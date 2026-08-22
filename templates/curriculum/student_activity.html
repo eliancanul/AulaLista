@@ -11,18 +11,67 @@
       <p>{{ snapshot_payload.objective }}</p>
       <p>{{ snapshot_payload.micro_lesson }}</p>
 
-      {% for question in snapshot_payload.questions %}
+      {% for question in activity_questions %}
         <section>
           <h2>{{ question.value.prompt }}</h2>
           <ul>
             {% for option in question.value.options %}
-              <li>
-                {{ option.position }}. {{ option.text }}
-              </li>
+              <li>{{ option.position }}. {{ option.text }}</li>
             {% endfor %}
           </ul>
+          <form method="post" action="{% url 'student-question-answer' session.pk question.index %}">
+            {% csrf_token %}
+            {% for option in question.value.options %}
+              <label>
+                <input type="radio" name="option_position" value="{{ option.position }}" required>
+                Elegir {{ option.position }}
+              </label>
+            {% endfor %}
+            <button type="submit">Responder</button>
+          </form>
+          {% if question.hint_capability %}
+            <form method="post" action="{% url 'student-question-assistance' session.pk question.index %}">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="hint">
+              <input type="hidden" name="hint_index" value="{{ question.hint_index }}">
+              <input type="hidden" name="hint_capability" value="{{ question.hint_capability }}">
+              <button type="submit">Solicitar pista</button>
+            </form>
+          {% endif %}
         </section>
       {% endfor %}
+
+      {% if practice_result %}
+        <section data-practice-result>
+          <h2>Resultado</h2>
+          <p>{% if practice_result.is_correct %}Respuesta correcta{% else %}Respuesta incorrecta{% endif %}</p>
+          <p>Puntuación: {{ practice_result.score }}</p>
+          <p>{{ practice_result.feedback }}</p>
+          <form method="post" action="{% url 'student-question-assistance' session.pk answered_question_index %}">
+            {% csrf_token %}
+            <input type="hidden" name="kind" value="explanation">
+            <input type="hidden" name="explanation_capability" value="{{ explanation_capability }}">
+            <button type="submit">Solicitar explicación final</button>
+          </form>
+        </section>
+      {% endif %}
+
+      {% if assistance %}
+        <section data-regulated-assistance>
+          <h2>Ayuda reglada</h2>
+          <p>{{ assistance.text }}</p>
+          <p>La ayuda no modifica la puntuación.</p>
+          {% if assistance.next_hint_index != None %}
+            <form method="post" action="{% url 'student-question-assistance' session.pk assistance_question_index %}">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="hint">
+              <input type="hidden" name="hint_index" value="{{ assistance.next_hint_index }}">
+              <input type="hidden" name="hint_capability" value="{{ next_hint_capability }}">
+              <button type="submit">Solicitar siguiente pista</button>
+            </form>
+          {% endif %}
+        </section>
+      {% endif %}
     </main>
   </body>
 </html>

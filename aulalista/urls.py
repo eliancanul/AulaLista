@@ -3,7 +3,13 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
 from health.views import health_page
-from curriculum.views import start_student_session, student_activity, student_packages
+from curriculum.views import (
+    start_student_session,
+    student_activity,
+    student_packages,
+    student_question_answer,
+    student_question_assistance,
+)
 
 
 urlpatterns = [
@@ -20,6 +26,16 @@ urlpatterns = [
         "student/sessions/<int:session_id>/activity/",
         student_activity,
         name="student-activity",
+    ),
+    path(
+        "student/sessions/<int:session_id>/questions/<int:question_index>/answer/",
+        student_question_answer,
+        name="student-question-answer",
+    ),
+    path(
+        "student/sessions/<int:session_id>/questions/<int:question_index>/assistance/",
+        student_question_assistance,
+        name="student-question-assistance",
     ),
 ]
 

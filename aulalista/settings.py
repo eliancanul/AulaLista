@@ -73,6 +73,15 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        # T05 targets the initial single-process local node. A shared cache is
+        # required before deploying multiple workers or nodes.
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "aulalista-local-cache",
+    }
+}
+
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "es-mx"
 TIME_ZONE = "America/Cancun"
