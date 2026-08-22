@@ -1,8 +1,26 @@
-from django.db import models
+import hashlib
+import json
+
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
+from django.db.models import Max
+from django.http import HttpResponseForbidden
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel
 from wagtail.fields import StreamField
+from wagtail.models import (
+    DraftStateMixin,
+    RevisionMixin,
+    TaskState,
+    WorkflowMixin,
+    WorkflowState,
+)
+from wagtail.permissions import ModelPermissionPolicy
 from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet, WorkflowActionView
+
+
+EDITORIAL_REVIEWER_GROUP_NAME = "EditorialReviewer"
 
 
 class CurriculumOptionBlock(blocks.StructBlock):
@@ -35,9 +53,8 @@ class CurriculumQuestionBlock(blocks.StructBlock):
         icon = "help"
 
 
-@register_snippet
-class CurriculumPackage(models.Model):
-    """A Wagtail-authored DemoPackage that remains an editorial draft in T02."""
+class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Model):
+    """A Wagtail-authored DemoPackage with human approval before publication."""
 
     title = models.CharField("título", max_length=160, blank=True)
     objective = models.TextField("objetivo", blank=True)
@@ -171,3 +188,134 @@ class CurriculumPackage(models.Model):
             + "\n".join(validation["missing"])
         )
         super().save(*args, **kwargs)
+
+    @transaction.atomic
+    def publish(
+        self,
+        revision,
+        user=None,
+        changed=True,
+        log_action=True,
+        previous_revision=None,
+        skip_permission_checks=False,
+    ):
+        if user is None or not getattr(user, "is_authenticated", False):
+            raise ValidationError(
+                "La publicación requiere una persona autenticada y aprobación humana."
+            )
+        if not user.groups.filter(name=EDITORIAL_REVIEWER_GROUP_NAME).exists():
+            raise ValidationError(
+                "La publicación requiere el grupo EditorialReviewer."
+            )
+        if not ModelPermissionPolicy(CurriculumPackage).user_has_permission(
+            user, "change"
+        ):
+            raise ValidationError(
+                "La publicación requiere permiso change sobre CurriculumPackage."
+            )
+
+        approved_task = TaskState.objects.filter(
+            workflow_state__base_content_type=self.get_base_content_type(),
+            workflow_state__object_id=str(self.pk),
+            workflow_state__status=WorkflowState.STATUS_APPROVED,
+            revision=revision,
+            status=TaskState.STATUS_APPROVED,
+            finished_by=user,
+        ).first()
+        if approved_task is None:
+            raise ValidationError(
+                "La publicación requiere una aprobación humana autenticada en Wagtail."
+            )
+
+        result = super().publish(
+            revision,
+            user=user,
+            changed=changed,
+            log_action=log_action,
+            previous_revision=previous_revision,
+            skip_permission_checks=False,
+        )
+        payload = dict(revision.content)
+        canonical = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        version = (
+            PublishedPackageSnapshot.objects.filter(package=self).aggregate(
+                maximum=Max("version")
+            )["maximum"]
+            or 0
+        ) + 1
+        PublishedPackageSnapshot.objects.create(
+            package=self,
+            version=version,
+            payload=payload,
+            sha256=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+            source_revision=revision,
+            published_by=user,
+        )
+        return result
+
+
+class PublishedPackageSnapshot(models.Model):
+    package = models.ForeignKey(
+        CurriculumPackage,
+        on_delete=models.PROTECT,
+        related_name="snapshots",
+    )
+    version = models.PositiveIntegerField()
+    payload = models.JSONField()
+    sha256 = models.CharField(max_length=64, editable=False)
+    source_revision = models.OneToOneField(
+        "wagtailcore.Revision",
+        on_delete=models.PROTECT,
+    )
+    published_by = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    published_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["package_id", "version"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("package", "version"),
+                name="unique_package_snapshot_version",
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("Un snapshot publicado es inmutable.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Un snapshot publicado no se elimina.")
+
+    def __str__(self):
+        return f"{self.package} v{self.version} ({self.sha256[:8]})"
+
+
+class EditorialReviewerWorkflowActionView(WorkflowActionView):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+        if not request.user.has_perm("wagtailadmin.access_admin"):
+            return HttpResponseForbidden()
+        if not ModelPermissionPolicy(CurriculumPackage).user_has_permission(
+            request.user, "change"
+        ):
+            return HttpResponseForbidden()
+        if not request.user.groups.filter(
+            name=EDITORIAL_REVIEWER_GROUP_NAME
+        ).exists():
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CurriculumPackageViewSet(SnippetViewSet):
+    model = CurriculumPackage
+    workflow_action_view_class = EditorialReviewerWorkflowActionView
+
+
+register_snippet(CurriculumPackageViewSet)
