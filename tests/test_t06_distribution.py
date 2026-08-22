@@ -174,6 +174,11 @@ def test_tutor_confirmation_activates_once_and_keeps_snapshot_pinned():
     assert ClassroomSessionConfirmation.objects.filter(session=session).count() == 1
     assert session.snapshot_id == snapshot.pk
     assert DeviceAssignment.objects.filter(session=session).count() == assignment_count
+    assignment = session.device_assignments.order_by("id").first()
+    client.post(
+        reverse("student-turn-start", args=[session.pk, assignment.local_identifier]),
+        {"display_name": "Luna"},
+    )
     assert client.get(reverse("student-activity", args=[session.pk])).status_code == 200
 
 
@@ -237,7 +242,6 @@ def test_database_guard_rejects_active_update_when_persisted_distribution_is_inv
     first_assignment = session.device_assignments.order_by("id").first()
     DeviceAssignment.objects.filter(pk=first_assignment.pk).update(
         assigned_capacity=3,
-        remaining_capacity=3,
     )
 
     with pytest.raises(IntegrityError):

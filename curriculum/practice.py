@@ -35,6 +35,7 @@ def issue_capability(
     *,
     session_id,
     question_index,
+    turn_id=None,
     next_hint_index=None,
 ):
     if kind not in {"explanation", "hint"}:
@@ -45,6 +46,8 @@ def issue_capability(
         "session_id": str(session_id),
         "question_index": int(question_index),
     }
+    if turn_id is not None:
+        payload["turn_id"] = str(turn_id)
     if kind == "hint":
         if next_hint_index is None:
             raise ValueError("Una capacidad de pista requiere su siguiente índice.")
@@ -62,6 +65,7 @@ def verify_capability(
     kind,
     session_id,
     question_index,
+    turn_id=None,
     next_hint_index=None,
 ):
     if not token:
@@ -82,6 +86,8 @@ def verify_capability(
         or payload.get("session_id") != str(session_id)
         or payload.get("question_index") != int(question_index)
     ):
+        return None
+    if turn_id is not None and payload.get("turn_id") != str(turn_id):
         return None
     if kind == "hint" and payload.get("next_hint_index") != int(next_hint_index):
         return None

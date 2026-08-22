@@ -93,10 +93,22 @@ def published_snapshot(
     return snapshot
 
 
+def active_student_session(snapshot, client):
+    session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
+    session.confirm()
+    assignment = session.device_assignments.get()
+    response = client.post(
+        reverse("student-turn-start", args=[session.pk, assignment.local_identifier]),
+        {"display_name": "Luna"},
+    )
+    assert response.status_code == 302
+    return session
+
+
 def test_student_can_submit_a_response_and_see_a_deterministic_result():
     snapshot = published_snapshot()
-    session = ClassroomSession.start_from_snapshot(snapshot)
     client = Client()
+    session = active_student_session(snapshot, client)
 
     response = client.post(
         reverse(
@@ -114,9 +126,10 @@ def test_student_can_submit_a_response_and_see_a_deterministic_result():
 
 def test_activity_does_not_reveal_expected_answer_before_response():
     snapshot = published_snapshot()
-    session = ClassroomSession.start_from_snapshot(snapshot)
+    client = Client()
+    session = active_student_session(snapshot, client)
 
-    response = Client().get(
+    response = client.get(
         reverse("student-activity", args=[session.pk]),
     )
 
@@ -131,8 +144,8 @@ def test_activity_does_not_reveal_expected_answer_before_response():
 
 def test_same_wrong_response_has_the_same_score_and_selected_option_feedback():
     snapshot = published_snapshot()
-    session = ClassroomSession.start_from_snapshot(snapshot)
     client = Client()
+    session = active_student_session(snapshot, client)
     answer_url = reverse("student-question-answer", args=[session.pk, 0])
 
     first_response = client.post(answer_url, {"option_position": 2})
@@ -149,8 +162,8 @@ def test_same_wrong_response_has_the_same_score_and_selected_option_feedback():
 
 def test_regulated_assistance_returns_ordered_snapshot_hints_without_changing_score():
     snapshot = published_snapshot()
-    session = ClassroomSession.start_from_snapshot(snapshot)
     client = Client()
+    session = active_student_session(snapshot, client)
     assistance_url = reverse("student-question-assistance", args=[session.pk, 0])
     session_rows_before = Session.objects.count()
 
@@ -259,7 +272,8 @@ def test_final_explanation_is_snapshot_assistance_only_after_response():
     snapshot = published_snapshot(
         final_explanation="La explicación final autorizada vive en este snapshot."
     )
-    session = ClassroomSession.start_from_snapshot(snapshot)
+    answered_client = Client()
+    session = active_student_session(snapshot, answered_client)
     assistance_url = reverse("student-question-assistance", args=[session.pk, 0])
 
     forged_client = Client()
@@ -268,7 +282,6 @@ def test_final_explanation_is_snapshot_assistance_only_after_response():
         {"kind": "explanation", "answer_submitted": "1"},
     )
 
-    answered_client = Client()
     answer_response = answered_client.post(
         reverse("student-question-answer", args=[session.pk, 0]),
         {"option_position": 1},
@@ -284,7 +297,7 @@ def test_final_explanation_is_snapshot_assistance_only_after_response():
         },
     )
 
-    assert before_response.status_code == 400
+    assert before_response.status_code == 403
     assert "La explicación final autorizada vive en este snapshot." not in before_response.text
     assert "La explicación final autorizada vive en este snapshot." not in answer_response.text
     assert after_response.status_code == 200

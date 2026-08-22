@@ -78,6 +78,18 @@ def published_snapshot(
     )
 
 
+def active_student_session(snapshot, client):
+    session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
+    session.confirm()
+    assignment = session.device_assignments.get()
+    response = client.post(
+        reverse("student-turn-start", args=[session.pk, assignment.local_identifier]),
+        {"display_name": "Luna"},
+    )
+    assert response.status_code == 302
+    return session
+
+
 def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     package = CurriculumPackage.objects.create(title="Versión uno")
     snapshot_one = published_snapshot(
@@ -90,7 +102,7 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     )
     client = Client()
 
-    first_session = ClassroomSession.start_from_snapshot(snapshot_one)
+    first_session = active_student_session(snapshot_one, client)
     assert first_session.snapshot_id == snapshot_one.pk
 
     package.title = "Versión corregida"
@@ -116,8 +128,9 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     assert "Microlección corregida." not in first_activity.text
     assert "Respuesta corregida" not in first_activity.text
 
-    second_session = ClassroomSession.start_from_snapshot(snapshot_two)
-    second_activity = client.get(
+    second_client = Client()
+    second_session = active_student_session(snapshot_two, second_client)
+    second_activity = second_client.get(
         reverse("student-activity", args=[second_session.pk]),
     )
 
@@ -151,7 +164,7 @@ def test_student_activity_does_not_expose_expected_answers_or_full_snapshot_payl
         expected=True,
     )
     client = Client()
-    session = ClassroomSession.start_from_snapshot(snapshot)
+    session = active_student_session(snapshot, client)
 
     activity = client.get(reverse("student-activity", args=[session.pk]))
 
@@ -204,7 +217,7 @@ def test_session_snapshot_cannot_be_reassigned_by_save_bulk_update_or_sql():
     assert session.snapshot_id == snapshot_one.pk
 
 
-def test_stopped_session_remains_stopped_in_activity_view():
+def test_stopped_session_is_not_available_in_activity_after_t07_stop():
     snapshot = published_snapshot(
         1,
         title="Sesión detenida",
@@ -213,11 +226,9 @@ def test_stopped_session_remains_stopped_in_activity_view():
         expected=True,
     )
     client = Client()
-    session = ClassroomSession.start_from_snapshot(snapshot)
+    session = active_student_session(snapshot, client)
     session.stop()
 
     activity = client.get(reverse("student-activity", args=[session.pk]))
 
-    assert activity.status_code == 200
-    assert "Detenida" in activity.text
-    assert "Completada" not in activity.text
+    assert activity.status_code == 403

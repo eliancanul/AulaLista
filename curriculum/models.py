@@ -5,6 +5,8 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Max
+from django.db.models.functions import Length, Trim
+from django.db.models.lookups import GreaterThanOrEqual
 from django.http import HttpResponseForbidden
 from django.utils import timezone
 from wagtail import blocks
@@ -478,13 +480,15 @@ class ClassroomSession(models.Model):
             )
         return super().save(*args, **kwargs)
 
+    @transaction.atomic
     def stop(self):
-        if self.status == self.STATUS_STOPPED:
-            return self
-        self.status = self.STATUS_STOPPED
-        self.stopped_at = timezone.now()
-        self.save(update_fields=["status", "stopped_at"])
-        return self
+        locked = type(self).objects.select_for_update().get(pk=self.pk)
+        if locked.status == self.STATUS_STOPPED:
+            return locked
+        locked.status = self.STATUS_STOPPED
+        locked.stopped_at = timezone.now()
+        locked.save(update_fields=["status", "stopped_at"])
+        return locked
 
 
 class ClassroomSessionConfirmation(models.Model):
@@ -547,6 +551,175 @@ class DeviceAssignment(models.Model):
     @property
     def queue_capacity(self):
         return self.assigned_capacity
+
+    def reserve_turn(self, display_name):
+        """Reserve one participant slot and create its temporary turn."""
+
+        normalized_name = StudentTurn.normalize_display_name(display_name)
+        with transaction.atomic():
+            assignment_snapshot = type(self).objects.get(pk=self.pk)
+            session = ClassroomSession.objects.select_for_update().get(
+                pk=assignment_snapshot.session_id,
+            )
+            assignment = type(self).objects.select_for_update().get(pk=self.pk)
+            if session.status != ClassroomSession.STATUS_ACTIVE:
+                raise ValidationError(
+                    "Solo una sesión activa puede iniciar un turno estudiantil."
+                )
+            if StudentTurn.objects.filter(
+                assignment=assignment,
+                status=StudentTurn.STATUS_ACTIVE,
+            ).exists():
+                raise ValidationError(
+                    "Este dispositivo ya tiene un turno activo; continúa o pulsa Listo."
+                )
+            if assignment.remaining_capacity <= 0:
+                raise ValidationError(
+                    "La capacidad restante de este dispositivo se agotó."
+                )
+            return StudentTurn.objects.create(
+                assignment=assignment,
+                display_name=normalized_name,
+            )
+
+
+class StudentTurn(models.Model):
+    """A temporary, non-identifying participant turn on one local device."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_COMPLETED = "completed"
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, "Activo"),
+        (STATUS_COMPLETED, "Completado"),
+    )
+    MAX_DISPLAY_NAME_LENGTH = 80
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    assignment = models.ForeignKey(
+        DeviceAssignment,
+        on_delete=models.CASCADE,
+        related_name="student_turns",
+    )
+    display_name = models.CharField(
+        "apodo local",
+        max_length=MAX_DISPLAY_NAME_LENGTH,
+        blank=True,
+    )
+    status = models.CharField(
+        "estado",
+        max_length=16,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+    )
+    started_at = models.DateTimeField("iniciado en", auto_now_add=True)
+    completed_at = models.DateTimeField("completado en", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-started_at", "-id"]
+        verbose_name = "StudentTurn"
+        verbose_name_plural = "StudentTurns"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(status__in=["active", "completed"]),
+                name="student_turn_status_allowed",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(status="completed")
+                    | (
+                        models.Q(status="active")
+                        & ~models.Q(display_name="")
+                    )
+                ),
+                name="student_turn_active_name_required",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(status="completed")
+                    | (
+                        models.Q(status="active")
+                        & GreaterThanOrEqual(Length(Trim("display_name")), 1)
+                    )
+                ),
+                name="student_turn_active_name_length",
+            ),
+            models.UniqueConstraint(
+                fields=("assignment",),
+                condition=models.Q(status="active"),
+                name="unique_active_student_turn_per_assignment",
+            ),
+        ]
+
+    @classmethod
+    def normalize_display_name(cls, value):
+        normalized = str(value or "").strip()
+        if not normalized:
+            raise ValidationError("El apodo local no puede estar vacío.")
+        if len(normalized) > cls.MAX_DISPLAY_NAME_LENGTH:
+            raise ValidationError(
+                f"El apodo local no puede superar {cls.MAX_DISPLAY_NAME_LENGTH} caracteres."
+            )
+        return normalized
+
+    def clean(self):
+        if self.status == self.STATUS_ACTIVE:
+            self.display_name = self.normalize_display_name(self.display_name)
+        elif self.status == self.STATUS_COMPLETED:
+            self.display_name = ""
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            if self.status == self.STATUS_ACTIVE:
+                self.display_name = self.normalize_display_name(self.display_name)
+            elif self.status == self.STATUS_COMPLETED:
+                self.display_name = ""
+        else:
+            original = type(self).objects.filter(pk=self.pk).values(
+                "assignment_id", "status", "display_name"
+            ).first()
+            if original and original["assignment_id"] != self.assignment_id:
+                raise ValidationError("La asignación de un turno queda fijada.")
+            if original and original["status"] == self.STATUS_COMPLETED:
+                if self.status != self.STATUS_COMPLETED or self.display_name != "":
+                    raise ValidationError("Un turno completado no puede reabrirse.")
+            if original and original["status"] == self.STATUS_ACTIVE:
+                if self.status not in {self.STATUS_ACTIVE, self.STATUS_COMPLETED}:
+                    raise ValidationError("La transición del turno no está permitida.")
+                if self.status == self.STATUS_ACTIVE:
+                    self.display_name = self.normalize_display_name(self.display_name)
+                else:
+                    self.display_name = ""
+        return super().save(*args, **kwargs)
+
+    @transaction.atomic
+    def finish(self):
+        assignment_snapshot = DeviceAssignment.objects.get(pk=self.assignment_id)
+        session = ClassroomSession.objects.select_for_update().get(
+            pk=assignment_snapshot.session_id,
+        )
+        assignment = DeviceAssignment.objects.select_for_update().get(
+            pk=assignment_snapshot.pk,
+        )
+        locked = type(self).objects.select_for_update().get(
+            pk=self.pk,
+            assignment_id=assignment.pk,
+        )
+        if session.status != ClassroomSession.STATUS_ACTIVE:
+            raise ValidationError("Un turno sólo puede finalizarse en una sesión activa.")
+        if locked.status == self.STATUS_COMPLETED:
+            return locked
+        if locked.status != self.STATUS_ACTIVE:
+            raise ValidationError("La transición del turno no está permitida.")
+        locked.status = self.STATUS_COMPLETED
+        locked.display_name = ""
+        locked.completed_at = timezone.now()
+        locked.save(update_fields=["status", "display_name", "completed_at"])
+        return locked
 
 
 class EditorialReviewerWorkflowActionView(WorkflowActionView):

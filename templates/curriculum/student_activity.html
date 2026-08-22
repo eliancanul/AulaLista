@@ -7,6 +7,7 @@
   <body>
     <main>
       <p>Estado de la sesión: <span data-session-status>{{ session.get_status_display }}</span></p>
+      {% if turn %}<p>Turno local: {{ turn.display_name }}</p>{% endif %}
       <h1>{{ snapshot_payload.title }}</h1>
       <p>{{ snapshot_payload.objective }}</p>
       <p>{{ snapshot_payload.micro_lesson }}</p>
@@ -71,6 +72,13 @@
             </form>
           {% endif %}
         </section>
+      {% endif %}
+
+      {% if turn %}
+        <form method="post" action="{% url 'student-turn-ready' session.pk %}">
+          {% csrf_token %}
+          <button type="submit">Listo</button>
+        </form>
       {% endif %}
     </main>
   </body>

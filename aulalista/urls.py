@@ -8,6 +8,9 @@ from curriculum.views import (
     student_packages,
     student_question_answer,
     student_question_assistance,
+    student_turn_recover,
+    student_turn_ready,
+    student_turn_start,
     tutor_session_confirm,
     tutor_session_prepare,
     tutor_session_review,
@@ -19,6 +22,21 @@ urlpatterns = [
     path("documents/", include("wagtail.documents.urls")),
     path("health/", health_page, name="health"),
     path("student/", student_packages, name="student-packages"),
+    path(
+        "student/sessions/<int:session_id>/devices/<uuid:local_identifier>/turn/start/",
+        student_turn_start,
+        name="student-turn-start",
+    ),
+    path(
+        "student/sessions/<int:session_id>/turn/ready/",
+        student_turn_ready,
+        name="student-turn-ready",
+    ),
+    path(
+        "student/sessions/<int:session_id>/devices/<uuid:local_identifier>/turn/recover/",
+        student_turn_recover,
+        name="student-turn-recover",
+    ),
     path(
         "tutor/snapshots/<int:snapshot_id>/prepare/",
         tutor_session_prepare,
