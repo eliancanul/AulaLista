@@ -1,0 +1,5 @@
+@font-face {
+  font-family: "AulaListaLocal";
+  src: local("Arial"), local("Helvetica Neue"), local("Segoe UI");
+  font-display: swap;
+}

@@ -1,0 +1,22 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Salud del nodo | AulaLista</title>
+    <link rel="stylesheet" href="{% static 'health/font.css' %}">
+    <link rel="stylesheet" href="{% static 'health/health.css' %}">
+  </head>
+  <body>
+    <main class="health-card">
+      <p class="eyebrow">AulaLista</p>
+      <h1>Nodo local disponible</h1>
+      <p id="health-status" data-health-status="{{ health_status }}">
+        Estado: <strong>{{ health_status }}</strong>
+      </p>
+      <p class="local-note">Esta página y sus recursos se sirven desde el nodo local.</p>
+    </main>
+    <script src="{% static 'health/health.js' %}" defer></script>
+  </body>
+</html>
