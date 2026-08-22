@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>AulaLista · contenido estudiantil</title>
+</head>
+<body>
+    <main>
+        <h1>Contenido para estudiantes</h1>
+        {% if packages %}
+            <ul>{% for package in packages %}<li>{{ package.title }}</li>{% endfor %}</ul>
+        {% else %}
+            <p>No hay paquetes publicados.</p>
+        {% endif %}
+    </main>
+</body>
+</html>
