@@ -26,6 +26,12 @@ _Avoid_: paquete piloto, material aprobado.
 Ejecución temporal de una actividad publicada para un conjunto de participantes y dispositivos. Una sesión conserva la versión publicada con la que comenzó.
 _Avoid_: curso, instancia editable.
 
+Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil.
+
+**LocalDeviceQueue**:
+Cola local asociada a un `DeviceAssignment`, identificada mediante un identificador opaco del nodo y limitada por una capacidad asignada. No contiene nombres, matrículas ni otras identidades estudiantiles.
+_Avoid_: lista nominal, grupo por nombre.
+
 **StudentTurn**:
 Intento individual realizado durante una `ClassroomSession`. Usa un identificador aleatorio local y no equivale al nombre o apodo que pueda mostrarse temporalmente en la interfaz.
 _Avoid_: cuenta estudiantil, identidad del estudiante.

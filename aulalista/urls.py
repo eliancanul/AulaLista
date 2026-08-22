@@ -4,11 +4,13 @@ from django.urls import include, path
 
 from health.views import health_page
 from curriculum.views import (
-    start_student_session,
     student_activity,
     student_packages,
     student_question_answer,
     student_question_assistance,
+    tutor_session_confirm,
+    tutor_session_prepare,
+    tutor_session_review,
 )
 
 
@@ -18,9 +20,19 @@ urlpatterns = [
     path("health/", health_page, name="health"),
     path("student/", student_packages, name="student-packages"),
     path(
-        "student/snapshots/<int:snapshot_id>/start/",
-        start_student_session,
-        name="student-session-start",
+        "tutor/snapshots/<int:snapshot_id>/prepare/",
+        tutor_session_prepare,
+        name="tutor-session-prepare",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/review/",
+        tutor_session_review,
+        name="tutor-session-review",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/confirm/",
+        tutor_session_confirm,
+        name="tutor-session-confirm",
     ),
     path(
         "student/sessions/<int:session_id>/activity/",

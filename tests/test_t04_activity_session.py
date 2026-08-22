@@ -90,11 +90,7 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     )
     client = Client()
 
-    start_response = client.post(
-        reverse("student-session-start", args=[snapshot_one.pk]),
-    )
-    assert start_response.status_code == 302
-    first_session = ClassroomSession.objects.get()
+    first_session = ClassroomSession.start_from_snapshot(snapshot_one)
     assert first_session.snapshot_id == snapshot_one.pk
 
     package.title = "Versión corregida"
@@ -108,7 +104,9 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
         package=package,
     )
 
-    first_activity = client.get(start_response["Location"])
+    first_activity = client.get(
+        reverse("student-activity", args=[first_session.pk]),
+    )
 
     assert first_activity.status_code == 200
     assert "Versión uno" in first_activity.text
@@ -118,11 +116,10 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     assert "Microlección corregida." not in first_activity.text
     assert "Respuesta corregida" not in first_activity.text
 
-    second_start = client.post(
-        reverse("student-session-start", args=[snapshot_two.pk]),
+    second_session = ClassroomSession.start_from_snapshot(snapshot_two)
+    second_activity = client.get(
+        reverse("student-activity", args=[second_session.pk]),
     )
-    second_activity = client.get(second_start["Location"])
-    second_session = ClassroomSession.objects.exclude(pk=first_session.pk).get()
 
     assert second_activity.status_code == 200
     assert second_session.snapshot_id == snapshot_two.pk
@@ -131,10 +128,15 @@ def test_activity_stays_on_started_snapshot_when_a_correction_is_published():
     assert "Respuesta corregida" in second_activity.text
 
 
-def test_session_cannot_start_without_a_published_snapshot():
-    response = Client().post(
-        reverse("student-session-start", args=[999999]),
+def test_legacy_student_session_start_endpoint_is_unavailable():
+    snapshot = published_snapshot(
+        1,
+        title="No debe iniciar por endpoint legacy",
+        micro_lesson="Contenido no iniciado.",
+        option_text="Opción no iniciada",
+        expected=True,
     )
+    response = Client().post(f"/student/snapshots/{snapshot.pk}/start/")
 
     assert response.status_code == 404
     assert ClassroomSession.objects.count() == 0
@@ -149,11 +151,9 @@ def test_student_activity_does_not_expose_expected_answers_or_full_snapshot_payl
         expected=True,
     )
     client = Client()
-    start_response = client.post(
-        reverse("student-session-start", args=[snapshot.pk]),
-    )
+    session = ClassroomSession.start_from_snapshot(snapshot)
 
-    activity = client.get(start_response["Location"])
+    activity = client.get(reverse("student-activity", args=[session.pk]))
 
     assert activity.status_code == 200
     assert "Microlección visible." in activity.text
@@ -213,13 +213,10 @@ def test_stopped_session_remains_stopped_in_activity_view():
         expected=True,
     )
     client = Client()
-    start_response = client.post(
-        reverse("student-session-start", args=[snapshot.pk]),
-    )
-    session = ClassroomSession.objects.get()
+    session = ClassroomSession.start_from_snapshot(snapshot)
     session.stop()
 
-    activity = client.get(start_response["Location"])
+    activity = client.get(reverse("student-activity", args=[session.pk]))
 
     assert activity.status_code == 200
     assert "Detenida" in activity.text

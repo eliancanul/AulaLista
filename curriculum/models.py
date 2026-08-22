@@ -1,5 +1,6 @@
 import hashlib
 import json
+import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -19,6 +20,8 @@ from wagtail.models import (
 from wagtail.permissions import ModelPermissionPolicy
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, WorkflowActionView
+
+from curriculum.distribution import calculate_distribution, validate_distribution
 
 
 EDITORIAL_REVIEWER_GROUP_NAME = "EditorialReviewer"
@@ -301,8 +304,10 @@ class ClassroomSession(models.Model):
     """A classroom activity fixed to one immutable published snapshot."""
 
     STATUS_ACTIVE = "active"
+    STATUS_PREPARED = "prepared"
     STATUS_STOPPED = "stopped"
     STATUS_CHOICES = (
+        (STATUS_PREPARED, "Preparada"),
         (STATUS_ACTIVE, "Activa"),
         (STATUS_STOPPED, "Detenida"),
     )
@@ -318,6 +323,21 @@ class ClassroomSession(models.Model):
         choices=STATUS_CHOICES,
         default=STATUS_ACTIVE,
     )
+    student_count = models.PositiveIntegerField(
+        "estudiantes indicados",
+        null=True,
+        blank=True,
+    )
+    device_count = models.PositiveIntegerField(
+        "dispositivos indicados",
+        null=True,
+        blank=True,
+    )
+    confirmed_at = models.DateTimeField(
+        "confirmada en",
+        null=True,
+        blank=True,
+    )
     started_at = models.DateTimeField("iniciada en", auto_now_add=True)
     stopped_at = models.DateTimeField("detenida en", null=True, blank=True)
 
@@ -325,6 +345,27 @@ class ClassroomSession(models.Model):
         ordering = ["-started_at", "-id"]
         verbose_name = "ClassroomSession"
         verbose_name_plural = "ClassroomSessions"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(student_count__isnull=True) | models.Q(student_count__gt=0),
+                name="session_student_count_positive_or_null",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(device_count__isnull=True) | models.Q(device_count__gt=0),
+                name="session_device_count_positive_or_null",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(student_count__isnull=True, device_count__isnull=True)
+                    | models.Q(
+                        student_count__isnull=False,
+                        device_count__isnull=False,
+                        student_count__gte=models.F("device_count"),
+                    )
+                ),
+                name="session_device_count_not_above_students",
+            ),
+        ]
 
     @classmethod
     def start_from_snapshot(cls, snapshot):
@@ -338,16 +379,103 @@ class ClassroomSession(models.Model):
             ) from error
         return cls.objects.create(snapshot=published_snapshot)
 
+    @classmethod
+    @transaction.atomic
+    def prepare_from_snapshot(cls, snapshot, student_count, device_count):
+        if not snapshot or snapshot.pk is None:
+            raise ValidationError("La sesión requiere un snapshot publicado existente.")
+        try:
+            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            capacities = calculate_distribution(student_count, device_count)
+        except PublishedPackageSnapshot.DoesNotExist as error:
+            raise ValidationError(
+                "La sesión requiere un snapshot publicado existente."
+            ) from error
+        except ValueError as error:
+            raise ValidationError(str(error)) from error
+
+        session = cls.objects.create(
+            snapshot=published_snapshot,
+            status=cls.STATUS_PREPARED,
+            student_count=int(str(student_count).strip()),
+            device_count=int(str(device_count).strip()),
+        )
+        DeviceAssignment.objects.bulk_create(
+            [
+                DeviceAssignment(
+                    session=session,
+                    assigned_capacity=capacity,
+                    remaining_capacity=capacity,
+                )
+                for capacity in capacities
+            ]
+        )
+        return session
+
+    @transaction.atomic
+    def confirm(self):
+        locked = type(self).objects.select_for_update().get(pk=self.pk)
+        if locked.status == self.STATUS_ACTIVE:
+            return locked
+        if locked.status != self.STATUS_PREPARED:
+            raise ValidationError("Solo una sesión preparada puede confirmarse.")
+        capacities = list(
+            locked.device_assignments.order_by("id").values_list(
+                "assigned_capacity",
+                flat=True,
+            )
+        )
+        try:
+            validate_distribution(
+                locked.student_count,
+                locked.device_count,
+                capacities,
+            )
+        except ValueError as error:
+            raise ValidationError(str(error)) from error
+        confirmation_time = timezone.now()
+        receipt, _ = ClassroomSessionConfirmation.objects.get_or_create(
+            session=locked,
+            defaults={"confirmed_at": confirmation_time},
+        )
+        type(self).objects.filter(pk=locked.pk).update(
+            status=self.STATUS_ACTIVE,
+            confirmed_at=receipt.confirmed_at,
+        )
+        self.refresh_from_db()
+        return self
+
     def save(self, *args, **kwargs):
         if not self._state.adding:
-            original_snapshot_id = type(self).objects.filter(pk=self.pk).values_list(
-                "snapshot_id", flat=True
+            original = type(self).objects.filter(pk=self.pk).values(
+                "snapshot_id", "status"
             ).first()
+            original_snapshot_id = original["snapshot_id"] if original else None
             if (
                 original_snapshot_id is not None
                 and original_snapshot_id != self.snapshot_id
             ):
                 raise ValidationError("El snapshot de una ClassroomSession queda fijado.")
+            if (
+                original
+                and original["status"] == self.STATUS_PREPARED
+                and self.status == self.STATUS_ACTIVE
+            ):
+                raise ValidationError(
+                    "Una sesión preparada requiere confirmación explícita para activarse."
+                )
+        elif self.status == self.STATUS_ACTIVE and self.student_count is not None:
+            raise ValidationError(
+                "Una sesión T06 debe confirmarse antes de activarse."
+            )
+        if (
+            self.status == self.STATUS_ACTIVE
+            and (self.student_count is not None or self.device_count is not None)
+            and self.confirmed_at is None
+        ):
+            raise ValidationError(
+                "Una sesión T06 activa requiere una confirmación registrada."
+            )
         return super().save(*args, **kwargs)
 
     def stop(self):
@@ -357,6 +485,68 @@ class ClassroomSession(models.Model):
         self.stopped_at = timezone.now()
         self.save(update_fields=["status", "stopped_at"])
         return self
+
+
+class ClassroomSessionConfirmation(models.Model):
+    """Operational receipt authorizing one prepared session to become active."""
+
+    session = models.OneToOneField(
+        ClassroomSession,
+        on_delete=models.CASCADE,
+        related_name="confirmation_receipt",
+    )
+    confirmed_at = models.DateTimeField("confirmada en")
+    nonce = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = "ClassroomSessionConfirmation"
+        verbose_name_plural = "ClassroomSessionConfirmations"
+
+
+class DeviceAssignment(models.Model):
+    """A local, non-semantic device queue prepared before session confirmation."""
+
+    session = models.ForeignKey(
+        ClassroomSession,
+        on_delete=models.CASCADE,
+        related_name="device_assignments",
+    )
+    local_identifier = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+    )
+    assigned_capacity = models.PositiveIntegerField("capacidad asignada")
+    remaining_capacity = models.PositiveIntegerField("capacidad restante")
+
+    class Meta:
+        ordering = ["id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(assigned_capacity__gt=0),
+                name="device_assignment_capacity_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(remaining_capacity__gte=0),
+                name="device_assignment_remaining_nonnegative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(remaining_capacity__lte=models.F("assigned_capacity")),
+                name="device_assignment_remaining_within_capacity",
+            ),
+            models.UniqueConstraint(
+                fields=("session", "local_identifier"),
+                name="unique_session_local_device_identifier",
+            ),
+        ]
+
+    @property
+    def queue_capacity(self):
+        return self.assigned_capacity
 
 
 class EditorialReviewerWorkflowActionView(WorkflowActionView):

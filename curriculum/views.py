@@ -1,9 +1,10 @@
 import hashlib
 
 from django.core.cache import cache
-from django.http import HttpResponseBadRequest
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from curriculum.models import ClassroomSession, PublishedPackageSnapshot
 from curriculum.practice import (
@@ -23,11 +24,70 @@ def student_packages(request):
     return render(request, "curriculum/student_packages.html", {"packages": []})
 
 
-@require_POST
-def start_student_session(request, snapshot_id):
+@require_http_methods(["GET", "POST"])
+def tutor_session_prepare(request, snapshot_id):
     snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
-    session = ClassroomSession.start_from_snapshot(snapshot)
-    return redirect("student-activity", session_id=session.pk)
+    context = {"snapshot": snapshot}
+    if request.method == "POST":
+        try:
+            session = ClassroomSession.prepare_from_snapshot(
+                snapshot,
+                request.POST.get("student_count"),
+                request.POST.get("device_count"),
+            )
+        except ValidationError as error:
+            # This local-only form has no teacher account yet; show the contract
+            # error without inventing an authentication or identity layer.
+            context["error"] = str(error)
+            return render(
+                request,
+                "curriculum/tutor_session_prepare.html",
+                context,
+                status=400,
+            )
+        return redirect("tutor-session-review", session_id=session.pk)
+    return render(request, "curriculum/tutor_session_prepare.html", context)
+
+
+def tutor_session_review(request, session_id):
+    session = get_object_or_404(
+        ClassroomSession.objects.select_related("snapshot").prefetch_related(
+            "device_assignments"
+        ),
+        pk=session_id,
+    )
+    return render(
+        request,
+        "curriculum/tutor_session_review.html",
+        {"session": session, "assignments": session.device_assignments.all()},
+    )
+
+
+@require_POST
+def tutor_session_confirm(request, session_id):
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    try:
+        session.confirm()
+    except ValidationError as error:
+        return render(
+            request,
+            "curriculum/tutor_session_review.html",
+            {
+                "session": session,
+                "assignments": session.device_assignments.all(),
+                "error": str(error),
+            },
+            status=400,
+        )
+    return redirect("tutor-session-review", session_id=session.pk)
+
+
+def _unconfirmed_session_response(session):
+    if session.status == ClassroomSession.STATUS_PREPARED:
+        return HttpResponseForbidden(
+            "La sesión requiere confirmación explícita antes de iniciar la actividad."
+        )
+    return None
 
 
 def student_activity(request, session_id):
@@ -35,6 +95,9 @@ def student_activity(request, session_id):
         ClassroomSession.objects.select_related("snapshot"),
         pk=session_id,
     )
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
     return render(
         request,
         "curriculum/student_activity.html",
@@ -143,6 +206,9 @@ def student_question_answer(request, session_id, question_index):
         ClassroomSession.objects.select_related("snapshot"),
         pk=session_id,
     )
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
     try:
         result = evaluate_response(
             session.snapshot.payload,
@@ -174,6 +240,9 @@ def student_question_assistance(request, session_id, question_index):
         ClassroomSession.objects.select_related("snapshot"),
         pk=session_id,
     )
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
     kind = request.POST.get("kind", "hint")
     hint_index = None
     if kind == "hint":

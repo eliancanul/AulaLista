@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>AulaLista · revisar sesión</title>
+  </head>
+  <body>
+    <main>
+      <h1>Revisar preparación</h1>
+      <p data-session-status>Estado: {{ session.get_status_display }}</p>
+      <p>Snapshot publicado: {{ session.snapshot.payload.title }}</p>
+      <p>Estudiantes indicados: {{ session.student_count }}</p>
+      <p>Dispositivos preparados: {{ session.device_count }}</p>
+      {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+      <table>
+        <thead>
+          <tr>
+            <th>Identificador local</th>
+            <th>Capacidad asignada</th>
+            <th>Capacidad restante</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in assignments %}
+            <tr>
+              <td>{{ assignment.local_identifier }}</td>
+              <td>{{ assignment.assigned_capacity }}</td>
+              <td>{{ assignment.remaining_capacity }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if session.status == "prepared" %}
+        <form method="post" action="{% url 'tutor-session-confirm' session.pk %}">
+          {% csrf_token %}
+          <button type="submit">Confirmar y activar sesión</button>
+        </form>
+      {% endif %}
+    </main>
+  </body>
+</html>
