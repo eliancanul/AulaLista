@@ -336,10 +336,10 @@ def test_turn_assignment_and_completed_status_are_immutable_and_snapshot_remains
         StudentTurn.objects.filter(pk=turn.pk).update(status=StudentTurn.STATUS_ACTIVE)
 
 
-def test_t07_does_not_introduce_result_or_classroom_close_entities():
+def test_t07_temporal_turn_remains_distinct_from_close_entities():
     model_names = {model.__name__ for model in apps.get_models()}
 
-    assert "PseudonymousResult" not in model_names
+    assert "PseudonymousResult" in model_names
     assert "ClassroomSessionClose" not in model_names
 
 
@@ -513,7 +513,7 @@ def test_ready_and_finish_do_not_complete_a_turn_after_session_stop():
 
     ready = client.post(reverse("student-turn-ready", args=[session.pk]))
     turn.refresh_from_db()
-    assert ready.status_code == 302
+    assert ready.status_code == 403
     assert turn.status == StudentTurn.STATUS_ACTIVE
     with pytest.raises(ValidationError, match="activa"):
         turn.finish()

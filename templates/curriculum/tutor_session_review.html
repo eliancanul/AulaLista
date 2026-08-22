@@ -36,6 +36,37 @@
           <button type="submit">Confirmar y activar sesión</button>
         </form>
       {% endif %}
+      {% if session.status == "prepared" or session.status == "active" %}
+        <form method="post" action="{% url 'tutor-session-close' session.pk %}">
+          {% csrf_token %}
+          <button type="submit">Cerrar sesión y conservar métricas anónimas</button>
+        </form>
+      {% endif %}
+      {% if session.status == "closed" %}
+        <section aria-label="Agregados sin nombres">
+          <h2>Agregados</h2>
+          <p>Resultados: {{ result_aggregate.count }}</p>
+          <p>Completados: {{ result_aggregate.completed_count }}</p>
+          <p>Puntuación total: {{ result_aggregate.score_total }}</p>
+          <p>Puntuación promedio: {{ result_aggregate.score_average }}</p>
+          <p>Ayudas solicitadas: {{ result_aggregate.help_count }}</p>
+          <p>Errores técnicos: {{ result_aggregate.technical_error_count }}</p>
+        </section>
+        <form method="post" action="{% url 'tutor-session-export' session.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="format" value="json">
+          <button type="submit">Exportar JSON</button>
+        </form>
+        <form method="post" action="{% url 'tutor-session-export' session.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="format" value="csv">
+          <button type="submit">Exportar CSV</button>
+        </form>
+        <form method="post" action="{% url 'tutor-session-results-delete' session.pk %}">
+          {% csrf_token %}
+          <button type="submit">Eliminar resultados</button>
+        </form>
+      {% endif %}
     </main>
   </body>
 </html>

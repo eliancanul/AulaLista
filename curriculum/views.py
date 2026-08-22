@@ -1,4 +1,7 @@
+import csv
 import hashlib
+import io
+import json
 
 from django.core import signing
 from django.core.cache import cache
@@ -10,15 +13,24 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
 
+from curriculum.ephemeral import (
+    clear_practice_cache,
+    ensure_ephemeral_turn_summary,
+    record_ephemeral_help,
+    record_ephemeral_response,
+    update_ephemeral_turn_summary,
+)
 from curriculum.models import (
     ClassroomSession,
     DeviceAssignment,
     PublishedPackageSnapshot,
+    PseudonymousResult,
     StudentTurn,
 )
 from curriculum.practice import (
@@ -126,16 +138,15 @@ def student_turn_start(request, session_id, local_identifier):
         ClassroomSession.objects.select_for_update(),
         pk=session_id,
     )
+    if session.status != ClassroomSession.STATUS_ACTIVE:
+        return HttpResponseForbidden(
+            "La sesión no está disponible para iniciar un turno."
+        )
     assignment = get_object_or_404(
         DeviceAssignment.objects.select_for_update(),
         session=session,
         local_identifier=local_identifier,
     )
-    if assignment.session.status != ClassroomSession.STATUS_ACTIVE:
-        return HttpResponseForbidden(
-            "La sesión no está disponible para iniciar un turno."
-        )
-
     capability = _read_turn_capability(request)
     if capability and (
         capability.get("session_id") != session_id
@@ -193,6 +204,7 @@ def student_turn_start(request, session_id, local_identifier):
                 status=400,
             )
         response = redirect("student-activity", session_id=session_id)
+        ensure_ephemeral_turn_summary(session_id, turn)
         _set_turn_cookie(response, turn)
         return response
     return render(request, "curriculum/student_turn_start.html", context)
@@ -206,16 +218,15 @@ def student_turn_recover(request, session_id, local_identifier):
         ClassroomSession.objects.select_for_update(),
         pk=session_id,
     )
+    if session.status != ClassroomSession.STATUS_ACTIVE:
+        return HttpResponseForbidden(
+            "La sesión no está disponible para recuperar un turno."
+        )
     assignment = get_object_or_404(
         DeviceAssignment.objects.select_for_update(),
         session=session,
         local_identifier=local_identifier,
     )
-    if assignment.session.status != ClassroomSession.STATUS_ACTIVE:
-        return HttpResponseForbidden(
-            "La sesión no está disponible para recuperar un turno."
-        )
-
     capability = _read_turn_capability(request)
     if capability and (
         capability.get("session_id") != session_id
@@ -239,10 +250,26 @@ def student_turn_recover(request, session_id, local_identifier):
 @transaction.atomic
 @require_POST
 def student_turn_ready(request, session_id):
+    session = get_object_or_404(
+        ClassroomSession.objects.select_for_update(),
+        pk=session_id,
+    )
+    if session.status != ClassroomSession.STATUS_ACTIVE:
+        response = HttpResponseForbidden(
+            "La sesión no está disponible para cerrar un turno."
+        )
+        _clear_turn_cookie(response)
+        return response
     turn, _ = _assignment_for_turn_capability(request, session_id)
     if turn is not None:
         question_count = len(turn.assignment.session.snapshot.payload.get("questions", []) or [])
         completed = turn.finish()
+        update_ephemeral_turn_summary(
+            session_id,
+            completed,
+            state="completed",
+            completed_at=completed.completed_at.isoformat(),
+        )
         clear_practice_cache(completed.pk, range(question_count))
         response = redirect(
             "student-turn-start",
@@ -289,10 +316,19 @@ def tutor_session_review(request, session_id):
         ),
         pk=session_id,
     )
+    results = list(
+        PseudonymousResult.objects.filter(
+            result_batch_id=session.result_batch_id,
+        )
+    )
     return render(
         request,
         "curriculum/tutor_session_review.html",
-        {"session": session, "assignments": session.device_assignments.all()},
+        {
+            "session": session,
+            "assignments": session.device_assignments.all(),
+            "result_aggregate": _result_aggregate(results),
+        },
     )
 
 
@@ -313,6 +349,147 @@ def tutor_session_confirm(request, session_id):
             status=400,
         )
     return redirect("tutor-session-review", session_id=session.pk)
+
+
+@require_POST
+def tutor_session_close(request, session_id):
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    try:
+        session.close()
+    except ValidationError as error:
+        return render(
+            request,
+            "curriculum/tutor_session_review.html",
+            {
+                "session": session,
+                "assignments": session.device_assignments.all(),
+                "result_aggregate": _result_aggregate(
+                    PseudonymousResult.objects.filter(
+                        result_batch_id=session.result_batch_id,
+                    )
+                ),
+                "error": str(error),
+            },
+            status=400,
+        )
+    return redirect("tutor-session-review", session_id=session.pk)
+
+
+def _result_aggregate(results):
+    results = list(results)
+    return {
+        "count": len(results),
+        "completed_count": sum(
+            result.state == PseudonymousResult.STATE_COMPLETED for result in results
+        ),
+        "score_total": sum(result.score for result in results),
+        "score_average": (
+            sum(result.score for result in results) / len(results) if results else 0
+        ),
+        "help_count": sum(len(result.help_requests or []) for result in results),
+        "technical_error_count": sum(
+            len(result.technical_errors or []) for result in results
+        ),
+    }
+
+
+def _result_export_payload(result):
+    return {
+        "id": str(result.id),
+        "snapshot_id": result.snapshot_id,
+        "snapshot_version": result.snapshot_version,
+        "snapshot_sha256": result.snapshot_sha256,
+        "state": result.state,
+        "duration_seconds": result.duration_seconds,
+        "responses": result.responses,
+        "score": result.score,
+        "help_requests": result.help_requests,
+        "technical_errors": result.technical_errors,
+    }
+
+
+@require_POST
+def tutor_session_export(request, session_id):
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    if session.status != ClassroomSession.STATUS_CLOSED:
+        return HttpResponseBadRequest("Sólo se pueden exportar sesiones cerradas.")
+    results = PseudonymousResult.objects.filter(
+        result_batch_id=session.result_batch_id,
+    )
+    payload = [_result_export_payload(result) for result in results]
+    export_format = request.POST.get("format", "json").lower()
+    if export_format == "json":
+        response = JsonResponse(payload, safe=False)
+        response["Content-Disposition"] = (
+            f'attachment; filename="aulalista-session-{session.pk}.json"'
+        )
+        return response
+    if export_format == "csv":
+        output = io.StringIO()
+        writer = csv.DictWriter(
+            output,
+            fieldnames=[
+                "id",
+                "snapshot_id",
+                "snapshot_version",
+                "snapshot_sha256",
+                "state",
+                "duration_seconds",
+                "responses",
+                "score",
+                "help_requests",
+                "technical_errors",
+            ],
+        )
+        writer.writeheader()
+        for result in payload:
+            writer.writerow(
+                {
+                    **result,
+                    "responses": json.dumps(result["responses"], ensure_ascii=False),
+                    "help_requests": json.dumps(
+                        result["help_requests"], ensure_ascii=False
+                    ),
+                    "technical_errors": json.dumps(
+                        result["technical_errors"], ensure_ascii=False
+                    ),
+                }
+            )
+        response = HttpResponse(output.getvalue(), content_type="text/csv")
+        response["Content-Disposition"] = (
+            f'attachment; filename="aulalista-session-{session.pk}.csv"'
+        )
+        return response
+    return HttpResponseBadRequest("El formato de exportación no está disponible.")
+
+
+@require_POST
+def tutor_session_results_delete(request, session_id):
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    if session.status != ClassroomSession.STATUS_CLOSED:
+        return HttpResponseBadRequest("Sólo se pueden eliminar resultados de una sesión cerrada.")
+    result_ids = request.POST.getlist("result_id")
+    queryset = PseudonymousResult.objects.filter(
+        result_batch_id=session.result_batch_id,
+    )
+    if result_ids:
+        queryset = queryset.filter(id__in=result_ids)
+    deleted, _ = queryset.delete()
+    return JsonResponse({"deleted": deleted})
+
+
+@require_POST
+def tutor_result_delete(request, session_id, result_id):
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    if session.status != ClassroomSession.STATUS_CLOSED:
+        return HttpResponseBadRequest("Sólo se pueden eliminar resultados de una sesión cerrada.")
+    result = get_object_or_404(
+        PseudonymousResult,
+        pk=result_id,
+        result_batch_id=session.result_batch_id,
+    )
+    result.delete()
+    return JsonResponse({"deleted": 1})
 
 
 def _unconfirmed_session_response(session):
@@ -396,16 +573,6 @@ def _consumed_hint_key(turn_id, question_index, capability):
 
 def _consumed_hint_index_key(turn_id, question_index):
     return f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{question_index}"
-
-
-def clear_practice_cache(turn_id, question_indices):
-    """Explicitly remove ephemeral T05 state for one completed turn."""
-
-    for question_index in question_indices:
-        progress_key = _hint_progress_key(turn_id, question_index)
-        consumed_index_key = _consumed_hint_index_key(turn_id, question_index)
-        consumed_keys = cache.get(consumed_index_key, []) or []
-        cache.delete_many([progress_key, consumed_index_key, *consumed_keys])
 
 
 def _current_hint_state(turn_id, question_index, *, session_id=None):
@@ -502,6 +669,7 @@ def student_question_answer(request, session_id, question_index):
         )
     except PracticeContractError as error:
         return HttpResponseBadRequest(str(error))
+    record_ephemeral_response(session_id, turn, result)
 
     return render(
         request,
@@ -589,6 +757,7 @@ def student_question_assistance(request, session_id, question_index):
         session_id=session_id,
     ):
         return HttpResponseBadRequest("La capacidad de pista ya fue consumida o quedó fuera de orden.")
+    record_ephemeral_help(session_id, turn, question_index, assistance)
 
     next_hint_capability = None
     if assistance.next_hint_index is not None:

@@ -12,8 +12,12 @@ from curriculum.views import (
     student_turn_ready,
     student_turn_start,
     tutor_session_confirm,
+    tutor_session_close,
+    tutor_session_export,
     tutor_session_prepare,
+    tutor_session_results_delete,
     tutor_session_review,
+    tutor_result_delete,
 )
 
 
@@ -51,6 +55,26 @@ urlpatterns = [
         "tutor/sessions/<int:session_id>/confirm/",
         tutor_session_confirm,
         name="tutor-session-confirm",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/close/",
+        tutor_session_close,
+        name="tutor-session-close",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/results/export/",
+        tutor_session_export,
+        name="tutor-session-export",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/results/delete/",
+        tutor_session_results_delete,
+        name="tutor-session-results-delete",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/results/<uuid:result_id>/delete/",
+        tutor_result_delete,
+        name="tutor-result-delete",
     ),
     path(
         "student/sessions/<int:session_id>/activity/",

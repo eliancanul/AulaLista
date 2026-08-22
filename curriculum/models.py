@@ -1,6 +1,7 @@
 import hashlib
 import json
 import uuid
+from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -27,6 +28,15 @@ from curriculum.distribution import calculate_distribution, validate_distributio
 
 
 EDITORIAL_REVIEWER_GROUP_NAME = "EditorialReviewer"
+
+
+def _parse_cached_datetime(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class CurriculumOptionBlock(blocks.StructBlock):
@@ -308,16 +318,24 @@ class ClassroomSession(models.Model):
     STATUS_ACTIVE = "active"
     STATUS_PREPARED = "prepared"
     STATUS_STOPPED = "stopped"
+    STATUS_CLOSED = "closed"
     STATUS_CHOICES = (
         (STATUS_PREPARED, "Preparada"),
         (STATUS_ACTIVE, "Activa"),
         (STATUS_STOPPED, "Detenida"),
+        (STATUS_CLOSED, "Cerrada"),
     )
 
     snapshot = models.ForeignKey(
         PublishedPackageSnapshot,
         on_delete=models.PROTECT,
         related_name="classroom_sessions",
+    )
+    result_batch_id = models.UUIDField(
+        "lote opaco de resultados",
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
     )
     status = models.CharField(
         "estado",
@@ -342,6 +360,7 @@ class ClassroomSession(models.Model):
     )
     started_at = models.DateTimeField("iniciada en", auto_now_add=True)
     stopped_at = models.DateTimeField("detenida en", null=True, blank=True)
+    closed_at = models.DateTimeField("cerrada en", null=True, blank=True)
 
     class Meta:
         ordering = ["-started_at", "-id"]
@@ -450,7 +469,7 @@ class ClassroomSession(models.Model):
     def save(self, *args, **kwargs):
         if not self._state.adding:
             original = type(self).objects.filter(pk=self.pk).values(
-                "snapshot_id", "status"
+                "snapshot_id", "status", "closed_at"
             ).first()
             original_snapshot_id = original["snapshot_id"] if original else None
             if (
@@ -466,6 +485,24 @@ class ClassroomSession(models.Model):
                 raise ValidationError(
                     "Una sesión preparada requiere confirmación explícita para activarse."
                 )
+            if (
+                original
+                and original["status"] != self.STATUS_CLOSED
+                and self.status == self.STATUS_CLOSED
+                and not ClassroomSessionClosure.objects.filter(
+                    session_id=self.pk
+                ).exists()
+            ):
+                raise ValidationError(
+                    "Una sesión sólo puede cerrarse con su receipt operacional."
+                )
+            if original and original["status"] == self.STATUS_CLOSED:
+                if self.status != self.STATUS_CLOSED:
+                    raise ValidationError("Una sesión cerrada no puede reabrirse.")
+                if self.closed_at is None:
+                    self.closed_at = original["closed_at"]
+        elif self.status == self.STATUS_CLOSED:
+            raise ValidationError("Una sesión sólo puede cerrarse con su receipt operacional.")
         elif self.status == self.STATUS_ACTIVE and self.student_count is not None:
             raise ValidationError(
                 "Una sesión T06 debe confirmarse antes de activarse."
@@ -490,6 +527,95 @@ class ClassroomSession(models.Model):
         locked.save(update_fields=["status", "stopped_at"])
         return locked
 
+    def close(self):
+        """Seal ephemeral turn summaries and destroy temporal classroom links."""
+
+        from curriculum.ephemeral import (
+            clear_ephemeral_session_summary,
+            clear_practice_cache,
+            read_ephemeral_session_summary,
+        )
+
+        turn_ids = []
+        question_count = 0
+        with transaction.atomic():
+            locked = type(self).objects.select_for_update().get(pk=self.pk)
+            if locked.status == self.STATUS_CLOSED:
+                ClassroomSessionClosure.objects.get_or_create(
+                    session=locked,
+                    defaults={"closed_at": locked.closed_at or timezone.now()},
+                )
+            else:
+                if locked.status not in {self.STATUS_ACTIVE, self.STATUS_PREPARED}:
+                    raise ValidationError(
+                        "Sólo una sesión activa o preparada puede cerrarse explícitamente."
+                    )
+
+                closed_at = timezone.now()
+                summary = read_ephemeral_session_summary(locked.pk)
+                turns = list(
+                    StudentTurn.objects.filter(
+                        assignment__session_id=locked.pk,
+                    ).select_related("assignment")
+                )
+                turn_ids = [turn.pk for turn in turns]
+                question_count = len(locked.snapshot.payload.get("questions", []) or [])
+                for turn in turns:
+                    turn_summary = summary.get("turns", {}).get(str(turn.pk), {})
+                    started_at = _parse_cached_datetime(turn_summary.get("started_at"))
+                    ended_at = (
+                        _parse_cached_datetime(turn_summary.get("completed_at"))
+                        or closed_at
+                    )
+                    duration_seconds = None
+                    if started_at is not None:
+                        duration_seconds = max(
+                            0,
+                            int((ended_at - started_at).total_seconds()),
+                        )
+                    responses = list(turn_summary.get("responses", []) or [])
+                    state = (
+                        PseudonymousResult.STATE_COMPLETED
+                        if turn_summary.get("state")
+                        == PseudonymousResult.STATE_COMPLETED
+                        else PseudonymousResult.STATE_ABANDONED
+                    )
+                    PseudonymousResult.objects.create(
+                        result_batch_id=locked.result_batch_id,
+                        snapshot_id=locked.snapshot_id,
+                        snapshot_version=locked.snapshot.version,
+                        snapshot_sha256=locked.snapshot.sha256,
+                        state=state,
+                        duration_seconds=duration_seconds,
+                        responses=responses,
+                        score=sum(
+                            1
+                            for response in responses
+                            if response.get("is_correct") is True
+                        ),
+                        help_requests=list(turn_summary.get("help_requests", []) or []),
+                        technical_errors=list(
+                            turn_summary.get("technical_errors", []) or []
+                        ),
+                    )
+
+                StudentTurn.objects.filter(assignment__session_id=locked.pk).delete()
+                DeviceAssignment.objects.filter(session_id=locked.pk).delete()
+                receipt, _ = ClassroomSessionClosure.objects.get_or_create(
+                    session=locked,
+                    defaults={"closed_at": closed_at},
+                )
+                locked.status = self.STATUS_CLOSED
+                locked.closed_at = receipt.closed_at
+                locked.save(update_fields=["status", "closed_at"])
+
+        # The final DB write and transaction exit are complete. Cache cleanup
+        # is deliberately last so rollback-prone work leaves evidence retryable.
+        for turn_id in turn_ids:
+            clear_practice_cache(turn_id, range(question_count))
+        clear_ephemeral_session_summary(locked.pk)
+        return locked
+
 
 class ClassroomSessionConfirmation(models.Model):
     """Operational receipt authorizing one prepared session to become active."""
@@ -509,6 +635,26 @@ class ClassroomSessionConfirmation(models.Model):
     class Meta:
         verbose_name = "ClassroomSessionConfirmation"
         verbose_name_plural = "ClassroomSessionConfirmations"
+
+
+class ClassroomSessionClosure(models.Model):
+    """Operational receipt proving that a classroom session was closed."""
+
+    session = models.OneToOneField(
+        ClassroomSession,
+        on_delete=models.CASCADE,
+        related_name="closure_receipt",
+    )
+    closed_at = models.DateTimeField("cerrada en")
+    nonce = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = "ClassroomSessionClosure"
+        verbose_name_plural = "ClassroomSessionClosures"
 
 
 class DeviceAssignment(models.Model):
@@ -720,6 +866,42 @@ class StudentTurn(models.Model):
         locked.completed_at = timezone.now()
         locked.save(update_fields=["status", "display_name", "completed_at"])
         return locked
+
+
+class PseudonymousResult(models.Model):
+    """An erasable result that has no relationship to a classroom participant."""
+
+    STATE_COMPLETED = "completed"
+    STATE_ABANDONED = "abandoned"
+    STATE_CHOICES = (
+        (STATE_COMPLETED, "Completado"),
+        (STATE_ABANDONED, "Interrumpido"),
+    )
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    result_batch_id = models.UUIDField(
+        "lote opaco de resultados",
+        db_index=True,
+    )
+    snapshot_id = models.PositiveBigIntegerField("id del snapshot")
+    snapshot_version = models.PositiveIntegerField("versión del snapshot")
+    snapshot_sha256 = models.CharField("sha256 del snapshot", max_length=64)
+    state = models.CharField("estado", max_length=16, choices=STATE_CHOICES)
+    duration_seconds = models.PositiveIntegerField("duración en segundos", null=True, blank=True)
+    responses = models.JSONField("respuestas", default=list)
+    score = models.IntegerField("puntuación", default=0)
+    help_requests = models.JSONField("ayudas solicitadas", default=list)
+    technical_errors = models.JSONField("errores técnicos", default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "PseudonymousResult"
+        verbose_name_plural = "PseudonymousResults"
 
 
 class EditorialReviewerWorkflowActionView(WorkflowActionView):
