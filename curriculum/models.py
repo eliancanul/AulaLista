@@ -39,6 +39,38 @@ def _parse_cached_datetime(value):
         return None
 
 
+def _normalize_published_payload(payload):
+    """Convert Wagtail's serialized StreamField shape to the runtime shape."""
+
+    normalized = dict(payload)
+    questions = normalized.get("questions") or []
+    if isinstance(questions, str):
+        questions = json.loads(questions)
+
+    normalized_questions = []
+    for question in questions:
+        if not isinstance(question, dict):
+            raise ValidationError("El snapshot contiene un reactivo inválido.")
+        value = dict(question.get("value") or {})
+        value["options"] = [
+            dict(option.get("value") or {})
+            if isinstance(option, dict) and option.get("type") == "item"
+            else option
+            for option in value.get("options", []) or []
+        ]
+        value["hints"] = [
+            hint.get("value")
+            if isinstance(hint, dict) and hint.get("type") == "item"
+            else hint
+            for hint in value.get("hints", []) or []
+        ]
+        normalized_questions.append(
+            {"type": question.get("type", "reactivo"), "value": value}
+        )
+    normalized["questions"] = normalized_questions
+    return normalized
+
+
 class CurriculumOptionBlock(blocks.StructBlock):
     position = blocks.IntegerBlock(
         label="Índice literal de la opción",
@@ -251,7 +283,7 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
             previous_revision=previous_revision,
             skip_permission_checks=False,
         )
-        payload = dict(revision.content)
+        payload = _normalize_published_payload(dict(revision.content))
         canonical = json.dumps(
             payload,
             sort_keys=True,

@@ -1,0 +1,11 @@
+flowchart LR
+    Tutor[Docente en MacBook Air\nWagtail + AulaLista]
+    Node[Nodo local\nDjango/WSGI + SQLite WAL\nrecursos locales]
+    Phone1[Cliente LAN 1\nQR o dirección textual]
+    Phone2[Cliente LAN 2\ndirección textual]
+    WAN[(WAN desconectada)]
+
+    Tutor -->|prepara, revisa y publica| Node
+    Node -->|Wi-Fi/LAN local| Phone1
+    Node -->|Wi-Fi/LAN local| Phone2
+    Node -.->|sin acceso| WAN
