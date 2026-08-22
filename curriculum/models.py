@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Max
 from django.http import HttpResponseForbidden
+from django.utils import timezone
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel
 from wagtail.fields import StreamField
@@ -294,6 +295,68 @@ class PublishedPackageSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.package} v{self.version} ({self.sha256[:8]})"
+
+
+class ClassroomSession(models.Model):
+    """A classroom activity fixed to one immutable published snapshot."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_STOPPED = "stopped"
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, "Activa"),
+        (STATUS_STOPPED, "Detenida"),
+    )
+
+    snapshot = models.ForeignKey(
+        PublishedPackageSnapshot,
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
+    )
+    status = models.CharField(
+        "estado",
+        max_length=16,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+    )
+    started_at = models.DateTimeField("iniciada en", auto_now_add=True)
+    stopped_at = models.DateTimeField("detenida en", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-started_at", "-id"]
+        verbose_name = "ClassroomSession"
+        verbose_name_plural = "ClassroomSessions"
+
+    @classmethod
+    def start_from_snapshot(cls, snapshot):
+        if not snapshot or snapshot.pk is None:
+            raise ValidationError("La sesión requiere un snapshot publicado existente.")
+        try:
+            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+        except PublishedPackageSnapshot.DoesNotExist as error:
+            raise ValidationError(
+                "La sesión requiere un snapshot publicado existente."
+            ) from error
+        return cls.objects.create(snapshot=published_snapshot)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original_snapshot_id = type(self).objects.filter(pk=self.pk).values_list(
+                "snapshot_id", flat=True
+            ).first()
+            if (
+                original_snapshot_id is not None
+                and original_snapshot_id != self.snapshot_id
+            ):
+                raise ValidationError("El snapshot de una ClassroomSession queda fijado.")
+        return super().save(*args, **kwargs)
+
+    def stop(self):
+        if self.status == self.STATUS_STOPPED:
+            return self
+        self.status = self.STATUS_STOPPED
+        self.stopped_at = timezone.now()
+        self.save(update_fields=["status", "stopped_at"])
+        return self
 
 
 class EditorialReviewerWorkflowActionView(WorkflowActionView):

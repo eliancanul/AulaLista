@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ snapshot_payload.title }}</title>
+  </head>
+  <body>
+    <main>
+      <p>Estado de la sesión: <span data-session-status>{{ session.get_status_display }}</span></p>
+      <h1>{{ snapshot_payload.title }}</h1>
+      <p>{{ snapshot_payload.objective }}</p>
+      <p>{{ snapshot_payload.micro_lesson }}</p>
+
+      {% for question in snapshot_payload.questions %}
+        <section>
+          <h2>{{ question.value.prompt }}</h2>
+          <ul>
+            {% for option in question.value.options %}
+              <li>
+                {{ option.position }}. {{ option.text }}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endfor %}
+    </main>
+  </body>
+</html>
