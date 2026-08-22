@@ -66,10 +66,22 @@ TEMPLATES = [
 WSGI_APPLICATION = "aulalista.wsgi.application"
 ASGI_APPLICATION = "aulalista.asgi.application"
 
+_sqlite_database_path = os.environ.get("AULALISTA_DB_PATH")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": Path(_sqlite_database_path) if _sqlite_database_path else BASE_DIR / "db.sqlite3",
+        "OPTIONS": {
+            # WAL permits concurrent readers while SQLite serializes writers.
+            # The timeout is finite so lock contention remains observable.
+            "timeout": 5,
+            "init_command": (
+                "PRAGMA journal_mode=WAL;"
+                "PRAGMA synchronous=NORMAL;"
+                "PRAGMA busy_timeout=5000"
+            ),
+        },
     }
 }
 
