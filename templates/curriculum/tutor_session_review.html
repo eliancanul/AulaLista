@@ -2,7 +2,10 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AulaLista · revisar sesión</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
     <main>
@@ -11,7 +14,7 @@
       <p>Snapshot publicado: {{ session.snapshot.payload.title }}</p>
       <p>Estudiantes indicados: {{ session.student_count }}</p>
       <p>Dispositivos preparados: {{ session.device_count }}</p>
-      {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
       <table>
         <thead>
           <tr>
@@ -33,13 +36,13 @@
       {% if session.status == "prepared" %}
         <form method="post" action="{% url 'tutor-session-confirm' session.pk %}">
           {% csrf_token %}
-          <button type="submit">Confirmar y activar sesión</button>
+          <button class="button-primary" type="submit">Confirmar y activar sesión</button>
         </form>
       {% endif %}
       {% if session.status == "prepared" or session.status == "active" %}
         <form method="post" action="{% url 'tutor-session-close' session.pk %}">
           {% csrf_token %}
-          <button type="submit">Cerrar sesión y conservar métricas anónimas</button>
+          <button class="button-danger" type="submit">Cerrar sesión y conservar métricas anónimas</button>
         </form>
       {% endif %}
       {% if session.status == "closed" %}
@@ -55,16 +58,16 @@
         <form method="post" action="{% url 'tutor-session-export' session.pk %}">
           {% csrf_token %}
           <input type="hidden" name="format" value="json">
-          <button type="submit">Exportar JSON</button>
+          <button class="button-secondary" type="submit">Exportar JSON</button>
         </form>
         <form method="post" action="{% url 'tutor-session-export' session.pk %}">
           {% csrf_token %}
           <input type="hidden" name="format" value="csv">
-          <button type="submit">Exportar CSV</button>
+          <button class="button-secondary" type="submit">Exportar CSV</button>
         </form>
         <form method="post" action="{% url 'tutor-session-results-delete' session.pk %}">
           {% csrf_token %}
-          <button type="submit">Eliminar resultados</button>
+          <button class="button-danger" type="submit">Eliminar resultados</button>
         </form>
       {% endif %}
     </main>

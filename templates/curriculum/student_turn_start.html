@@ -2,28 +2,31 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AulaLista · iniciar turno</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
     <main>
       <h1>Iniciar turno temporal</h1>
-      <p>Escribe un nombre o apodo local para reconocerte en este dispositivo.</p>
+      <p class="notice">Escribe un nombre o apodo local para reconocerte en este dispositivo.</p>
       <p>No es una cuenta ni se muestra en la revisión del tutor.</p>
-      {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
       {% if recovery_available %}
         <p>Este dispositivo tiene un turno temporal sin cookie disponible.</p>
         <form method="post" action="{% url 'student-turn-recover' session.pk assignment.local_identifier %}">
           {% csrf_token %}
-          <button type="submit">Recuperar turno de este dispositivo</button>
+          <button class="button-primary" type="submit">Recuperar turno de este dispositivo</button>
         </form>
       {% else %}
-        <form method="post">
+        <form method="post" class="status-card">
           {% csrf_token %}
           <label>
             Nombre o apodo local
             <input name="display_name" maxlength="80" required autofocus>
           </label>
-          <button type="submit">Continuar</button>
+          <button class="button-primary" type="submit">Continuar</button>
         </form>
       {% endif %}
     </main>

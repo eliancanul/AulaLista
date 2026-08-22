@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AulaLista · contenido estudiantil</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
 </head>
 <body>
     <main>
@@ -10,7 +13,9 @@
         {% if packages %}
             <ul>{% for package in packages %}<li>{{ package.title }}</li>{% endfor %}</ul>
         {% else %}
-            <p>No hay paquetes publicados.</p>
+            <p class="notice">No hay paquetes publicados.</p>
+            <p>Cuando el tutor publique una actividad, aparecerá aquí.</p>
+            <a class="button" href="{% url 'local-access' %}">Ver instrucciones de acceso</a>
         {% endif %}
     </main>
 </body>

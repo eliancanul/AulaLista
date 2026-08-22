@@ -2,14 +2,17 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AulaLista · preparar sesión</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
     <main>
       <h1>Preparar sesión de aula</h1>
       <p>Snapshot publicado: {{ snapshot.payload.title }}</p>
-      {% if error %}<p role="alert">{{ error }}</p>{% endif %}
-      <form method="post">
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" class="status-card">
         {% csrf_token %}
         <label>
           Número de estudiantes
@@ -19,7 +22,7 @@
           Número de dispositivos
           <input name="device_count" inputmode="numeric" required>
         </label>
-        <button type="submit">Preparar distribución</button>
+        <button class="button-primary" type="submit">Preparar distribución</button>
       </form>
     </main>
   </body>

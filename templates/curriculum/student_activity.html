@@ -2,33 +2,36 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ snapshot_payload.title }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
     <main>
-      <p>Estado de la sesión: <span data-session-status>{{ session.get_status_display }}</span></p>
+      <p class="notice" id="session-status">Estado de la sesión: <span data-session-status>{{ session.get_status_display }}</span></p>
       {% if turn %}<p>Turno local: {{ turn.display_name }}</p>{% endif %}
       <h1>{{ snapshot_payload.title }}</h1>
       <p>{{ snapshot_payload.objective }}</p>
       <p>{{ snapshot_payload.micro_lesson }}</p>
 
       {% for question in activity_questions %}
-        <section>
+        <section class="question-card">
           <h2>{{ question.value.prompt }}</h2>
-          <ul>
-            {% for option in question.value.options %}
-              <li>{{ option.position }}. {{ option.text }}</li>
-            {% endfor %}
-          </ul>
           <form method="post" action="{% url 'student-question-answer' session.pk question.index %}">
             {% csrf_token %}
-            {% for option in question.value.options %}
-              <label>
-                <input type="radio" name="option_position" value="{{ option.position }}" required>
-                Elegir {{ option.position }}
-              </label>
-            {% endfor %}
-            <button type="submit">Responder</button>
+            <fieldset class="choice-list">
+              <legend>Elige una opción</legend>
+              {% for option in question.value.options %}
+                <label>
+                  <input type="radio" name="option_position" value="{{ option.position }}" required>
+                  <span>{{ option.position }}. {{ option.text }}</span>
+                </label>
+              {% endfor %}
+            </fieldset>
+            <div class="question-actions">
+              <button class="button-primary" type="submit">Responder</button>
+            </div>
           </form>
           {% if question.hint_capability %}
             <form method="post" action="{% url 'student-question-assistance' session.pk question.index %}">
@@ -36,14 +39,14 @@
               <input type="hidden" name="kind" value="hint">
               <input type="hidden" name="hint_index" value="{{ question.hint_index }}">
               <input type="hidden" name="hint_capability" value="{{ question.hint_capability }}">
-              <button type="submit">Solicitar pista</button>
+              <button class="button-secondary" type="submit">Solicitar pista</button>
             </form>
           {% endif %}
         </section>
       {% endfor %}
 
       {% if practice_result %}
-        <section data-practice-result>
+        <section class="status-card" data-practice-result aria-live="polite">
           <h2>Resultado</h2>
           <p>{% if practice_result.is_correct %}Respuesta correcta{% else %}Respuesta incorrecta{% endif %}</p>
           <p>Puntuación: {{ practice_result.score }}</p>
@@ -52,13 +55,13 @@
             {% csrf_token %}
             <input type="hidden" name="kind" value="explanation">
             <input type="hidden" name="explanation_capability" value="{{ explanation_capability }}">
-            <button type="submit">Solicitar explicación final</button>
+            <button class="button-secondary" type="submit">Solicitar explicación final</button>
           </form>
         </section>
       {% endif %}
 
       {% if assistance %}
-        <section data-regulated-assistance>
+        <section class="status-card" data-regulated-assistance aria-live="polite">
           <h2>Ayuda reglada</h2>
           <p>{{ assistance.text }}</p>
           <p>La ayuda no modifica la puntuación.</p>
@@ -68,16 +71,16 @@
               <input type="hidden" name="kind" value="hint">
               <input type="hidden" name="hint_index" value="{{ assistance.next_hint_index }}">
               <input type="hidden" name="hint_capability" value="{{ next_hint_capability }}">
-              <button type="submit">Solicitar siguiente pista</button>
+              <button class="button-secondary" type="submit">Solicitar siguiente pista</button>
             </form>
           {% endif %}
         </section>
       {% endif %}
 
       {% if turn %}
-        <form method="post" action="{% url 'student-turn-ready' session.pk %}">
+        <form method="post" action="{% url 'student-turn-ready' session.pk %}" class="page-actions">
           {% csrf_token %}
-          <button type="submit">Listo</button>
+          <button class="button-primary" type="submit">Listo</button>
         </form>
       {% endif %}
     </main>
