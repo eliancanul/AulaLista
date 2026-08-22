@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
-from health.views import health_page
+from health.views import health_page, local_access
 from curriculum.views import (
     student_activity,
     student_packages,
@@ -25,6 +25,7 @@ urlpatterns = [
     path("cms/", include("wagtail.admin.urls")),
     path("documents/", include("wagtail.documents.urls")),
     path("health/", health_page, name="health"),
+    path("access/", local_access, name="local-access"),
     path("student/", student_packages, name="student-packages"),
     path(
         "student/sessions/<int:session_id>/devices/<uuid:local_identifier>/turn/start/",

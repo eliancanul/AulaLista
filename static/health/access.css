@@ -1,0 +1,54 @@
+:root {
+  color-scheme: light;
+  font-family: AulaListaLocal, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f4f1e8;
+  color: #1d2a26;
+}
+
+.access-card {
+  max-width: 44rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #fffdf7;
+  border: 1px solid #d8d0bd;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #5c756c;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.local-url {
+  overflow-wrap: anywhere;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.local-url a {
+  color: #0a5c52;
+}
+
+.qr {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.qr svg {
+  max-width: min(80vw, 22rem);
+  height: auto;
+  border: 0.5rem solid white;
+}
+
+.manual-note {
+  color: #53615c;
+}

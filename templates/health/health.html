@@ -16,6 +16,7 @@
         Estado: <strong>{{ health_status }}</strong>
       </p>
       <p class="local-note">Esta página y sus recursos se sirven desde el nodo local.</p>
+      <p><a href="{% url 'local-access' %}">Mostrar acceso LAN y código QR</a></p>
     </main>
     <script src="{% static 'health/health.js' %}" defer></script>
   </body>

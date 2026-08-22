@@ -95,3 +95,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 WAGTAIL_SITE_NAME = "AulaLista"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
+# The operator supplies the address other devices can reach on the LAN. The
+# node deliberately does not inspect interfaces or infer a possibly-wrong IP.
+AULALISTA_LAN_URL = os.environ.get("AULALISTA_LAN_URL", "").strip()

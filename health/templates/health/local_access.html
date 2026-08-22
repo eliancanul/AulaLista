@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acceso local | AulaLista</title>
+    <link rel="stylesheet" href="{% static 'health/access.css' %}">
+  </head>
+  <body>
+    <main class="access-card">
+      <p class="eyebrow">AulaLista</p>
+      <h1>Acceso desde la red local</h1>
+      {% if local_url %}
+        <p>Escanea el código o abre esta dirección directamente:</p>
+        <p class="local-url"><a href="{{ local_url }}">{{ local_url }}</a></p>
+        <div class="qr" aria-label="Código QR local">{{ qr_svg|safe }}</div>
+        <p class="manual-note">Si la cámara no lee el código, escribe la dirección tal como aparece arriba.</p>
+      {% else %}
+        <p role="alert">Falta configurar <code>AULALISTA_LAN_URL</code> con la dirección LAN que el operador haya verificado.</p>
+        <p class="manual-note">AulaLista no detecta automáticamente la IP ni consulta DNS o WAN.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>
