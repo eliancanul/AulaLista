@@ -60,6 +60,40 @@ SUBTOPIC_SCHEMA = {
     "required": ["subtemas"],
 }
 
+ACTIVITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "objetivo": {"type": "string"},
+        "microleccion": {"type": "string"},
+        "explicacion_final": {"type": "string"},
+        "reactivos": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "enunciado": {"type": "string"},
+                    "opciones": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "posicion": {"type": "integer"},
+                                "texto": {"type": "string"},
+                                "correcta": {"type": "boolean"},
+                                "retroalimentacion": {"type": "string"},
+                            },
+                            "required": ["posicion", "texto", "correcta", "retroalimentacion"],
+                        },
+                    },
+                    "pistas": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["enunciado", "opciones", "pistas"],
+            },
+        },
+    },
+    "required": ["objetivo", "microleccion", "explicacion_final", "reactivos"],
+}
+
 
 # ---------------------------------------------------------------------------
 # PDF extraction
@@ -268,4 +302,59 @@ def propose_subtopics(topic_title, context_text, *, transport=None):
         "actividades_sugeridas": (
             int(activities_hint) if isinstance(activities_hint, int) else 1
         ),
+    }
+
+
+def propose_activities(subtopic_title, context_text, count, *, transport=None):
+    """Stage D: draft one or more single-choice activities for a subtopic.
+
+    Returns a proposal dict shaped like a CurriculumPackage payload; it is
+    staging data only and must pass structural validation plus human review.
+    """
+
+    count = max(1, min(int(count), 5))
+    prompt = (
+        "Subtema curricular: \"" + subtopic_title + "\".\n\nContexto de la "
+        "currícula:\n" + context_text[:CHUNK_MAX_CHARS] + f"\n\nRedacta {count} "
+        "actividad(es) de opción única para este subtema. Responde JSON con la "
+        "forma {\"objetivo\": string, \"microleccion\": string, "
+        "\"explicacion_final\": string, \"reactivos\": [{\"enunciado\": "
+        "string, \"opciones\": [{\"posicion\": int empezando en 1 y sin huecos, "
+        "\"texto\": string, \"correcta\": bool (exactamente una true), "
+        "\"retroalimentacion\": string}], \"pistas\": [string]}]}. Usa sólo el "
+        "contexto entregado; no inventes temas ajenos."
+    )
+    result = chat_json(prompt, ACTIVITY_SCHEMA, transport=transport)
+
+    questions = []
+    for reactivo in result.get("reactivos", [])[:5]:
+        options = []
+        for position, option in enumerate(reactivo.get("opciones", [])[:6], start=1):
+            options.append(
+                {
+                    "position": position,
+                    "text": str(option.get("texto", "")).strip(),
+                    "expected": option.get("correcta") is True,
+                    "feedback": str(option.get("retroalimentacion", "")).strip(),
+                }
+            )
+        hints = [
+            str(hint).strip() for hint in reactivo.get("pistas", []) if str(hint).strip()
+        ]
+        questions.append(
+            {
+                "block_type": "reactivo",
+                "value": {
+                    "prompt": str(reactivo.get("enunciado", "")).strip(),
+                    "options": options,
+                    "hints": hints,
+                },
+            }
+        )
+    return {
+        "title": subtopic_title[:160],
+        "objective": str(result.get("objetivo", "")).strip(),
+        "micro_lesson": str(result.get("microleccion", "")).strip(),
+        "final_explanation": str(result.get("explicacion_final", "")).strip(),
+        "questions": questions,
     }
