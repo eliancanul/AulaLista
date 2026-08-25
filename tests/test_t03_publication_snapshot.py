@@ -7,6 +7,7 @@ import django
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.contrib.messages import get_messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, migrations, transaction
 from django.test import Client
@@ -16,7 +17,7 @@ from django.urls import reverse
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aulalista.settings")
 django.setup()
 
-from curriculum.models import CurriculumPackage, PublishedPackageSnapshot
+from curriculum.models import CurriculumPackage, PublishedPackageSnapshot, WorkflowState
 
 
 pytestmark = pytest.mark.django_db
@@ -73,6 +74,80 @@ def editorial_reviewer():
         ),
     )
     return user
+
+
+def incomplete_package():
+    return CurriculumPackage.objects.create(title="Paquete incompleto")
+
+
+def test_publication_rejects_structurally_incomplete_package_before_creating_snapshot():
+    reviewer = editorial_reviewer()
+    package = incomplete_package()
+    assert package.structural_validation()["is_valid"] is False
+    package.save_revision(user=reviewer)
+    workflow_state = package.get_workflow().start(package, user=reviewer)
+    task_state = workflow_state.current_task_state
+    client = Client()
+    client.force_login(reviewer)
+
+    response = client.post(
+        reverse(
+            package.snippet_viewset.get_url_name("workflow_action"),
+            args=[package.pk, "approve", task_state.pk],
+        ),
+        {"comment": "Intento de aprobar un paquete incompleto."},
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    assert PublishedPackageSnapshot.objects.count() == 0
+    task_state.refresh_from_db()
+    assert task_state.status == task_state.STATUS_IN_PROGRESS
+    workflow_state.refresh_from_db()
+    assert workflow_state.status == workflow_state.STATUS_IN_PROGRESS
+    shown_messages = [str(message) for message in get_messages(response.wsgi_request)]
+    validation = package.structural_validation()
+    for missing in validation["missing"]:
+        assert any(missing in message for message in shown_messages)
+
+
+def test_domain_publish_rejects_invalid_revision_even_with_recorded_human_approval():
+    reviewer = editorial_reviewer()
+    package = incomplete_package()
+    revision = package.save_revision(user=reviewer)
+    workflow_state = package.get_workflow().start(package, user=reviewer)
+    task_state = workflow_state.current_task_state
+
+    # La aprobación humana se registra, pero la publicación debe seguir bloqueada.
+    with pytest.raises(ValidationError, match="estructuralmente"):
+        task_state.approve(user=reviewer, update=True)
+
+    assert PublishedPackageSnapshot.objects.count() == 0
+    task_state.refresh_from_db()
+    assert task_state.status == task_state.STATUS_IN_PROGRESS
+
+
+def test_structural_validation_blocks_stale_incomplete_revision_even_if_package_is_completed_later():
+    reviewer = editorial_reviewer()
+    package = incomplete_package()
+    stale_revision = package.save_revision(user=reviewer)
+    workflow_state = package.get_workflow().start(package, user=reviewer)
+    task_state = workflow_state.current_task_state
+
+    # El paquete se completa después, pero la revisión aprobada sigue siendo inválida.
+    package.objective = "Objetivo agregado tarde."
+    package.save()
+    package.save_revision(user=reviewer)
+
+    # Se registra aprobación humana sobre la tarea de la revisión vieja e inválida.
+    task_state.approve(user=reviewer, update=False)
+    workflow_state.status = WorkflowState.STATUS_APPROVED
+    workflow_state.save()
+
+    with pytest.raises(ValidationError, match="estructuralmente"):
+        stale_revision.publish(user=reviewer, skip_permission_checks=True)
+
+    assert PublishedPackageSnapshot.objects.count() == 0
 
 
 def test_publication_without_human_approval_is_rejected():
