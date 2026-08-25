@@ -21,7 +21,7 @@
       {% if job.progress_total %}
         <p id="assistant-progress-counter">
           {{ job.progress_done }} de {{ job.progress_total }}
-          {% if job.progress_stage == "activities" %}actividades{% else %}bloques{% endif %}
+          {% if job.progress_stage == "activities" or job.progress_stage == "add_missing" %}actividades{% elif job.progress_stage == "subtopics" %}temas{% else %}bloques{% endif %}
         </p>
       {% endif %}
       <p class="notice">
