@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError
 from django.db import transaction
+from django.utils import timezone
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -16,8 +17,11 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
+
+from health.qr import qr_svg
 
 from curriculum.ephemeral import (
     clear_practice_cache,
@@ -46,12 +50,141 @@ HINT_PROGRESS_TTL = 3600
 HINT_PROGRESS_KEY_PREFIX = "aulalista.practice.hint-progress"
 TURN_CAPABILITY_COOKIE = "aulalista.student-turn"
 TURN_CAPABILITY_SALT = "aulalista.student-turn.capability.v1"
+DEVICE_ASSIGNMENT_COOKIE = "aulalista.device-assignment"
+DEVICE_ASSIGNMENT_SALT = "aulalista.device-assignment.capability.v1"
 LOCAL_SESSION_TTL = 12 * 60 * 60
 TURN_CAPABILITY_MAX_AGE = LOCAL_SESSION_TTL
+DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
 
 
 def student_packages(request):
-    return render(request, "curriculum/student_packages.html", {"packages": []})
+    active_sessions = (
+        ClassroomSession.objects.filter(status=ClassroomSession.STATUS_ACTIVE)
+        .select_related("snapshot")
+        .order_by("-started_at", "-id")
+    )
+    return render(
+        request,
+        "curriculum/student_packages.html",
+        {"active_sessions": active_sessions},
+    )
+
+
+def _device_binding(assignment):
+    return signing.dumps(
+        {
+            "session_id": assignment.session_id,
+            "assignment_id": assignment.pk,
+            "local_identifier": str(assignment.local_identifier),
+        },
+        salt=DEVICE_ASSIGNMENT_SALT,
+        compress=True,
+    )
+
+
+def _read_device_binding(request):
+    token = request.COOKIES.get(DEVICE_ASSIGNMENT_COOKIE)
+    if not token:
+        return None
+    try:
+        payload = signing.loads(
+            token,
+            salt=DEVICE_ASSIGNMENT_SALT,
+            max_age=DEVICE_ASSIGNMENT_MAX_AGE,
+        )
+    except (BadSignature, SignatureExpired, TypeError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _bound_assignment(request, session):
+    """Return this browser's own assignment for the session, if it still exists."""
+
+    payload = _read_device_binding(request)
+    if not payload or payload.get("session_id") != session.pk:
+        return None
+    try:
+        return DeviceAssignment.objects.get(
+            pk=payload.get("assignment_id"),
+            session=session,
+            local_identifier=payload.get("local_identifier"),
+        )
+    except (DeviceAssignment.DoesNotExist, ValueError, TypeError):
+        return None
+
+
+def _set_device_cookie(response, assignment):
+    response.set_cookie(
+        DEVICE_ASSIGNMENT_COOKIE,
+        _device_binding(assignment),
+        max_age=DEVICE_ASSIGNMENT_MAX_AGE,
+        httponly=True,
+        samesite="Lax",
+    )
+
+
+@never_cache
+@transaction.atomic
+@require_http_methods(["GET", "POST"])
+def student_session_join(request, session_id):
+    """Common entry point: one link or QR serves every device in the session."""
+
+    session = get_object_or_404(
+        ClassroomSession.objects.select_for_update().select_related("snapshot"),
+        pk=session_id,
+    )
+    if session.status != ClassroomSession.STATUS_ACTIVE:
+        return HttpResponseForbidden(
+            "La sesión no está disponible para incorporarse."
+        )
+
+    bound = _bound_assignment(request, session)
+    if bound is not None:
+        # This browser already owns one assignment; it never claims another.
+        return redirect(
+            "student-turn-start",
+            session_id=session.pk,
+            local_identifier=bound.local_identifier,
+        )
+
+    context = {"session": session}
+    if request.method == "GET":
+        return render(request, "curriculum/student_join.html", context)
+
+    try:
+        candidates = list(
+            DeviceAssignment.objects.filter(
+                session=session,
+                remaining_capacity__gt=0,
+                claimed_at__isnull=True,
+            )
+            .exclude(student_turns__status=StudentTurn.STATUS_ACTIVE)
+            .order_by("id")
+            .values_list("pk", flat=True)
+        )
+        assignment = (
+            DeviceAssignment.objects.select_for_update()
+            .filter(pk__in=candidates)
+            .order_by("id")
+            .first()
+        )
+    except IntegrityError:
+        assignment = None
+    if assignment is None:
+        context["error"] = (
+            "No hay dispositivos disponibles en este momento; espera a que se libere un turno."
+        )
+        return render(request, "curriculum/student_join.html", context, status=409)
+    assignment.claimed_at = timezone.now()
+    assignment.save(update_fields=["claimed_at"])
+
+    response = redirect(
+        "student-turn-start",
+        session_id=session.pk,
+        local_identifier=assignment.local_identifier,
+    )
+    _set_device_cookie(response, assignment)
+    return response
 
 
 def _turn_capability(turn):
@@ -321,6 +454,13 @@ def tutor_session_review(request, session_id):
             result_batch_id=session.result_batch_id,
         )
     )
+    join_url = ""
+    join_qr_svg = ""
+    if session.status == ClassroomSession.STATUS_ACTIVE:
+        join_url = request.build_absolute_uri(
+            reverse("student-session-join", args=[session.pk])
+        )
+        join_qr_svg = qr_svg(join_url)
     return render(
         request,
         "curriculum/tutor_session_review.html",
@@ -328,6 +468,8 @@ def tutor_session_review(request, session_id):
             "session": session,
             "assignments": session.device_assignments.all(),
             "result_aggregate": _result_aggregate(results),
+            "join_url": join_url,
+            "join_qr_svg": join_qr_svg,
         },
     )
 

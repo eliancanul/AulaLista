@@ -59,8 +59,8 @@ def test_new_clients_can_reach_local_entrypoint_without_a_session_or_dns():
     second = Client().get("/student/")
 
     assert first.status_code == second.status_code == 200
-    assert "No hay paquetes publicados." in first.text
-    assert "No hay paquetes publicados." in second.text
+    assert "No hay sesiones activas." in first.text
+    assert "No hay sesiones activas." in second.text
 
 
 def test_missing_explicit_lan_url_does_not_invent_an_address():

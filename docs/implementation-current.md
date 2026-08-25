@@ -43,6 +43,10 @@ continuidad real durante una emergencia.
 - El tutor prepara una `ClassroomSession` con distribución determinista entre
   dispositivos.
 - Una confirmación explícita activa la sesión.
+- `/student/` lista las sesiones activas y el tutor comparte un único
+  enlace o QR (`/student/sessions/<id>/join/`); cada navegador reclama
+  automáticamente su propia asignación de dispositivo mediante una cookie
+  firmada, sin copiar identificadores manualmente.
 - Cada dispositivo recibe un identificador local opaco.
 - Un `StudentTurn` temporal reserva capacidad y usa un apodo local.
 - La respuesta se evalúa con reglas deterministas; la ayuda autorizada no

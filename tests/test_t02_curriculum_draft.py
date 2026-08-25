@@ -202,4 +202,4 @@ def test_student_view_remains_empty_for_a_complete_demo_draft():
 
     assert response.status_code == 200
     assert "No publicar este DemoPackage" not in response.text
-    assert "No hay paquetes publicados." in response.text
+    assert "No hay sesiones activas." in response.text

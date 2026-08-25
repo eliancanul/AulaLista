@@ -10,13 +10,21 @@
 <body>
     <main>
         <h1>Contenido para estudiantes</h1>
-        {% if packages %}
-            <ul>{% for package in packages %}<li>{{ package.title }}</li>{% endfor %}</ul>
+        {% if active_sessions %}
+            <ul class="active-session-list">
+                {% for session in active_sessions %}
+                    <li>
+                        <a class="button button-primary"
+                           data-active-session-entry
+                           href="{% url 'student-session-join' session.pk %}">{{ session.snapshot.payload.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
         {% else %}
-            <p class="notice">No hay paquetes publicados.</p>
-            <p>Cuando el tutor publique una actividad, aparecerá aquí.</p>
-            <a class="button" href="{% url 'local-access' %}">Ver instrucciones de acceso</a>
+            <p class="notice">No hay sesiones activas.</p>
+            <p>Cuando el tutor active una sesión, aparecerá aquí.</p>
         {% endif %}
+        <a class="button" href="{% url 'local-access' %}">Ver instrucciones de acceso</a>
     </main>
 </body>
 </html>

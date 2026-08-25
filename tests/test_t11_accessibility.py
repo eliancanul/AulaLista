@@ -18,7 +18,7 @@ def test_student_entrypoint_has_viewport_local_styles_and_clear_empty_state():
     assert response.status_code == 200
     assert 'name="viewport"' in response.text
     assert "/static/curriculum/aulalista.css" in response.text
-    assert "No hay paquetes publicados." in response.text
+    assert "No hay sesiones activas." in response.text
     assert "http://" not in response.text
     assert "https://" not in response.text
 

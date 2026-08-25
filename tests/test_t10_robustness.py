@@ -219,7 +219,7 @@ def test_wsgi_route_probe_is_available_without_network():
 
     body = b"".join(application(environ, start_response))
     assert captured[0][0] == "200 OK"
-    assert b"No hay paquetes publicados." in body
+    assert b"No hay sesiones activas." in body
 
 
 def test_package_verification_script_has_no_external_runtime_dependencies():

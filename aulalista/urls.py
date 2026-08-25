@@ -8,6 +8,7 @@ from curriculum.views import (
     student_packages,
     student_question_answer,
     student_question_assistance,
+    student_session_join,
     student_turn_recover,
     student_turn_ready,
     student_turn_start,
@@ -27,6 +28,11 @@ urlpatterns = [
     path("health/", health_page, name="health"),
     path("access/", local_access, name="local-access"),
     path("student/", student_packages, name="student-packages"),
+    path(
+        "student/sessions/<int:session_id>/join/",
+        student_session_join,
+        name="student-session-join",
+    ),
     path(
         "student/sessions/<int:session_id>/devices/<uuid:local_identifier>/turn/start/",
         student_turn_start,

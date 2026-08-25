@@ -702,6 +702,12 @@ class DeviceAssignment(models.Model):
         unique=True,
         editable=False,
     )
+    claimed_at = models.DateTimeField(
+        "reclamada en",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     assigned_capacity = models.PositiveIntegerField("capacidad asignada")
     remaining_capacity = models.PositiveIntegerField("capacidad restante")
 
