@@ -25,6 +25,9 @@ from curriculum.curriculum_import import (  # noqa: E402
 )
 
 
+from helpers import tutor_client  # noqa: E402
+
+
 pytestmark = pytest.mark.django_db
 
 
@@ -66,7 +69,7 @@ def upload_job(client):
 
 def test_upload_creates_staging_job_without_touching_editorial_models():
     before_packages = CurriculumPackage.objects.count()
-    client = Client()
+    client = tutor_client()
     job = upload_job(client)
 
     assert job.status == CurriculumImportJob.STATUS_UPLOADED
@@ -126,7 +129,7 @@ def test_chat_json_retries_until_schema_valid_response():
 
 
 def test_extract_action_identifies_topics_with_citations_and_no_packages():
-    client = Client()
+    client = tutor_client()
     job = upload_job(client)
 
     pages = ["Bloque de fracciones", "Suma de fracciones y ejemplos"]
@@ -167,7 +170,7 @@ def test_extract_action_identifies_topics_with_citations_and_no_packages():
 
 
 def test_failed_stage_records_error_and_allows_retry():
-    client = Client()
+    client = tutor_client()
     job = upload_job(client)
 
     with patch.object(
@@ -202,7 +205,7 @@ def test_failed_stage_records_error_and_allows_retry():
 
 
 def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
-    client = Client()
+    client = tutor_client()
     job = upload_job(client)
     with patch.object(
         pipeline, "extract_pdf_pages", return_value=["página uno", "página dos"]
@@ -249,7 +252,7 @@ def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
 
 
 def test_confirm_subtopics_completes_hierarchy_without_creating_packages():
-    client = Client()
+    client = tutor_client()
     job = upload_job(client)
     job.topics = [
         {

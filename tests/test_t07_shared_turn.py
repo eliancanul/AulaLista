@@ -30,6 +30,9 @@ from curriculum.views import HINT_PROGRESS_KEY_PREFIX  # noqa: E402
 import curriculum.views as curriculum_views  # noqa: E402
 
 
+from helpers import tutor_client  # noqa: E402
+
+
 pytestmark = pytest.mark.django_db
 
 
@@ -134,7 +137,7 @@ def test_device_captures_a_non_empty_reasonable_apodo_and_keeps_it_out_of_tutor_
     assert response.status_code == 302
     turn = StudentTurn.objects.get()
     assert turn.display_name == "Luna"
-    assert "Luna" not in client.get(
+    assert "Luna" not in tutor_client().get(
         reverse("tutor-session-review", args=[session.pk])
     ).text
 

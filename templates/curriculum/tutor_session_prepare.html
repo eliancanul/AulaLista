@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
+    {% include "curriculum/tutor_nav.html" %}
     <main>
       <h1>Preparar sesión de aula</h1>
       <p>Snapshot publicado: {{ snapshot.payload.title }}</p>
