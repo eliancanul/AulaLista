@@ -43,6 +43,10 @@ TOPIC_SCHEMA = {
                     "titulo": {"type": "string"},
                     "pagina_inicio": {"type": "integer"},
                     "pagina_fin": {"type": "integer"},
+                    "tipo": {
+                        "type": "string",
+                        "enum": ["tema", "actividad", "otro"],
+                    },
                 },
                 "required": ["titulo"],
             },
@@ -232,20 +236,34 @@ def _normalize_title(title):
 
 
 def identify_topics(chunk, *, transport=None):
-    """Stage B: propose topics for one chunk, with page citations."""
+    """Stage B: propose topics for one chunk, with page citations.
+
+    Candidates are classified so that central curriculum topics survive and
+    mere activity titles or secondary headings are dropped (#33).
+    """
 
     prompt = (
         "El siguiente fragmento de una currícula escolar tiene marcadores de "
         "página como [página 3]. Identifica los temas curriculares presentes. "
-        "Responde JSON con la forma {\"temas\": [{\"titulo\": string, "
-        "\"pagina_inicio\": int, \"pagina_fin\": int}]}. Usa los números de "
-        "página de los marcadores.\n\n" + chunk["text"]
+        "Clasifica cada encabezado candidato con \"tipo\": \"tema\", "
+        "\"actividad\" o \"otro\". Criterios: un TEMA central es una unidad, "
+        "bloque o tema con contenido enseñable que agrupa varias actividades; "
+        "el título de una ACTIVIDAD suele empezar con un verbo (resuelve, "
+        "colorea, compara, elabora) o estar subordinado a otro encabezado; "
+        "\"otro\" cubre notas editoriales y encabezados decorativos. Responde "
+        "JSON con la forma {\"temas\": [{\"titulo\": string, "
+        "\"pagina_inicio\": int, \"pagina_fin\": int, \"tipo\": string}]}. "
+        "Usa los números de página de los marcadores.\n\n" + chunk["text"]
     )
     result = chat_json(prompt, TOPIC_SCHEMA, transport=transport)
     topics = []
     for topic in result["temas"][:20]:
         title = str(topic.get("titulo", "")).strip()[:200]
         if not title:
+            continue
+        # Missing tipo keeps the candidate: only explicit non-topics drop.
+        tipo = str(topic.get("tipo") or "tema").strip().lower()
+        if tipo != "tema":
             continue
         topics.append(
             {
