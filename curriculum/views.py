@@ -32,6 +32,7 @@ from curriculum.ephemeral import (
 )
 from curriculum.models import (
     ClassroomSession,
+    CurriculumImportJob,
     DeviceAssignment,
     PublishedPackageSnapshot,
     PseudonymousResult,
@@ -714,6 +715,190 @@ def student_session_survey(request, session_id):
     cache.set(submitted_key, True, timeout=SURVEY_SUBMITTED_TTL)
     context["already_submitted"] = True
     return render(request, "curriculum/student_survey.html", context)
+
+
+@require_http_methods(["GET", "POST"])
+def tutor_import_upload(request):
+    """Stage A entry: the teacher uploads the curriculum PDF."""
+
+    if request.method == "POST":
+        pdf = request.FILES.get("pdf")
+        if pdf is None:
+            return render(
+                request,
+                "curriculum/tutor_import_form.html",
+                {"error": "Selecciona el PDF de la currícula."},
+                status=400,
+            )
+        job = CurriculumImportJob.objects.create(pdf=pdf)
+        return redirect("tutor-import-detail", job_id=job.pk)
+    return render(request, "curriculum/tutor_import_form.html", {})
+
+
+@require_http_methods(["GET", "POST"])
+def tutor_import_detail(request, job_id):
+    """Staging review: extraction, topic/subtopic proposals and checkpoints.
+
+    Every LLM stage runs only on explicit teacher action, and every proposal
+    stays editable until confirmed. No CurriculumPackage is ever created here.
+    """
+
+    from curriculum import curriculum_import as pipeline
+
+    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    context = {"job": job}
+
+    action = request.POST.get("action") if request.method == "POST" else None
+    try:
+        if action == "extract":
+            _import_action_extract(job, pipeline)
+        elif action == "confirm_topics":
+            _import_action_confirm_topics(job, pipeline, request.POST)
+        elif action == "save_topics":
+            job.topics = _topics_from_post(request.POST)
+            job.save(update_fields=["topics", "updated_at"])
+        elif action == "save_subtopics":
+            job.topics = _subtopics_from_post(request.POST)
+            job.save(update_fields=["topics", "updated_at"])
+        elif action == "confirm_subtopics":
+            job.topics = _subtopics_from_post(request.POST)
+            job.status = CurriculumImportJob.STATUS_COMPLETED
+            job.error_message = ""
+            job.save()
+    except (pipeline.ImportPipelineError, ValueError) as error:
+        job.status = CurriculumImportJob.STATUS_FAILED
+        job.error_message = str(error)
+        job.save(update_fields=["status", "error_message", "updated_at"])
+    job.refresh_from_db()
+    context["error"] = job.error_message
+    return render(request, "curriculum/tutor_import_detail.html", context)
+
+
+def _import_action_extract(job, pipeline):
+    """Extraction + Stage B topic identification over all chunks."""
+
+    chunks = job.extract_text()
+    proposals_per_chunk = []
+    log = []
+    for chunk in chunks:
+        topics = pipeline.identify_topics(chunk)
+        proposals_per_chunk.append(topics)
+        log.append(
+            {
+                "stage": "identify_topics",
+                "pages": [chunk["first_page"], chunk["last_page"]],
+                "proposed_count": len(topics),
+            }
+        )
+    job.topics = [
+        {**topic, "subtemas": []}
+        for topic in pipeline.consolidate_topics(proposals_per_chunk)
+    ]
+    job.llm_log = log
+    job.status = CurriculumImportJob.STATUS_TOPICS_PROPOSED
+    job.error_message = ""
+    job.save()
+    return job
+
+
+def _import_action_confirm_topics(job, pipeline, post_data):
+    """Human checkpoint 1 → Stage C subtopic proposals for each kept topic."""
+
+    topics = _topics_from_post(post_data)
+    if not topics:
+        raise ValueError("Confirma al menos un tema antes de continuar.")
+    context_text = job.source_text
+    log = list(job.llm_log)
+    for topic in topics:
+        proposal = pipeline.propose_subtopics(topic["titulo"], context_text)
+        topic["subtemas"] = [
+            {"titulo": title, "actividades_sugeridas": proposal["actividades_sugeridas"]}
+            for title in proposal["subtemas"]
+        ]
+        log.append(
+            {
+                "stage": "propose_subtopics",
+                "topic": topic["titulo"],
+                "proposed_count": len(proposal["subtemas"]),
+            }
+        )
+    job.topics = topics
+    job.llm_log = log
+    job.status = CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED
+    job.error_message = ""
+    job.save()
+    return job
+
+
+def _topics_from_post(post_data):
+    import re
+
+    topics = []
+    indices = sorted(
+        int(match.group(1))
+        for key in post_data
+        if (match := re.fullmatch(r"topic_(\d+)", key))
+    )
+    for index in indices:
+        title = str(post_data.get(f"topic_{index}", "") or "").strip()[:200]
+        keep = post_data.get(f"keep_{index}") != "off"
+        if keep and title:
+            topics.append(
+                {
+                    "titulo": title,
+                    "pagina_inicio": int(post_data.get(f"start_{index}") or 1),
+                    "pagina_fin": int(post_data.get(f"end_{index}") or 1),
+                    "subtemas": [],
+                }
+            )
+    return topics
+
+
+def _subtopics_from_post(post_data):
+    """Rebuild the confirmed hierarchy from the subtopic review form."""
+
+    import re
+
+    topics = []
+    heading_indices = sorted(
+        int(match.group(1))
+        for key in post_data
+        if (match := re.fullmatch(r"heading_(\d+)", key))
+    )
+    for topic_index in heading_indices:
+        title = str(post_data.get(f"heading_{topic_index}", "") or "").strip()[:200]
+        if not title or post_data.get(f"keep_topic_{topic_index}") == "off":
+            continue
+        sub_indices = sorted(
+            int(match.group(1))
+            for key in post_data
+            if (match := re.fullmatch(rf"topic_{topic_index}_sub_(\d+)", key))
+        )
+        subtopics = []
+        for sub_index in sub_indices:
+            if post_data.get(f"keep_{topic_index}_{sub_index}") == "off":
+                continue
+            sub_title = str(
+                post_data.get(f"topic_{topic_index}_sub_{sub_index}", "") or ""
+            ).strip()[:200]
+            if not sub_title:
+                continue
+            try:
+                suggested = int(post_data.get(f"acts_{topic_index}_{sub_index}") or 1)
+            except ValueError:
+                suggested = 1
+            subtopics.append(
+                {"titulo": sub_title, "actividades_sugeridas": max(1, suggested)}
+            )
+        topics.append(
+            {
+                "titulo": title,
+                "pagina_inicio": int(post_data.get(f"start_{topic_index}") or 1),
+                "pagina_fin": int(post_data.get(f"end_{topic_index}") or 1),
+                "subtemas": subtopics,
+            }
+        )
+    return topics
 
 
 def _unconfirmed_session_response(session):

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · revisar importación</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <main>
+      <h1>Importación de currícula</h1>
+      <p data-import-status>Estado: {{ job.get_status_display }}</p>
+      {% if job.page_count %}<p>Páginas extraídas: {{ job.page_count }}</p>{% endif %}
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+      {% if job.status == "uploaded" or job.status == "failed" %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="extract">
+          <button class="button-primary" type="submit">Extraer texto e identificar temas con el modelo local</button>
+        </form>
+      {% endif %}
+
+      {% if job.status == "topics_proposed" %}
+        <section aria-label="Punto de control: temas">
+          <h2>Revisa los temas detectados</h2>
+          <p>Edita los títulos, desmarca lo que no aplica y confirma. Página = cita del PDF original.</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="confirm_topics">
+            {% for topic in job.topics %}
+              <fieldset class="question-card">
+                <label>
+                  Tema {{ forloop.counter }}
+                  <input name="topic_{{ forloop.counter0 }}" value="{{ topic.titulo }}" maxlength="200">
+                </label>
+                <label>Página inicial <input name="start_{{ forloop.counter0 }}" type="number" min="1" value="{{ topic.pagina_inicio }}" style="max-width:6rem"></label>
+                <label>Página final <input name="end_{{ forloop.counter0 }}" type="number" min="1" value="{{ topic.pagina_fin }}" style="max-width:6rem"></label>
+                <label><input type="checkbox" name="keep_{{ forloop.counter0 }}" checked> Conservar este tema</label>
+              </fieldset>
+            {% endfor %}
+            <button class="button-primary" type="submit">Confirmar temas y proponer subtemas</button>
+          </form>
+        </section>
+      {% endif %}
+
+      {% if job.status == "subtopics_proposed" %}
+        <section aria-label="Punto de control: subtemas">
+          <h2>Revisa los subtemas propuestos</h2>
+          <p>Cada subtema podrá convertirse en una actividad en el paso siguiente.</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="confirm_subtopics">
+            {% for topic in job.topics %}
+              <input type="hidden" name="heading_{{ forloop.counter0 }}" value="{{ topic.titulo }}">
+              <input type="hidden" name="start_{{ forloop.counter0 }}" value="{{ topic.pagina_inicio }}">
+              <input type="hidden" name="end_{{ forloop.counter0 }}" value="{{ topic.pagina_fin }}">
+              <input type="hidden" name="keep_topic_{{ forloop.counter0 }}" value="on">
+              <fieldset class="question-card">
+                <legend>{{ topic.titulo }}</legend>
+                {% for sub in topic.subtemas %}
+                  <div class="choice-list">
+                    <label>
+                      <input type="checkbox" name="keep_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" checked>
+                      Subtema {{ forloop.counter }}
+                    </label>
+                    <input name="topic_{{ forloop.parentloop.counter0 }}_sub_{{ forloop.counter0 }}" value="{{ sub.titulo }}" maxlength="200">
+                    <label>Actividades sugeridas
+                      <input name="acts_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" type="number" min="1" max="5" value="{{ sub.actividades_sugeridas }}" style="max-width:4rem">
+                    </label>
+                  </div>
+                {% endfor %}
+              </fieldset>
+            {% endfor %}
+            <button class="button-primary" type="submit">Confirmar jerarquía</button>
+          </form>
+        </section>
+      {% endif %}
+
+      {% if job.status == "completed" %}
+        <section aria-label="Jerarquía confirmada" class="status-card">
+          <h2>Jerarquía confirmada</h2>
+          <ol>
+            {% for topic in job.topics %}
+              <li>{{ topic.titulo }}
+                <ul>
+                  {% for sub in topic.subtemas %}
+                    <li>{{ sub.titulo }} ({{ sub.actividades_sugeridas }} actividad/es)</li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ol>
+        </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

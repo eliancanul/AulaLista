@@ -13,6 +13,8 @@ from curriculum.views import (
     student_turn_recover,
     student_turn_ready,
     student_turn_start,
+    tutor_import_detail,
+    tutor_import_upload,
     tutor_session_confirm,
     tutor_session_close,
     tutor_session_export,
@@ -48,6 +50,16 @@ urlpatterns = [
         "student/sessions/<int:session_id>/devices/<uuid:local_identifier>/turn/recover/",
         student_turn_recover,
         name="student-turn-recover",
+    ),
+    path(
+        "tutor/imports/new/",
+        tutor_import_upload,
+        name="tutor-import-upload",
+    ),
+    path(
+        "tutor/imports/<int:job_id>/",
+        tutor_import_detail,
+        name="tutor-import-detail",
     ),
     path(
         "tutor/snapshots/<int:snapshot_id>/prepare/",
