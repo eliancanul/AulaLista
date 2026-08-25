@@ -180,3 +180,30 @@ td {
     align-items: center;
   }
 }
+
+/* Página de espera del asistente (#32): contenedor estable para una
+   animación futura; hoy sólo un spinner simple accesible. */
+.assistant-wait {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #a9b6af;
+  background: #fffdf7;
+}
+
+.assistant-wait-spinner {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 0.2rem solid #a9b6af;
+  border-top-color: #075c52;
+  animation: assistant-wait-spin 1s linear infinite;
+}
+
+@keyframes assistant-wait-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

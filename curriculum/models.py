@@ -1059,6 +1059,28 @@ class CurriculumImportJob(models.Model):
         default=list,
         blank=True,
     )
+    progress_stage = models.CharField(
+        "etapa en curso",
+        max_length=24,
+        blank=True,
+        editable=False,
+    )
+    progress_done = models.PositiveIntegerField(
+        "elementos procesados",
+        default=0,
+        editable=False,
+    )
+    progress_total = models.PositiveIntegerField(
+        "elementos totales",
+        default=0,
+        editable=False,
+    )
+    progress_started_at = models.DateTimeField(
+        "inicio de la etapa",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     llm_log = models.JSONField(
         "bitácora del modelo local",
         default=list,
