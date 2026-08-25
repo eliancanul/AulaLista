@@ -1,3 +1,4 @@
+import io
 import json
 import os
 from unittest.mock import patch
@@ -305,3 +306,153 @@ def test_confirm_subtopics_completes_hierarchy_without_creating_packages():
     ]
     assert CurriculumPackage.objects.count() == 0
     assert PublishedPackageSnapshot.objects.count() == 0
+
+
+# --- Issue #33: tema central vs título de actividad -------------------------
+
+
+def make_minimal_pdf(pages_text):
+    """Build a small single-font PDF whose text pypdf can extract."""
+
+    import io
+
+    pages = []
+    for lines in pages_text:
+        escaped = [
+            line.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
+            for line in lines.split("\n")
+        ]
+        body = "0 -18 Td ".join(f"({line}) Tj " for line in escaped)
+        content = f"BT /F1 12 Tf 72 720 Td {body}ET".encode("latin-1")
+        pages.append(content)
+
+    objects = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids ["]
+    kids = []
+    for index in range(len(pages)):
+        kids.append(f"{4 + index * 2} 0 R".encode())
+    objects[1] = objects[1] + b" ".join(kids) + b"] /Count %d >>" % len(pages)
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+
+    page_number = 4
+    for content in pages:
+        objects.append(
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            f"/Contents {page_number + 1} 0 R /Resources << /Font << /F1 3 0 R >> >> >>".encode()
+        )
+        stream = b"stream\n" + content + b"\nendstream"
+        objects.append(
+            b"<< /Length " + str(len(stream)).encode() + b" >>\n" + stream
+        )
+        page_number += 2
+
+    buffer = io.BytesIO()
+    buffer.write(b"%PDF-1.4\n")
+    offsets = []
+    for number, obj in enumerate(objects, start=1):
+        offsets.append(buffer.tell())
+        buffer.write(f"{number} 0 obj\n".encode() + obj + b"\nendobj\n")
+    xref_at = buffer.tell()
+    buffer.write(f"xref\n0 {len(objects) + 1}\n".encode())
+    buffer.write(b"0000000000 65535 f \n")
+    for offset in offsets:
+        buffer.write(f"{offset:010d} 00000 n \n".encode())
+    buffer.write(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_at}\n%%EOF".encode()
+    )
+    return buffer.getvalue()
+
+
+def typed_topics_transport(payload):
+    def transport(request):
+        return {"message": {"content": json.dumps(payload)}}
+
+    return transport
+
+
+def test_identify_topics_filters_activity_and_other_titles():
+    chunk = {"text": "[página 1] contenido", "first_page": 1, "last_page": 1}
+    transport = typed_topics_transport(
+        {
+            "temas": [
+                {
+                    "titulo": "Fracciones",
+                    "pagina_inicio": 1,
+                    "pagina_fin": 1,
+                    "tipo": "tema",
+                },
+                {
+                    "titulo": "Actividad: colorea las mitades",
+                    "pagina_inicio": 1,
+                    "pagina_fin": 1,
+                    "tipo": "actividad",
+                },
+                {
+                    "titulo": "Nota editorial",
+                    "pagina_inicio": 1,
+                    "pagina_fin": 1,
+                    "tipo": "otro",
+                },
+                # Sin tipo explícito se conserva (compatibilidad).
+                {"titulo": "Números enteros", "pagina_inicio": 1, "pagina_fin": 1},
+            ]
+        }
+    )
+
+    topics = pipeline.identify_topics(chunk, transport=transport)
+    assert [topic["titulo"] for topic in topics] == [
+        "Fracciones",
+        "Números enteros",
+    ]
+
+
+def test_synthetic_pdf_detection_keeps_only_central_topics_with_citations():
+    pdf_bytes = make_minimal_pdf(
+        [
+            "BLOQUE I FRACCIONES",
+            "Actividad: suma con material concreto",
+            "Ejercicio: colorea las mitades",
+            "FRACCIONES CONTINUACION",
+        ]
+    )
+    from curriculum.curriculum_import import chunk_pages, extract_pdf_pages
+
+    pages = extract_pdf_pages(io.BytesIO(pdf_bytes))
+    assert len(pages) == 4
+    assert "FRACCIONES" in pages[0]
+    assert "colorea las mitades" in pages[2]
+
+    chunks = chunk_pages(pages)
+    transport = typed_topics_transport(
+        {
+            "temas": [
+                {
+                    "titulo": "Fracciones",
+                    "pagina_inicio": 1,
+                    "pagina_fin": 4,
+                    "tipo": "tema",
+                },
+                {
+                    "titulo": "Actividad: suma con material concreto",
+                    "pagina_inicio": 2,
+                    "pagina_fin": 2,
+                    "tipo": "actividad",
+                },
+                {
+                    "titulo": "Ejercicio: colorea las mitades",
+                    "pagina_inicio": 3,
+                    "pagina_fin": 3,
+                    "tipo": "actividad",
+                },
+            ]
+        }
+    )
+    merged = consolidate_topics(
+        [pipeline.identify_topics(chunk, transport=transport) for chunk in chunks]
+    )
+
+    # Sólo el tema central sobrevive, con sus citas de página correctas.
+    assert len(merged) == 1
+    fracciones = merged[0]
+    assert fracciones["titulo"] == "Fracciones"
+    assert fracciones["pagina_inicio"] == 1
+    assert fracciones["pagina_fin"] == 4
