@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 import threading
+import uuid
 from datetime import timedelta
 from functools import wraps
 
@@ -794,6 +795,7 @@ def _run_import_job_stage(job_id, stage, payload=None):
         "extract": CurriculumImportJob.STATUS_FAILED,
         "subtopics": CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED,
         "activities": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
+        "add_missing": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
     }
     try:
         job = CurriculumImportJob.objects.get(pk=job_id)
@@ -805,6 +807,8 @@ def _run_import_job_stage(job_id, stage, payload=None):
             _import_action_confirm_topics(job, pipeline, payload["topics"])
         elif stage == "activities":
             _import_action_generate_activities(job, pipeline)
+        elif stage == "add_missing":
+            _import_action_add_missing_activities(job, pipeline)
         else:
             raise ValueError(f"Etapa desconocida: {stage}")
     except Exception as error:  # noqa: BLE001 - the worker must never die silently
@@ -856,6 +860,7 @@ IMPORT_STAGE_WAIT_MESSAGES = {
     "extract": "El asistente virtual está leyendo los temas…",
     "subtopics": "El asistente virtual está organizando los subtemas…",
     "activities": "El asistente virtual está creando las actividades…",
+    "add_missing": "El asistente virtual está agregando las actividades que faltan…",
 }
 
 # Safety valve: if the worker died with the server (or hangs), stop waiting.
@@ -971,6 +976,10 @@ def tutor_import_detail(request, job_id):
             job.save()
         elif action == "generate_activities":
             return _start_import_stage(request, job, "activities")
+        elif action == "add_missing_activities":
+            return _start_import_stage(request, job, "add_missing")
+        elif action == "remove_activity":
+            _import_action_remove_activity(job, request.POST)
         elif action == "convert_selected":
             _import_action_convert(job, request.POST)
     except (pipeline.ImportPipelineError, ValueError) as error:
@@ -987,6 +996,12 @@ def tutor_import_detail(request, job_id):
         )
     job.refresh_from_db()
     context["error"] = job.error_message
+    if job.status == CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED:
+        grouped = _grouped_activities(job)
+        context["grouped_activities"] = grouped
+        context["any_missing"] = any(
+            sub["faltantes"] for group in grouped for sub in group["subs"]
+        )
     if job.status == CurriculumImportJob.STATUS_CONVERTED:
         drafts = CurriculumPackage.objects.filter(ai_assisted=True).order_by("-id")[:20]
         context["drafts"] = drafts
@@ -1166,6 +1181,7 @@ def _import_action_generate_activities(job, pipeline):
             validity = _validate_proposal(proposal)
             proposals.append(
                 {
+                    "id": uuid.uuid4().hex[:8],
                     "topic_title": topic["titulo"],
                     "subtopic_title": sub["titulo"],
                     "is_valid": validity["is_valid"],
@@ -1219,6 +1235,161 @@ def _validate_proposal(proposal):
         ],
     )
     return draft.structural_validation()
+
+
+def _activity_id(entry, fallback_index):
+    """Stable identifier for a staging proposal (older jobs may lack one)."""
+
+    return entry.get("id") or f"idx-{fallback_index}"
+
+
+def _import_action_remove_activity(job, post_data):
+    """Human checkpoint: drop one staging proposal with the X button (#35).
+
+    Removal never calls the model and never touches surviving proposals.
+    """
+
+    target = str(post_data.get("activity_id") or "")
+    kept = []
+    removed = False
+    for index, entry in enumerate(job.activities):
+        if not removed and _activity_id(entry, index) == target:
+            removed = True
+            continue
+        kept.append(entry)
+    if not removed:
+        raise ValueError("La actividad ya no está en la lista.")
+    job.activities = kept
+    job.save(update_fields=["activities", "updated_at"])
+    return removed
+
+
+def _import_action_add_missing_activities(job, pipeline):
+    """Stage D+: top-up only the missing activities per subtopic (#35).
+
+    Existing proposals are immutable context; the model drafts just what is
+    missing to reach the teacher-requested count. Append-only: whatever was
+    already on screen stays exactly as approved.
+    """
+
+    if not job.topics:
+        raise ValueError("No hay jerarquía confirmada para completar actividades.")
+    context_text = job.source_text
+    log = list(job.llm_log)
+
+    # Compute how many new proposals each subtopic needs before calling the
+    # model so progress_total reflects real work.
+    pending = []
+    for topic in job.topics:
+        for sub in topic.get("subtemas", []):
+            requested = max(1, int(sub.get("actividades_sugeridas") or 1))
+            existing = [
+                entry
+                for entry in job.activities
+                if entry.get("topic_title") == topic["titulo"]
+                and entry.get("subtopic_title") == sub["titulo"]
+            ]
+            missing = requested - len(existing)
+            if missing > 0:
+                pending.append(
+                    (
+                        topic,
+                        sub,
+                        min(missing, 5),
+                        [
+                            f"{entry['proposal'].get('title', '')}: "
+                            f"{entry['proposal'].get('objective', '')}"
+                            for entry in existing
+                        ],
+                    )
+                )
+    job.progress_total = sum(item[2] for item in pending)
+    job.progress_done = 0
+    job.save(update_fields=["progress_total", "progress_done", "updated_at"])
+
+    added = 0
+    proposals = list(job.activities)
+    for topic, sub, missing, summaries in pending:
+        proposal = pipeline.propose_activities_incremental(
+            sub["titulo"],
+            context_text,
+            missing,
+            summaries,
+        )
+        validity = _validate_proposal(proposal)
+        proposals.append(
+            {
+                "id": uuid.uuid4().hex[:8],
+                "topic_title": topic["titulo"],
+                "subtopic_title": sub["titulo"],
+                "is_valid": validity["is_valid"],
+                "issues": validity["missing"],
+                "proposal": proposal,
+                "selected": validity["is_valid"],
+                "added_by_topup": True,
+            }
+        )
+        log.append(
+            {
+                "stage": "add_missing_activities",
+                "subtema": sub["titulo"],
+                "reactivos": len(proposal["questions"]),
+                "is_valid": validity["is_valid"],
+            }
+        )
+        added += 1
+        job.progress_done = added
+        job.activities = proposals
+        job.llm_log = log
+        job.save(
+            update_fields=[
+                "activities",
+                "llm_log",
+                "progress_done",
+                "updated_at",
+            ]
+        )
+    job.error_message = ""
+    job.progress_stage = ""
+    job.save()
+    return added
+
+
+def _grouped_activities(job):
+    """Hierarchy view of staging proposals: topic → subtopic → activity (#35)."""
+
+    grouped = []
+    for topic in job.topics:
+        subs = []
+        for sub in topic.get("subtemas", []):
+            entries = []
+            for index, entry in enumerate(job.activities):
+                if (
+                    entry.get("topic_title") != topic["titulo"]
+                    or entry.get("subtopic_title") != sub["titulo"]
+                ):
+                    continue
+                entries.append(
+                    {
+                        "id": _activity_id(entry, index),
+                        "index": index,
+                        "entry": entry,
+                    }
+                )
+            subs.append(
+                {
+                    "titulo": sub["titulo"],
+                    "sugeridas": max(1, int(sub.get("actividades_sugeridas") or 1)),
+                    "entries": entries,
+                    "faltantes": max(
+                        0,
+                        max(1, int(sub.get("actividades_sugeridas") or 1))
+                        - len(entries),
+                    ),
+                }
+            )
+        grouped.append({"titulo": topic["titulo"], "subs": subs})
+    return grouped
 
 
 def _import_action_convert(job, post_data):

@@ -343,6 +343,11 @@ def propose_activities(subtopic_title, context_text, count, *, transport=None):
         "contexto entregado; no inventes temas ajenos."
     )
     result = chat_json(prompt, ACTIVITY_SCHEMA, transport=transport)
+    return _map_activity_payload(subtopic_title, result)
+
+
+def _map_activity_payload(subtopic_title, result):
+    """Map a raw ACTIVITY_SCHEMA response into the staging proposal shape."""
 
     questions = []
     for reactivo in result.get("reactivos", [])[:5]:
@@ -376,3 +381,38 @@ def propose_activities(subtopic_title, context_text, count, *, transport=None):
         "final_explanation": str(result.get("explicacion_final", "")).strip(),
         "questions": questions,
     }
+
+
+def propose_activities_incremental(
+    subtopic_title,
+    context_text,
+    count,
+    existing_summaries,
+    *,
+    transport=None,
+):
+    """Stage D+: append-only top-up for a subtopic (#35).
+
+    Existing proposals are passed as immutable context; the model must not
+    modify or repeat them and only draft the missing ones.
+    """
+
+    count = max(1, min(int(count), 5))
+    existing_block = "\n".join(f"- {summary}" for summary in existing_summaries)
+    prompt = (
+        "Subtema curricular: \"" + subtopic_title + "\".\n\nContexto de la "
+        "currícula:\n" + context_text[:CHUNK_MAX_CHARS]
+        + "\n\nYa existen estas actividades para este subtema (NO las "
+        "modifiques, NO las repitas, NO alteres sus textos):\n"
+        + existing_block
+        + f"\n\nRedacta {count} actividad(es) NUEVA(S) de opción única que se "
+        "sumen a las anteriores sin cambiarlas. Responde JSON con la forma "
+        "{\"objetivo\": string, \"microleccion\": string, "
+        "\"explicacion_final\": string, \"reactivos\": [{\"enunciado\": "
+        "string, \"opciones\": [{\"posicion\": int empezando en 1 y sin "
+        "huecos, \"texto\": string, \"correcta\": bool (exactamente una "
+        "true), \"retroalimentacion\": string}], \"pistas\": [string]}]}. "
+        "Usa sólo el contexto entregado; no inventes temas ajenos."
+    )
+    result = chat_json(prompt, ACTIVITY_SCHEMA, transport=transport)
+    return _map_activity_payload(subtopic_title, result)
