@@ -33,6 +33,7 @@ from curriculum.ephemeral import (
 from curriculum.models import (
     ClassroomSession,
     CurriculumImportJob,
+    CurriculumPackage,
     DeviceAssignment,
     PublishedPackageSnapshot,
     PseudonymousResult,
@@ -765,12 +766,20 @@ def tutor_import_detail(request, job_id):
             job.status = CurriculumImportJob.STATUS_COMPLETED
             job.error_message = ""
             job.save()
+        elif action == "generate_activities":
+            _import_action_generate_activities(job, pipeline)
+        elif action == "convert_selected":
+            _import_action_convert(job, request.POST)
     except (pipeline.ImportPipelineError, ValueError) as error:
         job.status = CurriculumImportJob.STATUS_FAILED
         job.error_message = str(error)
         job.save(update_fields=["status", "error_message", "updated_at"])
     job.refresh_from_db()
     context["error"] = job.error_message
+    if job.status == CurriculumImportJob.STATUS_CONVERTED:
+        drafts = CurriculumPackage.objects.filter(ai_assisted=True).order_by("-id")[:20]
+        context["drafts"] = drafts
+        context["drafts_count"] = drafts.count()
     return render(request, "curriculum/tutor_import_detail.html", context)
 
 
@@ -899,6 +908,97 @@ def _subtopics_from_post(post_data):
             }
         )
     return topics
+
+
+def _import_action_generate_activities(job, pipeline):
+    """Stage D: draft activities for every confirmed subtopic."""
+
+    if not job.topics:
+        raise ValueError("No hay jerarquía confirmada para generar actividades.")
+    context_text = job.source_text
+    log = list(job.llm_log)
+    proposals = []
+    for topic in job.topics:
+        for sub in topic.get("subtemas", []):
+            count = sub.get("actividades_sugeridas") or 1
+            proposal = pipeline.propose_activities(
+                sub["titulo"],
+                context_text,
+                count,
+            )
+            validity = _validate_proposal(proposal)
+            proposals.append(
+                {
+                    "topic_title": topic["titulo"],
+                    "subtopic_title": sub["titulo"],
+                    "is_valid": validity["is_valid"],
+                    "issues": validity["missing"],
+                    "proposal": proposal,
+                    "selected": validity["is_valid"],
+                }
+            )
+            log.append(
+                {
+                    "stage": "propose_activities",
+                    "subtema": sub["titulo"],
+                    "reactivos": len(proposal["questions"]),
+                    "is_valid": validity["is_valid"],
+                }
+            )
+    job.activities = proposals
+    job.llm_log = log
+    job.status = CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
+    job.error_message = ""
+    job.save()
+    return job
+
+
+def _validate_proposal(proposal):
+    """Run the canonical structural validation on a staging proposal."""
+
+    from curriculum.models import CurriculumPackage as Package
+
+    draft = Package(
+        title=proposal["title"],
+        objective=proposal["objective"],
+        micro_lesson=proposal["micro_lesson"],
+        final_explanation=proposal["final_explanation"],
+        questions=[
+            (question["block_type"], question["value"])
+            for question in proposal["questions"]
+        ],
+    )
+    return draft.structural_validation()
+
+
+def _import_action_convert(job, post_data):
+    """Human checkpoint 3: convert selected valid proposals into drafts."""
+
+    from curriculum.models import CurriculumPackage
+
+    created = 0
+    indices = post_data.getlist("select")
+    if not indices:
+        raise ValueError("Selecciona al menos una actividad válida para convertir.")
+    for index in indices:
+        entry = job.activities[int(index)]
+        if not entry.get("is_valid"):
+            continue  # un reactivo inválido nunca se convierte, ni marcándolo
+        package = CurriculumPackage.objects.create(
+            title=entry["proposal"]["title"][:160],
+            objective=entry["proposal"]["objective"],
+            micro_lesson=entry["proposal"]["micro_lesson"],
+            final_explanation=entry["proposal"]["final_explanation"],
+            questions=[
+                (question["block_type"], question["value"])
+                for question in entry["proposal"]["questions"]
+            ],
+            ai_assisted=True,
+        )
+        created += 1
+    job.status = CurriculumImportJob.STATUS_CONVERTED
+    job.save(update_fields=["status", "updated_at"])
+    return created
 
 
 def _unconfirmed_session_response(session):

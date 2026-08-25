@@ -122,6 +122,15 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         editable=False,
     )
     is_demo = models.BooleanField("DemoPackage", default=True, editable=False)
+    ai_assisted = models.BooleanField(
+        "borrador asistido por IA",
+        default=False,
+        editable=False,
+        help_text=(
+            "True si el borrador fue generado con asistencia de IA. No implica "
+            "validación pedagógica ni autorización de publicación."
+        ),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -132,6 +141,7 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         FieldPanel("questions"),
         FieldPanel("final_explanation"),
         FieldPanel("validation_summary", read_only=True),
+        FieldPanel("ai_assisted", read_only=True),
     ]
 
     class Meta:
@@ -971,13 +981,17 @@ class CurriculumImportJob(models.Model):
     STATUS_UPLOADED = "uploaded"
     STATUS_TOPICS_PROPOSED = "topics_proposed"
     STATUS_SUBTOPICS_PROPOSED = "subtopics_proposed"
+    STATUS_ACTIVITIES_PROPOSED = "activities_proposed"
     STATUS_COMPLETED = "completed"
+    STATUS_CONVERTED = "converted"
     STATUS_FAILED = "failed"
     STATUS_CHOICES = (
         (STATUS_UPLOADED, "PDF cargado"),
         (STATUS_TOPICS_PROPOSED, "Temas propuestos; en revisión docente"),
         (STATUS_SUBTOPICS_PROPOSED, "Subtemas propuestos; en revisión docente"),
+        (STATUS_ACTIVITIES_PROPOSED, "Actividades propuestas; en revisión docente"),
         (STATUS_COMPLETED, "Jerarquía confirmada"),
+        (STATUS_CONVERTED, "Borradores generados"),
         (STATUS_FAILED, "Procesamiento fallido"),
     )
 
@@ -1004,6 +1018,11 @@ class CurriculumImportJob(models.Model):
     )
     topics = models.JSONField(
         "jerarquía propuesta",
+        default=list,
+        blank=True,
+    )
+    activities = models.JSONField(
+        "actividades propuestas",
         default=list,
         blank=True,
     )

@@ -92,6 +92,54 @@
               </li>
             {% endfor %}
           </ol>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="generate_activities">
+            <button class="button-primary" type="submit">Generar actividades con el modelo local</button>
+          </form>
+        </section>
+      {% endif %}
+
+      {% if job.status == "activities_proposed" %}
+        <section aria-label="Punto de control: actividades">
+          <h2>Revisa las actividades propuestas</h2>
+          <p>Cada subtema propuso un borrador de paquete. Sólo los válidos pueden convertirse; después pasarán por revisión y publicación humanas.</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="convert_selected">
+            {% for entry in job.activities %}
+              <fieldset class="question-card">
+                <legend>
+                  {% if entry.is_valid %}
+                    <input type="checkbox" name="select" value="{{ forloop.counter0 }}" checked>
+                  {% else %}
+                    <input type="checkbox" disabled>
+                  {% endif %}
+                  {{ entry.topic_title }} · {{ entry.subtopic_title }}
+                </legend>
+                <p>Objetivo: {{ entry.proposal.objective }}</p>
+                <p>Microlección: {{ entry.proposal.micro_lesson }}</p>
+                <p>Reactivos: {{ entry.proposal.questions|length }}</p>
+                {% if not entry.is_valid %}
+                  <p class="error">Estructuralmente inválido (no convertible):</p>
+                  <ul>
+                    {% for issue in entry.issues %}<li>{{ issue }}</li>{% endfor %}
+                  </ul>
+                {% endif %}
+              </fieldset>
+            {% endfor %}
+            <button class="button-primary" type="submit">Convertir seleccionados en borradores</button>
+          </form>
+        </section>
+      {% endif %}
+
+      {% if job.status == "converted" %}
+        <section aria-label="Borradores generados" class="status-card">
+          <h2>Borradores generados ({{ drafts_count }})</h2>
+          <p>Los borradores etiquetados "asistido por IA" esperan revisión, aprobación y publicación humanas en Wagtail. La IA no publica.</p>
+          <ul>
+            {% for draft in drafts %}<li><a href="/cms/">{{ draft.title }}</a></li>{% endfor %}
+          </ul>
         </section>
       {% endif %}
     </main>
