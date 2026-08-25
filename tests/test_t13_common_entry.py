@@ -23,6 +23,9 @@ from curriculum.models import (  # noqa: E402
 )
 
 
+from helpers import tutor_client  # noqa: E402
+
+
 pytestmark = pytest.mark.django_db
 
 JOIN_ERROR_UNAVAILABLE = "No hay dispositivos disponibles"
@@ -210,9 +213,9 @@ def test_tutor_review_shows_one_link_and_qr_only_while_active():
     session = prepared_session()
     review_path = reverse("tutor-session-review", args=[session.pk])
 
-    prepared_page = Client().get(review_path)
+    prepared_page = tutor_client().get(review_path)
     session.confirm()
-    active_page = Client().get(review_path)
+    active_page = tutor_client().get(review_path)
 
     assert join_path(session.pk) not in prepared_page.text
     assert f'data-session-join-url href="http://testserver{join_path(session.pk)}"' in (

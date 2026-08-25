@@ -2,6 +2,7 @@ import csv
 import hashlib
 import io
 import json
+from functools import wraps
 
 from django.core import signing
 from django.core.cache import cache
@@ -16,6 +17,7 @@ from django.http import (
     HttpResponseForbidden,
     JsonResponse,
 )
+from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
@@ -66,6 +68,22 @@ LOCAL_SESSION_TTL = 12 * 60 * 60
 TURN_CAPABILITY_MAX_AGE = LOCAL_SESSION_TTL
 DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
 SURVEY_SUBMITTED_TTL = LOCAL_SESSION_TTL
+
+
+def teacher_required(view_func):
+    """All tutor routes require an authenticated staff (teacher) account."""
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not request.user.is_staff:
+            return HttpResponseForbidden(
+                "La sección del maestro requiere una cuenta de personal."
+            )
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
 
 
 def student_packages(request):
@@ -428,6 +446,8 @@ def student_turn_ready(request, session_id):
     return response
 
 
+@teacher_required
+
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
     snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
@@ -453,6 +473,8 @@ def tutor_session_prepare(request, snapshot_id):
     return render(request, "curriculum/tutor_session_prepare.html", context)
 
 
+@teacher_required
+
 def tutor_session_review(request, session_id):
     session = get_object_or_404(
         ClassroomSession.objects.select_related("snapshot").prefetch_related(
@@ -473,12 +495,24 @@ def tutor_session_review(request, session_id):
             reverse("student-session-join", args=[session.pk])
         )
         join_qr_svg = qr_svg(join_url)
+    labeled_assignments = [
+        {
+            "label": f"Dispositivo {position}",
+            "assigned_capacity": assignment.assigned_capacity,
+            "remaining_capacity": assignment.remaining_capacity,
+        }
+        for position, assignment in enumerate(session.device_assignments.all(), start=1)
+    ]
     return render(
         request,
         "curriculum/tutor_session_review.html",
         {
             "session": session,
-            "assignments": session.device_assignments.all(),
+            "assignments": labeled_assignments,
+            "snapshot_label": (
+                f"versión {session.snapshot.version} · "
+                f"{session.snapshot.sha256[:8]}"
+            ),
             "result_aggregate": _result_aggregate(results),
             "survey_aggregate": survey_aggregate(survey_responses),
             "survey_response_count": survey_responses.count(),
@@ -487,6 +521,8 @@ def tutor_session_review(request, session_id):
         },
     )
 
+
+@teacher_required
 
 @require_POST
 def tutor_session_confirm(request, session_id):
@@ -506,6 +542,8 @@ def tutor_session_confirm(request, session_id):
         )
     return redirect("tutor-session-review", session_id=session.pk)
 
+
+@teacher_required
 
 @require_POST
 def tutor_session_close(request, session_id):
@@ -570,6 +608,8 @@ def _result_export_payload(result):
     }
 
 
+@teacher_required
+
 @require_POST
 def tutor_session_export(request, session_id):
     session = get_object_or_404(ClassroomSession, pk=session_id)
@@ -631,6 +671,8 @@ def tutor_session_export(request, session_id):
     return HttpResponseBadRequest("El formato de exportación no está disponible.")
 
 
+@teacher_required
+
 @require_POST
 def tutor_session_results_delete(request, session_id):
     session = get_object_or_404(ClassroomSession, pk=session_id)
@@ -652,6 +694,8 @@ def tutor_session_results_delete(request, session_id):
     deleted, _ = queryset.delete()
     return JsonResponse({"deleted": deleted, "surveys_deleted": deleted_surveys})
 
+
+@teacher_required
 
 @require_POST
 def tutor_result_delete(request, session_id, result_id):
@@ -718,6 +762,8 @@ def student_session_survey(request, session_id):
     return render(request, "curriculum/student_survey.html", context)
 
 
+@teacher_required
+
 @require_http_methods(["GET", "POST"])
 def tutor_import_upload(request):
     """Stage A entry: the teacher uploads the curriculum PDF."""
@@ -735,6 +781,8 @@ def tutor_import_upload(request):
         return redirect("tutor-import-detail", job_id=job.pk)
     return render(request, "curriculum/tutor_import_form.html", {})
 
+
+@teacher_required
 
 @require_http_methods(["GET", "POST"])
 def tutor_import_detail(request, job_id):

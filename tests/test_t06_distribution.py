@@ -30,6 +30,9 @@ from curriculum.models import (  # noqa: E402
 )
 
 
+from helpers import tutor_client  # noqa: E402
+
+
 pytestmark = pytest.mark.django_db
 
 
@@ -105,7 +108,7 @@ def test_capacity_guard_rejects_overflow_unless_explicitly_authorized():
 
 def test_tutor_reviews_local_opaque_device_queues_without_student_identity():
     snapshot = published_snapshot()
-    client = Client()
+    client = tutor_client()
 
     response = client.post(
         reverse("tutor-session-prepare", args=[snapshot.pk]),
@@ -129,8 +132,7 @@ def test_tutor_reviews_local_opaque_device_queues_without_student_identity():
 
 def test_prepared_session_is_not_active_or_available_to_students():
     snapshot = published_snapshot()
-    response = Client().post(
-        reverse("tutor-session-prepare", args=[snapshot.pk]),
+    response = tutor_client().post(reverse("tutor-session-prepare", args=[snapshot.pk]),
         {"student_count": "2", "device_count": "1"},
     )
     session = ClassroomSession.objects.get()
@@ -144,7 +146,7 @@ def test_prepared_session_is_not_active_or_available_to_students():
 
 def test_tutor_confirmation_activates_once_and_keeps_snapshot_pinned():
     snapshot = published_snapshot()
-    client = Client()
+    client = tutor_client()
     prepare = client.post(
         reverse("tutor-session-prepare", args=[snapshot.pk]),
         {"student_count": "5", "device_count": "2"},

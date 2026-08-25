@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
+    {% include "curriculum/tutor_nav.html" %}
     <main>
       <h1>Importación de currícula</h1>
       <p data-import-status>Estado: {{ job.get_status_display }}</p>

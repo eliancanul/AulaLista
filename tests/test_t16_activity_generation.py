@@ -20,6 +20,9 @@ from curriculum.models import (  # noqa: E402
 from curriculum.curriculum_import import propose_activities  # noqa: E402
 
 
+from helpers import tutor_client  # noqa: E402
+
+
 pytestmark = pytest.mark.django_db
 
 
@@ -32,7 +35,7 @@ def pdf_upload():
 
 
 def completed_job():
-    client = Client()
+    client = tutor_client()
     response = client.post(
         reverse("tutor-import-upload"), {"pdf": pdf_upload()}
     )
