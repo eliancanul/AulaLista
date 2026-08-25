@@ -207,3 +207,43 @@ td {
     transform: rotate(360deg);
   }
 }
+
+/* Revisión jerárquica de actividades (#35) */
+.subtopic-activity-title {
+  font-weight: 600;
+  margin-block: 0.75rem 0.25rem;
+}
+
+.missing-count {
+  font-weight: 400;
+  color: #a33b22;
+}
+
+.muted {
+  color: #5a6a63;
+}
+
+.activity-card {
+  position: relative;
+}
+
+.remove-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.button-remove-activity,
+.remove-form .button-remove-activity {
+  border: 1px solid #a33b22;
+  background: #fbe9e4;
+  color: #a33b22;
+  min-inline-size: 2rem;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+}
+
+.topup-form {
+  border: 1px solid #a9b6af;
+  background: #e5f2ed;
+  padding: 0.75rem 1rem;
+}
