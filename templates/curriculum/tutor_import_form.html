@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · importar currícula</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <main>
+      <h1>Importar currícula (PDF)</h1>
+      <p class="notice">El modelo local de IA sólo propone temas y subtemas. Nada se publica: tú revisas y confirmas cada etapa.</p>
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" enctype="multipart/form-data" class="status-card">
+        {% csrf_token %}
+        <label>
+          PDF de la currícula
+          <input type="file" name="pdf" accept="application/pdf" required>
+        </label>
+        <button class="button-primary" type="submit">Cargar PDF</button>
+      </form>
+    </main>
+  </body>
+</html>

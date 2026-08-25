@@ -959,6 +959,87 @@ class PseudonymousResult(models.Model):
         verbose_name_plural = "PseudonymousResults"
 
 
+class CurriculumImportJob(models.Model):
+    """Staging area for the local-LLM curriculum import pipeline.
+
+    Holds the extracted PDF text and the LLM-proposed topic/subtopic
+    hierarchy awaiting human confirmation. Nothing here creates or modifies
+    CurriculumPackage, revisions or snapshots: conversion to drafts is a
+    separate, human-approved step.
+    """
+
+    STATUS_UPLOADED = "uploaded"
+    STATUS_TOPICS_PROPOSED = "topics_proposed"
+    STATUS_SUBTOPICS_PROPOSED = "subtopics_proposed"
+    STATUS_COMPLETED = "completed"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = (
+        (STATUS_UPLOADED, "PDF cargado"),
+        (STATUS_TOPICS_PROPOSED, "Temas propuestos; en revisión docente"),
+        (STATUS_SUBTOPICS_PROPOSED, "Subtemas propuestos; en revisión docente"),
+        (STATUS_COMPLETED, "Jerarquía confirmada"),
+        (STATUS_FAILED, "Procesamiento fallido"),
+    )
+
+    pdf = models.FileField(
+        "PDF de la currícula",
+        upload_to="curriculum_imports/",
+    )
+    status = models.CharField(
+        "estado",
+        max_length=24,
+        choices=STATUS_CHOICES,
+        default=STATUS_UPLOADED,
+    )
+    source_text = models.TextField(
+        "texto extraído del PDF",
+        blank=True,
+        editable=False,
+    )
+    page_count = models.PositiveIntegerField(
+        "páginas detectadas",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    topics = models.JSONField(
+        "jerarquía propuesta",
+        default=list,
+        blank=True,
+    )
+    llm_log = models.JSONField(
+        "bitácora del modelo local",
+        default=list,
+        blank=True,
+        editable=False,
+    )
+    error_message = models.TextField("error", blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "CurriculumImportJob"
+        verbose_name_plural = "CurriculumImportJobs"
+
+    def __str__(self):
+        return f"Import {self.pk} ({self.get_status_display()})"
+
+    def extract_text(self):
+        """Stage A: pull per-page text out of the uploaded PDF."""
+
+        from curriculum.curriculum_import import chunk_pages, extract_pdf_pages
+
+        pages = extract_pdf_pages(self.pdf)
+        self.source_text = "\n\n".join(
+            f"[página {number}]\n{text}"
+            for number, text in enumerate(pages, start=1)
+        )
+        self.page_count = len(pages)
+        self._chunks = chunk_pages(pages)
+        return self._chunks
+
+
 class PseudonymousSurveyResponse(models.Model):
     """An erasable survey answer with no relationship to any participant.
 

@@ -104,9 +104,17 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.environ.get("AULALISTA_MEDIA_ROOT", str(BASE_DIR / "media"))
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 WAGTAIL_SITE_NAME = "AulaLista"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 # The operator supplies the address other devices can reach on the LAN. The
 # node deliberately does not inspect interfaces or infer a possibly-wrong IP.
 AULALISTA_LAN_URL = os.environ.get("AULALISTA_LAN_URL", "").strip()
+
+# Local LLM used only for curriculum-import staging proposals (never for the
+# student path, grading or publishing). Defaults match a stock Ollama install.
+AULALISTA_OLLAMA_URL = os.environ.get("AULALISTA_OLLAMA_URL", "http://localhost:11434")
+AULALISTA_LLM_MODEL = os.environ.get("AULALISTA_LLM_MODEL", "qwen2.5:7b")
