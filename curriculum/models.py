@@ -959,6 +959,37 @@ class PseudonymousResult(models.Model):
         verbose_name_plural = "PseudonymousResults"
 
 
+class PseudonymousSurveyResponse(models.Model):
+    """An erasable survey answer with no relationship to any participant.
+
+    Like PseudonymousResult, it carries only opaque batch/snapshot references;
+    it never stores turn ids, device identifiers or display names, and no
+    database key connects it to who submitted it.
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    result_batch_id = models.UUIDField(
+        "lote opaco de resultados",
+        db_index=True,
+    )
+    snapshot_id = models.PositiveBigIntegerField("id del snapshot")
+    snapshot_version = models.PositiveIntegerField("versión del snapshot")
+    answers = models.JSONField("respuestas de la encuesta", default=list)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-submitted_at", "-id"]
+        verbose_name = "PseudonymousSurveyResponse"
+        verbose_name_plural = "PseudonymousSurveyResponses"
+
+    def __str__(self):
+        return f"Survey {self.pk} (batch {str(self.result_batch_id)[:8]})"
+
+
 class EditorialReviewerWorkflowActionView(WorkflowActionView):
     def post(self, request, *args, **kwargs):
         try:

@@ -35,6 +35,7 @@ from curriculum.models import (
     DeviceAssignment,
     PublishedPackageSnapshot,
     PseudonymousResult,
+    PseudonymousSurveyResponse,
     StudentTurn,
 )
 from curriculum.practice import (
@@ -44,10 +45,17 @@ from curriculum.practice import (
     request_assistance,
     verify_capability,
 )
+from curriculum.survey import (
+    STUDENT_SURVEY_QUESTIONS,
+    SurveyContractError,
+    survey_aggregate,
+    validate_survey_answers,
+)
 
 # Ephemeral anti-replay/progression guard only; never score/evidence. Expires in 3600s.
 HINT_PROGRESS_TTL = 3600
 HINT_PROGRESS_KEY_PREFIX = "aulalista.practice.hint-progress"
+SURVEY_SUBMITTED_KEY_PREFIX = "aulalista.survey.submitted"
 TURN_CAPABILITY_COOKIE = "aulalista.student-turn"
 TURN_CAPABILITY_SALT = "aulalista.student-turn.capability.v1"
 DEVICE_ASSIGNMENT_COOKIE = "aulalista.device-assignment"
@@ -55,6 +63,7 @@ DEVICE_ASSIGNMENT_SALT = "aulalista.device-assignment.capability.v1"
 LOCAL_SESSION_TTL = 12 * 60 * 60
 TURN_CAPABILITY_MAX_AGE = LOCAL_SESSION_TTL
 DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
+SURVEY_SUBMITTED_TTL = LOCAL_SESSION_TTL
 
 
 def student_packages(request):
@@ -454,6 +463,7 @@ def tutor_session_review(request, session_id):
             result_batch_id=session.result_batch_id,
         )
     )
+    survey_responses = _session_survey_responses(session)
     join_url = ""
     join_qr_svg = ""
     if session.status == ClassroomSession.STATUS_ACTIVE:
@@ -468,6 +478,8 @@ def tutor_session_review(request, session_id):
             "session": session,
             "assignments": session.device_assignments.all(),
             "result_aggregate": _result_aggregate(results),
+            "survey_aggregate": survey_aggregate(survey_responses),
+            "survey_response_count": survey_responses.count(),
             "join_url": join_url,
             "join_qr_svg": join_qr_svg,
         },
@@ -535,6 +547,12 @@ def _result_aggregate(results):
     }
 
 
+def _session_survey_responses(session):
+    return PseudonymousSurveyResponse.objects.filter(
+        result_batch_id=session.result_batch_id,
+    )
+
+
 def _result_export_payload(result):
     return {
         "id": str(result.id),
@@ -561,7 +579,13 @@ def tutor_session_export(request, session_id):
     payload = [_result_export_payload(result) for result in results]
     export_format = request.POST.get("format", "json").lower()
     if export_format == "json":
-        response = JsonResponse(payload, safe=False)
+        # JSON incluye también el resumen agregado de la encuesta seudonimizada.
+        response = JsonResponse(
+            {
+                "results": payload,
+                "survey": survey_aggregate(_session_survey_responses(session)),
+            }
+        )
         response["Content-Disposition"] = (
             f'attachment; filename="aulalista-session-{session.pk}.json"'
         )
@@ -614,10 +638,17 @@ def tutor_session_results_delete(request, session_id):
     queryset = PseudonymousResult.objects.filter(
         result_batch_id=session.result_batch_id,
     )
+    deleted_surveys = 0
     if result_ids:
+        # Sin llave resultado↔encuesta por diseño: borrar resultados
+        # individuales conserva las respuestas de encuesta del lote.
         queryset = queryset.filter(id__in=result_ids)
+    else:
+        deleted_surveys, _ = PseudonymousSurveyResponse.objects.filter(
+            result_batch_id=session.result_batch_id,
+        ).delete()
     deleted, _ = queryset.delete()
-    return JsonResponse({"deleted": deleted})
+    return JsonResponse({"deleted": deleted, "surveys_deleted": deleted_surveys})
 
 
 @require_POST
@@ -632,6 +663,57 @@ def tutor_result_delete(request, session_id, result_id):
     )
     result.delete()
     return JsonResponse({"deleted": 1})
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def student_session_survey(request, session_id):
+    """Pseudonymous end-of-activity survey gated by this device's assignment.
+
+    Access uses the signed device-binding cookie, but nothing that identifies
+    the turn or device is ever stored: the response row carries only the opaque
+    batch and snapshot references plus the validated answers.
+    """
+
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
+    assignment = _bound_assignment(request, session)
+    if assignment is None:
+        return HttpResponseForbidden(
+            "La encuesta requiere la capacidad del dispositivo asignado."
+        )
+
+    submitted_key = f"{SURVEY_SUBMITTED_KEY_PREFIX}:{assignment.pk}"
+    already_submitted = cache.get(submitted_key) is True
+    context = {
+        "session": session,
+        "survey_questions": STUDENT_SURVEY_QUESTIONS,
+        "already_submitted": already_submitted,
+    }
+    if request.method == "GET":
+        return render(request, "curriculum/student_survey.html", context)
+    if already_submitted:
+        return HttpResponseBadRequest(
+            "Este dispositivo ya envió su encuesta para esta sesión."
+        )
+
+    try:
+        answers = validate_survey_answers(request.POST)
+    except SurveyContractError as error:
+        context["error"] = str(error)
+        return render(request, "curriculum/student_survey.html", context, status=400)
+
+    PseudonymousSurveyResponse.objects.create(
+        result_batch_id=session.result_batch_id,
+        snapshot_id=session.snapshot_id,
+        snapshot_version=session.snapshot.version,
+        answers=answers,
+    )
+    cache.set(submitted_key, True, timeout=SURVEY_SUBMITTED_TTL)
+    context["already_submitted"] = True
+    return render(request, "curriculum/student_survey.html", context)
 
 
 def _unconfirmed_session_response(session):

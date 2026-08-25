@@ -78,6 +78,27 @@
           <button class="button-danger" type="submit">Eliminar resultados</button>
         </form>
       {% endif %}
+      {% if survey_response_count %}
+        <section aria-label="Encuesta de los alumnos" data-survey-aggregate>
+          <h2>Encuesta de los alumnos ({{ survey_response_count }} respuestas)</h2>
+          {% for question_id, totals in survey_aggregate.totals.items %}
+            <h3>{{ question_id }}</h3>
+            <ul>
+              {% for choice, count in totals.items %}
+                <li>{{ choice }}: {{ count }}</li>
+              {% endfor %}
+            </ul>
+          {% endfor %}
+          {% if survey_aggregate.open_texts %}
+            <h3>Comentarios abiertos</h3>
+            <ul>
+              {% for text in survey_aggregate.open_texts %}
+                <li>{{ text }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </section>
+      {% endif %}
     </main>
   </body>
 </html>

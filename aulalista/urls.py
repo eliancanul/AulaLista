@@ -9,6 +9,7 @@ from curriculum.views import (
     student_question_answer,
     student_question_assistance,
     student_session_join,
+    student_session_survey,
     student_turn_recover,
     student_turn_ready,
     student_turn_start,
@@ -87,6 +88,11 @@ urlpatterns = [
         "student/sessions/<int:session_id>/activity/",
         student_activity,
         name="student-activity",
+    ),
+    path(
+        "student/sessions/<int:session_id>/encuesta/",
+        student_session_survey,
+        name="student-session-survey",
     ),
     path(
         "student/sessions/<int:session_id>/questions/<int:question_index>/answer/",

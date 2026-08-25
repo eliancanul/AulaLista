@@ -507,5 +507,6 @@ def test_delete_requires_explicit_post_and_can_delete_selected_or_all_results():
         reverse("tutor-session-results-delete", args=[other.pk]),
     )
     assert bulk_delete.status_code == 200
-    assert bulk_delete.json() == {"deleted": 1}
+    # Borrar todos los resultados también elimina las respuestas de encuesta del lote.
+    assert bulk_delete.json() == {"deleted": 1, "surveys_deleted": 0}
     assert not PseudonymousResult.objects.exists()
