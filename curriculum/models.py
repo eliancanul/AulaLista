@@ -9,8 +9,11 @@ from django.db.models import Max
 from django.db.models.functions import Length, Trim
 from django.db.models.lookups import GreaterThanOrEqual
 from django.http import HttpResponseForbidden
+from django.shortcuts import redirect
 from django.utils import timezone
 from wagtail import blocks
+from wagtail.admin import messages as wagtail_messages
+from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.panels import FieldPanel
 from wagtail.fields import StreamField
 from wagtail.models import (
@@ -273,6 +276,20 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         if approved_task is None:
             raise ValidationError(
                 "La publicación requiere una aprobación humana autenticada en Wagtail."
+            )
+
+        # La aprobación humana no sustituye la validación estructural: ningún
+        # snapshot puede originarse de una revisión incompleta. Se valida el
+        # contenido exacto de la revisión que se publicará, no el estado actual
+        # del borrador.
+        revision_validation = revision.as_object().structural_validation()
+        if not revision_validation["is_valid"]:
+            raise ValidationError(
+                [
+                    "No se puede publicar un paquete curricular estructuralmente incompleto."
+                    " La aprobación humana sigue siendo obligatoria y no declara válido el contenido."
+                ]
+                + revision_validation["missing"]
             )
 
         result = super().publish(
@@ -943,6 +960,24 @@ class PseudonymousResult(models.Model):
 
 
 class EditorialReviewerWorkflowActionView(WorkflowActionView):
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except ValidationError as error:
+            # La transacción de publicación ya hizo rollback: ni la tarea queda
+            # aprobada ni se crea snapshot. Se informan los faltantes concretos.
+            for message in error.messages:
+                wagtail_messages.error(request, message)
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return render_modal_workflow(
+                    request,
+                    "",
+                    None,
+                    {},
+                    json_data={"step": "success", "redirect": self.redirect_url},
+                )
+            return redirect(self.redirect_url)
+
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
