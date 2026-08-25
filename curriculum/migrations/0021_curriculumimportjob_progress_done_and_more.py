@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('curriculum', '0019_curriculumimportjob_activities_and_more'),
+        ('curriculum', '0020_alter_curriculumimportjob_pdf'),
     ]
 
     operations = [
