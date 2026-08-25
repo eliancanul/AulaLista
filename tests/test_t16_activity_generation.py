@@ -4,7 +4,7 @@ from unittest.mock import patch
 import django
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 
@@ -24,6 +24,10 @@ from helpers import tutor_client  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
+
+# Las etapas LLM corren en segundo plano por defecto (#32/#36); los
+# tests de comportamiento sincrono piden modo inline explicito.
+sync_stage = override_settings(AULALISTA_IMPORT_ASYNC=False)
 
 
 def pdf_upload():
@@ -112,6 +116,7 @@ def test_propose_activities_maps_llm_output_to_package_payload_shape():
     assert sum(o["expected"] for o in proposal["questions"][0]["value"]["options"]) == 1
 
 
+@sync_stage
 def test_generate_activities_validates_each_proposal_structurally():
     client, job = completed_job()
     invalid = valid_proposal()
@@ -124,6 +129,7 @@ def test_generate_activities_validates_each_proposal_structurally():
         response = client.post(
             reverse("tutor-import-detail", args=[job.pk]),
             {"action": "generate_activities"},
+            follow=True,
         )
 
     assert response.status_code == 200

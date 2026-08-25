@@ -96,6 +96,13 @@
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="generate_activities">
+            {% if actividades_estimadas %}
+              <p class="notice" data-generation-estimate>
+                {{ subtemas_totales }} subtemas × ~1 minuto por actividad
+                (≈ {{ actividades_estimadas }} actividades): puede tardar varios
+                minutos. Puedes dejar esta página abierta.
+              </p>
+            {% endif %}
             <button class="button-primary" type="submit">Generar actividades con el modelo local</button>
           </form>
         </section>

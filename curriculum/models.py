@@ -1,5 +1,8 @@
 import hashlib
 import json
+import os
+import re
+import unicodedata
 import uuid
 from datetime import datetime
 
@@ -969,6 +972,36 @@ class PseudonymousResult(models.Model):
         verbose_name_plural = "PseudonymousResults"
 
 
+# Filesystem limits are per-path-component (~255 bytes on common Linux/macOS
+# filesystems); stay well below it so long teacher-supplied names never fail.
+CURRICULUM_IMPORT_PDF_MAX_STEM_BYTES = 120
+
+
+def _truncate_utf8(text, max_bytes):
+    """Truncate text to at most max_bytes of UTF-8, respecting char boundaries."""
+    return text.encode("utf-8")[:max_bytes].decode("utf-8", errors="ignore")
+
+
+def curriculum_import_pdf_path(instance, filename):
+    """Sanitize the teacher's PDF filename before it reaches the filesystem.
+
+    Real curriculum PDFs arrive with very long names, accents, emojis or
+    repeated spaces; several of those break the upload outright. The server
+    must never require the teacher to rename a file by hand.
+    """
+    stem = os.path.splitext(filename)[0]
+    stem = unicodedata.normalize("NFKC", stem)
+    stem = re.sub(r"\s+", " ", stem).strip()
+    # Keep letters/digits (including accented ones), dots, dashes and spaces;
+    # drop everything else (invalid chars, emojis, control characters).
+    stem = re.sub(r"[^\w .\-]", "", stem, flags=re.UNICODE)
+    stem = stem.strip(" .-").replace(" ", "_")
+    stem = _truncate_utf8(stem, CURRICULUM_IMPORT_PDF_MAX_STEM_BYTES)
+    if not stem:
+        stem = "curriculo"
+    return f"curriculum_imports/{stem}.pdf"
+
+
 class CurriculumImportJob(models.Model):
     """Staging area for the local-LLM curriculum import pipeline.
 
@@ -997,7 +1030,7 @@ class CurriculumImportJob(models.Model):
 
     pdf = models.FileField(
         "PDF de la currícula",
-        upload_to="curriculum_imports/",
+        upload_to=curriculum_import_pdf_path,
     )
     status = models.CharField(
         "estado",
@@ -1025,6 +1058,28 @@ class CurriculumImportJob(models.Model):
         "actividades propuestas",
         default=list,
         blank=True,
+    )
+    progress_stage = models.CharField(
+        "etapa en curso",
+        max_length=24,
+        blank=True,
+        editable=False,
+    )
+    progress_done = models.PositiveIntegerField(
+        "elementos procesados",
+        default=0,
+        editable=False,
+    )
+    progress_total = models.PositiveIntegerField(
+        "elementos totales",
+        default=0,
+        editable=False,
+    )
+    progress_started_at = models.DateTimeField(
+        "inicio de la etapa",
+        null=True,
+        blank=True,
+        editable=False,
     )
     llm_log = models.JSONField(
         "bitácora del modelo local",

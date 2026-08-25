@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Polling del estado del job: al terminar, el servidor redirige solo. -->
+    <meta http-equiv="refresh" content="2">
+    <title>AulaLista · asistente trabajando</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <h1>Importación de currícula</h1>
+      <div id="assistant-wait-indicator" class="assistant-wait" role="status">
+        {# Espacio reservado para una animación futura; hoy un spinner simple. #}
+        <span class="assistant-wait-spinner" aria-hidden="true"></span>
+        <p>{{ wait_message }}</p>
+      </div>
+      {% if job.progress_total %}
+        <p id="assistant-progress-counter">
+          {{ job.progress_done }} de {{ job.progress_total }}
+          {% if job.progress_stage == "activities" %}actividades{% else %}bloques{% endif %}
+        </p>
+      {% endif %}
+      <p class="notice">
+        Esto puede tardar varios minutos con currículas grandes.
+        Puedes dejar esta página abierta: al terminar continuarás automáticamente.
+      </p>
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    </main>
+  </body>
+</html>

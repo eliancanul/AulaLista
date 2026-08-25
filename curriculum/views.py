@@ -2,8 +2,11 @@ import csv
 import hashlib
 import io
 import json
+import threading
+from datetime import timedelta
 from functools import wraps
 
+from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -762,8 +765,140 @@ def student_session_survey(request, session_id):
     return render(request, "curriculum/student_survey.html", context)
 
 
-@teacher_required
+def _import_stage_runner():
+    """Return the callable used to run a slow import stage.
 
+    Stages run in a daemon thread so the teacher immediately gets a waiting
+    page (issues #32/#36). The test suite can disable this with
+    AULALISTA_IMPORT_ASYNC=False to keep everything deterministic inline.
+    """
+
+    if getattr(settings, "AULALISTA_IMPORT_ASYNC", True):
+
+        def spawn(target, *args):
+            threading.Thread(target=target, args=args, daemon=True).start()
+
+        return spawn
+
+    return lambda target, *args: target(*args)
+
+
+def _run_import_job_stage(job_id, stage, payload=None):
+    """Worker entry point: execute one LLM stage and persist its outcome.
+
+    Interruptions never discard the proposals already generated: partial
+    results stay reviewable under the corresponding proposed status (#36).
+    """
+
+    fallback_status = {
+        "extract": CurriculumImportJob.STATUS_FAILED,
+        "subtopics": CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED,
+        "activities": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
+    }
+    try:
+        job = CurriculumImportJob.objects.get(pk=job_id)
+        from curriculum import curriculum_import as pipeline
+
+        if stage == "extract":
+            _import_action_extract(job, pipeline)
+        elif stage == "subtopics":
+            _import_action_confirm_topics(job, pipeline, payload["topics"])
+        elif stage == "activities":
+            _import_action_generate_activities(job, pipeline)
+        else:
+            raise ValueError(f"Etapa desconocida: {stage}")
+    except Exception as error:  # noqa: BLE001 - the worker must never die silently
+        job = CurriculumImportJob.objects.filter(pk=job_id).first()
+        if job:
+            job.status = fallback_status[stage]
+            job.error_message = str(error)[:500]
+            job.progress_stage = ""
+            job.save(
+                update_fields=[
+                    "status",
+                    "error_message",
+                    "progress_stage",
+                    "updated_at",
+                ]
+            )
+    finally:
+        from django.db import connection
+
+        connection.close()
+
+
+def _start_import_stage(request, job, stage, payload=None):
+    """Mark the stage as running and hand it to the background runner."""
+
+    if job.progress_stage:
+        # A stage is already running; just watch it instead of starting twice.
+        return redirect("tutor-import-wait", job_id=job.pk)
+    job.progress_stage = stage
+    job.progress_done = 0
+    job.progress_total = 0
+    job.progress_started_at = timezone.now()
+    job.error_message = ""
+    job.save(
+        update_fields=[
+            "progress_stage",
+            "progress_done",
+            "progress_total",
+            "progress_started_at",
+            "error_message",
+            "updated_at",
+        ]
+    )
+    _import_stage_runner()(_run_import_job_stage, job.pk, stage, payload)
+    return redirect("tutor-import-wait", job_id=job.pk)
+
+
+IMPORT_STAGE_WAIT_MESSAGES = {
+    "extract": "El asistente virtual está leyendo los temas…",
+    "subtopics": "El asistente virtual está organizando los subtemas…",
+    "activities": "El asistente virtual está creando las actividades…",
+}
+
+# Safety valve: if the worker died with the server (or hangs), stop waiting.
+IMPORT_STAGE_TIMEOUT = timedelta(minutes=90)
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_wait(request, job_id):
+    """Waiting page that polls the job while an LLM stage runs (#32/#36).
+
+    The page refreshes itself every few seconds; once the stage clears, the
+    teacher lands back on the review panel automatically.
+    """
+
+    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    stale = bool(
+        job.progress_started_at
+        and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
+    )
+    if stale:
+        job.progress_stage = ""
+        job.error_message = (
+            "El asistente virtual tardó demasiado y el proceso se detuvo. "
+            "Puedes reintentarlo."
+        )
+        job.save(update_fields=["progress_stage", "error_message", "updated_at"])
+    if not job.progress_stage:
+        return redirect("tutor-import-detail", job_id=job.pk)
+    return render(
+        request,
+        "curriculum/tutor_import_wait.html",
+        {
+            "job": job,
+            "wait_message": IMPORT_STAGE_WAIT_MESSAGES.get(
+                job.progress_stage,
+                "El asistente virtual está trabajando…",
+            ),
+        },
+    )
+
+
+@teacher_required
 @require_http_methods(["GET", "POST"])
 def tutor_import_upload(request):
     """Stage A entry: the teacher uploads the curriculum PDF."""
@@ -795,14 +930,34 @@ def tutor_import_detail(request, job_id):
     from curriculum import curriculum_import as pipeline
 
     job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    if job.progress_stage:
+        # A stage is running in the background; watch it on the waiting page.
+        return redirect("tutor-import-wait", job_id=job.pk)
     context = {"job": job}
+    if job.status == CurriculumImportJob.STATUS_COMPLETED:
+        context["subtemas_totales"] = sum(
+            len(topic.get("subtemas", [])) for topic in job.topics
+        )
+        context["actividades_estimadas"] = sum(
+            (sub.get("actividades_sugeridas") or 1)
+            for topic in job.topics
+            for sub in topic.get("subtemas", [])
+        )
 
     action = request.POST.get("action") if request.method == "POST" else None
     try:
         if action == "extract":
-            _import_action_extract(job, pipeline)
+            return _start_import_stage(request, job, "extract")
         elif action == "confirm_topics":
-            _import_action_confirm_topics(job, pipeline, request.POST)
+            kept_topics = _topics_from_post(request.POST)
+            if not kept_topics:
+                raise ValueError("Confirma al menos un tema antes de continuar.")
+            return _start_import_stage(
+                request,
+                job,
+                "subtopics",
+                payload={"topics": kept_topics},
+            )
         elif action == "save_topics":
             job.topics = _topics_from_post(request.POST)
             job.save(update_fields=["topics", "updated_at"])
@@ -815,13 +970,21 @@ def tutor_import_detail(request, job_id):
             job.error_message = ""
             job.save()
         elif action == "generate_activities":
-            _import_action_generate_activities(job, pipeline)
+            return _start_import_stage(request, job, "activities")
         elif action == "convert_selected":
             _import_action_convert(job, request.POST)
     except (pipeline.ImportPipelineError, ValueError) as error:
         job.status = CurriculumImportJob.STATUS_FAILED
         job.error_message = str(error)
-        job.save(update_fields=["status", "error_message", "updated_at"])
+        job.progress_stage = ""
+        job.save(
+            update_fields=[
+                "status",
+                "error_message",
+                "progress_stage",
+                "updated_at",
+            ]
+        )
     job.refresh_from_db()
     context["error"] = job.error_message
     if job.status == CurriculumImportJob.STATUS_CONVERTED:
@@ -835,9 +998,12 @@ def _import_action_extract(job, pipeline):
     """Extraction + Stage B topic identification over all chunks."""
 
     chunks = job.extract_text()
+    job.progress_total = len(chunks)
+    job.progress_done = 0
+    job.save(update_fields=["progress_total", "progress_done", "updated_at"])
     proposals_per_chunk = []
     log = []
-    for chunk in chunks:
+    for index, chunk in enumerate(chunks):
         topics = pipeline.identify_topics(chunk)
         proposals_per_chunk.append(topics)
         log.append(
@@ -847,6 +1013,8 @@ def _import_action_extract(job, pipeline):
                 "proposed_count": len(topics),
             }
         )
+        job.progress_done = index + 1
+        job.save(update_fields=["progress_done", "updated_at"])
     job.topics = [
         {**topic, "subtemas": []}
         for topic in pipeline.consolidate_topics(proposals_per_chunk)
@@ -854,19 +1022,22 @@ def _import_action_extract(job, pipeline):
     job.llm_log = log
     job.status = CurriculumImportJob.STATUS_TOPICS_PROPOSED
     job.error_message = ""
+    job.progress_stage = ""
     job.save()
     return job
 
 
-def _import_action_confirm_topics(job, pipeline, post_data):
+def _import_action_confirm_topics(job, pipeline, topics):
     """Human checkpoint 1 → Stage C subtopic proposals for each kept topic."""
 
-    topics = _topics_from_post(post_data)
     if not topics:
         raise ValueError("Confirma al menos un tema antes de continuar.")
     context_text = job.source_text
     log = list(job.llm_log)
-    for topic in topics:
+    job.progress_total = len(topics)
+    job.progress_done = 0
+    job.save(update_fields=["progress_total", "progress_done", "updated_at"])
+    for index, topic in enumerate(topics):
         proposal = pipeline.propose_subtopics(topic["titulo"], context_text)
         topic["subtemas"] = [
             {"titulo": title, "actividades_sugeridas": proposal["actividades_sugeridas"]}
@@ -879,10 +1050,21 @@ def _import_action_confirm_topics(job, pipeline, post_data):
                 "proposed_count": len(proposal["subtemas"]),
             }
         )
-    job.topics = topics
-    job.llm_log = log
+        # Persist after every topic so an interruption keeps the partial work.
+        job.progress_done = index + 1
+        job.topics = topics
+        job.llm_log = log
+        job.save(
+            update_fields=[
+                "topics",
+                "llm_log",
+                "progress_done",
+                "updated_at",
+            ]
+        )
     job.status = CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED
     job.error_message = ""
+    job.progress_stage = ""
     job.save()
     return job
 
@@ -965,7 +1147,14 @@ def _import_action_generate_activities(job, pipeline):
         raise ValueError("No hay jerarquía confirmada para generar actividades.")
     context_text = job.source_text
     log = list(job.llm_log)
+    expected = sum(
+        len(topic.get("subtemas", [])) for topic in job.topics
+    )
+    job.progress_total = expected
+    job.progress_done = 0
+    job.save(update_fields=["progress_total", "progress_done", "updated_at"])
     proposals = []
+    done = 0
     for topic in job.topics:
         for sub in topic.get("subtemas", []):
             count = sub.get("actividades_sugeridas") or 1
@@ -993,10 +1182,23 @@ def _import_action_generate_activities(job, pipeline):
                     "is_valid": validity["is_valid"],
                 }
             )
-    job.activities = proposals
-    job.llm_log = log
+            # Persist after each proposal so an interruption never loses the
+            # activities already generated (#36).
+            done += 1
+            job.progress_done = done
+            job.activities = proposals
+            job.llm_log = log
+            job.save(
+                update_fields=[
+                    "activities",
+                    "llm_log",
+                    "progress_done",
+                    "updated_at",
+                ]
+            )
     job.status = CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
     job.error_message = ""
+    job.progress_stage = ""
     job.save()
     return job
 

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import django
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 
@@ -29,6 +29,10 @@ from helpers import tutor_client  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
+
+# Las etapas LLM corren en segundo plano por defecto (#32/#36); los
+# tests de comportamiento sincrono piden modo inline explicito.
+sync_stage = override_settings(AULALISTA_IMPORT_ASYNC=False)
 
 
 def pdf_upload(name="curricula.pdf"):
@@ -128,6 +132,7 @@ def test_chat_json_retries_until_schema_valid_response():
         pipeline.chat_json(prompt, pipeline.TOPIC_SCHEMA, transport=always_down)
 
 
+@sync_stage
 def test_extract_action_identifies_topics_with_citations_and_no_packages():
     client = tutor_client()
     job = upload_job(client)
@@ -149,6 +154,7 @@ def test_extract_action_identifies_topics_with_citations_and_no_packages():
         response = client.post(
             reverse("tutor-import-detail", args=[job.pk]),
             {"action": "extract"},
+            follow=True,
         )
 
     assert response.status_code == 200
@@ -169,6 +175,7 @@ def test_extract_action_identifies_topics_with_citations_and_no_packages():
     assert PublishedPackageSnapshot.objects.count() == 0
 
 
+@sync_stage
 def test_failed_stage_records_error_and_allows_retry():
     client = tutor_client()
     job = upload_job(client)
@@ -185,6 +192,7 @@ def test_failed_stage_records_error_and_allows_retry():
         first = client.post(
             reverse("tutor-import-detail", args=[job.pk]),
             {"action": "extract"},
+            follow=True,
         )
 
     job.refresh_from_db()
@@ -197,6 +205,7 @@ def test_failed_stage_records_error_and_allows_retry():
         second = client.post(
             reverse("tutor-import-detail", args=[job.pk]),
             {"action": "extract"},
+            follow=True,
         )
 
     assert second.status_code == 200
@@ -204,6 +213,7 @@ def test_failed_stage_records_error_and_allows_retry():
     assert job.status == CurriculumImportJob.STATUS_TOPICS_PROPOSED
 
 
+@sync_stage
 def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
     client = tutor_client()
     job = upload_job(client)
@@ -236,6 +246,7 @@ def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
                 "end_1": "4",
                 "keep_1": "off",
             },
+            follow=True,
         )
 
     job.refresh_from_db()
