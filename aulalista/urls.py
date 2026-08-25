@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+from django.shortcuts import redirect
 
 from health.views import health_page, local_access
 from curriculum.views import (
@@ -27,6 +28,7 @@ from curriculum.views import (
 
 
 urlpatterns = [
+    path("", lambda request: redirect("student-packages")),
     path("cms/", include("wagtail.admin.urls")),
     path("documents/", include("wagtail.documents.urls")),
     path("health/", health_page, name="health"),
