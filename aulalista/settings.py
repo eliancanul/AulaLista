@@ -108,6 +108,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.environ.get("AULALISTA_MEDIA_ROOT", str(BASE_DIR / "media"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# The only real login in this project is Wagtail's admin login. Without this,
+# redirect_to_login() sends anonymous users to the nonexistent /accounts/login/.
+LOGIN_URL = "/cms/login/"
+
 WAGTAIL_SITE_NAME = "AulaLista"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 # The operator supplies the address other devices can reach on the LAN. The
