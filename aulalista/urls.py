@@ -15,6 +15,8 @@ from curriculum.views import (
     student_turn_ready,
     student_turn_start,
     tutor_import_detail,
+    tutor_import_log_json,
+    tutor_import_log_md,
     tutor_import_upload,
     tutor_import_wait,
     tutor_session_confirm,
@@ -68,6 +70,16 @@ urlpatterns = [
         "tutor/imports/<int:job_id>/espera/",
         tutor_import_wait,
         name="tutor-import-wait",
+    ),
+    path(
+        "tutor/imports/<int:job_id>/bitacora.md",
+        tutor_import_log_md,
+        name="tutor-import-log-md",
+    ),
+    path(
+        "tutor/imports/<int:job_id>/bitacora.json",
+        tutor_import_log_json,
+        name="tutor-import-log-json",
     ),
     path(
         "tutor/snapshots/<int:snapshot_id>/prepare/",

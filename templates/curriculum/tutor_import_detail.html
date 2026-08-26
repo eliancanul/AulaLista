@@ -12,6 +12,10 @@
     <main>
       <h1>Importación de currícula</h1>
       <p data-import-status>Estado: {{ job.get_status_display }}</p>
+      <p class="technical-log-links">
+        <a href="{% url 'tutor-import-log-md' job.pk %}">Bitácora técnica (.md)</a> ·
+        <a href="{% url 'tutor-import-log-json' job.pk %}">Bitácora técnica (.json)</a>
+      </p>
       {% if job.page_count %}<p>Páginas extraídas: {{ job.page_count }}</p>{% endif %}
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 

@@ -7,10 +7,14 @@ review; it never touches CurriculumPackage, revisions or snapshots.
 
 import json
 import re
+import threading
+import time
 import unicodedata
-from difflib import SequenceMatcher
 import urllib.error
 import urllib.request
+from difflib import SequenceMatcher
+from pathlib import Path
+from string import Template
 
 from django.conf import settings
 
@@ -19,6 +23,45 @@ DEFAULT_MODEL = "qwen2.5:7b"
 CHAT_TIMEOUT_SECONDS = 180
 MAX_ATTEMPTS = 3
 CHUNK_MAX_CHARS = 4000
+
+
+PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+
+def load_prompt_template(name):
+    """Read a versioned prompt template (editable without touching code)."""
+
+    return (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8")
+
+
+def render_prompt(name, **values):
+    """Fill a versioned prompt template with the stage's dynamic values."""
+
+    return Template(load_prompt_template(name)).substitute(**values)
+
+
+SYSTEM_PROMPT_NAME = "system"
+
+# Per-thread recorder: stage workers bracket their LLM calls with
+# start_llm_trace()/stop_llm_trace() and every chat_json call appends an
+# entry with prompt, raw answer, duration and retry count (#34).
+_trace = threading.local()
+
+
+def start_llm_trace():
+    _trace.entries = []
+
+
+def stop_llm_trace():
+    entries = getattr(_trace, "entries", None)
+    _trace.entries = None
+    return entries or []
+
+
+def _record_trace(entry):
+    entries = getattr(_trace, "entries", None)
+    if entries is not None:
+        entries.append(entry)
 
 
 class ImportPipelineError(ValueError):
@@ -176,22 +219,31 @@ def _validate_against_schema(payload, schema):
     return payload
 
 
-def chat_json(prompt, schema, *, model=None, transport=None):
-    """Call the local Ollama chat API constrained to the given JSON Schema."""
+SYSTEM_PROMPT_CACHE = {}
+
+
+def system_prompt():
+    """The shared system prompt, loaded from its versioned file (#34)."""
+
+    if SYSTEM_PROMPT_NAME not in SYSTEM_PROMPT_CACHE:
+        SYSTEM_PROMPT_CACHE[SYSTEM_PROMPT_NAME] = load_prompt_template(
+            SYSTEM_PROMPT_NAME
+        )
+    return SYSTEM_PROMPT_CACHE[SYSTEM_PROMPT_NAME]
+
+
+def chat_json(prompt, schema, *, stage="", model=None, transport=None):
+    """Call the local Ollama chat API constrained to the given JSON Schema.
+
+    Every exchange is recorded into the active thread trace when one is
+    running: full system/user prompts, raw answer, duration and retries (#34).
+    """
 
     body = json.dumps(
         {
             "model": model or llm_model(),
             "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "Eres un asistente que analiza currículas escolares y "
-                        "responde exclusivamente con JSON válido conforme al "
-                        "esquema indicado. No inventes contenido que no esté "
-                        "en el texto entregado."
-                    ),
-                },
+                {"role": "system", "content": system_prompt()},
                 {"role": "user", "content": prompt},
             ],
             "stream": False,
@@ -211,20 +263,40 @@ def chat_json(prompt, schema, *, model=None, transport=None):
         ) as response:
             return json.loads(response.read().decode("utf-8"))
 
-    last_error = None
+    started = time.monotonic()
+    attempt_errors = []
+    parsed_result = None
+    raw_content = ""
     for _attempt in range(MAX_ATTEMPTS):
         try:
             raw = transport(request) if transport else _post()
             content = raw["message"]["content"]
-            parsed = json.loads(content)
-            return _validate_against_schema(parsed, schema)
+            raw_content = content
+            parsed_result = _validate_against_schema(json.loads(content), schema)
+            break
         except (ImportPipelineError, KeyError, json.JSONDecodeError,
                 urllib.error.URLError, TimeoutError, OSError) as error:
-            last_error = error
-    raise ImportPipelineError(
-        f"El modelo local no produjo una propuesta válida tras {MAX_ATTEMPTS} "
-        f"intentos: {last_error}"
+            attempt_errors.append(str(error))
+    duration_ms = int((time.monotonic() - started) * 1000)
+    _record_trace(
+        {
+            "stage": stage,
+            "model": model or llm_model(),
+            "system": system_prompt(),
+            "prompt": prompt,
+            "response_raw": raw_content,
+            "duration_ms": duration_ms,
+            "attempts": len(attempt_errors) + (1 if parsed_result is not None else 0),
+            "errors": attempt_errors,
+            "ok": parsed_result is not None,
+        }
     )
+    if parsed_result is None:
+        raise ImportPipelineError(
+            f"El modelo local no produjo una propuesta válida tras {MAX_ATTEMPTS} "
+            f"intentos: {attempt_errors[-1] if attempt_errors else 'desconocido'}"
+        )
+    return parsed_result
 
 
 # ---------------------------------------------------------------------------
@@ -243,20 +315,10 @@ def identify_topics(chunk, *, transport=None):
     mere activity titles or secondary headings are dropped (#33).
     """
 
-    prompt = (
-        "El siguiente fragmento de una currícula escolar tiene marcadores de "
-        "página como [página 3]. Identifica los temas curriculares presentes. "
-        "Clasifica cada encabezado candidato con \"tipo\": \"tema\", "
-        "\"actividad\" o \"otro\". Criterios: un TEMA central es una unidad, "
-        "bloque o tema con contenido enseñable que agrupa varias actividades; "
-        "el título de una ACTIVIDAD suele empezar con un verbo (resuelve, "
-        "colorea, compara, elabora) o estar subordinado a otro encabezado; "
-        "\"otro\" cubre notas editoriales y encabezados decorativos. Responde "
-        "JSON con la forma {\"temas\": [{\"titulo\": string, "
-        "\"pagina_inicio\": int, \"pagina_fin\": int, \"tipo\": string}]}. "
-        "Usa los números de página de los marcadores.\n\n" + chunk["text"]
+    prompt = render_prompt("identify_topics", chunk_text=chunk["text"])
+    result = chat_json(
+        prompt, TOPIC_SCHEMA, stage="identify_topics", transport=transport
     )
-    result = chat_json(prompt, TOPIC_SCHEMA, transport=transport)
     topics = []
     for topic in result["temas"][:20]:
         title = str(topic.get("titulo", "")).strip()[:200]
@@ -364,15 +426,14 @@ def context_for_pages(source_text, start, end, *, pad=1, max_chars=CHUNK_MAX_CHA
 def propose_subtopics(topic_title, context_text, *, transport=None):
     """Stage C: propose subtopics (and an activity-count hint) for one topic."""
 
-    prompt = (
-        "Tema curricular: \"" + topic_title + "\".\n\nContexto de la currícula "
-        "(con páginas):\n" + context_text[:CHUNK_MAX_CHARS] + "\n\nPropón los "
-        "subtemas que componen este tema, en orden pedagógico. Responde JSON "
-        "{\"subtemas\": [string], \"actividades_sugeridas\": int} donde "
-        "actividades_sugeridas es cuántas actividades convendría por subtema "
-        "según su densidad conceptual."
+    prompt = render_prompt(
+        "propose_subtopics",
+        topic_title=topic_title,
+        context=context_text[:CHUNK_MAX_CHARS],
     )
-    result = chat_json(prompt, SUBTOPIC_SCHEMA, transport=transport)
+    result = chat_json(
+        prompt, SUBTOPIC_SCHEMA, stage="propose_subtopics", transport=transport
+    )
     subtopics = []
     for subtopic in result["subtemas"][:15]:
         title = str(subtopic).strip()[:200]
@@ -395,18 +456,15 @@ def propose_activities(subtopic_title, context_text, count, *, transport=None):
     """
 
     count = max(1, min(int(count), 5))
-    prompt = (
-        "Subtema curricular: \"" + subtopic_title + "\".\n\nContexto de la "
-        "currícula:\n" + context_text[:CHUNK_MAX_CHARS] + f"\n\nRedacta {count} "
-        "actividad(es) de opción única para este subtema. Responde JSON con la "
-        "forma {\"objetivo\": string, \"microleccion\": string, "
-        "\"explicacion_final\": string, \"reactivos\": [{\"enunciado\": "
-        "string, \"opciones\": [{\"posicion\": int empezando en 1 y sin huecos, "
-        "\"texto\": string, \"correcta\": bool (exactamente una true), "
-        "\"retroalimentacion\": string}], \"pistas\": [string]}]}. Usa sólo el "
-        "contexto entregado; no inventes temas ajenos."
+    prompt = render_prompt(
+        "propose_activities",
+        subtopic_title=subtopic_title,
+        context=context_text[:CHUNK_MAX_CHARS],
+        count=count,
     )
-    result = chat_json(prompt, ACTIVITY_SCHEMA, transport=transport)
+    result = chat_json(
+        prompt, ACTIVITY_SCHEMA, stage="propose_activities", transport=transport
+    )
     return _map_activity_payload(subtopic_title, result)
 
 
@@ -463,20 +521,17 @@ def propose_activities_incremental(
 
     count = max(1, min(int(count), 5))
     existing_block = "\n".join(f"- {summary}" for summary in existing_summaries)
-    prompt = (
-        "Subtema curricular: \"" + subtopic_title + "\".\n\nContexto de la "
-        "currícula:\n" + context_text[:CHUNK_MAX_CHARS]
-        + "\n\nYa existen estas actividades para este subtema (NO las "
-        "modifiques, NO las repitas, NO alteres sus textos):\n"
-        + existing_block
-        + f"\n\nRedacta {count} actividad(es) NUEVA(S) de opción única que se "
-        "sumen a las anteriores sin cambiarlas. Responde JSON con la forma "
-        "{\"objetivo\": string, \"microleccion\": string, "
-        "\"explicacion_final\": string, \"reactivos\": [{\"enunciado\": "
-        "string, \"opciones\": [{\"posicion\": int empezando en 1 y sin "
-        "huecos, \"texto\": string, \"correcta\": bool (exactamente una "
-        "true), \"retroalimentacion\": string}], \"pistas\": [string]}]}. "
-        "Usa sólo el contexto entregado; no inventes temas ajenos."
+    prompt = render_prompt(
+        "propose_activities_incremental",
+        subtopic_title=subtopic_title,
+        context=context_text[:CHUNK_MAX_CHARS],
+        existing_block=existing_block,
+        count=count,
     )
-    result = chat_json(prompt, ACTIVITY_SCHEMA, transport=transport)
+    result = chat_json(
+        prompt,
+        ACTIVITY_SCHEMA,
+        stage="add_missing_activities",
+        transport=transport,
+    )
     return _map_activity_payload(subtopic_title, result)
