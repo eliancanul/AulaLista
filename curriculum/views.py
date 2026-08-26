@@ -1053,7 +1053,12 @@ def _import_action_confirm_topics(job, pipeline, topics):
     job.progress_done = 0
     job.save(update_fields=["progress_total", "progress_done", "updated_at"])
     for index, topic in enumerate(topics):
-        proposal = pipeline.propose_subtopics(topic["titulo"], context_text)
+        window = pipeline.context_for_pages(
+            context_text,
+            topic.get("pagina_inicio", 1),
+            topic.get("pagina_fin", 1),
+        )
+        proposal = pipeline.propose_subtopics(topic["titulo"], window)
         topic["subtemas"] = [
             {"titulo": title, "actividades_sugeridas": proposal["actividades_sugeridas"]}
             for title in proposal["subtemas"]
@@ -1095,7 +1100,8 @@ def _topics_from_post(post_data):
     )
     for index in indices:
         title = str(post_data.get(f"topic_{index}", "") or "").strip()[:200]
-        keep = post_data.get(f"keep_{index}") != "off"
+        # Unchecked checkboxes never reach the server; presence = keep (#44).
+        keep = f"keep_{index}" in post_data
         if keep and title:
             topics.append(
                 {
@@ -1121,8 +1127,8 @@ def _subtopics_from_post(post_data):
     )
     for topic_index in heading_indices:
         title = str(post_data.get(f"heading_{topic_index}", "") or "").strip()[:200]
-        if not title or post_data.get(f"keep_topic_{topic_index}") == "off":
-            continue
+        if not title or f"keep_topic_{topic_index}" not in post_data:
+            continue  # absent checkbox = dropped by the teacher (#44)
         sub_indices = sorted(
             int(match.group(1))
             for key in post_data
@@ -1130,8 +1136,8 @@ def _subtopics_from_post(post_data):
         )
         subtopics = []
         for sub_index in sub_indices:
-            if post_data.get(f"keep_{topic_index}_{sub_index}") == "off":
-                continue
+            if f"keep_{topic_index}_{sub_index}" not in post_data:
+                continue  # absent checkbox = dropped by the teacher (#44)
             sub_title = str(
                 post_data.get(f"topic_{topic_index}_sub_{sub_index}", "") or ""
             ).strip()[:200]

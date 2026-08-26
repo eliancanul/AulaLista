@@ -8,6 +8,7 @@ review; it never touches CurriculumPackage, revisions or snapshots.
 import json
 import re
 import unicodedata
+from difflib import SequenceMatcher
 import urllib.error
 import urllib.request
 
@@ -275,26 +276,89 @@ def identify_topics(chunk, *, transport=None):
     return topics
 
 
-def consolidate_topics(proposals_per_chunk):
-    """Merge per-chunk topic lists, deduplicating by normalized title."""
+def _ranges_overlap(a, b):
+    return a["pagina_inicio"] <= b["pagina_fin"] and b["pagina_inicio"] <= a["pagina_fin"]
 
-    consolidated = []
-    seen = {}
-    for proposals in proposals_per_chunk:
-        for topic in proposals:
-            key = _normalize_title(topic["titulo"])
-            if key in seen:
-                existing = seen[key]
-                existing["pagina_inicio"] = min(
-                    existing["pagina_inicio"], topic["pagina_inicio"]
+
+def _titles_equivalent(a, b):
+    """Near-duplicate detection: substring or high sequence similarity (#43)."""
+
+    left, right = _normalize_title(a), _normalize_title(b)
+    if not left or not right:
+        return False
+    if left in right or right in left:
+        return True
+    return SequenceMatcher(None, left, right).ratio() >= 0.7
+
+
+def consolidate_topics(proposals_per_chunk):
+    """Merge per-chunk topic lists, deduplicating near-identical titles (#43).
+
+    Exact and fuzzy duplicates merge only when their page ranges overlap, so
+    distinct topics that merely share a title fragment survive. The shorter
+    (more generic) title wins; citations are widened to the union.
+    """
+
+    consolidated = [
+        dict(topic) for proposals in proposals_per_chunk for topic in proposals
+    ]
+    # Absorb equivalent+overlapping pairs until stable: widening a range can
+    # enable further merges (transitive near-duplicates, #43).
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(consolidated)):
+            for j in range(i + 1, len(consolidated)):
+                first, second = consolidated[i], consolidated[j]
+                exact_match = _normalize_title(first["titulo"]) == _normalize_title(
+                    second["titulo"]
                 )
-                existing["pagina_fin"] = max(
-                    existing["pagina_fin"], topic["pagina_fin"]
-                )
-                continue
-            seen[key] = dict(topic)
-            consolidated.append(seen[key])
+                if exact_match or (
+                    _titles_equivalent(first["titulo"], second["titulo"])
+                    and _ranges_overlap(first, second)
+                ):
+                    first["pagina_inicio"] = min(
+                        first["pagina_inicio"], second["pagina_inicio"]
+                    )
+                    first["pagina_fin"] = max(first["pagina_fin"], second["pagina_fin"])
+                    if len(str(second["titulo"])) < len(str(first["titulo"])):
+                        first["titulo"] = second["titulo"]
+                    del consolidated[j]
+                    changed = True
+                    break
+            if changed:
+                break
     return consolidated
+
+
+def context_for_pages(source_text, start, end, *, pad=1, max_chars=CHUNK_MAX_CHARS):
+    """Extract the source window covering pages start..end (plus padding).
+
+    Subtopic proposals must reason about the text where the topic actually
+    lives (#42); falls back to the head of the document when the markers are
+    missing.
+    """
+
+    if not source_text:
+        return ""
+    marker = re.compile(r"\[página (\d+)\]")
+    matches = list(marker.finditer(source_text))
+    if not matches:
+        return source_text[:max_chars]
+
+    pages = {}
+    for index, match in enumerate(matches):
+        page = int(match.group(1))
+        begin = match.end()
+        finish = matches[index + 1].start() if index + 1 < len(matches) else len(source_text)
+        pages[page] = source_text[begin:finish].strip("\n")
+
+    lo = max(min(pages), int(start) - pad)
+    hi = min(max(pages), int(end) + pad)
+    window = "\n\n".join(
+        f"[página {page}]\n{pages[page]}" for page in sorted(pages) if lo <= page <= hi
+    )
+    return window or source_text[:max_chars]
 
 
 def propose_subtopics(topic_title, context_text, *, transport=None):
