@@ -34,6 +34,18 @@ curl -s localhost:11434/api/tags | grep qwen2.5   # modelo presente
       las actividades; la docente revisa, edita y confirma antes de publicar.
       Reutilizar sólo patrones de interacción, nunca marca, contenido o assets
       propietarios.
+- [ ] **Landing estudiantil — #68:** entrada por QR/enlace con animación opcional
+      de temas ya vistos, sólo cuando el maestro haya indicado el avance de la
+      currícula. Debe tener alternativa estática y soporte para movimiento
+      reducido.
+- [ ] **Landing del maestro — #69:** entrada autenticada orientada a preparar,
+      activar y continuar sesiones; no un dashboard de métricas.
+- [ ] **Actividad activa/proyección — #67:** pantalla tipo aula/Kahoot! con QR
+      persistente y apodos locales de los alumnos que ya entraron, sin UUIDs,
+      identidades reales ni puntuaciones individuales.
+- [ ] **Tres prototipos visuales aislados — #70, #71, #72:** agentes separados
+      entregan A Editorial tranquila, B Camino de aprendizaje y C Aula directa.
+      Probar las tres en vivo y elegir una antes de tocar las pantallas reales.
 - [ ] **Referencia de interacción estudiantil:** evaluar
       `sanidhyy/duolingo-clone` (<https://github.com/sanidhyy/duolingo-clone>,
       MIT) para el cuestionario. No introducir el clon directamente en Django:
