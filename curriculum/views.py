@@ -1141,9 +1141,21 @@ def _import_action_extract(job, pipeline):
         )
         job.progress_done = index + 1
         job.save(update_fields=["progress_done", "updated_at"])
+    consolidated = pipeline.consolidate_topics(proposals_per_chunk)
+    # Pasada semántica final: agrupa fragmentos del mismo tema curricular
+    # en una sola llamada LLM barata (#47); degrada a los candidatos
+    # heurísticos si el modelo no responde.
+    topics = pipeline.consolidate_topics_semantic(consolidated)
+    log.append(
+        {
+            "stage": "consolidate_topics",
+            "candidates": len(consolidated),
+            "proposed_count": len(topics),
+        }
+    )
     job.topics = [
         {**topic, "subtemas": []}
-        for topic in pipeline.consolidate_topics(proposals_per_chunk)
+        for topic in topics
     ]
     job.llm_log = log
     job.status = CurriculumImportJob.STATUS_TOPICS_PROPOSED

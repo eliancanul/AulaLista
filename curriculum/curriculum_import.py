@@ -99,6 +99,24 @@ TOPIC_SCHEMA = {
     "required": ["temas"],
 }
 
+CONSOLIDATE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "temas": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string"},
+                    "indices": {"type": "array", "items": {"type": "integer"}},
+                },
+                "required": ["titulo", "indices"],
+            },
+        }
+    },
+    "required": ["temas"],
+}
+
 SUBTOPIC_SCHEMA = {
     "type": "object",
     "properties": {
@@ -391,6 +409,66 @@ def consolidate_topics(proposals_per_chunk):
             if changed:
                 break
     return consolidated
+
+
+def consolidate_topics_semantic(candidates, *, transport=None):
+    """Final semantic grouping pass over candidate topics (#47).
+
+    One cheap LLM call receives the numbered candidates and returns groups
+    of real curriculum themes; citations are computed in code as the union
+    of the members' page ranges (the model never invents pages). Candidates
+    the model does not claim survive untouched for human review. Any LLM
+    failure degrades gracefully to the heuristic consolidation result.
+    """
+
+    if len(candidates) <= 1:
+        return [dict(topic) for topic in candidates]
+    numbered = "\n".join(
+        f"{index}. {topic['titulo']} ([página {topic['pagina_inicio']}-"
+        f"página {topic['pagina_fin']}])"
+        for index, topic in enumerate(candidates)
+    )
+    prompt = render_prompt("consolidate_topics", candidates=numbered)
+    try:
+        result = chat_json(
+            prompt,
+            CONSOLIDATE_SCHEMA,
+            stage="consolidate_topics",
+            transport=transport,
+        )
+    except ImportPipelineError:
+        # Degradación elegante: sin pasada semántica se conservan los
+        # candidatos heurísticos; la maestra decide en la revisión.
+        return [dict(topic) for topic in candidates]
+
+    grouped = []
+    claimed = set()
+    for group in result.get("temas", []):
+        title = str(group.get("titulo", "")).strip()[:200]
+        members = []
+        for raw_index in group.get("indices", []):
+            try:
+                index = int(raw_index)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= index < len(candidates) and index not in claimed:
+                claimed.add(index)
+                members.append(candidates[index])
+        if not title or not members:
+            continue
+        grouped.append(
+            {
+                "titulo": title,
+                "pagina_inicio": min(member["pagina_inicio"] for member in members),
+                "pagina_fin": max(member["pagina_fin"] for member in members),
+            }
+        )
+    grouped.extend(
+        dict(topic)
+        for index, topic in enumerate(candidates)
+        if index not in claimed
+    )
+    return grouped
 
 
 def context_for_pages(source_text, start, end, *, pad=1, max_chars=CHUNK_MAX_CHARS):
