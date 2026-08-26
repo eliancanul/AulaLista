@@ -3,40 +3,79 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AulaLista · mis sesiones</title>
+    <title>AulaLista · aula docente</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
   </head>
   <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <h1>Mis sesiones</h1>
-      {% if sessions %}
-        <table data-sessions-listing>
-          <thead>
-            <tr>
-              <th>Sesión</th>
-              <th>Actividad</th>
-              <th>Estado</th>
-              <th>Estudiantes indicados</th>
-              <th>Dispositivos preparados</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for session in sessions %}
-              <tr data-session-status>
-                <td><a href="{% url 'tutor-session-review' session.pk %}">Sesión {{ session.pk }}</a></td>
-                <td>{{ session.snapshot.payload.title }}</td>
-                <td>{{ session.get_status_display }}</td>
-                <td>{{ session.student_count }}</td>
-                <td>{{ session.device_count }}</td>
-              </tr>
+    <main id="contenido">
+      <header class="landing-header">
+        <p class="eyebrow">OPERACIÓN DOCENTE · NODO LOCAL</p>
+        <h1>Tu aula, lista para la siguiente decisión</h1>
+        <p class="lead">Prepara, activa y cierra actividades a partir de contenido publicado.</p>
+      </header>
+
+      <section class="authority-boundary" aria-labelledby="authority-heading">
+        <h2 id="authority-heading">Autoridad humana visible</h2>
+        <p>La IA solo propone. <strong>EditorialReviewer</strong> revisa, aprueba y publica; la maestra activa la sesión.</p>
+        <p class="muted">La asistencia, la ayuda y el progreso visual no son evidencia de aprendizaje.</p>
+      </section>
+
+      <section aria-labelledby="path-heading" class="orientation">
+        <h2 id="path-heading">Camino esencial</h2>
+        <p>Importar → publicación humana → preparar → activar → cerrar/resultados.</p>
+        <a href="{% url 'tutor-import-upload' %}">Importar currícula</a>
+      </section>
+
+      <section aria-labelledby="sessions-heading">
+        <h2 id="sessions-heading">Sesiones recientes</h2>
+        {% if session_cards %}
+          <div class="session-grid">
+            {% for card in session_cards %}
+              <article class="session-card" data-session-status>
+                <div class="session-card-heading">
+                  <div>
+                    <p class="eyebrow">SESIÓN DE AULA</p>
+                    <h3>{{ card.title }}</h3>
+                  </div>
+                  <span class="status">{{ card.state }}</span>
+                </div>
+                <p class="snapshot">Publicado · versión {{ card.session.snapshot.version }} · {{ card.session.snapshot.sha256|slice:':8' }}</p>
+                {% if card.session.status == "active" %}
+                  <p class="participant-state">{{ card.participant_count }} {{ card.participant_label }}</p>
+                  <a class="primary-action" href="{{ card.action_url }}">{{ card.action_label }}</a>
+                  <div class="supporting-actions">
+                    <a href="{{ card.projection_url }}">Abrir proyección pública</a>
+                    <a href="{{ card.review_url }}">Ver revisión</a>
+                  </div>
+                {% else %}
+                  <a class="primary-action" href="{{ card.action_url }}">{{ card.action_label }}</a>
+                {% endif %}
+              </article>
             {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <p>Todavía no hay sesiones. Importa una currícula, publica un paquete y prepára una sesión para empezar.</p>
-      {% endif %}
+          </div>
+        {% else %}
+          <p class="empty-note">Todavía no hay sesiones. Elige un snapshot publicado para preparar la primera.</p>
+        {% endif %}
+      </section>
+
+      <section aria-labelledby="snapshots-heading" class="snapshot-choices">
+        <h2 id="snapshots-heading">Snapshots publicados para preparar</h2>
+        {% if snapshots %}
+          <ul>
+            {% for snapshot in snapshots %}
+              <li>
+                <span><strong>{{ snapshot.payload.title|default:snapshot.package.title }}</strong> · versión {{ snapshot.version }} · {{ snapshot.sha256|slice:':8' }}</span>
+                <a href="{% url 'tutor-session-prepare' snapshot.pk %}">Preparar sesión</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="empty-note">No hay publicaciones disponibles todavía.</p>
+        {% endif %}
+      </section>
     </main>
   </body>
 </html>

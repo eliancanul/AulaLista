@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError
 from django.db import transaction
+
 from django.utils import timezone
 from django.http import (
     HttpResponse,
@@ -451,17 +452,74 @@ def student_turn_ready(request, session_id):
 
 
 @teacher_required
-
 def tutor_sessions(request):
-    """Listing of recent teacher sessions with explicit state navigation (#21).
+    """Operational teacher landing for the existing session workflow.
 
-    The teacher can find any session's review screen without remembering
-    URLs; statuses are shown in teacher language and no raw technical
-    identifiers are exposed.
+    Counts are derived at read time; the landing does not create or persist
+    any additional classroom state.
     """
-
-    sessions = ClassroomSession.objects.select_related("snapshot").order_by("-id")[:20]
-    return render(request, "curriculum/tutor_sessions.html", {"sessions": sessions})
+    sessions = (
+        ClassroomSession.objects.select_related("snapshot", "snapshot__package")
+        .order_by("-started_at", "-id")[:20]
+    )
+    session_cards = []
+    for session in sessions:
+        participant_count = (
+            StudentTurn.objects.filter(
+                assignment__session=session,
+                status=StudentTurn.STATUS_ACTIVE,
+            ).count()
+            if session.status == ClassroomSession.STATUS_ACTIVE
+            else 0
+        )
+        if session.status == ClassroomSession.STATUS_PREPARED:
+            action_label = "Revisar y activar"
+        elif session.status == ClassroomSession.STATUS_ACTIVE:
+            action_label = (
+                "Esperando participantes · abrir control autenticado"
+                if participant_count == 0
+                else "Actividad en progreso · abrir control autenticado"
+            )
+        elif session.status == ClassroomSession.STATUS_CLOSED:
+            action_label = "Revisar resultados y exportar"
+        else:
+            action_label = "Revisar"
+        title = session.snapshot.payload.get("title") or session.snapshot.package.title
+        session_cards.append(
+            {
+                "session": session,
+                "title": title,
+                "state": session.get_status_display(),
+                "participant_count": participant_count,
+                "participant_label": (
+                    "participante" if participant_count == 1 else "participantes"
+                ),
+                "action_label": action_label,
+                "action_url": reverse(
+                    (
+                        "tutor-session-active"
+                        if session.status == ClassroomSession.STATUS_ACTIVE
+                        else "tutor-session-review"
+                    ),
+                    args=[session.pk],
+                ),
+                "review_url": reverse(
+                    "tutor-session-review", args=[session.pk]
+                ),
+                "projection_url": reverse(
+                    "session-projection", args=[session.pk]
+                ),
+            }
+        )
+    snapshots = (
+        PublishedPackageSnapshot.objects.select_related("package")
+        .order_by("-published_at", "-id")[:12]
+    )
+    return render(
+        request,
+        "curriculum/tutor_sessions.html",
+        {"session_cards": session_cards, "snapshots": snapshots},
+    )
 
 
 @teacher_required
