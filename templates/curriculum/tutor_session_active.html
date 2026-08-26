@@ -21,7 +21,7 @@
         </section>
         <div class="operational-links"><a class="button button-primary" href="{% url 'session-projection' session.pk %}">Abrir proyección pública</a><span>QR, enlace y conteo permanecen visibles para el aula.</span></div>
       {% elif session.status == "prepared" %}
-        <section class="empty-state notice"><h2>Sesión preparada, aún no activa</h2><p>La maestra debe confirmarla desde la revisión docente antes de admitir participantes.</p><a class="button button-primary" href="{% url 'tutor-session-review' session.pk %}">Volver a revisión</a></section>
+        <section class="empty-state notice"><h2>Sesión preparada, aún no activa</h2><p>La maestra debe confirmarla desde la revisión docente antes de admitir participantes.</p><a class="button button-primary" href="{% url 'tutor-session-review' session.pk %}">Volver a revisión</a><a class="button button-secondary" href="{% url 'session-projection' session.pk %}">Abrir proyección pública</a></section>
       {% else %}
         <section class="empty-state notice"><h2>La sesión ya no admite participantes.</h2><p>El acceso y los apodos temporales dejaron de estar disponibles.</p></section>
       {% endif %}

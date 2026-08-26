@@ -76,6 +76,8 @@ p { color: var(--color-muted); }
 .alias-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; margin: 1.5rem 0 1rem; padding: 0; list-style: none; }
 .alias-list li { padding: .75rem; border-inline-start: .3rem solid var(--color-review); border-radius: var(--radius); background: #f7f3e9; font-size: 1rem; font-weight: 750; overflow-wrap: anywhere; }
 .empty-note, .notice { padding: .9rem 1rem; border-inline-start: .35rem solid #87958e; background: #eef3f0; }
+.empty-state { padding: 1rem; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-surface); }
+.projection-participant-summary { color: var(--color-muted); font-size: .9rem; }
 .monitor-note { margin-block-start: 1rem; }
 .operational-links { margin-block-start: 1rem; }
 .operational-links > span, .privacy-note { color: var(--color-muted); font-size: .78rem; }

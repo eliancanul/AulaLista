@@ -62,6 +62,8 @@ p { color: var(--color-muted); }
 .primary-action--large { min-block-size: 54px; font-size: 1.02rem; white-space: nowrap; }
 .secondary-action { border-color: var(--color-action); color: var(--color-action-dark); background: var(--color-surface); }
 .button { cursor: pointer; }
+.button-primary { background: var(--color-action); color: #fff; }
+.button-primary:hover { background: var(--color-action-dark); }
 .button-secondary { border-color: #82929b; color: var(--color-ink); background: var(--color-surface); }
 .button-secondary:hover { background: var(--color-soft); }
 .button-danger { border-color: var(--color-error); color: #fff; background: var(--color-error); }
@@ -119,7 +121,7 @@ input, select { inline-size: 100%; min-block-size: 44px; padding: .6rem .7rem; b
 .node-decision { display: grid; grid-template-columns: 1fr auto; gap: .35rem .5rem; align-items: center; }
 .node-decision label { grid-column: 1 / -1; font-size: .72rem; font-weight: 750; }
 .node-decision select { min-block-size: 40px; }
-.node-decision .button { min-block-size: 40px; padding: .5rem .7rem; }
+.node-decision .button { min-block-size: var(--target-min); padding: .5rem .7rem; }
 .error { padding: .9rem 1rem; border-inline-start: .35rem solid var(--color-error); background: #fbe8ee; color: var(--color-error); }
 .site-footer { display: flex; justify-content: space-between; gap: 1rem; width: min(1180px, calc(100% - 2rem)); margin-inline: auto; padding: 1rem 0 1.5rem; border-block-start: 1px solid var(--color-line); color: var(--color-muted); font-size: .75rem; }
 @media (max-width: 760px) { .landing-header--split { display: block; } .landing-header--split .primary-action { margin-block-start: 1rem; } .session-grid, .roadmap-card-grid { grid-template-columns: 1fr; } .teacher-node { grid-template-columns: 2rem minmax(0, 1fr); } .node-decision { grid-column: 2; } }
