@@ -73,12 +73,20 @@ def test_visual_b_has_accessible_responsive_and_reduced_motion_hooks():
     assert "@media (max-width: 520px)" in css
 
 
-def test_visual_b_js_supports_local_navigation_qr_persistence_and_nicknames():
+def test_visual_b_js_keeps_ephemeral_nicknames_only_in_memory():
     js = read("app.js")
+    docs = "\n".join(read(name) for name in ("index.html", "README.md", "DESIGN.md"))
     assert "addEventListener" in js
-    assert "localStorage" in js
     assert "qr" in js.lower()
     assert "apodo" in js.lower()
     assert "activo" in js.lower()
     assert "cerrado" in js.lower()
     assert "error" in js.lower()
+    for source in (js, docs):
+        for forbidden in ("localStorage", "sessionStorage", "IndexedDB", "cookie"):
+            assert forbidden.lower() not in source.lower()
+    assert "initialSession" in js
+    assert "memoria" in docs.lower()
+    assert "se borra al cerrar" in docs.lower()
+    assert re.search(r"session\.nicknames\s*=\s*\[\]", js)
+    assert re.search(r"if \(state === 'cerrado'\)\s*\{.*?session\.nicknames\s*=\s*\[\];.*?renderSession\(\);", js, re.S)

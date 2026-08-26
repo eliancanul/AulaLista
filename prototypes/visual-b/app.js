@@ -1,27 +1,8 @@
 const screens = Array.from(document.querySelectorAll('.screen'));
 const announcement = document.getElementById('announcement');
-const storageKey = 'aulalista-visual-b';
-const fallbackSession = { joinCode: 'AULA-B7Q2', nicknames: ['Luz', 'Nube'] };
-
-function getSession() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-    if (saved && saved.joinCode && Array.isArray(saved.nicknames)) return saved;
-  } catch (error) {
-    return { ...fallbackSession, storageError: true };
-  }
-  return { ...fallbackSession };
-}
-
-function saveSession(session) {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify({ joinCode: session.joinCode, nicknames: session.nicknames.slice(0, 12) }));
-  } catch (error) {
-    document.getElementById('session-error').hidden = false;
-  }
-}
-
-const session = getSession();
+/* Synthetic seed data lives only in this JavaScript memory space. */
+const initialSession = Object.freeze({ joinCode: 'AULA-B7Q2', nicknames: Object.freeze(['Luz', 'Nube']) });
+const session = { joinCode: initialSession.joinCode, nicknames: [...initialSession.nicknames] };
 
 function announce(message) {
   announcement.textContent = message;
@@ -101,7 +82,6 @@ if (nicknameForm) {
     }
     input.setCustomValidity('');
     if (!session.nicknames.includes(nickname)) session.nicknames.push(nickname);
-    saveSession(session);
     renderSession();
     navigate('roadmap');
     announce(`Apodo local ${nickname} agregado a la demostración sintética.`);
@@ -144,6 +124,10 @@ function setSessionState(state) {
   container.dataset.state = labels[state] ? state : 'error';
   label.textContent = labels[state] || 'Error';
   errorBanner.hidden = state !== 'error';
+  if (state === 'cerrado') {
+    session.nicknames = [];
+    renderSession();
+  }
   announce(`Estado de sesión: ${label.textContent}.`);
 }
 
@@ -160,5 +144,3 @@ document.querySelector('[data-action="copy-code"]')?.addEventListener('click', a
     announce(`Código local: ${code}. La copia automática no está disponible.`);
   }
 });
-
-if (session.storageError) document.getElementById('session-error').hidden = false;

@@ -12,7 +12,7 @@ Desde la raíz de este worktree:
 python -m http.server 8000 --directory prototypes/visual-b
 ```
 
-Abre `index.html` a través del servidor local. También se puede abrir el archivo directamente, aunque el almacenamiento del navegador funciona de forma más consistente con el servidor local. No se necesita instalar nada ni conectar el servidor a Internet.
+Abre `index.html` a través del servidor local. También se puede abrir el archivo directamente. No se necesita instalar nada ni conectar el servidor a Internet.
 
 ## Recorrido sugerido
 
@@ -20,14 +20,16 @@ Abre `index.html` a través del servidor local. También se puede abrir el archi
 2. Escribe un apodo sintético y entra al camino. También puedes usar **Ver camino sin entrar**.
 3. Observa unidades, lecciones y actividades: hay temas `visto`, `actual`, `disponible`, `bloqueado` y una unidad `completada`.
 4. En **Vista docente**, confirma que la activación es una decisión de la maestra después de la aprobación de `EditorialReviewer`.
-5. Activa la sesión para ver el QR persistente, el conteo y los apodos locales.
-6. Usa los controles del modo activo para revisar `Espera`, `Activo`, `Cerrado` y `Error`.
+5. Activa la sesión para ver el QR sintético, el conteo y los apodos locales.
+6. Usa los controles del modo activo para revisar `Espera`, `Activo`, `Cerrado` y `Error`; al cerrar, la lista y el conteo de apodos quedan vacíos.
 
 La acción **Continuar con la actividad** abre una sola actividad por pantalla; sus respuestas solo producen un mensaje sintético local. La IA no publica, no activa, no declara avance y no decide resultados.
+
+Los apodos son temporales: viven solo en la memoria de esta página y se borran al cerrar la sesión. Al recargar o cerrar la página también desaparecen porque no hay persistencia.
 
 ## Archivos
 
 - `index.html`: landings, camino, vistas docente y activa.
 - `styles.css`: sistema visual local, móvil pequeño, proyección y movimiento reducido.
-- `app.js`: navegación, QR gráfico, estado de sesión y apodos locales.
+- `app.js`: navegación, QR gráfico, estado de sesión en memoria y apodos locales temporales.
 - `DESIGN.md`: decisiones, estados y límites del prototipo.

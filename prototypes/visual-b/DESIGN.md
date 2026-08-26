@@ -9,12 +9,12 @@ Todo texto, código de entrada, apodo, conteo y estado que aparece en este proto
 ## Mapa de pantallas
 
 - **Inicio general (`home`)**: dos entradas independientes: enlace/QR para estudiante y vista docente.
-- **Entrada estudiante (`student`)**: espera de una sesión local, QR sintético, código persistente y formulario de apodo temporal.
+- **Entrada estudiante (`student`)**: espera de una sesión local, QR sintético, código de demo y formulario de apodo temporal.
 - **Camino (`roadmap`)**: progreso 50%, guía de unidades/lecciones/actividades y la acción única de continuar a una actividad.
 - **Vista docente (`teacher`)**: revisión del mismo camino, estado de la sesión y acción explícita para activar.
-- **Modo activo (`active`)**: QR persistente, código local, contador de apodos y estados de espera, activo, cerrado y error.
+- **Modo activo (`active`)**: QR sintético, código local, contador de apodos y estados de espera, activo, cerrado y error.
 
-Los botones de la cabecera permiten recorrer las cinco vistas sin servidor de aplicación. El formulario conserva el apodo únicamente en `localStorage` del navegador de demostración.
+Los botones de la cabecera permiten recorrer las cinco vistas sin servidor de aplicación. El formulario conserva el apodo únicamente en la memoria de la página durante la sesión.
 
 ## Estados del camino
 
@@ -32,10 +32,12 @@ Los estados no son puntuaciones individuales. La interfaz evita que el clic de u
 
 - **Espera**: la maestra está preparando; la entrada estudiante lo comunica.
 - **Activo**: la maestra confirmó la activación y el QR permite participar.
-- **Cerrado**: el acompañamiento terminó; se conserva como estado visible de la demo.
-- **Error**: el almacenamiento local no estuvo disponible o se simuló un fallo de enlace; se ofrece reintento local.
+- **Cerrado**: el acompañamiento terminó; la lista y el conteo de apodos se vacían al cerrar.
+- **Error**: se simuló un fallo de enlace; se ofrece reintento local.
 
-El código `AULA-B7Q2` es sintético, legible y persistente en este navegador. El QR es un patrón gráfico generado por CSS y JavaScript, sin imágenes, red ni servicios de terceros.
+El código `AULA-B7Q2` es sintético y legible durante esta sesión en memoria. El QR es un patrón gráfico generado por CSS y JavaScript, sin imágenes, red ni servicios de terceros.
+
+Los apodos viven solo en la memoria de la página; la lista se borra al cerrar la sesión. Al recargar o cerrar la página desaparecen; no se guardan en el navegador.
 
 ## Autoridad y límites
 
