@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · modo activo</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/session_active.css' %}">
+  </head>
+  <body class="active-control">
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <p class="eyebrow">CONTROL DOCENTE · SESIÓN LOCAL</p>
+      <h1>Modo activo</h1>
+      <p class="status" data-session-status>Estado: {{ session.get_status_display }}</p>
+      <p class="snapshot">{{ session.snapshot.payload.title }} · {{ snapshot_label }}</p>
+      {% if session.status == "active" %}
+        <section class="panel" aria-labelledby="participants-heading">
+          <div class="panel-heading">
+            <h2 id="participants-heading">Participantes</h2>
+            <strong class="count" data-participant-count>{{ participant_count }}</strong>
+          </div>
+          {% if active_turns %}
+            <ul class="alias-list">
+              {% for turn in active_turns %}<li>{{ turn.display_name }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <p class="quiet">Esperando participantes.</p>
+          {% endif %}
+        </section>
+        <section class="panel join-panel" aria-label="Entrada para el grupo">
+          <h2>Entrada para el grupo</h2>
+          <p>Comparte este QR o enlace en la red local.</p>
+          <p><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p>
+          <div class="qr" aria-label="Código QR de la sesión">{{ join_qr_svg|safe }}</div>
+        </section>
+        <form method="post" action="{% url 'tutor-session-close' session.pk %}">
+          {% csrf_token %}
+          <button class="button-danger" type="submit">Cerrar sesión</button>
+        </form>
+      {% elif session.status == "prepared" %}
+        <p class="notice">La sesión está preparada. Actívala desde la revisión docente.</p>
+      {% else %}
+        <p class="notice">La sesión ya no admite participantes.</p>
+      {% endif %}
+      <p><a href="{% url 'session-projection' session.pk %}">Abrir proyección pública</a></p>
+    </main>
+  </body>
+</html>

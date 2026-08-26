@@ -25,6 +25,8 @@ from curriculum.views import (
     tutor_session_prepare,
     tutor_session_results_delete,
     tutor_session_review,
+    tutor_session_active,
+    tutor_session_projection,
     tutor_sessions,
     tutor_result_delete,
 )
@@ -101,6 +103,16 @@ urlpatterns = [
         "tutor/sessions/<int:session_id>/confirm/",
         tutor_session_confirm,
         name="tutor-session-confirm",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/active/",
+        tutor_session_active,
+        name="tutor-session-active",
+    ),
+    path(
+        "sessions/<int:session_id>/projection/",
+        tutor_session_projection,
+        name="session-projection",
     ),
     path(
         "tutor/sessions/<int:session_id>/close/",
