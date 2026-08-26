@@ -36,7 +36,6 @@ from curriculum.ephemeral import (
     ensure_ephemeral_turn_summary,
     record_ephemeral_help,
     record_ephemeral_response,
-    read_ephemeral_session_summary,
     update_ephemeral_turn_summary,
 )
 from curriculum.models import (
@@ -308,7 +307,10 @@ def _assignment_for_turn_capability(request, session_id):
             local_identifier=payload.get("local_identifier"),
         )
         turn = StudentTurn.objects.select_for_update().select_related(
-            "assignment", "assignment__session", "assignment__session__snapshot"
+            "assignment",
+            "assignment__session",
+            "assignment__session__snapshot",
+            "assignment__session__roadmap_snapshot",
         ).get(
             pk=payload.get("turn_id"),
             assignment=assignment,
@@ -467,7 +469,11 @@ def student_turn_ready(request, session_id):
             state="completed",
             completed_at=completed.completed_at.isoformat(),
         )
-        clear_practice_cache(completed.pk, range(question_count))
+        clear_practice_cache(
+            completed.pk,
+            range(question_count),
+            activity_ids=_roadmap_activity_ids(completed.assignment.session) or None,
+        )
         response = redirect(
             "student-turn-start",
             session_id=session_id,
@@ -482,11 +488,34 @@ def student_turn_ready(request, session_id):
 
 
 @teacher_required
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def tutor_roadmaps(request):
-    """Authenticated teacher surface for manual curriculum confirmation."""
+    """Publish a teacher-selected roadmap and confirm its curriculum position."""
 
     from curriculum.roadmap import ordered_nodes
+
+    package_snapshots = list(
+        PublishedPackageSnapshot.objects.select_related("package").order_by(
+            "-published_at", "-id"
+        )
+    )
+    publication_error = None
+    if request.method == "POST":
+        selected_ids = request.POST.getlist("package_snapshot_ids")
+        if not selected_ids:
+            selected_ids = request.POST.getlist("package_snapshot_id")
+        snapshots_by_id = {str(snapshot.pk): snapshot for snapshot in package_snapshots}
+        selected_snapshots = [snapshots_by_id[item] for item in selected_ids if item in snapshots_by_id]
+        try:
+            PublishedRoadmapSnapshot.publish(
+                title=request.POST.get("title", "Roadmap"),
+                package_snapshots=selected_snapshots,
+                teacher=request.user,
+            )
+        except ValidationError as error:
+            publication_error = str(error)
+        else:
+            return redirect("tutor-roadmaps")
 
     snapshots = list(PublishedRoadmapSnapshot.objects.all()[:20])
     cards = []
@@ -505,7 +534,15 @@ def tutor_roadmaps(request):
                 "progress_count": len(progress),
             }
         )
-    return render(request, "curriculum/tutor_roadmaps.html", {"roadmap_cards": cards})
+    return render(
+        request,
+        "curriculum/tutor_roadmaps.html",
+        {
+            "roadmap_cards": cards,
+            "package_snapshots": package_snapshots,
+            "publication_error": publication_error,
+        },
+    )
 
 
 @teacher_required
@@ -670,9 +707,9 @@ def tutor_session_prepare(request, snapshot_id):
 
 def tutor_session_review(request, session_id):
     session = get_object_or_404(
-        ClassroomSession.objects.select_related("snapshot").prefetch_related(
-            "device_assignments"
-        ),
+        ClassroomSession.objects.select_related(
+            "snapshot", "roadmap_snapshot"
+        ).prefetch_related("device_assignments"),
         pk=session_id,
     )
     results = list(
@@ -1845,13 +1882,29 @@ def _unconfirmed_session_response(session):
     return None
 
 
-def _roadmap_context(session, turn):
-    progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
+def _roadmap_context(session, turn, progress=None):
+    progress = progress or (StudentRoadmapProgress.for_turn(turn) if turn is not None else None)
     return {
         "roadmap_progress": progress,
         "roadmap_states": progress.roadmap_states() if progress else [],
         "roadmap_snapshot": session.roadmap_snapshot,
     }
+
+
+def _activity_snapshot(session, progress=None):
+    """Resolve the immutable package for the current roadmap activity."""
+
+    if progress is None or session.roadmap_snapshot_id is None:
+        return session.snapshot
+    return progress.package_snapshot_for_activity()
+
+
+def _roadmap_activity_ids(session):
+    if session.roadmap_snapshot_id is None:
+        return []
+    from curriculum.roadmap import ordered_activity_ids
+
+    return ordered_activity_ids(session.roadmap_snapshot.payload)
 
 
 @never_cache
@@ -1902,19 +1955,25 @@ def student_roadmap(request, session_id):
 
 def _activity_context(session, **extra):
     turn = extra.get("turn")
+    progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
+    activity_snapshot = _activity_snapshot(session, progress)
     context = {
         "session": session,
-        "snapshot_payload": session.snapshot.payload,
+        "snapshot": activity_snapshot,
+        "snapshot_payload": activity_snapshot.payload,
         "turn": turn,
-        "activity_questions": _activity_questions(session, turn),
-        **_roadmap_context(session, turn),
+        "activity_questions": _activity_questions(session, turn, activity_snapshot),
+        **_roadmap_context(session, turn, progress),
     }
     context.update(extra)
     return context
 
 
-def _activity_questions(session, turn):
-    questions = session.snapshot.payload.get("questions", []) or []
+def _activity_questions(session, turn, activity_snapshot=None):
+    activity_snapshot = activity_snapshot or session.snapshot
+    questions = activity_snapshot.payload.get("questions", []) or []
+    progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
+    activity_id = progress.current_activity_id() if progress else None
     activity_questions = []
     turn_id = turn.pk if turn is not None else session.pk
     for question_index, question in enumerate(questions):
@@ -1923,6 +1982,7 @@ def _activity_questions(session, turn):
             turn_id,
             question_index,
             session_id=session.pk,
+            activity_id=activity_id,
         )
         next_hint_index = hint_state["next_hint_index"]
         hints = list(value.get("hints", []) or [])
@@ -1941,47 +2001,49 @@ def _activity_questions(session, turn):
     return activity_questions
 
 
-def _complete_activity_after_response(session, turn):
-    """Advance only the turn's roadmap after every snapshot rule is satisfied."""
+def _complete_activity_after_response(session, turn, question_index):
+    """Persist correctness and advance the individual route immediately."""
 
     progress = StudentRoadmapProgress.for_turn(turn)
     if progress is None:
         return False
-    questions = session.snapshot.payload.get("questions", []) or []
-    summary = read_ephemeral_session_summary(session.pk)
-    responses = {
-        item.get("question_index"): item
-        for item in summary.get("turns", {}).get(str(turn.pk), {}).get("responses", [])
-    }
-    if questions and not all(
-        responses.get(index, {}).get("is_correct") is True
-        for index in range(len(questions))
-    ):
-        return False
     activity_id = progress.current_activity_id()
     if activity_id is None:
         return False
-    progress.complete_activity(activity_id, package_snapshot=session.snapshot)
-    return True
+    activity_snapshot = _activity_snapshot(session, progress)
+    questions = activity_snapshot.payload.get("questions", []) or []
+    if not questions:
+        return False
+    return progress.record_correct_answer(
+        activity_id,
+        question_index,
+        len(questions),
+    )
 
 
-def _hint_progress_key(turn_id, question_index):
-    return f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{question_index}"
+def _hint_progress_key(turn_id, question_index, activity_id=None):
+    if activity_id is None:
+        return f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{question_index}"
+    return f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{activity_id}:{question_index}"
 
 
-def _consumed_hint_key(turn_id, question_index, capability):
+def _consumed_hint_key(turn_id, question_index, capability, activity_id=None):
     digest = hashlib.sha256(capability.encode("utf-8")).hexdigest()
-    return f"{HINT_PROGRESS_KEY_PREFIX}:consumed:{turn_id}:{question_index}:{digest}"
+    if activity_id is None:
+        return f"{HINT_PROGRESS_KEY_PREFIX}:consumed:{turn_id}:{question_index}:{digest}"
+    return f"{HINT_PROGRESS_KEY_PREFIX}:consumed:{turn_id}:{activity_id}:{question_index}:{digest}"
 
 
-def _consumed_hint_index_key(turn_id, question_index):
-    return f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{question_index}"
+def _consumed_hint_index_key(turn_id, question_index, activity_id=None):
+    if activity_id is None:
+        return f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{question_index}"
+    return f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{activity_id}:{question_index}"
 
 
-def _current_hint_state(turn_id, question_index, *, session_id=None):
+def _current_hint_state(turn_id, question_index, *, session_id=None, activity_id=None):
     """Read the ephemeral anti-replay/progression state, never learning evidence."""
 
-    key = _hint_progress_key(turn_id, question_index)
+    key = _hint_progress_key(turn_id, question_index, activity_id)
     state = cache.get(key)
     if isinstance(state, dict) and {"next_hint_index", "capability"} <= state.keys():
         return state
@@ -1994,6 +2056,7 @@ def _current_hint_state(turn_id, question_index, *, session_id=None):
             question_index=question_index,
             turn_id=turn_id,
             next_hint_index=0,
+            activity_id=activity_id,
         ),
     }
     if cache.add(key, candidate, timeout=HINT_PROGRESS_TTL):
@@ -2008,6 +2071,7 @@ def _consume_hint_capability(
     capability,
     *,
     session_id=None,
+    activity_id=None,
 ):
     """Atomically consume one nonce, then advance temporal hint authorization."""
 
@@ -2015,6 +2079,7 @@ def _consume_hint_capability(
         turn_id,
         question_index,
         session_id=session_id,
+        activity_id=activity_id,
     )
     if (
         state["next_hint_index"] != hint_index
@@ -2022,17 +2087,17 @@ def _consume_hint_capability(
     ):
         return False
     if not cache.add(
-        _consumed_hint_key(turn_id, question_index, capability),
+        _consumed_hint_key(turn_id, question_index, capability, activity_id),
         True,
         timeout=HINT_PROGRESS_TTL,
     ):
         return False
-    consumed_key = _consumed_hint_key(turn_id, question_index, capability)
-    consumed_index_key = _consumed_hint_index_key(turn_id, question_index)
+    consumed_key = _consumed_hint_key(turn_id, question_index, capability, activity_id)
+    consumed_index_key = _consumed_hint_index_key(turn_id, question_index, activity_id)
     consumed_keys = cache.get(consumed_index_key, []) or []
     cache.set(consumed_index_key, [*consumed_keys, consumed_key], timeout=HINT_PROGRESS_TTL)
     cache.set(
-        _hint_progress_key(turn_id, question_index),
+        _hint_progress_key(turn_id, question_index, activity_id),
         {
             "next_hint_index": hint_index + 1,
             "capability": issue_capability(
@@ -2041,6 +2106,7 @@ def _consume_hint_capability(
                 question_index=question_index,
                 turn_id=turn_id,
                 next_hint_index=hint_index + 1,
+                activity_id=activity_id,
             ),
         },
         timeout=HINT_PROGRESS_TTL,
@@ -2068,25 +2134,20 @@ def student_roadmap_complete(request, session_id, activity_id):
         return HttpResponseForbidden(
             "Completar la actividad requiere el turno activo y su capacidad."
         )
-    if session.snapshot.payload.get("questions"):
-        summary = read_ephemeral_session_summary(session.pk)
-        responses = summary.get("turns", {}).get(str(turn.pk), {}).get("responses", [])
-        response_by_question = {
-            item.get("question_index"): item for item in responses
-        }
-        if not all(
-            response_by_question.get(index, {}).get("is_correct") is True
-            for index in range(len(session.snapshot.payload.get("questions", []) or []))
-        ):
-            return HttpResponseBadRequest(
-                "La actividad requiere completar correctamente sus reactivos."
-            )
     progress = StudentRoadmapProgress.for_turn(turn)
     if progress is None:
         return HttpResponseBadRequest("La sesión no tiene un roadmap publicado.")
     try:
-        progress.complete_activity(activity_id, package_snapshot=session.snapshot)
-    except ValidationError as error:
+        activity_snapshot = _activity_snapshot(session, progress)
+        if activity_snapshot.payload.get("questions"):
+            correct_indices = (progress.correct_question_indices or {}).get(str(activity_id), [])
+            question_count = len(activity_snapshot.payload.get("questions", []) or [])
+            if len(set(correct_indices)) < question_count:
+                return HttpResponseBadRequest(
+                    "La actividad requiere completar correctamente sus reactivos."
+                )
+        progress.complete_activity(activity_id, package_snapshot=activity_snapshot)
+    except (ValidationError, PublishedPackageSnapshot.DoesNotExist) as error:
         return HttpResponseBadRequest(str(error))
     return redirect("student-roadmap", session_id=session_id)
 
@@ -2096,7 +2157,9 @@ def student_roadmap_complete(request, session_id, activity_id):
 @require_POST
 def student_question_answer(request, session_id, question_index):
     session = get_object_or_404(
-        ClassroomSession.objects.select_for_update().select_related("snapshot"),
+        ClassroomSession.objects.select_for_update().select_related(
+            "snapshot", "roadmap_snapshot"
+        ),
         pk=session_id,
     )
     blocked = _unconfirmed_session_response(session)
@@ -2107,9 +2170,11 @@ def student_question_answer(request, session_id, question_index):
         return HttpResponseForbidden(
             "La respuesta requiere el turno activo y la capacidad de este dispositivo."
         )
+    progress = StudentRoadmapProgress.for_turn(turn)
+    activity_id = progress.current_activity_id() if progress else None
     try:
         result = evaluate_response(
-            session.snapshot.payload,
+            _activity_snapshot(session, progress).payload,
             question_index,
             request.POST.get("option_position"),
         )
@@ -2119,6 +2184,7 @@ def student_question_answer(request, session_id, question_index):
     activity_completed = result.is_correct and _complete_activity_after_response(
         session,
         turn,
+        result.question_index,
     )
 
     return render(
@@ -2134,6 +2200,7 @@ def student_question_answer(request, session_id, question_index):
                 session_id=session_id,
                 question_index=question_index,
                 turn_id=turn.pk,
+                activity_id=activity_id,
             ),
             activity_completed=activity_completed,
         ),
@@ -2145,7 +2212,9 @@ def student_question_answer(request, session_id, question_index):
 @require_POST
 def student_question_assistance(request, session_id, question_index):
     session = get_object_or_404(
-        ClassroomSession.objects.select_for_update().select_related("snapshot"),
+        ClassroomSession.objects.select_for_update().select_related(
+            "snapshot", "roadmap_snapshot"
+        ),
         pk=session_id,
     )
     blocked = _unconfirmed_session_response(session)
@@ -2156,6 +2225,9 @@ def student_question_assistance(request, session_id, question_index):
         return HttpResponseForbidden(
             "La ayuda requiere el turno activo y la capacidad de este dispositivo."
         )
+    progress = StudentRoadmapProgress.for_turn(turn)
+    activity_id = progress.current_activity_id() if progress else None
+    activity_snapshot = _activity_snapshot(session, progress)
     kind = request.POST.get("kind", "hint")
     hint_index = None
     if kind == "hint":
@@ -2171,6 +2243,7 @@ def student_question_assistance(request, session_id, question_index):
                 question_index=question_index,
                 turn_id=turn.pk,
                 next_hint_index=hint_index,
+                activity_id=activity_id,
             )
             is None
         ):
@@ -2183,6 +2256,7 @@ def student_question_assistance(request, session_id, question_index):
                 session_id=session_id,
                 question_index=question_index,
                 turn_id=turn.pk,
+                activity_id=activity_id,
             )
             is None
         ):
@@ -2192,7 +2266,7 @@ def student_question_assistance(request, session_id, question_index):
 
     try:
         assistance = request_assistance(
-            session.snapshot.payload,
+            activity_snapshot.payload,
             question_index,
             kind=kind,
             hint_index=hint_index if hint_index is not None else 0,
@@ -2206,6 +2280,7 @@ def student_question_assistance(request, session_id, question_index):
         hint_index,
         request.POST.get("hint_capability"),
         session_id=session_id,
+        activity_id=activity_id,
     ):
         return HttpResponseBadRequest("La capacidad de pista ya fue consumida o quedó fuera de orden.")
     record_ephemeral_help(session_id, turn, question_index, assistance)
@@ -2216,6 +2291,7 @@ def student_question_assistance(request, session_id, question_index):
             turn.pk,
             question_index,
             session_id=session_id,
+            activity_id=activity_id,
         )["capability"]
 
     return render(

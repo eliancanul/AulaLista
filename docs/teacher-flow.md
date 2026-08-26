@@ -27,7 +27,7 @@ En revisión docente (ActivityReview)
      Sesión cerrada
 ```
 
-Una corrección de una actividad publicada crea una nueva revisión y, al publicarse, un `PublishedPackageSnapshot` nuevo. Una corrección del camino crea un `PublishedRoadmapSnapshot` nuevo. Al preparar una sesión, la maestra puede fijar ambos snapshots; una sesión ya iniciada conserva exactamente las versiones con las que comenzó.
+Una corrección de una actividad publicada crea una nueva revisión y, al publicarse, un `PublishedPackageSnapshot` nuevo. La maestra publica el camino desde **Avance curricular**, seleccionando y ordenando snapshots de paquetes; cada actividad queda vinculada a su snapshot exacto dentro del `PublishedRoadmapSnapshot`. Al preparar una sesión se fija el roadmap y un snapshot base; una sesión ya iniciada conserva todas las versiones con las que comenzó.
 
 ## Estados y autoridad
 
@@ -58,7 +58,7 @@ Las reglas son:
 3. Cerrar una sesión ofrece registrar el tema trabajado, pero nunca avanza `CurriculumProgress` por sí solo.
 4. El avance docente requiere confirmación explícita del maestro; ningún estudiante puede editarlo o falsificarlo.
 5. El recorrido individual no requiere cuenta ni identidad real. Su relación con el turno temporal se elimina al cerrar la sesión.
-6. El algoritmo de `StudentRoadmapProgress` sólo lee el `PublishedRoadmapSnapshot` y el `PublishedPackageSnapshot` fijados a la sesión. Es determinista y no lee la actividad editorial viva.
+6. El algoritmo de `StudentRoadmapProgress` sólo lee el `PublishedRoadmapSnapshot` fijado a la sesión y el `PublishedPackageSnapshot` referenciado por cada actividad. Es determinista y no lee la actividad editorial viva. La corrección de respuestas y la compleción se persisten al responder; la caché de 12 horas sólo sirve para superficies efímeras.
 7. Una corrección publicada después del inicio no reescribe ninguno de los snapshots de una sesión ya iniciada.
 
 ### Estados legibles del recorrido

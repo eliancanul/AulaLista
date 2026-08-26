@@ -7,7 +7,7 @@
 
 `TeacherWorkflow` separa seleccionar un tema, preparar un `ActivityDraft`, realizar `ActivityReview`, publicar una actividad y ejecutar una `ClassroomSession`. Una inferencia del sistema no es una decisión curricular: el currículo cargado puede ser ambiguo y una actividad puede carecer de fuente local suficiente.
 
-Además, una sesión publicada debe seguir siendo reproducible aunque cambie el material editorial. `ClassroomSession` debe conservar el `PublishedPackageSnapshot` inmutable con el que comenzó.
+Además, una sesión publicada debe seguir siendo reproducible aunque cambie el material editorial. `ClassroomSession` conserva un `PublishedPackageSnapshot` base y el `PublishedRoadmapSnapshot`; cada actividad del roadmap referencia el snapshot de paquete inmutable que le corresponde.
 
 ## Decisión
 
@@ -15,9 +15,9 @@ Además, una sesión publicada debe seguir siendo reproducible aunque cambie el 
 
 `StudentRoadmapProgress` es un mecanismo separado: un registro temporal y pseudónimo por turno que sólo contiene actividades completadas y calcula el siguiente paso mediante reglas deterministas. Completar una actividad no es aprobación curricular, dominio, calificación oficial ni evidencia pedagógica. No hay cuenta estudiantil ni relación con identidad real; el cierre elimina el turno y su progreso.
 
-El algoritmo individual opera sobre el `PublishedRoadmapSnapshot` y el `PublishedPackageSnapshot` fijados a la sesión. Una corrección publicada después del inicio crea snapshots nuevos para sesiones posteriores, pero no modifica la sesión activa ni su recorrido. El estudiante no tiene una ruta que pueda escribir `CurriculumProgress`.
+El algoritmo individual recorre en orden el `PublishedRoadmapSnapshot` fijado a la sesión y resuelve para cada actividad su `PublishedPackageSnapshot` referenciado. La corrección publicada después del inicio crea snapshots nuevos para sesiones posteriores, pero no modifica la sesión activa ni su recorrido. La respuesta correcta y la decisión de compleción se persisten durante la sesión, sin depender de la caché efímera. El estudiante no tiene una ruta que pueda escribir `CurriculumProgress`.
 
-El sistema puede sugerir un siguiente tema basado en un mapa curricular confirmado y en la actividad trabajada; una sugerencia no es una transición de estado. La autoridad para corregir, aprobar, publicar, activar y confirmar el avance permanece en personas docentes/editoriales. La IA sólo propone: nunca aprueba, publica, activa ni califica.
+El sistema puede sugerir un siguiente tema basado en un mapa curricular confirmado y en la actividad trabajada; una sugerencia no es una transición de estado. La autoridad para corregir, aprobar, publicar un roadmap, activar y confirmar el avance permanece en personas docentes/editoriales. La IA sólo propone: nunca aprueba, publica, activa ni califica.
 
 Si no existe suficiente evidencia en fuentes locales confirmadas, `ActivityDraft` conserva exactamente el estado `No hay suficiente fuente local` y permanece como borrador. El sistema no inventa contenido para completar la ausencia.
 
@@ -25,7 +25,7 @@ Si no existe suficiente evidencia en fuentes locales confirmadas, `ActivityDraft
 
 - El estado editorial y el progreso curricular son conceptos distintos y auditables.
 - La interfaz debe hacer explícita la confirmación docente del progreso.
-- Las sesiones iniciadas no cambian cuando se publica una nueva versión curricular.
+- Las sesiones iniciadas no cambian cuando se publica una nueva versión curricular; un roadmap puede combinar múltiples snapshots de paquetes sin perder el aislamiento de versiones.
 - Los estados `ACTUAL`, `DISPONIBLE` y `COMPLETADA` del recorrido se muestran como texto, no sólo como color.
 - El progreso docente manual y el progreso individual pseudónimo son separados y auditables.
 - Esta decisión documenta un contrato de autoridad y no afirma validación pedagógica ni prescribe políticas específicas por materia.

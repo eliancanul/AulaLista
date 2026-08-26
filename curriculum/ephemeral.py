@@ -87,13 +87,27 @@ def clear_ephemeral_session_summary(session_id):
     cache.delete(ephemeral_session_summary_key(session_id))
 
 
-def clear_practice_cache(turn_id, question_indices):
+def clear_practice_cache(turn_id, question_indices, activity_ids=None):
     """Clear all T05/T07 hint progression keys for a temporary turn."""
 
-    for question_index in question_indices:
-        progress_key = f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{question_index}"
-        consumed_index_key = (
-            f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{question_index}"
-        )
-        consumed_keys = cache.get(consumed_index_key, []) or []
-        cache.delete_many([progress_key, consumed_index_key, *consumed_keys])
+    activity_ids = list(activity_ids or [None])
+    for activity_id in activity_ids:
+        activity_key = str(activity_id or "activity")
+        for question_index in question_indices:
+            progress_key = (
+                f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{activity_key}:{question_index}"
+            )
+            consumed_index_key = (
+                f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:"
+                f"{turn_id}:{activity_key}:{question_index}"
+            )
+            consumed_keys = cache.get(consumed_index_key, []) or []
+            cache.delete_many([progress_key, consumed_index_key, *consumed_keys])
+            # Remove keys emitted before activity-scoped capabilities were added.
+            if activity_id is None:
+                legacy_progress_key = f"{HINT_PROGRESS_KEY_PREFIX}:{turn_id}:{question_index}"
+                legacy_index_key = (
+                    f"{HINT_PROGRESS_KEY_PREFIX}:consumed-index:{turn_id}:{question_index}"
+                )
+                legacy_keys = cache.get(legacy_index_key, []) or []
+                cache.delete_many([legacy_progress_key, legacy_index_key, *legacy_keys])
