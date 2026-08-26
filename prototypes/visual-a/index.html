@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f1eb">
+  <title>AulaLista — prototipo A</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="app-header">
+    <a class="wordmark" href="#inicio" data-route="inicio" aria-label="AulaLista, inicio">
+      <span class="wordmark-mark" aria-hidden="true">a</span>
+      <span>AulaLista</span>
+      <span class="prototype-tag">prototipo A</span>
+    </a>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <a href="#inicio" data-route="inicio">Inicio</a>
+      <a href="#estudiante" data-route="estudiante">Estudiante</a>
+      <a href="#docente" data-route="docente">Docente</a>
+    </nav>
+    <div class="header-note"><span class="status-dot"></span> nodo local · demostración</div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <section class="view view-home" data-view="inicio" aria-labelledby="home-title">
+      <div class="eyebrow">Un punto de encuentro para aprender</div>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1 id="home-title">Una clase clara,<br><em>a tu ritmo.</em></h1>
+          <p class="hero-intro">AulaLista acerca una actividad preparada por una maestra a cada dispositivo, incluso cuando la conexión no acompaña.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#estudiante" data-route="estudiante">Entrar como estudiante <span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" href="#docente" data-route="docente">Abrir espacio docente</a>
+          </div>
+          <p class="small-note"><span class="lock-mark" aria-hidden="true">⌁</span> Sin cuentas estudiantiles · los apodos se quedan en este dispositivo</p>
+        </div>
+        <aside class="home-aside soft-panel" aria-label="Resumen de la demostración">
+          <div class="panel-kicker">Sesión de hoy <span class="badge badge-soft">sintética</span></div>
+          <div class="home-aside-title">Pensar en sistemas</div>
+          <p>Una ruta breve para observar conexiones, probar una idea y conversar sobre ella.</p>
+          <div class="mini-rule"></div>
+          <div class="aside-meta"><span>3 momentos</span><span>15 min</span><span>local</span></div>
+        </aside>
+      </div>
+      <div class="role-grid" aria-label="Entradas del producto">
+        <article class="role-card student-card">
+          <div class="card-icon icon-student" aria-hidden="true">↗</div>
+          <div>
+            <div class="card-label">Para quien aprende</div>
+            <h2>Continúa tu camino</h2>
+            <p>Entra con un enlace o con el QR que comparte tu maestra. Mira qué temas ya recorriste.</p>
+            <a class="text-link" href="#estudiante" data-route="estudiante">Ir al camino <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+        <article class="role-card teacher-card">
+          <div class="card-icon icon-teacher" aria-hidden="true">✦</div>
+          <div>
+            <div class="card-label">Para quien acompaña</div>
+            <h2>Prepara la conversación</h2>
+            <p>Revisa una propuesta, abre una sesión y observa el pulso del grupo sin pedir identidades.</p>
+            <a class="text-link" href="#docente" data-route="docente">Ir al espacio docente <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </div>
+      <div class="principle-strip"><strong>Regla de confianza</strong><span>La IA solo propone. Una persona <b>EditorialReviewer</b> aprueba y publica; la maestra activa la sesión.</span></div>
+    </section>
+
+    <section class="view view-student" data-view="estudiante" hidden aria-labelledby="student-title">
+      <div class="page-heading split-heading">
+        <div>
+          <div class="eyebrow">Entrada estudiante · demostración sintética</div>
+          <h1 id="student-title">Tu camino de hoy</h1>
+          <p>Usa el enlace o escribe el código que aparece en la pantalla del aula. No necesitas una cuenta.</p>
+        </div>
+        <div class="quiet-status"><span class="status-dot"></span> funcionamiento local</div>
+      </div>
+      <div class="student-layout">
+        <div class="soft-panel entry-panel">
+          <div class="panel-kicker">Entrar a una sesión</div>
+          <h2>¿Ya tienes un enlace?</h2>
+          <p class="panel-lead">El código es solo de esta demostración y no identifica a ninguna persona.</p>
+          <form id="student-entry-form" novalidate>
+            <label for="session-code">Código de sesión</label>
+            <div class="input-with-prefix"><span aria-hidden="true">#</span><input id="session-code" name="session-code" value="DEMO-7K4" autocomplete="off" spellcheck="false" aria-describedby="code-help"></div>
+            <p id="code-help" class="field-help">Prueba con <code>DEMO-7K4</code>.</p>
+            <label for="local-nickname">Apodo local <span class="optional">(opcional)</span></label>
+            <input id="local-nickname" name="local-nickname" placeholder="Elige un apodo para esta pantalla" maxlength="18" autocomplete="off">
+            <p class="field-help">Será temporal, visible solo en el aula y no es una identidad.</p>
+            <button class="button button-primary button-full" type="submit">Entrar al camino <span aria-hidden="true">→</span></button>
+            <div id="entry-feedback" class="form-feedback" role="status" aria-live="polite"></div>
+          </form>
+          <div class="or-rule"><span>o</span></div>
+          <button class="button button-secondary button-full" type="button" data-route="actividad">Ver la sesión de demostración</button>
+        </div>
+        <div class="path-panel">
+          <div class="section-heading">
+            <div>
+              <div class="panel-kicker">Ruta curricular</div>
+              <h2>Pequeños pasos, una idea a la vez</h2>
+            </div>
+            <span class="badge badge-neutral">3 temas</span>
+          </div>
+          <div class="learning-path" aria-label="Estado de temas vistos">
+            <article class="path-item is-done">
+              <div class="path-marker" aria-label="Tema visto">✓</div>
+              <div class="path-content"><span class="path-index">01 · visto</span><h3>Observar el entorno</h3><p>Reconocer elementos y sus relaciones.</p></div>
+              <span class="path-state">listo</span>
+            </article>
+            <article class="path-item is-current">
+              <div class="path-marker" aria-label="Tema actual">2</div>
+              <div class="path-content"><span class="path-index">02 · ahora</span><h3>Pensar en sistemas</h3><p>Probar qué cambia cuando movemos una pieza.</p></div>
+              <span class="path-state">en curso</span>
+            </article>
+            <article class="path-item is-next">
+              <div class="path-marker" aria-label="Tema pendiente">3</div>
+              <div class="path-content"><span class="path-index">03 · después</span><h3>Contar lo aprendido</h3><p>Compartir una observación con el grupo.</p></div>
+              <span class="path-state">pendiente</span>
+            </article>
+          </div>
+          <div class="synthetic-callout"><span aria-hidden="true">i</span><p><strong>Datos sintéticos explícitos.</strong> Este camino ilustra la interfaz; no representa un historial real ni evidencia de aprendizaje.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-teacher" data-view="docente" hidden aria-labelledby="teacher-title">
+      <div class="page-heading split-heading">
+        <div>
+          <div class="eyebrow">Espacio docente · control humano</div>
+          <h1 id="teacher-title">Prepara una sesión tranquila</h1>
+          <p>Elige una propuesta, revisa el alcance y activa el encuentro cuando estés lista.</p>
+        </div>
+        <button class="button button-primary" type="button" data-route="actividad">Abrir sesión de demostración <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="review-banner">
+        <div class="review-icon" aria-hidden="true">✓</div>
+        <div><strong>Tu revisión es la decisión.</strong><p>La IA solo propone una estructura o una pregunta. <b>EditorialReviewer</b>, una persona humana, aprueba y publica el DemoPackage antes de que una maestra lo active.</p></div>
+        <span class="badge badge-amber">revisión humana</span>
+      </div>
+      <div class="teacher-grid">
+        <section class="soft-panel sessions-panel" aria-labelledby="recent-title">
+          <div class="section-heading"><div><div class="panel-kicker">Actividad local</div><h2 id="recent-title">Sesiones recientes</h2></div><span class="badge badge-soft">datos sintéticos</span></div>
+          <div class="session-list">
+            <div class="session-row"><div class="session-state-dot state-green"></div><div class="session-row-main"><strong>Pensar en sistemas</strong><span>Hoy · DemoPackage · cerrada</span></div><span class="session-count">08 <small>participantes</small></span></div>
+            <div class="session-row"><div class="session-state-dot state-blue"></div><div class="session-row-main"><strong>Observar el entorno</strong><span>Ayer · DemoPackage · lista</span></div><span class="session-count">— <small>sin iniciar</small></span></div>
+            <div class="session-row"><div class="session-state-dot state-gray"></div><div class="session-row-main"><strong>Contar lo aprendido</strong><span>Demo · borrador local</span></div><span class="session-count">— <small>en espera</small></span></div>
+          </div>
+          <button class="button button-secondary button-full" type="button" data-route="actividad">Preparar una nueva sesión</button>
+        </section>
+        <aside class="soft-panel teacher-side-panel">
+          <div class="panel-kicker">Antes de activar</div>
+          <h2>Una mirada basta</h2>
+          <ul class="check-list"><li><span>✓</span><span>El contenido tiene una versión fija.</span></li><li><span>✓</span><span>La actividad funciona sin red.</span></li><li><span>✓</span><span>El grupo usa apodos locales.</span></li></ul>
+          <div class="side-rule"></div>
+          <p class="small-note">No se muestran puntuaciones individuales. El cierre conserva solo métricas seudónimas y eliminables.</p>
+        </aside>
+      </div>
+      <div class="teacher-footer-note"><span class="teacher-line" aria-hidden="true"></span> La maestra activa · la persona EditorialReviewer publica · el grupo participa</div>
+    </section>
+
+    <section class="view view-activity" data-view="actividad" hidden aria-labelledby="activity-title">
+      <div class="activity-topline"><a class="back-link" href="#docente" data-route="docente">← Volver al espacio docente</a><span class="demo-pill">DemoPackage · datos sintéticos</span></div>
+      <div class="activity-heading">
+        <div><div class="eyebrow">Sesión local · código DEMO-7K4</div><h1 id="activity-title">Pensar en sistemas</h1><p>Comparte la pantalla o lee el código en voz alta. El QR permanece disponible mientras la sesión está activa.</p></div>
+        <div class="activity-actions"><button class="button button-secondary" id="projection-toggle" type="button">Modo proyección</button><button class="button button-primary" id="session-close" type="button">Cerrar sesión</button></div>
+      </div>
+      <div class="activity-grid">
+        <section class="soft-panel qr-panel" aria-labelledby="join-title">
+          <div class="panel-kicker">Entrada al aula</div>
+          <h2 id="join-title">Escanea para comenzar</h2>
+          <div class="qr-layout"><div class="qr-code" id="demo-qr" role="img" aria-label="Código QR sintético de demostración para DEMO-7K4"></div><div><div class="join-code">DEMO-7K4</div><p>También puedes escribir este código en el dispositivo estudiante.</p><span class="badge badge-soft">QR local · sin red</span></div></div>
+          <div class="qr-footnote"><span aria-hidden="true">⌁</span> El código es fijo en esta demostración. No contiene una identidad ni una dirección externa.</div>
+        </section>
+        <section class="soft-panel roster-panel" aria-labelledby="roster-title">
+          <div class="roster-heading"><div><div class="panel-kicker">Pulso del grupo</div><h2 id="roster-title">Ya están dentro</h2></div><div class="participant-total"><strong id="participant-count">3</strong><span>apodos</span></div></div>
+          <div id="participant-list" class="participant-list" aria-live="polite"></div>
+          <form id="nickname-form" class="nickname-form"><label for="new-nickname">Agregar apodo local <span class="optional">(demo)</span></label><div class="nickname-entry"><input id="new-nickname" maxlength="18" placeholder="p. ej. Nube" autocomplete="off"><button class="button button-small" type="submit">Sumar</button></div><p id="nickname-feedback" class="field-help">Sin cuenta, correo ni matrícula.</p></form>
+        </section>
+      </div>
+      <section class="state-console soft-panel" aria-labelledby="state-title">
+        <div class="state-console-copy"><div class="panel-kicker">Vista de estados</div><h2 id="state-title">Estado de la sesión</h2><p id="state-description" aria-live="polite"></p></div>
+        <div class="state-panel state-panel-waiting" data-state-panel="espera"><span class="state-symbol">…</span><div><strong>En espera</strong><p>La sesión está preparada. La maestra aún no la ha activado.</p></div></div>
+        <div class="state-panel state-panel-active" data-state-panel="activa"><span class="state-symbol">●</span><div><strong>Activa</strong><p>El grupo puede participar. El conteo se actualiza en este dispositivo.</p></div></div>
+        <div class="state-panel state-panel-closed" data-state-panel="cerrada"><span class="state-symbol">✓</span><div><strong>Actividad cerrada</strong><p>La sesión terminó. El acceso queda detenido y el resumen no contiene puntuación individual.</p></div></div>
+        <div class="state-panel state-panel-error" data-state-panel="error"><span class="state-symbol">!</span><div><strong>Error de conexión local</strong><p>No se pudo actualizar el estado. Comprueba el dispositivo o vuelve a intentarlo.</p></div></div>
+        <div class="state-controls" aria-label="Controles de demostración"><span>Simular:</span><button class="state-button" type="button" data-session-state="espera">espera</button><button class="state-button is-selected" type="button" data-session-state="activa">activa</button><button class="state-button" type="button" data-session-state="cerrada">cerrada</button><button class="state-button" type="button" data-session-state="error">error</button></div>
+      </section>
+      <div class="synthetic-callout activity-callout"><span aria-hidden="true">i</span><p><strong>Demostración aislada.</strong> Los apodos y el conteo se guardan únicamente en <code>localStorage</code> de este navegador. La IA no califica, publica ni declara aprendizaje.</p></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>AulaLista · prototipo visual A</span><span>Todo lo que ves aquí es una demostración con datos sintéticos explícitos.</span></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
