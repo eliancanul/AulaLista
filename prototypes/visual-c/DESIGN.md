@@ -11,7 +11,7 @@ Este es un prototipo estático aislado. Todo lo que aparece en pantalla está ma
 1. **Inicio** ofrece dos entradas equivalentes en jerarquía, con una acción grande para estudiante y otra para docente.
 2. **Estudiante** presenta un QR dibujado con CSS/DOM y la ruta local `/demo-ciencias`. El camino compacto marca dos temas ya vistos y el siguiente.
 3. **Docente** presenta una actividad sintética, sesiones recientes sintéticas y controles separados de preparar y activar.
-4. **Actividad activa** mantiene el QR visible, el conteo y los apodos que la persona escribe localmente. La maestra puede demostrar espera, activo, cerrado y error.
+4. **Actividad activa** mantiene el QR visible, el conteo y los apodos que la persona escribe en memoria. La maestra puede demostrar espera, activo, cerrado y error.
 
 La navegación usa fragmentos (`#home`, `#student`, `#teacher`, `#active`), así que no necesita un servidor de aplicaciones ni cambia rutas de producción.
 
@@ -20,7 +20,7 @@ La navegación usa fragmentos (`#home`, `#student`, `#teacher`, `#active`), así
 - `EditorialReviewer` es la persona humana que revisa, aprueba y publica el paquete.
 - La maestra activa la `ClassroomSession` cuando el grupo está listo.
 - La IA solo propone: no publica, no evalúa, no declara aprendizaje y no crea evidencia.
-- Los apodos son entradas temporales del navegador, guardadas únicamente en `localStorage` local para esta demostración y limitadas a 20. No son cuentas, nombres, matrículas ni identidades.
+- Los apodos son entradas temporales mantenidas únicamente en memoria para esta demostración y limitadas a 20. Al cerrar la sesión se vacían la lista y el conteo; también desaparecen al recargar o cerrar el navegador. No son cuentas, nombres, matrículas ni identidades.
 - El prototipo no muestra UUIDs, puntuaciones individuales, fuentes, imágenes, assets remotos ni dependencias WAN.
 - El QR es deliberadamente sintético y no codifica una identidad ni un destino remoto. El dato visible `/demo-ciencias` es una ruta de demostración.
 

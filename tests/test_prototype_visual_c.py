@@ -55,3 +55,16 @@ def test_prototype_c_navigation_is_wired_to_local_views():
     assert "data-view" in js
     assert "classList" in js
     assert "local" in js.lower()
+
+
+def test_prototype_c_aliases_are_memory_only_and_documented_as_ephemeral():
+    js = read("app.js")
+    docs = read("README.md") + read("DESIGN.md") + (ROOT.parents[1] / "docs" / "prototypes" / "visual-c.md").read_text(encoding="utf-8")
+    persistence_apis = re.compile(r"localstorage|sessionstorage|indexeddb|document\\.cookie|cookies?", re.IGNORECASE)
+
+    assert not persistence_apis.search(js)
+    assert not persistence_apis.search(docs)
+    assert re.search(r"(?:solo viven|viven solo) en la memoria", docs, re.IGNORECASE)
+    assert re.search(r"(cerrar|cierre|cerrado).*?(vac[ií]an|limpia|borr|dejan de mostrarse)", docs, re.IGNORECASE | re.DOTALL)
+    assert "localAliases = [];" in js
+    assert "const INITIAL_ALIASES" in js

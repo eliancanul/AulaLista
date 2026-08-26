@@ -11,26 +11,9 @@
   const teacherMessage = document.querySelector("#teacher-message");
   const prepareStatus = document.querySelector("#prepare-status");
   const route = "demo-ciencias";
+  const INITIAL_ALIASES = [];
   let currentState = "espera";
-  let localAliases = loadAliases();
-
-  function loadAliases() {
-    try {
-      const saved = JSON.parse(localStorage.getItem("aulalista-demo-apodos") || "[]");
-      return Array.isArray(saved) ? saved.filter((alias) => typeof alias === "string").slice(0, 20) : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function saveAliases() {
-    try {
-      localStorage.setItem("aulalista-demo-apodos", JSON.stringify(localAliases));
-    } catch (error) {
-      return false;
-    }
-    return true;
-  }
+  let localAliases = [...INITIAL_ALIASES];
 
   function drawQr(selector) {
     const qr = document.querySelector(selector);
@@ -99,7 +82,6 @@
     if (nicknameForm) nicknameForm.hidden = currentState === "cerrado" || currentState === "error";
     if (currentState === "cerrado") {
       localAliases = [];
-      saveAliases();
       renderRoster();
     }
   }
@@ -136,7 +118,6 @@
       const typedAlias = nicknameInput.value.trim().replace(/[<>]/g, "").slice(0, 18);
       const alias = typedAlias || "Invitado local";
       if (!localAliases.includes(alias) && localAliases.length < 20) localAliases.push(alias);
-      saveAliases();
       renderRoster();
       nicknameInput.value = "";
       nicknameInput.setAttribute("aria-label", `Apodo local ${alias} añadido`);
