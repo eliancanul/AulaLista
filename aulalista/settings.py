@@ -122,4 +122,4 @@ AULALISTA_LAN_URL = os.environ.get("AULALISTA_LAN_URL", "").strip()
 # Local LLM used only for curriculum-import staging proposals (never for the
 # student path, grading or publishing). Defaults match a stock Ollama install.
 AULALISTA_OLLAMA_URL = os.environ.get("AULALISTA_OLLAMA_URL", "http://localhost:11434")
-AULALISTA_LLM_MODEL = os.environ.get("AULALISTA_LLM_MODEL", "qwen2.5:7b")
+AULALISTA_LLM_MODEL = os.environ.get("AULALISTA_LLM_MODEL", "qwen2.5:14b")

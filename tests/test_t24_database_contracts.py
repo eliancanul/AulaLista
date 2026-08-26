@@ -97,7 +97,7 @@ def test_llm_trace_entries_contract():
         llm_trace=[
             {
                 "stage": "identify_topics",
-                "model": "qwen2.5:7b",
+                "model": "qwen2.5:14b",
                 "system": "s",
                 "prompt": "p",
                 "response_raw": "{}",

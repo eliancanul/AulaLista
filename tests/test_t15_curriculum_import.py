@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import django
 import pytest
+from django.conf import settings as django_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, override_settings
 from django.urls import reverse
@@ -70,6 +71,15 @@ def upload_job(client):
     )
     assert response.status_code == 302
     return CurriculumImportJob.objects.get()
+
+
+def test_qwen14b_is_default_in_settings_and_curriculum_import():
+    expected_model = "qwen2.5:14b"
+
+    assert django_settings.AULALISTA_LLM_MODEL == expected_model
+    assert pipeline.DEFAULT_MODEL == expected_model
+    with override_settings(AULALISTA_LLM_MODEL=""):
+        assert pipeline.llm_model() == expected_model
 
 
 def test_upload_creates_staging_job_without_touching_editorial_models():
