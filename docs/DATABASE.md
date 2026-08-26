@@ -85,7 +85,9 @@ se ve como "no pasó nada".
 ### `llm_log` (resumen por llamada) y `llm_trace` (intercambio completo, #34)
 
 `llm_log`: `{stage, pages?|topic?|subtema?, proposed_count?|reactivos?,
-is_valid?, intentos_validacion?}`.
+candidates?}`. Etapas: `identify_topics`, `consolidate_topics` (#47, con
+`candidates`=candidatos entrantes), `propose_subtopics`,
+`propose_activities`, `add_missing_activities`.
 
 `llm_trace`: `{stage, model, system, prompt, response_raw, duration_ms,
 attempts, errors[], ok}` + entradas sintéticas de fallo de worker con
