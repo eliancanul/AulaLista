@@ -148,7 +148,7 @@ def test_topup_appends_missing_and_never_touches_existing():
 
     called = []
 
-    def fake_incremental(subtopic_title, context_text, count, summaries):
+    def fake_incremental(subtopic_title, context_text, count, summaries, *, feedback_issues=None):
         # Both subtopics are below their requested count and get a top-up.
         called.append((subtopic_title, count, list(summaries)))
         if subtopic_title == "Suma de fracciones":
@@ -198,3 +198,81 @@ def test_review_screen_shows_full_titles_grouping_and_x_buttons():
     assert 'value="remove_activity"' in body
     assert 'name="activity_id" value="aaa111"' in body
     assert "Agregar las actividades que faltan" in body
+
+
+# --- #49: regeneración automática hasta pasar la validación ------------------
+
+
+def invalid_proposal(title="Suma de fracciones"):
+    proposal = valid_proposal(title)
+    proposal["micro_lesson"] = ""
+    return proposal
+
+
+def test_invalid_activity_regenerates_with_feedback_until_valid():
+    from django.test import override_settings
+
+    calls = []
+
+    def flaky_propose(subtopic_title, context_text, count, summaries, *, feedback_issues=None):
+        calls.append(list(feedback_issues or []))
+        if len(calls) == 1:
+            return invalid_proposal()
+        return valid_proposal()
+
+    with override_settings(AULALISTA_IMPORT_ASYNC=False):
+        client, job = activities_job()
+        with patch.object(
+            pipeline,
+            "propose_activities_incremental",
+            side_effect=flaky_propose,
+        ):
+            response = client.post(
+                reverse("tutor-import-detail", args=[job.pk]),
+                {"action": "add_missing_activities"},
+                follow=True,
+            )
+
+    assert response.status_code == 200
+    # First call had no feedback; the retry received the exact issues.
+    assert calls[0] == []
+    assert calls[1] and "microlección" in calls[1][0].lower()
+    job.refresh_from_db()
+    new_entry = next(
+        entry for entry in job.activities if entry.get("added_by_topup")
+    )
+    assert new_entry["is_valid"] is True
+
+
+def test_regeneration_is_bounded_and_last_attempt_stays_flagged():
+    from django.test import override_settings
+
+    with override_settings(AULALISTA_IMPORT_ASYNC=False):
+        client, job = activities_job()
+        with patch.object(
+            pipeline,
+            "propose_activities_incremental",
+            return_value=invalid_proposal(),
+        ):
+            client.post(
+                reverse("tutor-import-detail", args=[job.pk]),
+                {"action": "add_missing_activities"},
+                follow=True,
+            )
+
+    job.refresh_from_db()
+    new_entry = next(
+        entry for entry in job.activities if entry.get("added_by_topup")
+    )
+    assert new_entry["is_valid"] is False
+    assert new_entry["issues"]
+
+
+def test_review_screen_renders_new_card_design():
+    client, job = activities_job()
+    response = client.get(reverse("tutor-import-detail", args=[job.pk]))
+    body = response.content.decode()
+    assert 'class="activity-card' in body
+    assert "activity-head" in body
+    assert "badge" in body
+    assert 'form="convert-form"' in body

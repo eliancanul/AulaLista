@@ -1270,12 +1270,16 @@ def _import_action_generate_activities(job, pipeline):
     for topic in job.topics:
         for sub in topic.get("subtemas", []):
             count = sub.get("actividades_sugeridas") or 1
-            proposal = pipeline.propose_activities(
-                sub["titulo"],
-                context_text,
-                count,
-            )
-            validity = _validate_proposal(proposal)
+
+            def make_proposal(feedback_issues, _sub=sub, _count=count):
+                return pipeline.propose_activities(
+                    _sub["titulo"],
+                    context_text,
+                    _count,
+                    feedback_issues=feedback_issues or None,
+                )
+
+            proposal, validity, attempts = _propose_validated(make_proposal)
             proposals.append(
                 {
                     "id": uuid.uuid4().hex[:8],
@@ -1293,6 +1297,7 @@ def _import_action_generate_activities(job, pipeline):
                     "subtema": sub["titulo"],
                     "reactivos": len(proposal["questions"]),
                     "is_valid": validity["is_valid"],
+                    "intentos_validacion": attempts,
                 }
             )
             # Persist after each proposal so an interruption never loses the
@@ -1314,6 +1319,29 @@ def _import_action_generate_activities(job, pipeline):
     job.progress_stage = ""
     job.save()
     return job
+
+
+MAX_VALIDATION_ATTEMPTS = 3
+
+
+def _propose_validated(make_proposal):
+    """Draft an activity and regenerate with feedback until valid (#49).
+
+    ``make_proposal(feedback_issues)`` must return a raw proposal; the loop
+    feeds the exact structural issues back to the model. Bounded: after
+    MAX_VALIDATION_ATTEMPTS the last proposal returns with its issues so the
+    teacher still sees it flagged invalid (never convertible).
+    """
+
+    feedback_issues = []
+    proposal = validity = None
+    for attempt in range(MAX_VALIDATION_ATTEMPTS):
+        proposal = make_proposal(feedback_issues)
+        validity = _validate_proposal(proposal)
+        if validity["is_valid"]:
+            return proposal, validity, attempt + 1
+        feedback_issues = validity["missing"]
+    return proposal, validity, MAX_VALIDATION_ATTEMPTS
 
 
 def _validate_proposal(proposal):
@@ -1407,13 +1435,16 @@ def _import_action_add_missing_activities(job, pipeline):
     added = 0
     proposals = list(job.activities)
     for topic, sub, missing, summaries in pending:
-        proposal = pipeline.propose_activities_incremental(
-            sub["titulo"],
-            context_text,
-            missing,
-            summaries,
-        )
-        validity = _validate_proposal(proposal)
+        def make_topup(feedback_issues, _sub=sub, _missing=missing, _sum=summaries):
+            return pipeline.propose_activities_incremental(
+                _sub["titulo"],
+                context_text,
+                _missing,
+                _sum,
+                feedback_issues=feedback_issues or None,
+            )
+
+        proposal, validity, _attempts = _propose_validated(make_topup)
         proposals.append(
             {
                 "id": uuid.uuid4().hex[:8],
@@ -1432,6 +1463,7 @@ def _import_action_add_missing_activities(job, pipeline):
                 "subtema": sub["titulo"],
                 "reactivos": len(proposal["questions"]),
                 "is_valid": validity["is_valid"],
+                "intentos_validacion": _attempts,
             }
         )
         added += 1

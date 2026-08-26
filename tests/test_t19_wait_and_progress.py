@@ -132,7 +132,7 @@ def test_extract_runs_in_background_and_wait_page_reports_it():
 def test_generate_activities_interrupted_keeps_partial_results():
     client, job = completed_job()
 
-    def fail_on_second(subtopic_title, context, count):
+    def fail_on_second(subtopic_title, context, count, *, feedback_issues=None):
         if subtopic_title.startswith("Resta"):
             raise OSError("modelo sin respuesta")
         return valid_proposal()

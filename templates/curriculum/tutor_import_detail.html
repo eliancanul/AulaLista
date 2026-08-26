@@ -65,14 +65,17 @@
               <fieldset class="question-card">
                 <legend>{{ topic.titulo }}</legend>
                 {% for sub in topic.subtemas %}
-                  <div class="choice-list">
-                    <label>
+                  <div class="subtopic-form">
+                    <label class="keep-toggle">
                       <input type="checkbox" name="keep_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" checked>
-                      {{ sub.titulo }}
+                      Conservar
                     </label>
-                    <input name="topic_{{ forloop.parentloop.counter0 }}_sub_{{ forloop.counter0 }}" value="{{ sub.titulo }}" maxlength="200" aria-label="Título del subtema {{ forloop.counter }}">
-                    <label>Actividades sugeridas
-                      <input name="acts_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" type="number" min="1" max="5" value="{{ sub.actividades_sugeridas }}" style="max-width:4rem">
+                    <span class="field-title">{{ sub.titulo }}</span>
+                    <input type="text" name="topic_{{ forloop.parentloop.counter0 }}_sub_{{ forloop.counter0 }}" value="{{ sub.titulo }}" maxlength="200"
+                           aria-label="Editar el título del subtema {{ forloop.counter }}">
+                    <label class="acts-field">
+                      Actividades sugeridas
+                      <input name="acts_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" type="number" min="1" max="5" value="{{ sub.actividades_sugeridas }}">
                     </label>
                   </div>
                 {% endfor %}
@@ -115,7 +118,7 @@
       {% if job.status == "activities_proposed" %}
         <section aria-label="Punto de control: actividades">
           <h2>Revisa las actividades propuestas</h2>
-          <p>Cada subtema propuso un borrador de paquete. Sólo los válidos pueden convertirse; después pasarán por revisión y publicación humanas.</p>
+          <p class="review-intro">Sólo las actividades válidas pueden convertirse en borradores; después pasan por revisión y publicación humanas.</p>
           {% if any_missing %}
           <form method="post" class="topup-form">
             {% csrf_token %}
@@ -124,50 +127,70 @@
             <button class="button-secondary" type="submit">Agregar las actividades que faltan</button>
           </form>
           {% endif %}
+          {% for group in grouped_activities %}
+            <section class="topic-block">
+              <h3>{{ group.titulo }}</h3>
+              {% for sub in group.subs %}
+                <div class="subtopic-block">
+                  <header class="subtopic-head">
+                    <h4>{{ sub.titulo }}</h4>
+                    {% if sub.faltantes %}
+                      <span class="badge badge-missing">faltan {{ sub.faltantes }} de {{ sub.sugeridas }}</span>
+                    {% else %}
+                      <span class="badge badge-ok">{{ sub.entries|length }} de {{ sub.sugeridas }}</span>
+                    {% endif %}
+                  </header>
+                  {% if not sub.entries %}<p class="muted empty-note">Sin actividades propuestas todavía.</p>{% endif %}
+                  {% for item in sub.entries %}
+                    <article class="activity-card {% if item.entry.is_valid %}is-valid{% else %}is-invalid{% endif %}">
+                      <header class="activity-head">
+                        {% if item.entry.is_valid %}
+                          <input type="checkbox" name="select" value="{{ item.index }}" checked form="convert-form"
+                                 aria-label="Convertir {{ item.entry.proposal.title }}">
+                        {% else %}
+                          <input type="checkbox" disabled aria-label="Inválida, no convertible">
+                        {% endif %}
+                        <h5 class="activity-title">{{ item.entry.proposal.title }}</h5>
+                        <form class="remove-form" method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="remove_activity">
+                          <input type="hidden" name="activity_id" value="{{ item.id }}">
+                          <button class="button-remove-activity" type="submit"
+                                  aria-label="Quitar {{ item.entry.proposal.title }}">X</button>
+                        </form>
+                      </header>
+                      <p class="activity-objective">{{ item.entry.proposal.objective }}</p>
+                      <details class="activity-details">
+                        <summary>Microlección y explicación</summary>
+                        <p>{{ item.entry.proposal.micro_lesson }}</p>
+                        <p>{{ item.entry.proposal.final_explanation }}</p>
+                      </details>
+                      <footer class="activity-foot">
+                        {% if item.entry.is_valid %}
+                          <span class="badge badge-ok">✓ lista para convertir</span>
+                        {% else %} 
+                          <span class="badge badge-invalid">inválida · no convertible</span>
+                        {% endif %}
+                        <span>{{ item.entry.proposal.questions|length }} reactivo(s)</span>
+                      </footer>
+                      {% if not item.entry.is_valid %}
+                        <ul class="issue-list">
+                          {% for issue in item.entry.issues %}<li>{{ issue }}</li>{% endfor %}
+                        </ul>
+                      {% endif %}
+                    </article>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </section>
+          {% endfor %}
           <form method="post" id="convert-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="convert_selected">
           </form>
-          {% for group in grouped_activities %}
-            <h3>{{ group.titulo }}</h3>
-            {% for sub in group.subs %}
-              <div class="subtopic-activities">
-                <p class="subtopic-activity-title">{{ sub.titulo }}
-                  {% if sub.faltantes %}<span class="missing-count">faltan {{ sub.faltantes }} de {{ sub.sugeridas }}</span>{% endif %}
-                </p>
-                {% if not sub.entries %}<p class="muted">Sin actividades propuestas todavía.</p>{% endif %}
-                {% for item in sub.entries %}
-                  <fieldset class="question-card activity-card">
-                    <legend>
-                      {% if item.entry.is_valid %}
-                        <input type="checkbox" name="select" value="{{ item.index }}" checked form="convert-form">
-                      {% else %}
-                        <input type="checkbox" disabled>
-                      {% endif %}
-                      {{ item.entry.topic_title }} · {{ item.entry.subtopic_title }}
-                    </legend>
-                    <p>Objetivo: {{ item.entry.proposal.objective }}</p>
-                    <p>Microlección: {{ item.entry.proposal.micro_lesson }}</p>
-                    <p>Reactivos: {{ item.entry.proposal.questions|length }}</p>
-                    {% if not item.entry.is_valid %}
-                      <p class="error">Estructuralmente inválido (no convertible):</p>
-                      <ul>
-                        {% for issue in item.entry.issues %}<li>{{ issue }}</li>{% endfor %}
-                      </ul>
-                    {% endif %}
-                    <form class="remove-form" method="post">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="remove_activity">
-                      <input type="hidden" name="activity_id" value="{{ item.id }}">
-                      <button class="button-remove-activity" type="submit"
-                              aria-label="Quitar {{ item.entry.proposal.title }}">X</button>
-                    </form>
-                  </fieldset>
-                {% endfor %}
-              </div>
-            {% endfor %}
-          {% endfor %}
-          <button class="button-primary" type="submit" form="convert-form">Convertir seleccionados en borradores</button>
+          <div class="convert-bar">
+            <button class="button-primary" type="submit" form="convert-form">Convertir seleccionados en borradores</button>
+          </div>
         </section>
       {% endif %}
 
