@@ -374,8 +374,111 @@ class PublishedPackageSnapshot(models.Model):
         return f"{self.package} v{self.version} ({self.sha256[:8]})"
 
 
+class PublishedRoadmapSnapshot(models.Model):
+    """An immutable, human-published roadmap used by student sessions.
+
+    The roadmap is deliberately separate from package snapshots. A roadmap
+    describes the ordered units/lessons/activities; the package snapshot holds
+    the exact activity content and deterministic practice rules.
+    """
+
+    title = models.CharField("título", max_length=160, blank=True)
+    version = models.PositiveIntegerField()
+    payload = models.JSONField("roadmap publicado")
+    sha256 = models.CharField(max_length=64, editable=False)
+    published_by = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    published_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-published_at", "-id"]
+        verbose_name = "PublishedRoadmapSnapshot"
+        verbose_name_plural = "PublishedRoadmapSnapshots"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("Un snapshot de roadmap publicado es inmutable.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Un snapshot de roadmap publicado no se elimina.")
+
+    def __str__(self):
+        label = self.title or "Roadmap"
+        return f"{label} v{self.version} ({self.sha256[:8]})"
+
+
+class CurriculumProgress(models.Model):
+    """Teacher-confirmed curriculum position, never inferred from activity."""
+
+    STATUS_CURRENT = "current"
+    STATUS_WORKED = "worked"
+    STATUS_CHOICES = (
+        (STATUS_CURRENT, "Actual"),
+        (STATUS_WORKED, "Trabajado"),
+    )
+
+    roadmap_snapshot = models.ForeignKey(
+        PublishedRoadmapSnapshot,
+        on_delete=models.PROTECT,
+        related_name="curriculum_progress",
+    )
+    node_id = models.CharField("identificador del tema", max_length=160)
+    status = models.CharField(
+        "estado confirmado por la maestra",
+        max_length=16,
+        choices=STATUS_CHOICES,
+    )
+    confirmed_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="confirmed_curriculum_progress",
+    )
+    confirmed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["node_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("roadmap_snapshot", "node_id"),
+                name="unique_curriculum_progress_node",
+            )
+        ]
+        verbose_name = "CurriculumProgress"
+        verbose_name_plural = "CurriculumProgress"
+
+    @property
+    def topic_id(self):
+        """Compatibility vocabulary for teacher-facing topic screens."""
+
+        return self.node_id
+
+    def clean(self):
+        self.node_id = str(self.node_id or "").strip()
+        if not self.node_id:
+            raise ValidationError("El avance curricular requiere un tema.")
+        if self.status not in dict(self.STATUS_CHOICES):
+            raise ValidationError("El estado curricular no está autorizado.")
+        super().clean()
+
+    @classmethod
+    def confirm(cls, *, roadmap_snapshot, node_id, status, teacher):
+        if not getattr(teacher, "is_authenticated", False) or not teacher.is_staff:
+            raise ValidationError("El avance curricular requiere una maestra autenticada.")
+        node_id = str(node_id or "").strip()
+        if not node_id:
+            raise ValidationError("El avance curricular requiere un tema.")
+        if status not in dict(cls.STATUS_CHOICES):
+            raise ValidationError("El estado curricular no está autorizado.")
+        progress, _ = cls.objects.update_or_create(
+            roadmap_snapshot=roadmap_snapshot,
+            node_id=str(node_id).strip(),
+            defaults={"status": status, "confirmed_by": teacher},
+        )
+        return progress
+
+
 class ClassroomSession(models.Model):
-    """A classroom activity fixed to one immutable published snapshot."""
+    """An activity and roadmap fixed to immutable published snapshots."""
 
     STATUS_ACTIVE = "active"
     STATUS_PREPARED = "prepared"
@@ -392,6 +495,13 @@ class ClassroomSession(models.Model):
         PublishedPackageSnapshot,
         on_delete=models.PROTECT,
         related_name="classroom_sessions",
+    )
+    roadmap_snapshot = models.ForeignKey(
+        PublishedRoadmapSnapshot,
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
+        null=True,
+        blank=True,
     )
     result_batch_id = models.UUIDField(
         "lote opaco de resultados",
@@ -451,34 +561,50 @@ class ClassroomSession(models.Model):
         ]
 
     @classmethod
-    def start_from_snapshot(cls, snapshot):
+    def start_from_snapshot(cls, snapshot, roadmap_snapshot=None):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
             published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
-        except PublishedPackageSnapshot.DoesNotExist as error:
+            published_roadmap = (
+                PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
+                if roadmap_snapshot is not None
+                else None
+            )
+        except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
-                "La sesión requiere un snapshot publicado existente."
+                "La sesión requiere snapshots publicados existentes."
             ) from error
-        return cls.objects.create(snapshot=published_snapshot)
+        return cls.objects.create(
+            snapshot=published_snapshot,
+            roadmap_snapshot=published_roadmap,
+        )
 
     @classmethod
     @transaction.atomic
-    def prepare_from_snapshot(cls, snapshot, student_count, device_count):
+    def prepare_from_snapshot(
+        cls, snapshot, student_count, device_count, roadmap_snapshot=None
+    ):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
             published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            published_roadmap = (
+                PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
+                if roadmap_snapshot is not None
+                else None
+            )
             capacities = calculate_distribution(student_count, device_count)
-        except PublishedPackageSnapshot.DoesNotExist as error:
+        except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
-                "La sesión requiere un snapshot publicado existente."
+                "La sesión requiere snapshots publicados existentes."
             ) from error
         except ValueError as error:
             raise ValidationError(str(error)) from error
 
         session = cls.objects.create(
             snapshot=published_snapshot,
+            roadmap_snapshot=published_roadmap,
             status=cls.STATUS_PREPARED,
             student_count=int(str(student_count).strip()),
             device_count=int(str(device_count).strip()),
@@ -531,14 +657,23 @@ class ClassroomSession(models.Model):
     def save(self, *args, **kwargs):
         if not self._state.adding:
             original = type(self).objects.filter(pk=self.pk).values(
-                "snapshot_id", "status", "closed_at"
+                "snapshot_id", "roadmap_snapshot_id", "status", "closed_at"
             ).first()
             original_snapshot_id = original["snapshot_id"] if original else None
+            original_roadmap_snapshot_id = (
+                original["roadmap_snapshot_id"] if original else None
+            )
             if (
                 original_snapshot_id is not None
                 and original_snapshot_id != self.snapshot_id
             ):
                 raise ValidationError("El snapshot de una ClassroomSession queda fijado.")
+            if (
+                original_roadmap_snapshot_id != self.roadmap_snapshot_id
+            ):
+                raise ValidationError(
+                    "El snapshot de roadmap de una ClassroomSession queda fijado."
+                )
             if (
                 original
                 and original["status"] == self.STATUS_PREPARED
@@ -934,6 +1069,163 @@ class StudentTurn(models.Model):
         locked.completed_at = timezone.now()
         locked.save(update_fields=["status", "display_name", "completed_at"])
         return locked
+
+
+class StudentRoadmapProgress(models.Model):
+    """An erasable, pseudonymous activity path for one classroom turn.
+
+    This row is intentionally tied to the temporary ``StudentTurn``. Closing
+    the session deletes the turn and therefore this progress; there is no
+    student account, name, grade or identity relationship to retain.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(
+        ClassroomSession,
+        on_delete=models.CASCADE,
+        related_name="student_roadmap_progress",
+    )
+    turn = models.OneToOneField(
+        StudentTurn,
+        on_delete=models.CASCADE,
+        related_name="roadmap_progress",
+        null=True,
+        blank=True,
+    )
+    student_key = models.UUIDField(default=uuid.uuid4, editable=False)
+    roadmap_snapshot = models.ForeignKey(
+        PublishedRoadmapSnapshot,
+        on_delete=models.PROTECT,
+        related_name="student_progress",
+    )
+    package_snapshot = models.ForeignKey(
+        PublishedPackageSnapshot,
+        on_delete=models.PROTECT,
+        related_name="student_progress",
+    )
+    completed_activity_ids = models.JSONField(
+        "actividades completadas en el recorrido",
+        default=list,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("session", "student_key"),
+                name="unique_session_student_roadmap_key",
+            )
+        ]
+        verbose_name = "StudentRoadmapProgress"
+        verbose_name_plural = "StudentRoadmapProgress"
+
+    @classmethod
+    def for_turn(cls, turn):
+        session = turn.assignment.session
+        if session.roadmap_snapshot_id is None:
+            return None
+        progress, _ = cls.objects.get_or_create(
+            turn=turn,
+            defaults={
+                "session": session,
+                "student_key": turn.pk,
+                "roadmap_snapshot_id": session.roadmap_snapshot_id,
+                "package_snapshot_id": session.snapshot_id,
+            },
+        )
+        if (
+            progress.session_id != session.pk
+            or progress.roadmap_snapshot_id != session.roadmap_snapshot_id
+            or progress.package_snapshot_id != session.snapshot_id
+        ):
+            raise ValidationError("El progreso no corresponde a los snapshots de la sesión.")
+        return progress
+
+    def _assert_session_snapshots(self):
+        session = self.session
+        if (
+            self.roadmap_snapshot_id != session.roadmap_snapshot_id
+            or self.package_snapshot_id != session.snapshot_id
+        ):
+            raise ValidationError("El progreso debe usar los snapshots fijados a la sesión.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = type(self).objects.filter(pk=self.pk).values(
+                "session_id", "turn_id", "student_key", "roadmap_snapshot_id", "package_snapshot_id"
+            ).first()
+            if original and any(
+                original[field] != getattr(self, field)
+                for field in ("session_id", "turn_id", "student_key", "roadmap_snapshot_id", "package_snapshot_id")
+            ):
+                raise ValidationError("El progreso pseudónimo y sus snapshots quedan fijados.")
+        self._assert_session_snapshots()
+        return super().save(*args, **kwargs)
+
+    def available_activity_ids(self):
+        from curriculum.roadmap import ordered_activity_ids
+
+        return ordered_activity_ids(
+            self.roadmap_snapshot.payload,
+            package_snapshot_id=self.package_snapshot_id,
+        )
+
+    @property
+    def completed_activities(self):
+        """Human-readable alias for the persisted opaque activity ids."""
+
+        return list(self.completed_activity_ids)
+
+    def current_activity_id(self):
+        activities = self.available_activity_ids()
+        completed = {str(item) for item in self.completed_activity_ids}
+        return next((activity_id for activity_id in activities if activity_id not in completed), None)
+
+    @property
+    def current_activity(self):
+        current_id = self.current_activity_id()
+        return next(
+            (item for item in self.roadmap_states() if item["id"] == current_id),
+            None,
+        )
+
+    @property
+    def next_available_activity(self):
+        available = [item for item in self.roadmap_states() if item["state"] == "DISPONIBLE"]
+        return available[0] if available else None
+
+    def complete_activity(self, activity_id, *, package_snapshot=None):
+        """Complete one eligible activity without touching CurriculumProgress."""
+
+        self._assert_session_snapshots()
+        if package_snapshot is not None and package_snapshot.pk != self.package_snapshot_id:
+            raise ValidationError("La actividad no pertenece al snapshot fijado a la sesión.")
+        activity_id = str(activity_id)
+        activities = self.available_activity_ids()
+        if activity_id not in activities:
+            raise ValidationError("La actividad no existe en el roadmap publicado.")
+        if activity_id != self.current_activity_id():
+            raise ValidationError("La actividad todavía no está habilitada en este recorrido.")
+        self.completed_activity_ids = [
+            *self.completed_activity_ids,
+            activity_id,
+        ]
+        self.save(update_fields=["completed_activity_ids", "updated_at"])
+        return self
+
+    mark_activity_completed = complete_activity
+
+    def roadmap_states(self):
+        from curriculum.roadmap import states_for_progress
+
+        return states_for_progress(
+            self.roadmap_snapshot.payload,
+            self.completed_activity_ids,
+            package_snapshot_id=self.package_snapshot_id,
+        )
 
 
 class PseudonymousResult(models.Model):

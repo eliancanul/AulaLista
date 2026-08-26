@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · avance curricular</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <h1>Avance curricular</h1>
+      <p>La maestra confirma qué tema está actual o ya fue trabajado. Esta decisión es independiente del recorrido individual del alumnado.</p>
+      {% if roadmap_cards %}
+        {% for card in roadmap_cards %}
+          <section class="session-card" aria-labelledby="roadmap-{{ card.snapshot.pk }}">
+            <h2 id="roadmap-{{ card.snapshot.pk }}">{{ card.snapshot.title|default:"Roadmap publicado" }} · versión {{ card.snapshot.version }}</h2>
+            <p>Snapshot publicado: {{ card.snapshot.sha256|slice:":8" }}</p>
+            <p>{{ card.progress_count }} confirmaciones docentes</p>
+            <a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual</a>
+          </section>
+        {% endfor %}
+      {% else %}
+        <p>No hay roadmaps publicados todavía.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>

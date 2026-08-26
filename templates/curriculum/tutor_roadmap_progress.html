@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · confirmar avance</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <h1>Confirmar avance curricular</h1>
+      <p>Roadmap: {{ snapshot.title|default:"Roadmap publicado" }} · versión {{ snapshot.version }}</p>
+      <p class="authority-boundary">Sólo esta pantalla docente autenticada puede cambiar <strong>CurriculumProgress</strong>. Completar una actividad no lo modifica.</p>
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+      {% if nodes %}
+        {% for node in nodes %}
+          <article class="session-card">
+            <h2>{{ node.kind|capfirst }} · {{ node.title }}</h2>
+            <p>Estado confirmado: {% if node.progress %}{{ node.progress.get_status_display }}{% else %}Sin confirmar{% endif %}</p>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="node_id" value="{{ node.id }}">
+              <label>Decisión docente
+                <select name="status">
+                  <option value="worked"{% if node.progress.status == "worked" %} selected{% endif %}>Trabajado</option>
+                  <option value="current"{% if node.progress.status == "current" %} selected{% endif %}>Actual</option>
+                </select>
+              </label>
+              <button class="primary-action" type="submit">Guardar confirmación</button>
+            </form>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p>Este roadmap no contiene temas seleccionables.</p>
+      {% endif %}
+      <p><a href="{% url 'tutor-roadmaps' %}">Volver a roadmaps</a></p>
+    </main>
+  </body>
+</html>

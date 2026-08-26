@@ -36,16 +36,20 @@ from curriculum.ephemeral import (
     ensure_ephemeral_turn_summary,
     record_ephemeral_help,
     record_ephemeral_response,
+    read_ephemeral_session_summary,
     update_ephemeral_turn_summary,
 )
 from curriculum.models import (
     ClassroomSession,
     CurriculumImportJob,
     CurriculumPackage,
+    CurriculumProgress,
     DeviceAssignment,
     PublishedPackageSnapshot,
+    PublishedRoadmapSnapshot,
     PseudonymousResult,
     PseudonymousSurveyResponse,
+    StudentRoadmapProgress,
     StudentTurn,
 )
 from curriculum.practice import (
@@ -396,6 +400,7 @@ def student_turn_start(request, session_id, local_identifier):
             )
         response = redirect("student-activity", session_id=session_id)
         ensure_ephemeral_turn_summary(session_id, turn)
+        StudentRoadmapProgress.for_turn(turn)
         _set_turn_cookie(response, turn)
         return response
     return render(request, "curriculum/student_turn_start.html", context)
@@ -432,6 +437,7 @@ def student_turn_recover(request, session_id, local_identifier):
     ).first()
     if turn is None:
         return HttpResponse("No hay un turno activo para recuperar.", status=409)
+    StudentRoadmapProgress.for_turn(turn)
     response = redirect("student-activity", session_id=session_id)
     _set_turn_cookie(response, turn)
     return response
@@ -473,6 +479,82 @@ def student_turn_ready(request, session_id):
     response = redirect("student-packages")
     _clear_turn_cookie(response)
     return response
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_roadmaps(request):
+    """Authenticated teacher surface for manual curriculum confirmation."""
+
+    from curriculum.roadmap import ordered_nodes
+
+    snapshots = list(PublishedRoadmapSnapshot.objects.all()[:20])
+    cards = []
+    for snapshot in snapshots:
+        progress = {
+            item.node_id: item
+            for item in snapshot.curriculum_progress.select_related("confirmed_by")
+        }
+        cards.append(
+            {
+                "snapshot": snapshot,
+                "nodes": [
+                    {**node, "progress": progress.get(node["id"])}
+                    for node in ordered_nodes(snapshot.payload)
+                ],
+                "progress_count": len(progress),
+            }
+        )
+    return render(request, "curriculum/tutor_roadmaps.html", {"roadmap_cards": cards})
+
+
+@teacher_required
+@require_http_methods(["GET", "POST"])
+def tutor_roadmap_progress(request, snapshot_id):
+    """Record only an explicit teacher decision; students have no route here."""
+
+    from curriculum.roadmap import ordered_nodes
+
+    snapshot = get_object_or_404(PublishedRoadmapSnapshot, pk=snapshot_id)
+    nodes = ordered_nodes(snapshot.payload)
+    if request.method == "POST":
+        node_id = str(request.POST.get("node_id", "")).strip()
+        allowed = {node["id"] for node in nodes}
+        if node_id not in allowed:
+            return render(
+                request,
+                "curriculum/tutor_roadmap_progress.html",
+                {"snapshot": snapshot, "nodes": nodes, "error": "Selecciona un tema publicado."},
+                status=400,
+            )
+        try:
+            CurriculumProgress.confirm(
+                roadmap_snapshot=snapshot,
+                node_id=node_id,
+                status=request.POST.get("status", CurriculumProgress.STATUS_WORKED),
+                teacher=request.user,
+            )
+        except ValidationError as error:
+            return render(
+                request,
+                "curriculum/tutor_roadmap_progress.html",
+                {"snapshot": snapshot, "nodes": nodes, "error": str(error)},
+                status=400,
+            )
+        return redirect("tutor-roadmap-progress", snapshot_id=snapshot.pk)
+
+    progress = {
+        item.node_id: item
+        for item in snapshot.curriculum_progress.select_related("confirmed_by")
+    }
+    return render(
+        request,
+        "curriculum/tutor_roadmap_progress.html",
+        {
+            "snapshot": snapshot,
+            "nodes": [{**node, "progress": progress.get(node["id"])} for node in nodes],
+        },
+    )
 
 
 @teacher_required
@@ -551,13 +633,24 @@ def tutor_sessions(request):
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
     snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
-    context = {"snapshot": snapshot}
+    context = {
+        "snapshot": snapshot,
+        "roadmaps": PublishedRoadmapSnapshot.objects.all()[:20],
+    }
     if request.method == "POST":
         try:
+            roadmap_snapshot = None
+            roadmap_id = request.POST.get("roadmap_snapshot_id")
+            if roadmap_id:
+                roadmap_snapshot = get_object_or_404(
+                    PublishedRoadmapSnapshot,
+                    pk=roadmap_id,
+                )
             session = ClassroomSession.prepare_from_snapshot(
                 snapshot,
                 request.POST.get("student_count"),
                 request.POST.get("device_count"),
+                roadmap_snapshot=roadmap_snapshot,
             )
         except ValidationError as error:
             # Keep contract errors explicit; authentication is handled by the
@@ -1752,6 +1845,15 @@ def _unconfirmed_session_response(session):
     return None
 
 
+def _roadmap_context(session, turn):
+    progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
+    return {
+        "roadmap_progress": progress,
+        "roadmap_states": progress.roadmap_states() if progress else [],
+        "roadmap_snapshot": session.roadmap_snapshot,
+    }
+
+
 @never_cache
 @transaction.atomic
 def student_activity(request, session_id):
@@ -1774,6 +1876,30 @@ def student_activity(request, session_id):
     )
 
 
+@never_cache
+@transaction.atomic
+def student_roadmap(request, session_id):
+    session = get_object_or_404(
+        ClassroomSession.objects.select_for_update().select_related(
+            "snapshot", "roadmap_snapshot"
+        ),
+        pk=session_id,
+    )
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
+    turn, _ = _assignment_for_turn_capability(request, session_id)
+    if turn is None:
+        return HttpResponseForbidden(
+            "El camino requiere el turno activo y la capacidad de este dispositivo."
+        )
+    return render(
+        request,
+        "curriculum/student_roadmap.html",
+        {"session": session, **_roadmap_context(session, turn)},
+    )
+
+
 def _activity_context(session, **extra):
     turn = extra.get("turn")
     context = {
@@ -1781,6 +1907,7 @@ def _activity_context(session, **extra):
         "snapshot_payload": session.snapshot.payload,
         "turn": turn,
         "activity_questions": _activity_questions(session, turn),
+        **_roadmap_context(session, turn),
     }
     context.update(extra)
     return context
@@ -1812,6 +1939,30 @@ def _activity_questions(session, turn):
             }
         )
     return activity_questions
+
+
+def _complete_activity_after_response(session, turn):
+    """Advance only the turn's roadmap after every snapshot rule is satisfied."""
+
+    progress = StudentRoadmapProgress.for_turn(turn)
+    if progress is None:
+        return False
+    questions = session.snapshot.payload.get("questions", []) or []
+    summary = read_ephemeral_session_summary(session.pk)
+    responses = {
+        item.get("question_index"): item
+        for item in summary.get("turns", {}).get(str(turn.pk), {}).get("responses", [])
+    }
+    if questions and not all(
+        responses.get(index, {}).get("is_correct") is True
+        for index in range(len(questions))
+    ):
+        return False
+    activity_id = progress.current_activity_id()
+    if activity_id is None:
+        return False
+    progress.complete_activity(activity_id, package_snapshot=session.snapshot)
+    return True
 
 
 def _hint_progress_key(turn_id, question_index):
@@ -1900,6 +2051,49 @@ def _consume_hint_capability(
 @never_cache
 @transaction.atomic
 @require_POST
+def student_roadmap_complete(request, session_id, activity_id):
+    """Complete a no-question activity after its local deterministic rules."""
+
+    session = get_object_or_404(
+        ClassroomSession.objects.select_for_update().select_related(
+            "snapshot", "roadmap_snapshot"
+        ),
+        pk=session_id,
+    )
+    blocked = _unconfirmed_session_response(session)
+    if blocked:
+        return blocked
+    turn, _ = _assignment_for_turn_capability(request, session_id)
+    if turn is None:
+        return HttpResponseForbidden(
+            "Completar la actividad requiere el turno activo y su capacidad."
+        )
+    if session.snapshot.payload.get("questions"):
+        summary = read_ephemeral_session_summary(session.pk)
+        responses = summary.get("turns", {}).get(str(turn.pk), {}).get("responses", [])
+        response_by_question = {
+            item.get("question_index"): item for item in responses
+        }
+        if not all(
+            response_by_question.get(index, {}).get("is_correct") is True
+            for index in range(len(session.snapshot.payload.get("questions", []) or []))
+        ):
+            return HttpResponseBadRequest(
+                "La actividad requiere completar correctamente sus reactivos."
+            )
+    progress = StudentRoadmapProgress.for_turn(turn)
+    if progress is None:
+        return HttpResponseBadRequest("La sesión no tiene un roadmap publicado.")
+    try:
+        progress.complete_activity(activity_id, package_snapshot=session.snapshot)
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    return redirect("student-roadmap", session_id=session_id)
+
+
+@never_cache
+@transaction.atomic
+@require_POST
 def student_question_answer(request, session_id, question_index):
     session = get_object_or_404(
         ClassroomSession.objects.select_for_update().select_related("snapshot"),
@@ -1922,6 +2116,10 @@ def student_question_answer(request, session_id, question_index):
     except PracticeContractError as error:
         return HttpResponseBadRequest(str(error))
     record_ephemeral_response(session_id, turn, result)
+    activity_completed = result.is_correct and _complete_activity_after_response(
+        session,
+        turn,
+    )
 
     return render(
         request,
@@ -1937,6 +2135,7 @@ def student_question_answer(request, session_id, question_index):
                 question_index=question_index,
                 turn_id=turn.pk,
             ),
+            activity_completed=activity_completed,
         ),
     )
 

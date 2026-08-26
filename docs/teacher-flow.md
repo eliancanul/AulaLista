@@ -27,7 +27,7 @@ En revisión docente (ActivityReview)
      Sesión cerrada
 ```
 
-Una corrección de una actividad publicada crea una nueva revisión y, al publicarse, un snapshot nuevo. Una sesión ya iniciada conserva el snapshot inmutable con el que comenzó.
+Una corrección de una actividad publicada crea una nueva revisión y, al publicarse, un `PublishedPackageSnapshot` nuevo. Una corrección del camino crea un `PublishedRoadmapSnapshot` nuevo. Al preparar una sesión, la maestra puede fijar ambos snapshots; una sesión ya iniciada conserva exactamente las versiones con las que comenzó.
 
 ## Estados y autoridad
 
@@ -43,17 +43,34 @@ Una corrección de una actividad publicada crea una nueva revisión y, al public
 | Sesión activa | Monitorear y cerrar | Cambiar su snapshot |
 | Sesión cerrada | Consultar/exportar/eliminar resultados permitidos | Aceptar nuevas respuestas |
 
-## Progreso curricular
+## Dos progresos que no se colapsan
 
-`CurriculumProgress` registra únicamente un tema que la persona docente confirma como actual o trabajado. El sistema puede mostrar un siguiente tema sugerido a partir del mapa curricular confirmado y de la actividad previamente trabajada. La sugerencia no es una transición de estado.
+`CurriculumProgress` es el avance curricular que la maestra confirma manualmente desde la pantalla **Avance curricular** (`/tutor/roadmaps/`). Registra que una unidad, lección o tema está `ACTUAL` o `TRABAJADO`; no implica dominio. El sistema puede sugerir un siguiente tema, pero la sugerencia no es una transición de estado.
+
+La sugerencia no es una transición de estado.
+
+`StudentRoadmapProgress` es distinto: un recorrido individual, temporal y pseudónimo. Marca actividades `COMPLETADA` cuando las reglas deterministas se satisfacen y calcula la siguiente actividad `ACTUAL` o `DISPONIBLE`. Completar una actividad no aprueba el currículo, no califica y no cambia `CurriculumProgress`.
 
 Las reglas son:
 
 1. Crear una actividad no cambia `CurriculumProgress`.
 2. Publicar una actividad no cambia `CurriculumProgress`.
 3. Cerrar una sesión ofrece registrar el tema trabajado, pero nunca avanza `CurriculumProgress` por sí solo.
-4. El avance requiere confirmación explícita del maestro.
-5. Una nueva versión curricular no reescribe sesiones ya iniciadas.
+4. El avance docente requiere confirmación explícita del maestro; ningún estudiante puede editarlo o falsificarlo.
+5. El recorrido individual no requiere cuenta ni identidad real. Su relación con el turno temporal se elimina al cerrar la sesión.
+6. El algoritmo de `StudentRoadmapProgress` sólo lee el `PublishedRoadmapSnapshot` y el `PublishedPackageSnapshot` fijados a la sesión. Es determinista y no lee la actividad editorial viva.
+7. Una corrección publicada después del inicio no reescribe ninguno de los snapshots de una sesión ya iniciada.
+
+### Estados legibles del recorrido
+
+La pantalla estudiantil siempre escribe el estado, además de cualquier color o símbolo:
+
+- `ACTUAL`: el paso que corresponde continuar ahora.
+- `DISPONIBLE`: el siguiente paso habilitado después del actual.
+- `COMPLETADA`: actividad terminada en este recorrido, sin declarar aprendizaje.
+- `BLOQUEADA`: paso posterior que todavía espera el orden determinista.
+
+La interfaz docente conserva también la confirmación manual como `ACTUAL` o `TRABAJADO`; nunca sustituye esos estados por un cálculo estudiantil.
 
 ## Falta de fuente local
 

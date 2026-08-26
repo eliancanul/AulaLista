@@ -28,6 +28,14 @@ _Avoid_: flujo automático, pipeline de IA.
 Registro del tema curricular que una persona docente confirma como actual o trabajado dentro de un curso. Puede recibir una sugerencia del sistema, pero no avanza por crear, publicar o cerrar una actividad sin confirmación humana.
 _Avoid_: dominio automático, avance de IA.
 
+**PublishedRoadmapSnapshot**:
+Roadmap publicado e inmutable con unidades, lecciones y actividades en orden determinista. Una sesión fija este snapshot junto con su `PublishedPackageSnapshot`; una corrección posterior sólo sirve para sesiones nuevas.
+_Avoid_: roadmap vivo, secuencia inferida.
+
+**StudentRoadmapProgress**:
+Recorrido individual, temporal y pseudónimo que registra actividades completadas y calcula la siguiente actividad habilitada usando únicamente los dos snapshots fijados a la sesión. No es cuenta, expediente, aprobación curricular, dominio ni calificación; al cerrar la sesión se elimina con el turno temporal.
+_Avoid_: progreso docente automático, identidad estudiantil.
+
 **ActivityDraft**:
 Propuesta editable de actividad asociada a un tema y a fuentes curriculares concretas. Puede ser producida con asistencia automática, pero no es publicable hasta atravesar la revisión y aprobación humana.
 _Avoid_: actividad aprobada, contenido generado publicado.
@@ -42,7 +50,7 @@ _Avoid_: validación de IA, revisión automática.
 Ejecución temporal de una actividad publicada para un conjunto de participantes y dispositivos. Una sesión conserva la versión publicada con la que comenzó.
 _Avoid_: curso, instancia editable.
 
-Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva un `PublishedPackageSnapshot` inmutable: cambiar el contenido editorial no modifica una sesión ya iniciada.
+Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva un `PublishedPackageSnapshot` y, cuando usa camino, un `PublishedRoadmapSnapshot` inmutables: cambiar el contenido editorial no modifica una sesión ya iniciada.
 
 **LocalDeviceQueue**:
 Cola local asociada a un `DeviceAssignment`, identificada mediante un identificador opaco del nodo y limitada por una capacidad asignada. No contiene nombres, matrículas ni otras identidades estudiantiles.
