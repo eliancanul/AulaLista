@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f0e8">
+  <title>AulaLista · Camino B</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <button class="wordmark" type="button" data-screen="home" aria-label="Ir al inicio">Aula<span>Lista</span><small>B</small></button>
+      <nav class="top-nav" aria-label="Navegación principal">
+        <button type="button" data-screen="student">Entrar al camino</button>
+        <button type="button" data-screen="teacher">Vista docente</button>
+      </nav>
+      <div class="demo-pill" data-demo="synthetic"><span class="demo-dot"></span> DEMOSTRACIÓN SINTÉTICA</div>
+    </div>
+  </header>
+
+  <main id="main-content" class="shell">
+    <div id="announcement" class="sr-only" aria-live="polite"></div>
+
+    <section id="screen-home" class="screen active-screen" aria-labelledby="home-title">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">CAMINO B <span class="rule"></span> APRENDIZAJE LOCAL</p>
+          <h1 id="home-title">Un camino claro para aprender <em>juntas.</em></h1>
+          <p class="hero-lead">Unidades, lecciones y actividades en un recorrido visible. Sin cuentas estudiantiles, sin calificaciones individuales.</p>
+          <div class="hero-actions">
+            <button class="button button-primary" type="button" data-screen="student">Entrar por enlace o QR <span aria-hidden="true">→</span></button>
+            <button class="button button-secondary" type="button" data-screen="teacher">Abrir vista docente</button>
+          </div>
+          <p class="microcopy">Funciona en la red local del aula. Cada ejemplo de esta pantalla es sintético.</p>
+        </div>
+        <div class="hero-map" aria-label="Vista previa sintética del camino de aprendizaje" data-demo="synthetic">
+          <div class="map-label"><span class="status-dot status-green"></span> Camino de muestra</div>
+          <div class="mini-path" aria-hidden="true">
+            <span class="mini-line"></span>
+            <span class="mini-node done">✓</span><span class="mini-node done">✓</span><span class="mini-node current">3</span><span class="mini-node locked">×</span>
+          </div>
+          <div class="map-caption"><strong>Explorar el barrio</strong><span>2 de 4 temas vistos por la maestra</span></div>
+          <div class="map-stats"><span><b>3</b> unidades</span><span><b>8</b> actividades</span></div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <article class="feature-card"><span class="feature-number">01</span><h2>Una acción</h2><p>Una pregunta por pantalla, con progreso que se entiende de un vistazo.</p></article>
+        <article class="feature-card"><span class="feature-number">02</span><h2>Decisión humana</h2><p>La IA puede proponer; una <strong>EditorialReviewer</strong> aprueba y publica, y la maestra activa.</p></article>
+        <article class="feature-card"><span class="feature-number">03</span><h2>Rastro local</h2><p>El acceso usa un enlace local y un apodo temporal, no una cuenta.</p></article>
+      </div>
+    </section>
+
+    <section id="screen-student" class="screen" aria-labelledby="student-title" hidden>
+      <div class="compact-heading">
+        <p class="eyebrow">ENTRADA ESTUDIANTE <span class="rule"></span> DEMO</p>
+        <h1 id="student-title">Tu camino empieza aquí.</h1>
+        <p>Escanea el código que proyectó tu maestra o abre el enlace local. Elige un apodo para esta sesión.</p>
+      </div>
+      <div class="student-entry-grid">
+        <div class="entry-card card-paper" data-demo="synthetic">
+          <div class="card-topline"><span class="status-dot status-yellow"></span><span>ESPERA</span><span class="synthetic-label">DATO SINTÉTICO</span></div>
+          <h2>Sesión: Mirar de cerca</h2>
+          <p class="muted">La maestra todavía está preparando la actividad.</p>
+          <form id="nickname-form" class="nickname-form">
+            <label for="nickname">Tu apodo local</label>
+            <div class="input-action"><input id="nickname" name="nickname" maxlength="14" autocomplete="off" placeholder="Ej. Luciérnaga" required><button class="button button-primary" type="submit">Entrar</button></div>
+            <p class="field-note">Solo se muestra en este dispositivo durante la demo. No es una identidad.</p>
+          </form>
+        </div>
+        <div class="join-visual" data-demo="synthetic">
+          <div class="join-visual-header"><span class="eyebrow">ENLACE LOCAL</span><span class="code-chip">AULA-B7Q2</span></div>
+          <div class="qr-code" id="student-qr" role="img" aria-label="Código QR sintético para entrar a la sesión"></div>
+          <p>Apunta la cámara al QR proyectado</p>
+          <button class="text-button" type="button" data-screen="roadmap">Ver camino sin entrar <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
+      <div class="state-strip" aria-label="Estados de entrada">
+        <span class="state-item is-current"><b>Espera</b><small>maestra prepara</small></span><span class="state-item"><b>Activo</b><small>puedes participar</small></span><span class="state-item"><b>Cerrado</b><small>sesión terminó</small></span><span class="state-item"><b>Error</b><small>reintentar enlace</small></span>
+      </div>
+    </section>
+
+    <section id="screen-roadmap" class="screen" aria-labelledby="roadmap-title" hidden>
+      <div class="roadmap-heading">
+        <div><p class="eyebrow">CAMINO DE APRENDIZAJE <span class="rule"></span> ESTUDIANTE</p><h1 id="roadmap-title">Explorar el barrio</h1><p class="heading-note">Avance compartido por la maestra · <strong>2 de 4 temas vistos</strong></p></div>
+        <div class="progress-badge" data-demo="synthetic"><span>PROGRESO</span><strong>50%</strong><div class="progress-bar"><i style="width:50%"></i></div></div>
+      </div>
+      <div class="roadmap-guide"><span class="guide-step done"><b>1</b> Unidades</span><span class="guide-line done"></span><span class="guide-step current"><b>2</b> Lecciones</span><span class="guide-line"></span><span class="guide-step"><b>3</b> Actividades</span></div>
+      <div class="roadmap-layout">
+        <div class="path-column">
+          <article class="unit-card unit-done" data-demo="synthetic">
+            <div class="unit-head"><div><span class="unit-kicker">UNIDAD 01 · COMPLETADA</span><h2>Observar lo cotidiano</h2></div><span class="unit-mark" aria-label="Completado">✓</span></div>
+            <p>Mirar, nombrar y compartir lo que encontramos.</p>
+            <div class="lesson-list"><div class="lesson-row viewed"><span class="lesson-node">✓</span><span><b>Formas a mi alrededor</b><small>Visto por la maestra</small></span><span class="status-tag">VISTO</span></div><div class="lesson-row viewed"><span class="lesson-node">✓</span><span><b>Sonidos del camino</b><small>Visto por la maestra</small></span><span class="status-tag">VISTO</span></div></div>
+          </article>
+          <div class="path-connector"></div>
+          <article class="unit-card unit-current" data-demo="synthetic">
+            <div class="unit-head"><div><span class="unit-kicker">UNIDAD 02 · EN CURSO</span><h2>Contar historias del lugar</h2></div><span class="unit-mark current-mark" aria-label="Actual">→</span></div>
+            <p>Conectar una observación con una historia breve.</p>
+            <div class="lesson-list"><div class="lesson-row active-lesson"><span class="lesson-node">→</span><span><b>Una pista, una historia</b><small>Actividad actual · 1 paso</small></span><span class="status-tag current-tag">ACTUAL</span></div><div class="lesson-row available"><span class="lesson-node">○</span><span><b>Ordenar la escena</b><small>Disponible después</small></span><span class="status-tag available-tag">DISPONIBLE</span></div></div>
+            <button class="button button-primary continue-button" type="button" data-action="start-activity">Continuar con la actividad <span aria-hidden="true">→</span></button>
+          </article>
+          <div class="path-connector muted-connector"></div>
+          <article class="unit-card unit-locked" data-demo="synthetic"><div class="unit-head"><div><span class="unit-kicker">UNIDAD 03 · BLOQUEADA</span><h2>Compartir hallazgos</h2></div><span class="unit-mark" aria-label="Bloqueado">•</span></div><p>Se abrirá cuando la maestra lo decida.</p><div class="locked-note"><span aria-hidden="true">▣</span> Bloqueado por decisión docente <span class="synthetic-label">DATO SINTÉTICO</span></div></article>
+        </div>
+        <aside class="legend-card" aria-labelledby="legend-title"><h2 id="legend-title">Cómo leer el camino</h2><div class="legend-row"><span class="legend-icon viewed-icon">✓</span><span><b>Visto</b><small>La maestra indicó avance.</small></span></div><div class="legend-row"><span class="legend-icon current-icon">→</span><span><b>Actual</b><small>Tu siguiente paso.</small></span></div><div class="legend-row"><span class="legend-icon available-icon">○</span><span><b>Disponible</b><small>Listo para después.</small></span></div><div class="legend-row"><span class="legend-icon locked-icon">•</span><span><b>Bloqueado</b><small>Decisión de la maestra.</small></span></div><p class="legend-foot">Los estados son una señal de acompañamiento, no una puntuación.</p></aside>
+      </div>
+      <div id="activity-panel" class="activity-panel" hidden aria-live="polite"><div><span class="eyebrow">ACTIVIDAD 01 <span class="rule"></span> PASO 1 DE 2</span><h2 tabindex="-1">¿Qué pista elegirías para contar esta historia?</h2><p class="muted">Selecciona una opción. La regla de la demo es explícita y local.</p></div><div class="activity-options"><button type="button" class="option-button" data-option="calle">La sombra en la pared</button><button type="button" class="option-button" data-option="sonido">El sonido de una puerta</button></div><p id="activity-feedback" class="activity-feedback" role="status"></p></div>
+    </section>
+
+    <section id="screen-teacher" class="screen" aria-labelledby="teacher-title" hidden>
+      <div class="compact-heading teacher-heading"><p class="eyebrow">VISTA DOCENTE <span class="rule"></span> CONTROL LOCAL</p><h1 id="teacher-title">Preparar, activar, acompañar.</h1><p>La misma ruta, vista desde la decisión de quien acompaña el aula.</p></div>
+      <div class="teacher-grid">
+        <div class="review-card card-paper" data-demo="synthetic"><div class="card-topline"><span class="status-dot status-blue"></span><span>PAQUETE DE DEMO</span><span class="synthetic-label">DATO SINTÉTICO</span></div><h2>Explorar el barrio</h2><p>3 unidades · 4 lecciones · 8 actividades</p><div class="review-flow"><span class="flow-done">Borrador propuesto</span><span>→</span><span class="flow-done">EditorialReviewer aprueba y publica</span><span>→</span><strong>Maestra activa</strong></div><p class="boundary-note"><b>Límite humano:</b> la IA solo propone. No publica, no declara avance y no decide estados.</p></div>
+        <div class="session-card" data-demo="synthetic"><div class="session-card-head"><div><span class="unit-kicker">SESIÓN LOCAL · LISTA</span><h2>Mirar de cerca</h2></div><span class="status-tag available-tag">ESPERA</span></div><p>El camino está preparado para que la maestra lo active cuando esté lista.</p><button class="button button-primary full-button" type="button" data-action="activate-session">Activar sesión de demostración</button><p class="field-note">Activar es una decisión explícita de la maestra.</p><button class="text-button teacher-preview" type="button" data-screen="active">Abrir modo activo <span aria-hidden="true">↗</span></button></div>
+      </div>
+      <div class="teacher-roadmap"><div class="section-title"><div><p class="eyebrow">REVISIÓN DEL CAMINO</p><h2>Estado propuesto para la sesión</h2></div><span class="synthetic-label">DATOS SINTÉTICOS</span></div><div class="teacher-path"><div class="teacher-unit done-unit"><b>01</b><span>Observar lo cotidiano</span><em>2 temas vistos</em></div><div class="teacher-unit current-unit"><b>02</b><span>Contar historias del lugar</span><em>1 tema actual</em></div><div class="teacher-unit locked-unit"><b>03</b><span>Compartir hallazgos</span><em>Bloqueado por decisión docente</em></div></div></div>
+    </section>
+
+    <section id="screen-active" class="screen" aria-labelledby="active-title" hidden>
+      <div class="active-heading"><div><p class="eyebrow">MODO ACTIVO <span class="rule"></span> SESIÓN LOCAL</p><h1 id="active-title">Mirar de cerca</h1><p>Comparte este QR. El camino queda abierto mientras tú acompañas.</p></div><div class="active-state" id="active-state" data-state="espera"><span class="state-light"></span><b id="active-state-label">Espera</b><span class="synthetic-label">DATO SINTÉTICO</span></div></div>
+      <div id="session-error" class="error-banner" role="alert" hidden><b>Error de enlace.</b> La demo simuló un fallo de enlace. Puedes reintentar sin red.</div>
+      <div class="active-grid">
+        <div class="qr-panel" data-demo="synthetic"><div class="qr-panel-top"><span class="unit-kicker">ENLACE DE DEMO</span><button class="icon-button" type="button" data-action="copy-code" aria-label="Copiar código local">▣</button></div><div class="qr-code qr-large" id="active-qr" role="img" aria-label="Código QR sintético de la sesión"></div><strong class="join-code" id="join-code">AULA-B7Q2</strong><p>Este código pertenece a la sesión sintética en memoria.</p></div>
+        <div class="monitor-panel"><div class="monitor-head"><div><span class="unit-kicker">PARTICIPACIÓN</span><h2><span id="participant-count">0</span> apodos presentes</h2></div><span class="synthetic-label">DATOS SINTÉTICOS</span></div><div id="nickname-list" class="nickname-list" aria-live="polite"></div><p class="monitor-note">Apodos temporales de esta demostración. Viven solo en memoria y se borran al cerrar. No representan identidades ni resultados individuales.</p><div class="state-controls"><span>Simular estado:</span><button type="button" data-state="espera">Espera</button><button type="button" data-state="activo">Activo</button><button type="button" data-state="cerrado">Cerrado</button><button type="button" data-state="error">Error</button></div></div>
+      </div>
+      <div class="active-footer"><button class="button button-secondary" type="button" data-screen="teacher">Volver a vista docente</button><p><span class="status-dot status-green"></span> Activación humana requerida · prototipo sin red</p></div>
+    </section>
+  </main>
+
+  <footer class="site-footer shell"><p><strong>AulaLista · Camino B</strong> <span>Prototipo aislado para revisión</span></p><p>Todo dato mostrado es sintético y local.</p></footer>
+  <script src="./app.js"></script>
+</body>
+</html>
