@@ -798,6 +798,7 @@ def _run_import_job_stage(job_id, stage, payload=None):
         "add_missing": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
     }
     pipeline_module = None
+    failure_traceback = ""
     try:
         job = CurriculumImportJob.objects.get(pk=job_id)
         from curriculum import curriculum_import as pipeline
@@ -815,6 +816,9 @@ def _run_import_job_stage(job_id, stage, payload=None):
         else:
             raise ValueError(f"Etapa desconocida: {stage}")
     except Exception as error:  # noqa: BLE001 - the worker must never die silently
+        import traceback
+
+        failure_traceback = traceback.format_exc()
         job = CurriculumImportJob.objects.filter(pk=job_id).first()
         if job:
             job.status = fallback_status[stage]
@@ -832,6 +836,22 @@ def _run_import_job_stage(job_id, stage, payload=None):
         entries = (
             pipeline_module.stop_llm_trace() if pipeline_module else []
         )
+        if pipeline_module and failure_traceback:
+            # Structured failure record so debugging never depends on a
+            # buried one-line message (#34/#47 lessons).
+            entries.append(
+                {
+                    "stage": stage,
+                    "model": "",
+                    "system": "",
+                    "prompt": "",
+                    "response_raw": "",
+                    "duration_ms": 0,
+                    "attempts": 0,
+                    "errors": [failure_traceback],
+                    "ok": False,
+                }
+            )
         try:
             if entries:
                 job = CurriculumImportJob.objects.filter(pk=job_id).first()
