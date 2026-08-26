@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aula directa | AulaLista</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="#home" data-view="home" aria-label="AulaLista, inicio">AulaLista</a>
+    <span class="demo-badge">Demostración sintética</span>
+    <nav aria-label="Navegación principal">
+      <button type="button" class="nav-button" data-view="student">Estudiante</button>
+      <button type="button" class="nav-button" data-view="teacher">Docente</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="view view--home" aria-labelledby="home-title">
+      <div class="intro">
+        <p class="eyebrow">Aula directa · modo local</p>
+        <h1 id="home-title">Una actividad.<br><span>Todo el grupo.</span></h1>
+        <p class="lede">Entra con una ruta corta o prepara la sesión para proyectarla en el aula.</p>
+      </div>
+      <div class="choice-grid" aria-label="Elige tu entrada">
+        <article class="choice-card choice-card--student">
+          <p class="card-kicker">Para participar</p>
+          <h2>Entrar como estudiante</h2>
+          <p>Usa el QR o la ruta que comparte tu maestra. No necesitas cuenta.</p>
+          <button type="button" class="button button--primary" data-view="student">Entrar <span aria-hidden="true">→</span></button>
+        </article>
+        <article class="choice-card">
+          <p class="card-kicker">Para conducir</p>
+          <h2>Preparar como docente</h2>
+          <p>Elige una actividad demostrativa y decide cuándo comienza.</p>
+          <button type="button" class="button button--secondary" data-view="teacher">Preparar sesión <span aria-hidden="true">→</span></button>
+        </article>
+      </div>
+      <div class="trust-line">
+        <span class="signal-dot" aria-hidden="true"></span>
+        <span>Funciona sin red · datos sintéticos · sin cuentas estudiantiles</span>
+      </div>
+    </section>
+
+    <section id="student" class="view" aria-labelledby="student-title" hidden>
+      <div class="view-heading">
+        <p class="eyebrow">Entrada estudiante</p>
+        <h1 id="student-title">Sigue tu camino.</h1>
+        <p class="lede">Escanea el QR de tu aula o usa la ruta local. Este recorrido es una demostración sintética.</p>
+      </div>
+      <div class="student-layout">
+        <article class="qr-card" aria-labelledby="qr-student-title">
+          <div class="qr-code" id="qr-student" role="img" aria-label="Código QR sintético para la demostración"></div>
+          <div>
+            <p class="card-kicker" id="qr-student-title">Ruta de demostración</p>
+            <code class="local-route">/demo-ciencias</code>
+            <p class="microcopy">QR sintético · no abre una cuenta ni guarda identidad.</p>
+          </div>
+        </article>
+        <article class="path-card" aria-labelledby="path-title">
+          <div class="card-title-row">
+            <div>
+              <p class="card-kicker">Camino curricular compacto</p>
+              <h2 id="path-title">Ciencias · cambios de estado</h2>
+            </div>
+            <span class="status-chip status-chip--soft">DemoPackage</span>
+          </div>
+          <ol class="topic-path" aria-label="Temas de demostración">
+            <li class="topic topic--done"><span class="topic-mark" aria-hidden="true">✓</span><span>Observar</span><small>Ya visto</small></li>
+            <li class="topic topic--done"><span class="topic-mark" aria-hidden="true">✓</span><span>Comparar</span><small>Ya visto</small></li>
+            <li class="topic topic--next"><span class="topic-mark" aria-hidden="true">3</span><span>Explicar</span><small>Siguiente</small></li>
+          </ol>
+          <p class="microcopy">El camino es orientativo; no muestra puntuaciones individuales.</p>
+        </article>
+      </div>
+      <div class="action-row">
+        <button type="button" class="button button--primary button--large" data-view="active" data-entry="student">Continuar <span aria-hidden="true">→</span></button>
+        <button type="button" class="text-button" data-view="home">Volver al inicio</button>
+      </div>
+    </section>
+
+    <section id="teacher" class="view" aria-labelledby="teacher-title" hidden>
+      <div class="view-heading view-heading--split">
+        <div>
+          <p class="eyebrow">Entrada docente</p>
+          <h1 id="teacher-title">Prepara. Activa. Acompaña.</h1>
+          <p class="lede">Una vista despejada para tomar la siguiente decisión en clase.</p>
+        </div>
+        <span class="role-pill">Maestra · demostración</span>
+      </div>
+      <div class="teacher-layout">
+        <article class="prepare-card">
+          <div class="card-title-row">
+            <div>
+              <p class="card-kicker">Sesión disponible</p>
+              <h2>Cambios de estado</h2>
+              <p class="microcopy">DemoPackage · versión sintética local</p>
+            </div>
+            <span class="status-chip status-chip--ready" id="prepare-status">Lista para preparar</span>
+          </div>
+          <div class="session-facts">
+            <span><strong>3</strong> temas</span>
+            <span><strong>0</strong> participantes</span>
+            <span>sin red</span>
+          </div>
+          <div class="action-row action-row--tight">
+            <button type="button" class="button button--primary button--large" data-action="prepare">Preparar sesión</button>
+            <button type="button" class="button button--secondary" data-action="activate">Activar</button>
+          </div>
+          <p class="helper-text" id="teacher-message" role="status" aria-live="polite">La maestra mantiene el control de activación.</p>
+        </article>
+        <aside class="recent-card" aria-labelledby="recent-title">
+          <p class="card-kicker">Sesiones recientes</p>
+          <h2 id="recent-title">Solo demostraciones</h2>
+          <ul class="recent-list">
+            <li><span>Lectura de mapas</span><small>Cerrada · demo</small></li>
+            <li><span>Mezclas</span><small>En espera · demo</small></li>
+          </ul>
+          <p class="microcopy">No son sesiones reales ni contienen datos de alumnado.</p>
+        </aside>
+      </div>
+      <div class="authority-note"><strong>Autoridad humana:</strong> EditorialReviewer revisa, aprueba y publica el paquete. La maestra activa la ClassroomSession. La IA solo propone; no publica, evalúa ni declara aprendizaje.</div>
+    </section>
+
+    <section id="active" class="view view--active" aria-labelledby="active-title" hidden>
+      <div class="active-topline">
+        <div>
+          <p class="eyebrow">Actividad en aula · demostración sintética</p>
+          <h1 id="active-title">Cambios de estado</h1>
+        </div>
+        <span class="status-chip status-chip--live" id="live-chip">EN ESPERA</span>
+      </div>
+      <div class="active-layout">
+        <article class="projector-card" aria-labelledby="projector-title">
+          <div class="projector-card__top">
+            <p class="card-kicker" id="projector-title">Para proyectar · entra con QR</p>
+            <span class="local-only">Solo local</span>
+          </div>
+          <div class="qr-wrap">
+            <div class="qr-code qr-code--projector" id="qr-persistent" role="img" aria-label="Código QR sintético persistente de la sesión"></div>
+            <div>
+              <p class="join-number">Entra en</p>
+              <code class="local-route local-route--large">/demo-ciencias</code>
+              <p class="microcopy">Código QR sintético · permanece mientras la sesión está abierta.</p>
+            </div>
+          </div>
+          <div class="count-block" aria-live="polite" aria-label="0 participantes">
+            <span class="count-number" id="participant-count">0</span>
+            <span>participantes</span>
+          </div>
+        </article>
+        <article class="roster-card" aria-labelledby="roster-title">
+          <div class="card-title-row">
+            <div>
+              <p class="card-kicker">Entrada local</p>
+              <h2 id="roster-title">apodos locales</h2>
+            </div>
+            <span class="status-chip status-chip--soft">sin cuentas</span>
+          </div>
+          <p class="microcopy">Se muestran solo durante esta demostración en este navegador.</p>
+          <form class="nickname-form" id="nickname-form">
+            <label for="nickname">Tu apodo</label>
+            <div class="input-row"><input id="nickname" name="nickname" maxlength="18" autocomplete="off" placeholder="ej. Sol" /><button type="submit" class="button button--primary">Entrar</button></div>
+          </form>
+          <ul class="nickname-list" id="nickname-list" aria-label="Apodos locales de demostración"></ul>
+        </article>
+      </div>
+      <div class="state-panel" aria-labelledby="state-title">
+        <div class="state-panel__heading"><h2 id="state-title">Estado de la sesión</h2><span class="microcopy">Controles de demostración para la maestra</span></div>
+        <div class="state-options" role="group" aria-label="Cambiar estado de demostración">
+          <button type="button" class="state-button" data-state-target="espera">Espera</button>
+          <button type="button" class="state-button state-button--selected" data-state-target="activo">Activo</button>
+          <button type="button" class="state-button" data-state-target="cerrado">Cerrar sesión</button>
+          <button type="button" class="state-button" data-state-target="error">Simular error</button>
+        </div>
+        <div class="state-messages">
+          <p data-state="espera"><strong>En espera:</strong> comparte el QR cuando el grupo esté listo.</p>
+          <p data-state="activo" hidden><strong>Activo:</strong> la actividad está disponible para el grupo.</p>
+          <p data-state="cerrado" hidden><strong>Cerrado:</strong> la entrada terminó; los apodos dejan de mostrarse.</p>
+          <p data-state="error" hidden><strong>No se pudo abrir la sesión.</strong> Revisa la conexión local y vuelve a intentar.</p>
+        </div>
+      </div>
+      <div class="action-row">
+        <button type="button" class="text-button" data-view="home">Salir al inicio</button>
+        <span class="microcopy">Datos sintéticos explícitos · sin puntuaciones individuales</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>AulaLista · prototipo visual C</span><span>Local · sin red · sin identidad real</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
