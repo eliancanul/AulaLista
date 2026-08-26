@@ -24,6 +24,23 @@ curl -s localhost:11434/api/tags | grep qwen2.5   # modelo presente
 - [ ] Dos teléfonos/tablets en la misma red Wi-Fi; `AULALISTA_LAN_URL` configurada.
 - [ ] Plan B sin WAN: todo el pipeline corre local (Ollama incluido); verificar
       que ningún recurso externo aparece en `docs/evidence/`.
+- [ ] **Sistema visual común:** revisar `VoltAgent/awesome-design-md`
+      (<https://github.com/VoltAgent/awesome-design-md>, MIT) y crear/versionar
+      un `DESIGN.md` propio de AulaLista antes de ajustar las pantallas de
+      maestro y estudiante. Usarlo como referencia para tokens, componentes,
+      espaciado y estados; no como dependencia de ejecución.
+- [ ] **Referencia de interacción estudiantil:** evaluar
+      `sanidhyy/duolingo-clone` (<https://github.com/sanidhyy/duolingo-clone>,
+      MIT) para el cuestionario. Reutilizar código sólo con licencia compatible;
+      sustituir marca, contenido y assets de terceros. No copiar código o
+      recursos propietarios de Duolingo ni introducir este clon directamente
+      en el flujo Django sin adaptar los contratos de AulaLista.
+- [ ] **Referencia futura de repasos:** tener localizado
+      `duolingo/halflife-regression`
+      (<https://github.com/duolingo/halflife-regression>, MIT) y su artículo.
+      No es dependencia ni requisito del MVP del viernes: después de la demo
+      evaluar si sirve para programar repasos, separado de puntuación,
+      publicación y decisiones pedagógicas.
 
 ## Recorrido de la demo
 
