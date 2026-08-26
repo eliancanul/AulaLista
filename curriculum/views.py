@@ -24,6 +24,7 @@ from django.http import (
 )
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
@@ -75,13 +76,32 @@ DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
 SURVEY_SUBMITTED_TTL = LOCAL_SESSION_TTL
 
 
+def _safe_teacher_next(request):
+    """Return only a local path for Wagtail's login ``next`` parameter.
+
+    The protected request is normally already a relative path, but explicitly
+    validating it keeps this boundary safe if a deployment or middleware ever
+    supplies an unusual request path. Wagtail remains responsible for the
+    actual login and its final redirect validation.
+    """
+
+    next_url = request.get_full_path()
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts=set(),
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return "/"
+
+
 def teacher_required(view_func):
-    """All tutor routes require an authenticated staff (teacher) account."""
+    """Require Wagtail's existing staff account for teacher operations."""
 
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect_to_login(request.get_full_path())
+            return redirect_to_login(_safe_teacher_next(request))
         if not request.user.is_staff:
             return HttpResponseForbidden(
                 "La sección del maestro requiere una cuenta de personal."
@@ -536,8 +556,8 @@ def tutor_session_prepare(request, snapshot_id):
                 request.POST.get("device_count"),
             )
         except ValidationError as error:
-            # This local-only form has no teacher account yet; show the contract
-            # error without inventing an authentication or identity layer.
+            # Keep contract errors explicit; authentication is handled by the
+            # Wagtail-backed teacher boundary above.
             context["error"] = str(error)
             return render(
                 request,
