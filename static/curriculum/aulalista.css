@@ -247,3 +247,9 @@ td {
   background: #e5f2ed;
   padding: 0.75rem 1rem;
 }
+
+
+/* Enlaces a la bitácora técnica (#34) */
+.technical-log-links {
+  font-size: 0.9rem;
+}

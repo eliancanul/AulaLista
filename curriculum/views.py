@@ -797,10 +797,13 @@ def _run_import_job_stage(job_id, stage, payload=None):
         "activities": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
         "add_missing": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
     }
+    pipeline_module = None
     try:
         job = CurriculumImportJob.objects.get(pk=job_id)
         from curriculum import curriculum_import as pipeline
 
+        pipeline_module = pipeline
+        pipeline.start_llm_trace()
         if stage == "extract":
             _import_action_extract(job, pipeline)
         elif stage == "subtopics":
@@ -826,9 +829,20 @@ def _run_import_job_stage(job_id, stage, payload=None):
                 ]
             )
     finally:
-        from django.db import connection
+        entries = (
+            pipeline_module.stop_llm_trace() if pipeline_module else []
+        )
+        try:
+            if entries:
+                job = CurriculumImportJob.objects.filter(pk=job_id).first()
+                if job:
+                    # Persist every LLM exchange for the technical log (#34).
+                    job.llm_trace = list(job.llm_trace) + entries
+                    job.save(update_fields=["llm_trace", "updated_at"])
+        finally:
+            from django.db import connection
 
-        connection.close()
+            connection.close()
 
 
 def _start_import_stage(request, job, stage, payload=None):
@@ -901,6 +915,83 @@ def tutor_import_wait(request, job_id):
             ),
         },
     )
+
+
+def _render_technical_log_markdown(job):
+    """Human-readable technical log of every LLM exchange (#34)."""
+
+    from curriculum import curriculum_import as pipeline
+
+    lines = [
+        f"# Bitácora técnica · Importación #{job.pk}",
+        "",
+        f"- Modelo: `{pipeline.llm_model()}` · Ollama: `{pipeline.ollama_url()}`",
+        f"- Estado del job: {job.get_status_display}",
+        f"- Páginas: {job.page_count or '—'} · Intercambios: {len(job.llm_trace)}",
+        f"- Generado: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+    ]
+    for number, entry in enumerate(job.llm_trace, start=1):
+        status = "ok" if entry.get("ok") else "FALLÓ"
+        lines += [
+            f"## {number}. {entry.get('stage') or 'sin etapa'} — "
+            f"{entry.get('duration_ms', 0)} ms · {entry.get('attempts', 1)} "
+            f"intento(s) · {status}",
+            "",
+            "**Prompt (system)**",
+            "",
+            "```",
+            entry.get("system", ""),
+            "```",
+            "",
+            "**Prompt (user)**",
+            "",
+            "```",
+            entry.get("prompt", ""),
+            "```",
+            "",
+            "**Respuesta cruda**",
+            "",
+            "```json",
+            entry.get("response_raw", ""),
+            "```",
+            "",
+        ]
+        if entry.get("errors"):
+            lines += ["**Errores durante los intentos**", ""]
+            lines += [f"- {error}" for error in entry["errors"]]
+            lines.append("")
+    return "\n".join(lines)
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_log_md(request, job_id):
+    """Download the full technical log as Markdown (#34)."""
+
+    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    content = _render_technical_log_markdown(job)
+    response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
+    response["Content-Disposition"] = (
+        f'attachment; filename="bitacora-import-{job.pk}.md"'
+    )
+    return response
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_log_json(request, job_id):
+    """Download the full technical log as JSON (#34)."""
+
+    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    response = JsonResponse(list(job.llm_trace), safe=False, json_dumps_params={
+        "ensure_ascii": False,
+        "indent": 2,
+    })
+    response["Content-Disposition"] = (
+        f'attachment; filename="bitacora-import-{job.pk}.json"'
+    )
+    return response
 
 
 @teacher_required

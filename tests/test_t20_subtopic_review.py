@@ -107,10 +107,12 @@ def test_incremental_prompt_declares_existing_immutable():
         transport=transport,
     )
     prompt = captured["request"]["messages"][1]["content"]
-    assert "NO las modifiques" in prompt
-    assert "NO las repitas" in prompt
-    assert "Suma de fracciones: Objetivo original." in prompt
-    assert "NUEVA" in prompt
+    # El .md versionado puede partir frases en varias líneas.
+    flat = " ".join(prompt.split())
+    assert "NO las modifiques" in flat
+    assert "NO las repitas" in flat
+    assert "Suma de fracciones: Objetivo original." in flat
+    assert "NUEVA" in flat
 
 
 def test_remove_activity_drops_only_the_targeted_proposal():
