@@ -23,6 +23,16 @@
           Número de dispositivos
           <input name="device_count" inputmode="numeric" required>
         </label>
+        <label>
+          Roadmap publicado (opcional)
+          <select name="roadmap_snapshot_id">
+            <option value="">Sin roadmap</option>
+            {% for roadmap in roadmaps %}
+              <option value="{{ roadmap.pk }}">{{ roadmap.title|default:"Roadmap" }} · versión {{ roadmap.version }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <p>El roadmap y el paquete quedan fijados a la sesión; una corrección posterior no cambia este recorrido.</p>
         <button class="button-primary" type="submit">Preparar distribución</button>
       </form>
     </main>

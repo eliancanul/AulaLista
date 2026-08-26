@@ -30,8 +30,10 @@ def test_teacher_workflow_vocabulary_and_authority_contract_are_documented():
     assert adr.startswith("# ADR-0006:")
 
 
-def test_curriculum_progress_cannot_be_advanced_by_activity_lifecycle():
+def test_curriculum_and_student_roadmap_progress_contract_is_explicitly_separate():
     flow = FLOW.read_text()
     forbidden_automatic_transition = "crear, publicar o cerrar una actividad avanza automáticamente el currículo"
     assert forbidden_automatic_transition not in flow.lower()
     assert "La sugerencia no es una transición de estado" in flow
+    assert "StudentRoadmapProgress" in flow
+    assert "COMPLETADA" in flow

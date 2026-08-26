@@ -11,8 +11,11 @@ por `tests/test_t24_database_contracts.py`.
 |---|---|---|
 | `CurriculumPackage` | Borrador editable de actividad | `ai_assisted=True` marca origen IA; nunca se auto-publica |
 | `PublishedPackageSnapshot` | Versión publicada inmutable | SHA256 identificable; las sesiones congelan esta versión |
+| `PublishedRoadmapSnapshot` | Roadmap publicado inmutable | Orden de unidades → lecciones → actividades; cada actividad contiene `package_snapshot_id`; la publicación calcula SHA256 en el modelo |
+| `CurriculumProgress` | Confirmación manual docente | Tema actual/trabajado; nunca lo modifica la actividad estudiantil |
+| `StudentRoadmapProgress` | Recorrido individual pseudónimo | Actividades completadas y reactivos correctos persistidos por turno; eliminable con los datos temporales |
 | `CurriculumImportJob` | Staging del pipeline PDF→actividades | El más complejo; ver máquinas de estado abajo |
-| `ClassroomSession` | Ejecución de una sesión de aula | Congela snapshot al activarse |
+| `ClassroomSession` | Ejecución de una sesión de aula | Congela un snapshot base y, si aplica, un roadmap cuyos nodos resuelven todos sus snapshots de paquete |
 | `DeviceAssignment` | Cupo por dispositivo en una sesión | |
 | `StudentTurn` | Turno de participación estudiantil | |
 | `PseudonymousResult` / `PseudonymousSurveyResponse` | Resultados sin identidad | Borrables sin romper sesiones |

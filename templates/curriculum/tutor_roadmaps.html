@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · avance curricular</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <h1>Avance curricular</h1>
+      <p>La maestra confirma qué tema está actual o ya fue trabajado. Esta decisión es independiente del recorrido individual del alumnado.</p>
+
+      <section class="status-card" aria-labelledby="publish-roadmap-heading">
+        <h2 id="publish-roadmap-heading">Publicar un roadmap</h2>
+        <p>La publicación es una decisión humana. Cada paquete seleccionado se convierte en una actividad de una unidad ordenada y conserva su snapshot.</p>
+        {% if publication_error %}<p class="error" role="alert">{{ publication_error }}</p>{% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <label>
+            Nombre del roadmap
+            <input name="title" maxlength="160" required>
+          </label>
+          {% if package_snapshots %}
+            <fieldset>
+              <legend>Paquetes publicados, en el orden elegido</legend>
+              {% for package_snapshot in package_snapshots %}
+                <label>
+                  <input type="checkbox" name="package_snapshot_ids" value="{{ package_snapshot.pk }}">
+                  {{ package_snapshot.payload.title|default:package_snapshot.package.title }} · versión {{ package_snapshot.version }}
+                </label>
+              {% endfor %}
+            </fieldset>
+            <button class="button-primary" type="submit">Publicar roadmap</button>
+          {% else %}
+            <p>No hay paquetes publicados para incluir.</p>
+          {% endif %}
+        </form>
+      </section>
+
+      {% if roadmap_cards %}
+        {% for card in roadmap_cards %}
+          <section class="session-card" aria-labelledby="roadmap-{{ card.snapshot.pk }}">
+            <h2 id="roadmap-{{ card.snapshot.pk }}">{{ card.snapshot.title|default:"Roadmap publicado" }} · versión {{ card.snapshot.version }}</h2>
+            <p>Snapshot publicado: {{ card.snapshot.sha256|slice:":8" }}</p>
+            <p>{{ card.progress_count }} confirmaciones docentes</p>
+            <a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual</a>
+          </section>
+        {% endfor %}
+      {% else %}
+        <p>No hay roadmaps publicados todavía.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>

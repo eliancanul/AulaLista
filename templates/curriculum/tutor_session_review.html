@@ -21,6 +21,11 @@
         </section>
       {% endif %}
       <p>Paquete publicado: {{ session.snapshot.payload.title }} · {{ snapshot_label }}</p>
+      {% if session.roadmap_snapshot %}
+        <p>Roadmap fijado: {{ session.roadmap_snapshot.title|default:"Roadmap" }} · versión {{ session.roadmap_snapshot.version }} · {{ session.roadmap_snapshot.sha256|slice:":8" }}</p>
+      {% else %}
+        <p>Sin roadmap publicado fijado a esta sesión.</p>
+      {% endif %}
       <p>Estudiantes indicados: {{ session.student_count }}</p>
       <p>Dispositivos preparados: {{ session.device_count }}</p>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}

@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from health.views import health_page, local_access
 from curriculum.views import (
     student_activity,
+    student_roadmap,
+    student_roadmap_complete,
     student_packages,
     student_question_answer,
     student_question_assistance,
@@ -26,6 +28,8 @@ from curriculum.views import (
     tutor_session_results_delete,
     tutor_session_review,
     tutor_session_active,
+    tutor_roadmaps,
+    tutor_roadmap_progress,
     tutor_session_projection,
     tutor_sessions,
     tutor_result_delete,
@@ -90,6 +94,16 @@ urlpatterns = [
         name="tutor-sessions",
     ),
     path(
+        "tutor/roadmaps/",
+        tutor_roadmaps,
+        name="tutor-roadmaps",
+    ),
+    path(
+        "tutor/roadmaps/<int:snapshot_id>/progress/",
+        tutor_roadmap_progress,
+        name="tutor-roadmap-progress",
+    ),
+    path(
         "tutor/snapshots/<int:snapshot_id>/prepare/",
         tutor_session_prepare,
         name="tutor-session-prepare",
@@ -138,6 +152,16 @@ urlpatterns = [
         "student/sessions/<int:session_id>/activity/",
         student_activity,
         name="student-activity",
+    ),
+    path(
+        "student/sessions/<int:session_id>/roadmap/",
+        student_roadmap,
+        name="student-roadmap",
+    ),
+    path(
+        "student/sessions/<int:session_id>/activities/<str:activity_id>/complete/",
+        student_roadmap_complete,
+        name="student-roadmap-complete",
     ),
     path(
         "student/sessions/<int:session_id>/encuesta/",

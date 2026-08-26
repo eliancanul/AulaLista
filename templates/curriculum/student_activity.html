@@ -15,6 +15,37 @@
       <p>{{ snapshot_payload.objective }}</p>
       <p>{{ snapshot_payload.micro_lesson }}</p>
 
+      {% if roadmap_completed %}
+        <section class="status-card" aria-live="polite">
+          <h2>Recorrido completado</h2>
+          <p>Has completado todas las actividades de este recorrido.</p>
+        </section>
+      {% endif %}
+      {% if roadmap_states %}
+        <section class="status-card" aria-labelledby="roadmap-status-heading">
+          <h2 id="roadmap-status-heading">Tu recorrido</h2>
+          <p>Este progreso es pseudónimo y no cambia el avance curricular docente.</p>
+          <ul aria-label="Estados del recorrido">
+            {% for item in roadmap_states %}
+              <li>{{ item.title }}: <strong>{{ item.state }}</strong></li>
+            {% endfor %}
+          </ul>
+          <p><a href="{% url 'student-roadmap' session.pk %}">Ver camino completo</a></p>
+        </section>
+      {% endif %}
+      {% if roadmap_progress and not activity_questions and roadmap_progress.current_activity_id %}
+        <form method="post" action="{% url 'student-roadmap-complete' session.pk roadmap_progress.current_activity_id %}" class="page-actions">
+          {% csrf_token %}
+          <button class="button-primary" type="submit">Marcar actividad como completada</button>
+        </form>
+      {% endif %}
+      {% if activity_completed %}
+        <section class="status-card" aria-live="polite">
+          <h2>Actividad completada</h2>
+          <p>COMPLETADA en tu recorrido. El avance docente permanece bajo control de la maestra.</p>
+        </section>
+      {% endif %}
+
       {% for question in activity_questions %}
         <section class="question-card">
           <h2>{{ question.value.prompt }}</h2>
@@ -51,12 +82,14 @@
           <p>{% if practice_result.is_correct %}Respuesta correcta{% else %}Respuesta incorrecta{% endif %}</p>
           <p>Puntuación: {{ practice_result.score }}</p>
           <p>{{ practice_result.feedback }}</p>
-          <form method="post" action="{% url 'student-question-assistance' session.pk answered_question_index %}">
-            {% csrf_token %}
-            <input type="hidden" name="kind" value="explanation">
-            <input type="hidden" name="explanation_capability" value="{{ explanation_capability }}">
-            <button class="button-secondary" type="submit">Solicitar explicación final</button>
-          </form>
+          {% if not activity_completed %}
+            <form method="post" action="{% url 'student-question-assistance' session.pk answered_question_index %}">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="explanation">
+              <input type="hidden" name="explanation_capability" value="{{ explanation_capability }}">
+              <button class="button-secondary" type="submit">Solicitar explicación final</button>
+            </form>
+          {% endif %}
         </section>
       {% endif %}
 

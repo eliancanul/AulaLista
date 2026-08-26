@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · camino de aprendizaje</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <main>
+      <p class="notice">Camino de aprendizaje · progreso de este recorrido</p>
+      <h1>Tu camino</h1>
+      <p>Este recorrido es temporal y pseudónimo. No es una calificación ni cambia el avance curricular de la maestra.</p>
+      {% if roadmap_progress and roadmap_progress.current_activity_id is None and roadmap_progress.completed_activity_ids %}
+        <section class="status-card" aria-live="polite">
+          <h2>Recorrido completado</h2>
+          <p>Has completado todas las actividades de este recorrido.</p>
+        </section>
+      {% endif %}
+      {% if roadmap_states %}
+        <ol aria-label="Actividades del camino">
+          {% for item in roadmap_states %}
+            <li class="status-card">
+              <strong>{{ item.unit_title }} · {{ item.lesson_title }}</strong>
+              <p>{{ item.title }}</p>
+              <p aria-label="Estado: {{ item.state }}"><strong>{{ item.state }}</strong></p>
+              {% if item.state == "ACTUAL" %}
+                <a class="button-primary" href="{% url 'student-activity' session.pk %}">Abrir actividad actual</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p>No hay un roadmap publicado para esta sesión.</p>
+      {% endif %}
+      <p><a href="{% url 'student-activity' session.pk %}">Volver a la actividad</a></p>
+    </main>
+  </body>
+</html>

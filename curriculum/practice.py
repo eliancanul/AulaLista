@@ -37,6 +37,7 @@ def issue_capability(
     question_index,
     turn_id=None,
     next_hint_index=None,
+    activity_id=None,
 ):
     if kind not in {"explanation", "hint"}:
         raise ValueError("La capacidad de práctica no tiene un tipo autorizado.")
@@ -48,6 +49,8 @@ def issue_capability(
     }
     if turn_id is not None:
         payload["turn_id"] = str(turn_id)
+    if activity_id is not None:
+        payload["activity_id"] = str(activity_id)
     if kind == "hint":
         if next_hint_index is None:
             raise ValueError("Una capacidad de pista requiere su siguiente índice.")
@@ -67,6 +70,7 @@ def verify_capability(
     question_index,
     turn_id=None,
     next_hint_index=None,
+    activity_id=None,
 ):
     if not token:
         return None
@@ -88,6 +92,8 @@ def verify_capability(
     ):
         return None
     if turn_id is not None and payload.get("turn_id") != str(turn_id):
+        return None
+    if activity_id is not None and payload.get("activity_id") != str(activity_id):
         return None
     if kind == "hint" and payload.get("next_hint_index") != int(next_hint_index):
         return None
