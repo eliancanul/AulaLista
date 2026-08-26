@@ -452,6 +452,20 @@ def student_turn_ready(request, session_id):
 
 @teacher_required
 
+def tutor_sessions(request):
+    """Listing of recent teacher sessions with explicit state navigation (#21).
+
+    The teacher can find any session's review screen without remembering
+    URLs; statuses are shown in teacher language and no raw technical
+    identifiers are exposed.
+    """
+
+    sessions = ClassroomSession.objects.select_related("snapshot").order_by("-id")[:20]
+    return render(request, "curriculum/tutor_sessions.html", {"sessions": sessions})
+
+
+@teacher_required
+
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
     snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
