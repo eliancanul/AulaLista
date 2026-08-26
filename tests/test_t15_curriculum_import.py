@@ -241,11 +241,11 @@ def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
                 "start_0": "1",
                 "end_0": "2",
                 "keep_0": "on",
-                # El tema 1 se desmarca y no debe llegar al modelo ni al resultado.
+                # El tema 1 se desmarca: un checkbox desmarcado nunca viaja
+                # en el POST, así que su clave simplemente no se envía (#44).
                 "topic_1": "Proporcionalidad",
                 "start_1": "3",
                 "end_1": "4",
-                "keep_1": "off",
             },
             follow=True,
         )
@@ -292,7 +292,7 @@ def test_confirm_subtopics_completes_hierarchy_without_creating_packages():
             "keep_0_0": "on",
             "acts_0_0": "1",
             "topic_0_sub_1": "Resta de fracciones",
-            "keep_0_1": "off",  # descartado por la persona docente
+            # keep_0_1 ausente: descartado por la persona docente (#44)
             "acts_0_1": "2",
         },
     )
