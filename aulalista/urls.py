@@ -25,6 +25,7 @@ from curriculum.views import (
     tutor_session_prepare,
     tutor_session_results_delete,
     tutor_session_review,
+    tutor_sessions,
     tutor_result_delete,
 )
 
@@ -80,6 +81,11 @@ urlpatterns = [
         "tutor/imports/<int:job_id>/bitacora.json",
         tutor_import_log_json,
         name="tutor-import-log-json",
+    ),
+    path(
+        "tutor/sesiones/",
+        tutor_sessions,
+        name="tutor-sessions",
     ),
     path(
         "tutor/snapshots/<int:snapshot_id>/prepare/",

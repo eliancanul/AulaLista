@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · mis sesiones</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main>
+      <h1>Mis sesiones</h1>
+      {% if sessions %}
+        <table data-sessions-listing>
+          <thead>
+            <tr>
+              <th>Sesión</th>
+              <th>Actividad</th>
+              <th>Estado</th>
+              <th>Estudiantes indicados</th>
+              <th>Dispositivos preparados</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for session in sessions %}
+              <tr data-session-status>
+                <td><a href="{% url 'tutor-session-review' session.pk %}">Sesión {{ session.pk }}</a></td>
+                <td>{{ session.snapshot.payload.title }}</td>
+                <td>{{ session.get_status_display }}</td>
+                <td>{{ session.student_count }}</td>
+                <td>{{ session.device_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Todavía no hay sesiones. Importa una currícula, publica un paquete y prepára una sesión para empezar.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>
