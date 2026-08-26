@@ -19,7 +19,7 @@ from string import Template
 from django.conf import settings
 
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
-DEFAULT_MODEL = "qwen2.5:7b"
+DEFAULT_MODEL = "qwen2.5:14b"
 CHAT_TIMEOUT_SECONDS = 180
 MAX_ATTEMPTS = 3
 CHUNK_MAX_CHARS = 4000

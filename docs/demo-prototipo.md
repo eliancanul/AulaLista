@@ -1,7 +1,7 @@
 # Guion de demostración — Prototipo del viernes
 
 **Milestone:** Prototipo viernes · **Duración estimada:** 15–20 minutos
-**Requisitos:** MacBook con Ollama (`ollama list` debe mostrar `qwen2.5:7b`), red local sin necesidad de WAN.
+**Requisitos:** MacBook con Ollama (`ollama list` debe mostrar `qwen2.5:14b`), red local sin necesidad de WAN.
 
 > Regla inquebrantable de la demo: la IA **sólo propone borradores**. Toda revisión,
 > aprobación y publicación es humana. No presentar el contenido generado como
