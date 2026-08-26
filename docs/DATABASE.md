@@ -1,0 +1,117 @@
+# Base de datos — referencia para agentes y personas
+
+Estado de la verdad sobre el modelo de datos de AulaLista. Si este archivo y
+el código discrepan, el código gana: abre un issue. Convención de este repo:
+los payloads JSON grandes tienen su forma documentada aquí y están cubiertos
+por `tests/test_t24_database_contracts.py`.
+
+## Entidades
+
+| Modelo | Rol | Notas clave |
+|---|---|---|
+| `CurriculumPackage` | Borrador editable de actividad | `ai_assisted=True` marca origen IA; nunca se auto-publica |
+| `PublishedPackageSnapshot` | Versión publicada inmutable | SHA256 identificable; las sesiones congelan esta versión |
+| `CurriculumImportJob` | Staging del pipeline PDF→actividades | El más complejo; ver máquinas de estado abajo |
+| `ClassroomSession` | Ejecución de una sesión de aula | Congela snapshot al activarse |
+| `DeviceAssignment` | Cupo por dispositivo en una sesión | |
+| `StudentTurn` | Turno de participación estudiantil | |
+| `PseudonymousResult` / `PseudonymousSurveyResponse` | Resultados sin identidad | Borrables sin romper sesiones |
+
+## Máquinas de estado
+
+### `CurriculumImportJob.status`
+
+```
+uploaded ──extract──▶ topics_proposed ──confirm_topics──▶ subtopics_proposed
+     ▲                                                          │
+     │                                              confirm_subtopics
+     │                                                          ▼
+   failed ◀─────────────────────────────────────────────── completed
+                                                                │
+                                              generate_activities / add_missing
+                                                                ▼
+                                                 activities_proposed ──convert──▶ converted
+```
+
+Invariantes:
+- `failed` sólo lo produce la etapa `extract`; las demás etapas conservan su
+  estado `*_proposed` con el error visible (`error_message`) para no perder
+  trabajo parcial.
+- Nunca existe `CurriculumPackage` antes de `convert_selected`, y siempre con
+  `ai_assisted=True`.
+
+### Ciclo `progress_*` (#32/#36)
+
+`progress_stage ∈ {"", "extract", "subtopics", "activities", "add_missing"}`.
+
+- Al iniciar etapa: `progress_stage=<etapa>`, `done=0`, `total=0..N`,
+  `started_at=ahora`.
+- Durante: `done` crece con persistencia incremental (cada elemento).
+- Al terminar (éxito o fallo): `progress_stage=""`.
+- Significado de `total`: `extract`=bloques del PDF, `subtopics`=temas,
+  `activities`/`add_missing`=actividades.
+- Válvula: si `started_at` tiene >90 min, la vista de espera libera el job.
+
+**Trampa conocida**: el worker `_run_import_job_stage` atrapa TODA excepción
+y la guarda en `error_message` + `llm_trace` (con traceback). Al depurar
+tests de flujo, afirma siempre `job.error_message == ""` — un fallo silencio
+se ve como "no pasó nada".
+
+## Formas de los JSONField
+
+### `topics` (jerarquía confirmada)
+
+```json
+[{"titulo": "str ≤200", "pagina_inicio": int, "pagina_fin": int,
+  "subtemas": [{"titulo": "str ≤200", "actividades_sugeridas": 1..5}]}]
+```
+
+⚠️ Los emparejamientos topic→actividad usan `titulo` como clave de texto
+(deuda conocida; ver «Deuda estructural»).
+
+### `activities` (propuestas de staging)
+
+```json
+[{"id": "hex8",                          // estable; viejos jobs pueden no tenerlo
+  "topic_title": "str", "subtopic_title": "str",
+  "is_valid": bool, "issues": ["str"],
+  "proposal": {"title": "str", "objective": "str", "micro_lesson": "str",
+               "final_explanation": "str",
+               "questions": [{"block_type": "reactivo", "value": {...}}]},
+  "selected": bool,
+  "added_by_topup": true?}]              // sólo en top-ups (#35)
+```
+
+### `llm_log` (resumen por llamada) y `llm_trace` (intercambio completo, #34)
+
+`llm_log`: `{stage, pages?|topic?|subtema?, proposed_count?|reactivos?,
+is_valid?, intentos_validacion?}`.
+
+`llm_trace`: `{stage, model, system, prompt, response_raw, duration_ms,
+attempts, errors[], ok}` + entradas sintéticas de fallo de worker con
+`traceback`.
+
+## Deuda estructural registrada
+
+1. **Jerarquía en JSON en vez de tablas relacionales**: Topic/Subtopic/
+   ActivityProposal como FKs eliminarían los joins por título. Decisión
+   consciente para el prototipo; revisar antes de escalar (nuevo ADR).
+2. **SQLite single-node**: WAL + timeout finite; concurrencia limitada es
+   aceptada para el nodo local (ADR 0004).
+3. **Migraciones numeradas a mano**: dos ramas pueden chocar el número
+   (ocurrió con 0020). Al abrir rama desde otra rama, renumerar y ajustar
+   `dependencies`.
+
+## Convenciones para agentes
+
+- Campos nuevos en `CurriculumImportJob`: `editable=False` salvo motivo;
+  `makemigrations` + renumerar si la rama viene apilada.
+- Tests que disparan etapas LLM: `@override_settings(AULALISTA_IMPORT_ASYNC=
+  False)` para modo inline determinista; para probar el hilo real usar
+  `pytest.mark.django_db(transaction=True)` (los hilos no ven la transacción
+  del test) y mantener el `patch` activo durante el polling — si no, el
+  worker llama al Ollama real de la máquina.
+- Los fakes de funciones del pipeline deben aceptar `feedback_issues=None`
+  (contrato actual de propose_activities*).
+- Los prompts viven en `curriculum/prompts/*.md`; editarlos no requiere
+  reiniciar el server.
