@@ -1,30 +1,75 @@
 <!doctype html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AulaLista · contenido estudiantil</title>
+    <title>AulaLista · entrada</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
-</head>
-<body>
-    <main>
-        <h1>Contenido para estudiantes</h1>
-        {% if active_sessions %}
-            <ul class="active-session-list">
-                {% for session in active_sessions %}
-                    <li>
-                        <a class="button button-primary"
-                           data-active-session-entry
-                           href="{% url 'student-session-join' session.pk %}">{{ session.snapshot.payload.title }}</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="notice">No hay sesiones activas.</p>
-            <p>Cuando el tutor active una sesión, aparecerá aquí.</p>
-        {% endif %}
-        <a class="button" href="{% url 'local-access' %}">Ver instrucciones de acceso</a>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="public-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
+        <span class="demo-badge">Demostración sintética</span>
+        <nav class="top-nav" aria-label="Navegación principal">
+          <a href="#student-entry">Estudiante</a>
+          <a href="{% url 'tutor-sessions' %}">Docente</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido" class="shell">
+      <section class="home-hero" aria-labelledby="home-title">
+        <div class="hero-copy">
+          <p class="eyebrow">AULA DIRECTA · NODO LOCAL</p>
+          <h1 id="home-title">Una actividad clara para <em>todo el grupo.</em></h1>
+          <p class="hero-lead">Entra al camino que comparte tu maestra o prepara una sesión para acompañar la clase. Sin cuentas estudiantiles ni conexión externa.</p>
+        </div>
+        <aside class="hero-aside" aria-label="Límites de la demostración">
+          <span class="card-kicker">Entrada local</span>
+          <strong>Contenido primero</strong>
+          <p>El estado y la siguiente decisión siempre están a la vista.</p>
+          <span class="trust-line"><span class="signal-dot" aria-hidden="true"></span> Sin red · datos sintéticos</span>
+        </aside>
+      </section>
+
+      <section id="student-entry" class="choice-grid" aria-label="Elige tu entrada">
+        <article class="choice-card choice-card--student">
+          <p class="card-kicker">Para participar</p>
+          <h2>Entrar como estudiante</h2>
+          <p>Abre la sesión activa que proyectó tu maestra y continúa tu camino por unidades, lecciones y actividades.</p>
+          {% if active_sessions %}
+            <div class="session-choice-list">
+              {% for session in active_sessions %}
+                <a class="primary-action" data-active-session-entry href="{% url 'student-session-join' session.pk %}">
+                  <span>Entrar por enlace o QR<small>{{ session.snapshot.payload.title }}</small></span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty-note">No hay sesiones activas.</p>
+            <p class="microcopy">Cuando la maestra active una sesión, aparecerá aquí.</p>
+          {% endif %}
+        </article>
+        <article class="choice-card choice-card--teacher">
+          <p class="card-kicker">Para conducir</p>
+          <h2>Preparar como docente</h2>
+          <p>Revisa el contenido publicado, prepara la distribución y decide cuándo comienza la sesión.</p>
+          <a class="secondary-action" href="{% url 'tutor-sessions' %}">Abrir vista docente <span aria-hidden="true">→</span></a>
+        </article>
+      </section>
+
+      <section class="editorial-boundary" aria-labelledby="boundary-heading">
+        <div class="boundary-mark" aria-hidden="true">✓</div>
+        <div>
+          <h2 id="boundary-heading">Una decisión humana en cada límite</h2>
+          <p>La IA solo propone. <strong>EditorialReviewer</strong> revisa, aprueba y publica; la maestra activa la sesión. La demostración no afirma validación pedagógica.</p>
+        </div>
+      </section>
     </main>
-</body>
+    <footer class="site-footer shell"><span>AulaLista · nodo local</span><span>Demostración sintética · sin cuentas ni datos reales</span></footer>
+  </body>
 </html>

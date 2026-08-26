@@ -8,28 +8,40 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
-    <main>
-      <h1>Iniciar turno temporal</h1>
-      <p class="notice">Escribe un nombre o apodo local para reconocerte en este dispositivo.</p>
-      <p>No es una cuenta ni se muestra en la revisión del tutor.</p>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="public-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
+        <span class="demo-badge">Demostración sintética</span>
+      </div>
+    </header>
+    <main id="contenido" class="shell narrow-shell">
+      <div class="view-heading">
+        <p class="eyebrow">ENTRADA ESTUDIANTE · TURNO LOCAL</p>
+        <h1>Elige un apodo para esta pantalla.</h1>
+        <p class="lede">Es temporal y solo sirve para reconocerte durante esta sesión. No es una identidad.</p>
+      </div>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
       {% if recovery_available %}
-        <p>Este dispositivo tiene un turno temporal sin cookie disponible.</p>
-        <form method="post" action="{% url 'student-turn-recover' session.pk assignment.local_identifier %}">
-          {% csrf_token %}
-          <button class="button-primary" type="submit">Recuperar turno de este dispositivo</button>
-        </form>
+        <section class="status-card recovery-card" aria-labelledby="recovery-heading">
+          <p class="card-kicker">Recuperación local</p>
+          <h2 id="recovery-heading">Hay un turno temporal para este dispositivo.</h2>
+          <p>Continúa con la capacidad local ya asignada, sin crear otra entrada.</p>
+          <form method="post" action="{% url 'student-turn-recover' session.pk assignment.local_identifier %}">
+            {% csrf_token %}
+            <button class="button button-primary" type="submit">Recuperar turno de este dispositivo</button>
+          </form>
+        </section>
       {% else %}
-        <form method="post" class="status-card">
+        <form method="post" class="status-card turn-form">
           {% csrf_token %}
-          <label>
-            Nombre o apodo local
-            <input name="display_name" maxlength="80" required autofocus>
-          </label>
-          <button class="button-primary" type="submit">Continuar</button>
+          <label for="display-name">Apodo local temporal</label>
+          <input id="display-name" name="display_name" maxlength="80" autocomplete="off" required autofocus>
+          <p class="field-help">No uses nombre completo, correo ni matrícula.</p>
+          <button class="button button-primary button-large" type="submit">Continuar al camino <span aria-hidden="true">→</span></button>
         </form>
       {% endif %}
-      <p><a href="{% url 'student-session-survey' session.pk %}">Encuesta de la actividad</a></p>
+      <p class="back-link"><a href="{% url 'student-packages' %}">← Volver a sesiones activas</a></p>
     </main>
   </body>
 </html>

@@ -8,34 +8,26 @@
     <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
   </head>
   <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <h1>Confirmar avance curricular</h1>
-      <p>Roadmap: {{ snapshot.title|default:"Roadmap publicado" }} · versión {{ snapshot.version }}</p>
-      <p class="authority-boundary">Sólo esta pantalla docente autenticada puede cambiar <strong>CurriculumProgress</strong>. Completar una actividad no lo modifica.</p>
+    <main id="contenido" class="shell">
+      <header class="landing-header"><p class="eyebrow">AVANCE DOCENTE · DECISIÓN MANUAL</p><h1>Confirmar el siguiente paso.</h1><p class="lead">{{ snapshot.title|default:"Roadmap publicado" }} · versión {{ snapshot.version }}</p></header>
+      <section class="authority-boundary" aria-labelledby="progress-boundary-heading"><div class="boundary-mark" aria-hidden="true">!</div><div><h2 id="progress-boundary-heading">Avance docente e individual están separados</h2><p>Sólo esta pantalla docente autenticada cambia <strong>CurriculumProgress</strong>. Completar una actividad no modifica esta decisión.</p></div></section>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
       {% if nodes %}
-        {% for node in nodes %}
-          <article class="session-card">
-            <h2>{{ node.kind|capfirst }} · {{ node.title }}</h2>
-            <p>Estado confirmado: {% if node.progress %}{{ node.progress.get_status_display }}{% else %}Sin confirmar{% endif %}</p>
-            <form method="post">
-              {% csrf_token %}
-              <input type="hidden" name="node_id" value="{{ node.id }}">
-              <label>Decisión docente
-                <select name="status">
-                  <option value="worked"{% if node.progress.status == "worked" %} selected{% endif %}>Trabajado</option>
-                  <option value="current"{% if node.progress.status == "current" %} selected{% endif %}>Actual</option>
-                </select>
-              </label>
-              <button class="primary-action" type="submit">Guardar confirmación</button>
-            </form>
-          </article>
-        {% endfor %}
-      {% else %}
-        <p>Este roadmap no contiene temas seleccionables.</p>
-      {% endif %}
-      <p><a href="{% url 'tutor-roadmaps' %}">Volver a roadmaps</a></p>
+        <section class="teacher-roadmap" aria-labelledby="nodes-heading"><div class="section-heading"><div><p class="eyebrow">UNIDADES · LECCIONES · ACTIVIDADES</p><h2 id="nodes-heading">Estado confirmado por la maestra</h2></div><span class="synthetic-label">DATOS SINTÉTICOS</span></div>
+          <div class="teacher-path-list">
+            {% for node in nodes %}
+              <article class="teacher-node teacher-node--{{ node.kind|slugify }}">
+                <div class="teacher-node-marker" aria-hidden="true">{{ forloop.counter }}</div>
+                <div class="teacher-node-copy"><span class="node-kind">{{ node.kind }}</span><h3>{{ node.title }}</h3><p>Estado confirmado: <strong>{% if node.progress %}{{ node.progress.get_status_display }}{% else %}Sin confirmar{% endif %}</strong></p></div>
+                <form method="post" class="node-decision"><label for="status-{{ forloop.counter }}">Decisión docente</label><select id="status-{{ forloop.counter }}" name="status"><option value="worked"{% if node.progress.status == "worked" %} selected{% endif %}>Trabajado</option><option value="current"{% if node.progress.status == "current" %} selected{% endif %}>Actual</option></select><input type="hidden" name="node_id" value="{{ node.id }}"><button class="button button-secondary" type="submit">Guardar</button>{% csrf_token %}</form>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% else %}<p class="empty-note">Este roadmap no contiene temas seleccionables.</p>{% endif %}
+      <p class="back-link"><a href="{% url 'tutor-roadmaps' %}">← Volver a roadmaps</a></p>
     </main>
   </body>
 </html>

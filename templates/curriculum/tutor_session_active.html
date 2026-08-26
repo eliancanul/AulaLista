@@ -8,42 +8,24 @@
     <link rel="stylesheet" href="{% static 'curriculum/session_active.css' %}">
   </head>
   <body class="active-control">
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <p class="eyebrow">CONTROL DOCENTE · SESIÓN LOCAL</p>
-      <h1>Modo activo</h1>
-      <p class="status" data-session-status>Estado: {{ session.get_status_display }}</p>
-      <p class="snapshot">{{ session.snapshot.payload.title }} · {{ snapshot_label }}</p>
+    <main id="contenido" class="shell active-shell">
+      <header class="active-heading"><div><p class="eyebrow">MODO ACTIVO · CONTROL DOCENTE</p><h1>La sesión está en tus manos.</h1><p class="lead">Comparte la entrada, observa el conteo y acompaña al grupo sin proyectar apodos.</p></div><div class="active-state" data-session-status><span class="state-light" aria-hidden="true"></span><strong>{{ session.get_status_display }}</strong><span class="synthetic-label">Demostración sintética</span></div></header>
+      <section class="session-card active-summary" aria-labelledby="active-summary-heading"><div><p class="card-kicker">CONTENIDO FIJO</p><h2 id="active-summary-heading">{{ session.snapshot.payload.title }}</h2><p class="snapshot">{{ snapshot_label }} · ClassroomSession local</p></div><div class="active-controls"><a class="button button-secondary" href="{% url 'tutor-session-review' session.pk %}">Ver preparación</a>{% if session.status == "active" %}<form method="post" action="{% url 'tutor-session-close' session.pk %}">{% csrf_token %}<button class="button button-danger" type="submit">Cerrar sesión</button></form>{% endif %}</div></section>
+
       {% if session.status == "active" %}
-        <section class="panel" aria-labelledby="participants-heading">
-          <div class="panel-heading">
-            <h2 id="participants-heading">Participantes</h2>
-            <strong class="count" data-participant-count>{{ participant_count }}</strong>
-          </div>
-          {% if active_turns %}
-            <ul class="alias-list">
-              {% for turn in active_turns %}<li>{{ turn.display_name }}</li>{% endfor %}
-            </ul>
-          {% else %}
-            <p class="quiet">Esperando participantes.</p>
-          {% endif %}
+        <section class="active-grid" aria-label="Operación de sesión activa">
+          <article class="projector-card" aria-labelledby="projector-heading"><div class="panel-heading"><div><p class="card-kicker">PARA PROYECTAR · ENTRADA DEL GRUPO</p><h2 id="projector-heading">Escanea o escribe el enlace local</h2></div><span class="local-only">QR local</span></div><div class="qr-wrap"><div class="qr" aria-label="Código QR sintético de la sesión">{{ join_qr_svg|safe }}</div><div><p class="join-number">Enlace de esta sesión</p><a class="join-link" data-session-join-url href="{{ join_url }}">{{ join_url }}</a><p class="microcopy">La ruta no contiene una identidad ni una dirección externa.</p></div></div><div class="count-block" aria-live="polite" aria-label="{{ participant_count }} participantes"><span class="count-number" data-participant-count>{{ participant_count }}</span><span>participantes presentes<br><small>No es asistencia oficial</small></span></div></article>
+          <article class="roster-card" aria-labelledby="roster-heading"><div class="panel-heading"><div><p class="card-kicker">CONTROL AUTENTICADO</p><h2 id="roster-heading">Apodos en esta sesión</h2></div><span class="synthetic-label">NO SE PROYECTAN</span></div>{% if active_turns %}<ul class="alias-list" aria-live="polite">{% for turn in active_turns %}<li>{{ turn.display_name }}</li>{% endfor %}</ul>{% else %}<p class="empty-note">Esperando participantes.</p>{% endif %}<p class="monitor-note">Los apodos son temporales, pseudónimos y visibles sólo en este control docente. Se purgan al cerrar.</p></article>
         </section>
-        <section class="panel join-panel" aria-label="Entrada para el grupo">
-          <h2>Entrada para el grupo</h2>
-          <p>Comparte este QR o enlace en la red local.</p>
-          <p><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p>
-          <div class="qr" aria-label="Código QR de la sesión">{{ join_qr_svg|safe }}</div>
-        </section>
-        <form method="post" action="{% url 'tutor-session-close' session.pk %}">
-          {% csrf_token %}
-          <button class="button-danger" type="submit">Cerrar sesión</button>
-        </form>
+        <div class="operational-links"><a class="button button-primary" href="{% url 'session-projection' session.pk %}">Abrir proyección pública</a><span>QR, enlace y conteo permanecen visibles para el aula.</span></div>
       {% elif session.status == "prepared" %}
-        <p class="notice">La sesión está preparada. Actívala desde la revisión docente.</p>
+        <section class="empty-state notice"><h2>Sesión preparada, aún no activa</h2><p>La maestra debe confirmarla desde la revisión docente antes de admitir participantes.</p><a class="button button-primary" href="{% url 'tutor-session-review' session.pk %}">Volver a revisión</a></section>
       {% else %}
-        <p class="notice">La sesión ya no admite participantes.</p>
+        <section class="empty-state notice"><h2>La sesión ya no admite participantes.</h2><p>El acceso y los apodos temporales dejaron de estar disponibles.</p></section>
       {% endif %}
-      <p><a href="{% url 'session-projection' session.pk %}">Abrir proyección pública</a></p>
+      <p class="privacy-note">Demostración sintética · la IA no activa, no califica y no declara aprendizaje.</p>
     </main>
   </body>
 </html>

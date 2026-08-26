@@ -8,33 +8,82 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
-    <main>
-      <p class="notice">Camino de aprendizaje · progreso de este recorrido</p>
-      <h1>Tu camino</h1>
-      <p>Este recorrido es temporal y pseudónimo. No es una calificación ni cambia el avance curricular de la maestra.</p>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="public-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
+        <span class="demo-badge">Demostración sintética</span>
+        <nav class="top-nav" aria-label="Navegación del estudiante"><a href="{% url 'student-activity' session.pk %}">Actividad</a></nav>
+      </div>
+    </header>
+    <main id="contenido" class="shell">
+      <header class="roadmap-heading">
+        <div>
+          <p class="eyebrow">CAMINO DE APRENDIZAJE · ESTUDIANTE</p>
+          <h1>{{ roadmap_snapshot.title|default:"Tu camino" }}</h1>
+          <p class="lede">Unidades, lecciones y actividades en orden. Tu recorrido individual es temporal y pseudónimo.</p>
+        </div>
+        <div class="progress-badge" data-demo="synthetic"><span>AVANCE INDIVIDUAL</span><strong>Recorrido local</strong><small>No es puntuación</small></div>
+      </header>
+
+      <div class="progress-boundary" role="note">
+        <strong>Dos avances, dos decisiones.</strong>
+        <span>La maestra confirma el avance docente; las actividades completadas aquí solo describen este recorrido individual.</span>
+      </div>
+
       {% if roadmap_progress and roadmap_progress.current_activity_id is None and roadmap_progress.completed_activity_ids %}
-        <section class="status-card" aria-live="polite">
-          <h2>Recorrido completado</h2>
-          <p>Has completado todas las actividades de este recorrido.</p>
+        <section class="status-card completion-card" aria-live="polite">
+          <span class="status-mark" aria-hidden="true">✓</span>
+          <div><h2>Recorrido completado</h2><p>Has completado todas las actividades de este recorrido. Esto no declara aprendizaje ni cambia el avance docente.</p></div>
         </section>
       {% endif %}
+
       {% if roadmap_states %}
-        <ol aria-label="Actividades del camino">
-          {% for item in roadmap_states %}
-            <li class="status-card">
-              <strong>{{ item.unit_title }} · {{ item.lesson_title }}</strong>
-              <p>{{ item.title }}</p>
-              <p aria-label="Estado: {{ item.state }}"><strong>{{ item.state }}</strong></p>
-              {% if item.state == "ACTUAL" %}
-                <a class="button-primary" href="{% url 'student-activity' session.pk %}">Abrir actividad actual</a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ol>
+        <section class="roadmap-layout" aria-labelledby="roadmap-list-heading">
+          <div class="path-column">
+            <div class="section-heading"><div><p class="card-kicker">Ruta publicada</p><h2 id="roadmap-list-heading">El camino, paso a paso</h2></div><span class="status-chip status-chip--soft">Demostración sintética</span></div>
+            {% regroup roadmap_states by unit_title as unit_groups %}
+            <div class="roadmap-tree">
+              {% for unit in unit_groups %}
+                <section class="unit-card" data-roadmap-state="unidad">
+                  <div class="unit-heading"><div><span class="unit-kicker">UNIDAD {{ forloop.counter|stringformat:"02d" }}</span><h3>{{ unit.grouper }}</h3></div><span class="unit-mark" aria-hidden="true">{{ forloop.counter }}</span></div>
+                  {% regroup unit.list by lesson_title as lesson_groups %}
+                  <div class="lesson-groups">
+                    {% for lesson in lesson_groups %}
+                      <section class="lesson-group">
+                        <h4><span>Lección {{ forloop.counter }}</span> {{ lesson.grouper }}</h4>
+                        <ol class="activity-list">
+                          {% for item in lesson.list %}
+                            <li class="activity-row state-{{ item.state|lower }}">
+                              <span class="activity-mark" aria-hidden="true">{% if item.state == "COMPLETADA" %}✓{% elif item.state == "ACTUAL" %}→{% elif item.state == "DISPONIBLE" %}○{% else %}·{% endif %}</span>
+                              <span class="activity-copy"><strong>{{ item.title }}</strong><small>Actividad · {{ item.state }}</small></span>
+                              <span class="status-tag">{{ item.state }}</span>
+                              {% if item.state == "ACTUAL" %}<a class="activity-open" href="{% url 'student-activity' session.pk %}">Abrir</a>{% endif %}
+                            </li>
+                          {% endfor %}
+                        </ol>
+                      </section>
+                    {% endfor %}
+                  </div>
+                </section>
+                {% if not forloop.last %}<div class="path-connector" aria-hidden="true"></div>{% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <aside class="legend-card" aria-labelledby="legend-heading">
+            <h2 id="legend-heading">Cómo leer el camino</h2>
+            <div class="legend-row"><span class="legend-icon viewed-icon">✓</span><span><strong>COMPLETADA</strong><small>Actividad terminada en este recorrido.</small></span></div>
+            <div class="legend-row"><span class="legend-icon current-icon">→</span><span><strong>ACTUAL</strong><small>Siguiente paso individual.</small></span></div>
+            <div class="legend-row"><span class="legend-icon available-icon">○</span><span><strong>DISPONIBLE</strong><small>Preparada para después.</small></span></div>
+            <div class="legend-row"><span class="legend-icon locked-icon">·</span><span><strong>BLOQUEADA</strong><small>La decisión docente la mantiene cerrada.</small></span></div>
+            <p class="legend-foot">VISTO y el avance docente se confirman por separado. Ningún estado es una calificación.</p>
+          </aside>
+        </section>
       {% else %}
-        <p>No hay un roadmap publicado para esta sesión.</p>
+        <p class="empty-note">No hay un roadmap publicado para esta sesión.</p>
       {% endif %}
-      <p><a href="{% url 'student-activity' session.pk %}">Volver a la actividad</a></p>
+      <p class="back-link"><a href="{% url 'student-activity' session.pk %}">← Volver a la actividad</a></p>
     </main>
+    <footer class="site-footer shell"><span>AulaLista · camino local</span><span>Demostración sintética · sin evidencia de aprendizaje</span></footer>
   </body>
 </html>
