@@ -20,13 +20,29 @@ _Avoid_: aprobador automático, evaluador de IA.
 Paquete sintético usado para verificar el software. No representa una planeación autorizada ni debe presentarse como contenido curricular validado para alumnado.
 _Avoid_: paquete piloto, material aprobado.
 
+**TeacherWorkflow**:
+Recorrido editorial y operativo mediante el que una persona docente selecciona un tema, prepara una actividad, la revisa, la publica y ejecuta una sesión. Sus estados expresan autoridad y disponibilidad, no progreso automático del aprendizaje.
+_Avoid_: flujo automático, pipeline de IA.
+
+**CurriculumProgress**:
+Registro del tema curricular que una persona docente confirma como actual o trabajado dentro de un curso. Puede recibir una sugerencia del sistema, pero no avanza por crear, publicar o cerrar una actividad sin confirmación humana.
+_Avoid_: dominio automático, avance de IA.
+
+**ActivityDraft**:
+Propuesta editable de actividad asociada a un tema y a fuentes curriculares concretas. Puede ser producida con asistencia automática, pero no es publicable hasta atravesar la revisión y aprobación humana.
+_Avoid_: actividad aprobada, contenido generado publicado.
+
+**ActivityReview**:
+Estado en el que una persona docente verifica objetivo, ejemplos, problemas, respuestas, explicaciones y fuentes de una actividad antes de autorizar su publicación.
+_Avoid_: validación de IA, revisión automática.
+
 ## Actividad de aula
 
 **ClassroomSession**:
 Ejecución temporal de una actividad publicada para un conjunto de participantes y dispositivos. Una sesión conserva la versión publicada con la que comenzó.
 _Avoid_: curso, instancia editable.
 
-Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil.
+Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva un `PublishedPackageSnapshot` inmutable: cambiar el contenido editorial no modifica una sesión ya iniciada.
 
 **LocalDeviceQueue**:
 Cola local asociada a un `DeviceAssignment`, identificada mediante un identificador opaco del nodo y limitada por una capacidad asignada. No contiene nombres, matrículas ni otras identidades estudiantiles.
