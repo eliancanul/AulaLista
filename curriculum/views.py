@@ -106,6 +106,10 @@ def teacher_required(view_func):
             return HttpResponseForbidden(
                 "La sección del maestro requiere una cuenta de personal."
             )
+        if not request.user.is_active:
+            return HttpResponseForbidden(
+                "La sección del maestro requiere una cuenta de personal."
+            )
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -657,6 +661,7 @@ def tutor_session_active(request, session_id):
 @never_cache
 def tutor_session_projection(request, session_id):
     """Public projection: status, count, and active join material only."""
+    # Intentionally public: this is a classroom projection, not a teacher action.
     session = get_object_or_404(ClassroomSession, pk=session_id)
     participant_count = 0
     join_url = ""

@@ -1,6 +1,7 @@
 """Issue #83: Wagtail-backed authentication for teacher operations."""
 
 import os
+from urllib.parse import quote
 
 import django
 import pytest
@@ -12,7 +13,6 @@ django.setup()
 from django.contrib.auth import get_user_model  # noqa: E402
 from django.test import Client  # noqa: E402
 from django.urls import reverse  # noqa: E402
-from django.utils.http import url_has_allowed_host_and_scheme  # noqa: E402
 
 from curriculum.models import CurriculumPackage, PublishedPackageSnapshot  # noqa: E402
 
@@ -84,7 +84,18 @@ def test_authenticated_user_without_teacher_permissions_gets_403_without_mutatio
     assert ClassroomSession.objects.count() == 0
 
 
-def test_wagtail_login_returns_to_requested_teacher_page_and_rejects_open_redirects():
+@pytest.mark.parametrize(
+    "malicious_next",
+    [
+        "https://evil.example",
+        "//evil.com",
+        "/\\evil.com",
+        "///evil.com",
+    ],
+)
+def test_wagtail_login_returns_to_requested_teacher_page_and_rejects_open_redirects(
+    malicious_next,
+):
     snapshot = published_snapshot()
     target = reverse("tutor-session-prepare", args=[snapshot.pk])
     user = get_user_model().objects.create_user(
@@ -94,23 +105,35 @@ def test_wagtail_login_returns_to_requested_teacher_page_and_rejects_open_redire
     )
     client = Client()
 
+    # Exercise the complete protected-view flow: redirect to login, then back
+    # to the requested teacher page after a valid login.
     login_response = client.get(target)
     login_url = login_response["Location"]
     assert f"next={target}" in login_url
-    assert client.get(login_url).status_code == 200
-    assert client.login(username=user.username, password="test-password")
-    assert client.get(target).status_code == 200
+    completed_login = client.post(
+        login_url,
+        {
+            "username": user.username,
+            "password": "test-password",
+            "next": target,
+        },
+        follow=True,
+    )
+    assert completed_login.status_code == 200
+    assert completed_login.request["PATH_INFO"] == target
 
-    # The Wagtail login accepts local destinations, but must not turn its
-    # ``next`` field into an external redirect.
+    # The Wagtail login must not turn its ``next`` field into an external redirect.
     client.logout()
-    unsafe_login = client.get("/cms/login/?next=https%3A%2F%2Fevil.example")
+    encoded_next = quote(malicious_next, safe="")
+    unsafe_login = client.get(f"/cms/login/?next={encoded_next}")
     assert unsafe_login.status_code == 200
     completed_login = client.post(
-        unsafe_login.request["PATH_INFO"] + "?next=https%3A%2F%2Fevil.example",
-        {"username": user.username, "password": "test-password", "next": "https://evil.example"},
+        unsafe_login.wsgi_request.path + f"?next={encoded_next}",
+        {
+            "username": user.username,
+            "password": "test-password",
+            "next": malicious_next,
+        },
     )
     assert completed_login.status_code == 302
-    assert url_has_allowed_host_and_scheme(
-        completed_login["Location"], allowed_hosts={"testserver"}
-    )
+    assert completed_login["Location"] == "/cms/"
