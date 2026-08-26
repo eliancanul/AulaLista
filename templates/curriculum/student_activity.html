@@ -15,6 +15,12 @@
       <p>{{ snapshot_payload.objective }}</p>
       <p>{{ snapshot_payload.micro_lesson }}</p>
 
+      {% if roadmap_completed %}
+        <section class="status-card" aria-live="polite">
+          <h2>Recorrido completado</h2>
+          <p>Has completado todas las actividades de este recorrido.</p>
+        </section>
+      {% endif %}
       {% if roadmap_states %}
         <section class="status-card" aria-labelledby="roadmap-status-heading">
           <h2 id="roadmap-status-heading">Tu recorrido</h2>

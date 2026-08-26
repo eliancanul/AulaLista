@@ -12,6 +12,12 @@
       <p class="notice">Camino de aprendizaje · progreso de este recorrido</p>
       <h1>Tu camino</h1>
       <p>Este recorrido es temporal y pseudónimo. No es una calificación ni cambia el avance curricular de la maestra.</p>
+      {% if roadmap_progress and roadmap_progress.current_activity_id is None and roadmap_progress.completed_activity_ids %}
+        <section class="status-card" aria-live="polite">
+          <h2>Recorrido completado</h2>
+          <p>Has completado todas las actividades de este recorrido.</p>
+        </section>
+      {% endif %}
       {% if roadmap_states %}
         <ol aria-label="Actividades del camino">
           {% for item in roadmap_states %}

@@ -454,7 +454,10 @@ class PublishedRoadmapSnapshot(models.Model):
                     ],
                 }
             )
-        payload = {"title": str(title or "Roadmap").strip()[:160], "units": units}
+        normalized_title = str(title or "").strip()
+        if not normalized_title:
+            normalized_title = "Roadmap"
+        payload = {"title": normalized_title[:160], "units": units}
         version = (
             cls.objects.aggregate(maximum=Max("version"))["maximum"] or 0
         ) + 1
@@ -554,8 +557,12 @@ class CurriculumProgress(models.Model):
 
     @classmethod
     def confirm(cls, *, roadmap_snapshot, node_id, status, teacher):
-        if not getattr(teacher, "is_authenticated", False) or not teacher.is_staff:
-            raise ValidationError("El avance curricular requiere una maestra autenticada.")
+        if (
+            not getattr(teacher, "is_authenticated", False)
+            or not teacher.is_staff
+            or not teacher.is_active
+        ):
+            raise ValidationError("El avance curricular requiere una maestra autenticada activa.")
         node_id = str(node_id or "").strip()
         if not node_id:
             raise ValidationError("El avance curricular requiere un tema.")
@@ -859,16 +866,21 @@ class ClassroomSession(models.Model):
                 )
                 turn_ids = [turn.pk for turn in turns]
                 question_counts = [len(locked.snapshot.payload.get("questions", []) or [])]
+                roadmap_activity_snapshots = {}
                 if locked.roadmap_snapshot_id:
-                    from curriculum.roadmap import ordered_activity_ids
+                    from curriculum.roadmap import ordered_activities
 
-                    activity_ids = ordered_activity_ids(locked.roadmap_snapshot.payload)
-                    package_snapshots = PublishedPackageSnapshot.objects.filter(
-                        pk__in=locked.roadmap_snapshot.package_snapshot_ids()
-                    )
+                    roadmap_activity_snapshots = {
+                        activity["id"]: PublishedPackageSnapshot.objects.get(
+                            pk=activity["package_snapshot_id"]
+                        )
+                        for activity in ordered_activities(locked.roadmap_snapshot.payload)
+                        if activity.get("package_snapshot_id") is not None
+                    }
+                    activity_ids = list(roadmap_activity_snapshots)
                     question_counts.extend(
                         len(snapshot.payload.get("questions", []) or [])
-                        for snapshot in package_snapshots
+                        for snapshot in roadmap_activity_snapshots.values()
                     )
                 question_count = max(question_counts, default=0)
                 for turn in turns:
@@ -885,30 +897,47 @@ class ClassroomSession(models.Model):
                             int((ended_at - started_at).total_seconds()),
                         )
                     responses = list(turn_summary.get("responses", []) or [])
+                    help_requests = list(turn_summary.get("help_requests", []) or [])
                     state = (
                         PseudonymousResult.STATE_COMPLETED
                         if turn_summary.get("state")
                         == PseudonymousResult.STATE_COMPLETED
                         else PseudonymousResult.STATE_ABANDONED
                     )
-                    PseudonymousResult.objects.create(
-                        result_batch_id=locked.result_batch_id,
-                        snapshot_id=locked.snapshot_id,
-                        snapshot_version=locked.snapshot.version,
-                        snapshot_sha256=locked.snapshot.sha256,
-                        state=state,
-                        duration_seconds=duration_seconds,
-                        responses=responses,
-                        score=sum(
-                            1
-                            for response in responses
-                            if response.get("is_correct") is True
-                        ),
-                        help_requests=list(turn_summary.get("help_requests", []) or []),
-                        technical_errors=list(
-                            turn_summary.get("technical_errors", []) or []
-                        ),
+                    result_snapshots = (
+                        list(roadmap_activity_snapshots.items())
+                        if roadmap_activity_snapshots
+                        else [(None, locked.snapshot)]
                     )
+                    for activity_id, result_snapshot in result_snapshots:
+                        activity_responses = (
+                            [response for response in responses if response.get("activity_id") == activity_id]
+                            if activity_id is not None
+                            else responses
+                        )
+                        activity_help = (
+                            [request for request in help_requests if request.get("activity_id") == activity_id]
+                            if activity_id is not None
+                            else help_requests
+                        )
+                        PseudonymousResult.objects.create(
+                            result_batch_id=locked.result_batch_id,
+                            snapshot_id=result_snapshot.pk,
+                            snapshot_version=result_snapshot.version,
+                            snapshot_sha256=result_snapshot.sha256,
+                            state=state,
+                            duration_seconds=duration_seconds,
+                            responses=activity_responses,
+                            score=sum(
+                                1
+                                for response in activity_responses
+                                if response.get("is_correct") is True
+                            ),
+                            help_requests=activity_help,
+                            technical_errors=list(
+                                turn_summary.get("technical_errors", []) or []
+                            ),
+                        )
 
                 StudentTurn.objects.filter(assignment__session_id=locked.pk).delete()
                 DeviceAssignment.objects.filter(session_id=locked.pk).delete()

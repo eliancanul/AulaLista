@@ -50,26 +50,32 @@ def update_ephemeral_turn_summary(session_id, turn, **updates):
     )
 
 
-def record_ephemeral_response(session_id, turn, result):
+def record_ephemeral_response(session_id, turn, result, *, activity_id=None):
+    """Record a response without colliding across activities in a roadmap."""
+
     turn_summary = ensure_ephemeral_turn_summary(session_id, turn)
+    response_key = (str(activity_id), result.question_index)
     responses = [
         response
         for response in turn_summary["responses"]
-        if response["question_index"] != result.question_index
+        if (str(response.get("activity_id")), response["question_index"]) != response_key
     ]
-    responses.append(
-        {
-            "question_index": result.question_index,
-            "selected_position": result.selected_position,
-            "is_correct": result.is_correct,
-        }
-    )
+    response = {
+        "question_index": result.question_index,
+        "selected_position": result.selected_position,
+        "is_correct": result.is_correct,
+    }
+    if activity_id is not None:
+        response["activity_id"] = str(activity_id)
+    responses.append(response)
     update_ephemeral_turn_summary(session_id, turn, responses=responses)
 
 
-def record_ephemeral_help(session_id, turn, question_index, assistance):
+def record_ephemeral_help(session_id, turn, question_index, assistance, *, activity_id=None):
     turn_summary = ensure_ephemeral_turn_summary(session_id, turn)
     help_request = {"kind": assistance.kind, "question_index": question_index}
+    if activity_id is not None:
+        help_request["activity_id"] = str(activity_id)
     if assistance.hint_index is not None:
         help_request["hint_index"] = assistance.hint_index
     update_ephemeral_turn_summary(

@@ -1956,13 +1956,20 @@ def student_roadmap(request, session_id):
 def _activity_context(session, **extra):
     turn = extra.get("turn")
     progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
-    activity_snapshot = _activity_snapshot(session, progress)
+    roadmap_completed = bool(
+        progress
+        and session.roadmap_snapshot_id
+        and progress.current_activity_id() is None
+        and progress.completed_activity_ids
+    )
+    activity_snapshot = session.snapshot if roadmap_completed else _activity_snapshot(session, progress)
     context = {
         "session": session,
         "snapshot": activity_snapshot,
         "snapshot_payload": activity_snapshot.payload,
         "turn": turn,
-        "activity_questions": _activity_questions(session, turn, activity_snapshot),
+        "activity_questions": [] if roadmap_completed else _activity_questions(session, turn, activity_snapshot),
+        "roadmap_completed": roadmap_completed,
         **_roadmap_context(session, turn, progress),
     }
     context.update(extra)
@@ -2180,7 +2187,7 @@ def student_question_answer(request, session_id, question_index):
         )
     except PracticeContractError as error:
         return HttpResponseBadRequest(str(error))
-    record_ephemeral_response(session_id, turn, result)
+    record_ephemeral_response(session_id, turn, result, activity_id=activity_id)
     activity_completed = result.is_correct and _complete_activity_after_response(
         session,
         turn,
@@ -2283,7 +2290,13 @@ def student_question_assistance(request, session_id, question_index):
         activity_id=activity_id,
     ):
         return HttpResponseBadRequest("La capacidad de pista ya fue consumida o quedó fuera de orden.")
-    record_ephemeral_help(session_id, turn, question_index, assistance)
+    record_ephemeral_help(
+        session_id,
+        turn,
+        question_index,
+        assistance,
+        activity_id=activity_id,
+    )
 
     next_hint_capability = None
     if assistance.next_hint_index is not None:
