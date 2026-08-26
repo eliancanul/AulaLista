@@ -42,6 +42,9 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if session.status == "active" %}
+        <p><a href="{% url 'tutor-session-active' session.pk %}">Abrir modo activo</a></p>
+      {% endif %}
       {% if session.status == "prepared" %}
         <form method="post" action="{% url 'tutor-session-confirm' session.pk %}">
           {% csrf_token %}

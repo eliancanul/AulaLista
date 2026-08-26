@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · proyección</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/session_active.css' %}">
+  </head>
+  <body class="projection">
+    <main>
+      <p class="eyebrow">AULALISTA · PROYECCIÓN</p>
+      <h1>Actividad de aula</h1>
+      <p class="status" data-session-status>Estado: {{ session.get_status_display }}</p>
+      <section class="projection-count" aria-label="Participantes">
+        <strong data-participant-count>{{ participant_count }}</strong>
+        <span>participantes</span>
+      </section>
+      {% if join_url %}
+        <section class="join-panel" aria-label="Entrada a la actividad">
+          <p>Escanea para entrar desde la red local</p>
+          <div class="qr" aria-label="Código QR de entrada">{{ join_qr_svg|safe }}</div>
+          <p><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p>
+        </section>
+      {% elif session.status == "prepared" %}
+        <p class="notice">La actividad aparecerá aquí cuando la maestra la active.</p>
+      {% else %}
+        <p class="notice">Esta actividad está cerrada.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>

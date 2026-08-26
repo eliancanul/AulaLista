@@ -540,6 +540,70 @@ def tutor_session_review(request, session_id):
     )
 
 
+@never_cache
+@teacher_required
+def tutor_session_active(request, session_id):
+    """Authenticated operational view; aliases exist only in active state."""
+    session = get_object_or_404(
+        ClassroomSession.objects.select_related("snapshot"), pk=session_id
+    )
+    active_turns = StudentTurn.objects.none()
+    if session.status == ClassroomSession.STATUS_ACTIVE:
+        active_turns = StudentTurn.objects.filter(
+            assignment__session_id=session.pk,
+            status=StudentTurn.STATUS_ACTIVE,
+        ).exclude(display_name="").order_by("started_at", "pk")
+    join_url = ""
+    join_qr_svg = ""
+    if session.status == ClassroomSession.STATUS_ACTIVE:
+        join_url = request.build_absolute_uri(
+            reverse("student-session-join", args=[session.pk])
+        )
+        join_qr_svg = qr_svg(join_url)
+    return render(
+        request,
+        "curriculum/tutor_session_active.html",
+        {
+            "session": session,
+            "active_turns": active_turns,
+            "participant_count": active_turns.count(),
+            "join_url": join_url,
+            "join_qr_svg": join_qr_svg,
+            "snapshot_label": (
+                f"versión {session.snapshot.version} · {session.snapshot.sha256[:8]}"
+            ),
+        },
+    )
+
+
+@never_cache
+def tutor_session_projection(request, session_id):
+    """Public projection: status, count, and active join material only."""
+    session = get_object_or_404(ClassroomSession, pk=session_id)
+    participant_count = 0
+    join_url = ""
+    join_qr_svg = ""
+    if session.status == ClassroomSession.STATUS_ACTIVE:
+        participant_count = StudentTurn.objects.filter(
+            assignment__session_id=session.pk,
+            status=StudentTurn.STATUS_ACTIVE,
+        ).count()
+        join_url = request.build_absolute_uri(
+            reverse("student-session-join", args=[session.pk])
+        )
+        join_qr_svg = qr_svg(join_url)
+    return render(
+        request,
+        "curriculum/tutor_session_projection.html",
+        {
+            "session": session,
+            "participant_count": participant_count,
+            "join_url": join_url,
+            "join_qr_svg": join_qr_svg,
+        },
+    )
+
+
 @teacher_required
 
 @require_POST
