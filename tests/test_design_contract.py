@@ -5,10 +5,39 @@ import re
 
 ROOT = Path(__file__).parents[1]
 DESIGN = ROOT / "DESIGN.md"
+CSS = ROOT / "static" / "curriculum" / "aulalista.css"
+
+
+# Estas plantillas todavía comparten la hoja canónica; la lista explícita evita
+# tratar como contrato las clases dinámicas o las de librerías externas.
+TEMPLATE_CLASS_CONTRACT = {
+    "templates/curriculum/tutor_import_detail.html": {
+        "subtopic-form", "keep-toggle", "field-title", "acts-field",
+        "topic-block", "subtopic-block", "subtopic-head", "activity-head",
+        "activity-title", "activity-objective", "activity-details",
+        "activity-foot", "remove-form", "issue-list", "convert-bar",
+        "technical-log-links", "review-intro", "topup-form", "is-valid",
+        "is-invalid",
+    },
+    "templates/curriculum/student_roadmap.html": {
+        "viewed-icon", "current-icon", "available-icon", "locked-icon",
+    },
+}
 
 
 def read_design() -> str:
     return DESIGN.read_text(encoding="utf-8")
+
+
+def test_css_contract_covers_legacy_import_and_roadmap_legend_templates():
+    css = CSS.read_text(encoding="utf-8")
+    for template_name, classes in TEMPLATE_CLASS_CONTRACT.items():
+        template = (ROOT / template_name).read_text(encoding="utf-8")
+        for class_name in classes:
+            assert class_name in template
+            assert f".{class_name}" in css, (
+                f"{template_name} usa .{class_name}, pero falta en aulalista.css"
+            )
 
 
 def test_canonical_contract_exists_and_records_the_hybrid_decision():
