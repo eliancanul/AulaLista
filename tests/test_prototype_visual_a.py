@@ -26,7 +26,21 @@ def test_visual_a_is_an_offline_navigable_prototype():
     assert "prefers-reduced-motion" in css
     assert ":focus-visible" in css
     assert "matchMedia" in js
-    assert "localStorage" in js
+
+
+def test_visual_a_aliases_are_memory_only_and_cleared_on_close():
+    js = read("app.js")
+    documentation = "\n".join(read(name) for name in ("README.md", "DESIGN.md"))
+    persisted_browser_state = re.compile(
+        r"localStorage|sessionStorage|indexedDB|document\.cookie|\bcookies?\b",
+        re.I,
+    )
+    assert not persisted_browser_state.search(js)
+    assert not persisted_browser_state.search(documentation)
+    assert re.search(r"nicknames:\s*DEFAULT_NICKNAMES\.slice\(\)", js)
+    assert re.search(r"state\.nicknames\s*=\s*\[\]", js)
+    assert "solo en memoria" in documentation.lower()
+    assert "al cerrar" in documentation.lower()
 
 
 def test_visual_a_covers_required_states_and_local_participants():

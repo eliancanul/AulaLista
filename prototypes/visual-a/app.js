@@ -2,37 +2,16 @@
   "use strict";
 
   const DEMO_CODE = "DEMO-7K4";
-  const STORAGE_KEY = "aulalista-visual-a-demo-nicknames";
   const DEFAULT_NICKNAMES = ["Río", "Luna", "Pino"];
   const validRoutes = new Set(["inicio", "estudiante", "docente", "actividad"]);
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  // Todo lo que vive aquí es demostración sintética y solo permanece en este navegador.
+  // Todo lo que vive aquí es demostración sintética y solo permanece en memoria durante esta visita.
   const state = {
     session: "activa",
-    nicknames: loadNicknames(),
+    nicknames: DEFAULT_NICKNAMES.slice(),
     reducedMotion: reducedMotion.matches,
   };
-
-  function loadNicknames() {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (Array.isArray(stored) && stored.every((name) => typeof name === "string")) {
-        return stored.slice(0, 12);
-      }
-    } catch (_error) {
-      // La interfaz funciona también cuando el navegador no permite almacenamiento local.
-    }
-    return DEFAULT_NICKNAMES.slice();
-  }
-
-  function saveNicknames() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.nicknames.slice(0, 12)));
-    } catch (_error) {
-      // El apodo sigue siendo visible durante esta visita aunque no pueda persistirse.
-    }
-  }
 
   function escapeHTML(value) {
     return value.replace(/[&<>'"]/g, (character) => ({
@@ -147,9 +126,8 @@
       const nickname = nicknameInput.value.trim().replace(/\s+/g, " ");
       if (nickname && !state.nicknames.includes(nickname)) {
         state.nicknames.push(nickname.slice(0, 18));
-        saveNicknames();
       }
-      setFeedback("Entrada lista. El apodo queda solo en este dispositivo.", "success");
+      setFeedback("Entrada lista. El apodo vive solo en memoria durante esta visita.", "success");
       window.setTimeout(() => { window.location.hash = "actividad"; }, state.reducedMotion ? 0 : 220);
     });
   }
@@ -175,7 +153,6 @@
         return;
       }
       state.nicknames.push(nickname.slice(0, 18));
-      saveNicknames();
       input.value = "";
       feedback.textContent = "Apodo local agregado. No es una cuenta estudiantil.";
       renderParticipants();
@@ -183,15 +160,19 @@
   }
 
   function bindActivityControls() {
+    const setSessionState = (nextSession) => {
+      state.session = nextSession;
+      if (nextSession === "cerrada") {
+        state.nicknames = [];
+        renderParticipants();
+      }
+      renderSessionState();
+    };
     document.querySelectorAll("[data-session-state]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.session = button.dataset.sessionState;
-        renderSessionState();
-      });
+      button.addEventListener("click", () => setSessionState(button.dataset.sessionState));
     });
     document.querySelector("#session-close")?.addEventListener("click", () => {
-      state.session = "cerrada";
-      renderSessionState();
+      setSessionState("cerrada");
     });
     document.querySelector("#projection-toggle")?.addEventListener("click", (event) => {
       document.body.classList.toggle("projection-mode");

@@ -9,7 +9,7 @@ La gramática es compartida entre las cuatro vistas:
 - **Inicio:** dos entradas equivalentes, estudiante y docente.
 - **Estudiante:** entrada breve por código/enlace y un camino curricular calmado, con estados «visto», «ahora» y «después».
 - **Docente:** sesiones recientes, preparación y una franja explícita de revisión humana.
-- **Actividad:** QR local persistente, código corto, conteo y apodos locales; los cuatro estados se pueden simular.
+- **Actividad:** QR local, código corto, conteo y apodos locales en memoria; los cuatro estados se pueden simular.
 
 ## Dirección visual
 
@@ -25,7 +25,7 @@ La gramática es compartida entre las cuatro vistas:
 | --- | --- |
 | Enlace/código | `DEMO-7K4` es un código sintético fijo, visible para poder recorrer la demo sin red. |
 | QR | Patrón CSS generado por `app.js`; es ilustrativo, no una imagen, librería o recurso remoto. El código se puede escribir si el escaneo no está disponible. |
-| Apodo | Se normaliza, se limita a 18 caracteres y se conserva solo en `localStorage` de este navegador. No hay cuenta, correo, matrícula o identidad. |
+| Apodo | Se normaliza, se limita a 18 caracteres y vive solo en memoria durante la visita. Al cerrar la sesión se vacían la lista y el conteo; al recargar o cerrar la página desaparece. No hay cuenta, correo, matrícula o identidad. |
 | Estados | Espera, activa, cerrada y error tienen texto, símbolo y control de demostración. Cerrar desactiva el botón de cierre; los controles permiten volver a recorrer cada estado. |
 | Conteo | Cuenta apodos locales en esta pantalla. No es puntuación, asistencia oficial ni evidencia de aprendizaje. |
 | IA y publicación | El texto mantiene la frontera: la IA solo propone; `EditorialReviewer` aprueba y publica; la maestra activa. |
@@ -40,4 +40,4 @@ La gramática es compartida entre las cuatro vistas:
 
 ## Datos y límites
 
-Todo contenido, nombres de sesiones, código, temas y apodos iniciales son **datos sintéticos explícitos**. El prototipo no presenta alumnado real, no muestra puntuación individual y no afirma validación pedagógica. Es un recorrido visual aislado; no modifica los modelos ni las rutas de producción.
+Todo contenido, nombres de sesiones, código, temas y apodos iniciales son **datos sintéticos explícitos**. El estado de la sesión vive solo en memoria: no usa almacenamiento persistente del navegador y se borra al cerrar. El prototipo no presenta alumnado real, no muestra puntuación individual y no afirma validación pedagógica. Es un recorrido visual aislado; no modifica los modelos ni las rutas de producción.
