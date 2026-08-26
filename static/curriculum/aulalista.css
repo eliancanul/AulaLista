@@ -253,3 +253,154 @@ td {
 .technical-log-links {
   font-size: 0.9rem;
 }
+
+
+/* ===== Revisión de actividades (#50): tarjetas y jerarquía clara ===== */
+
+.review-intro {
+  color: #5a6a63;
+}
+
+.topic-block {
+  margin-block: 1.5rem;
+  padding-block-start: 0.25rem;
+}
+
+.topic-block > h3 {
+  border-block-end: 2px solid #075c52;
+  padding-block-end: 0.35rem;
+}
+
+.subtopic-block {
+  margin-block: 1rem;
+}
+
+.subtopic-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.subtopic-head h4 {
+  margin: 0;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-ok {
+  background: #e5f2ed;
+  color: #075c52;
+}
+
+.badge-missing,
+.badge-invalid {
+  background: #fbe9e4;
+  color: #a33b22;
+}
+
+.activity-card {
+  border: 1px solid #a9b6af;
+  border-inline-start: 0.3rem solid #075c52;
+  background: #fffdf7;
+  padding: 0.75rem 0.9rem;
+  margin-block: 0.6rem;
+}
+
+.activity-card.is-invalid {
+  border-inline-start-color: #a33b22;
+  background: #fdf6f4;
+}
+
+.activity-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.activity-head form {
+  margin-inline-start: auto;
+}
+
+.activity-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.activity-objective {
+  margin: 0.4rem 0 0.2rem;
+}
+
+.activity-details summary {
+  cursor: pointer;
+  color: #075c52;
+}
+
+.activity-foot {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-start: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.issue-list {
+  margin: 0.4rem 0 0;
+  color: #a33b22;
+  font-size: 0.85rem;
+}
+
+.empty-note {
+  font-style: italic;
+}
+
+.convert-bar {
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 0;
+  background: linear-gradient(to top, #f4f1ea 70%, transparent);
+}
+
+/* ===== Formulario prellenado de subtemas (#50) ===== */
+
+.subtopic-form {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid #a9b6af;
+  background: #fffdf7;
+  padding: 0.7rem 0.9rem;
+  margin-block: 0.6rem;
+}
+
+.subtopic-form .keep-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #5a6a63;
+}
+
+.subtopic-form .field-title {
+  font-weight: 600;
+}
+
+.subtopic-form input[type="text"] {
+  inline-size: 100%;
+  font-size: 1rem;
+}
+
+.subtopic-form .acts-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.subtopic-form .acts-field input {
+  max-inline-size: 5rem;
+}

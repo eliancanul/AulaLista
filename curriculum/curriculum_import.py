@@ -448,7 +448,19 @@ def propose_subtopics(topic_title, context_text, *, transport=None):
     }
 
 
-def propose_activities(subtopic_title, context_text, count, *, transport=None):
+VALIDATION_FEEDBACK_SUFFIX = (
+    "\n\nNota: tu intento anterior fue rechazado por validación "
+    "estructural por: {issues}. Corrige exactamente esos puntos."
+)
+
+
+def _with_validation_feedback(prompt, issues):
+    if not issues:
+        return prompt
+    return prompt + VALIDATION_FEEDBACK_SUFFIX.format(issues="; ".join(issues))
+
+
+def propose_activities(subtopic_title, context_text, count, *, transport=None, feedback_issues=None):
     """Stage D: draft one or more single-choice activities for a subtopic.
 
     Returns a proposal dict shaped like a CurriculumPackage payload; it is
@@ -462,6 +474,7 @@ def propose_activities(subtopic_title, context_text, count, *, transport=None):
         context=context_text[:CHUNK_MAX_CHARS],
         count=count,
     )
+    prompt = _with_validation_feedback(prompt, feedback_issues)
     result = chat_json(
         prompt, ACTIVITY_SCHEMA, stage="propose_activities", transport=transport
     )
@@ -512,6 +525,7 @@ def propose_activities_incremental(
     existing_summaries,
     *,
     transport=None,
+    feedback_issues=None,
 ):
     """Stage D+: append-only top-up for a subtopic (#35).
 
@@ -528,6 +542,7 @@ def propose_activities_incremental(
         existing_block=existing_block,
         count=count,
     )
+    prompt = _with_validation_feedback(prompt, feedback_issues)
     result = chat_json(
         prompt,
         ACTIVITY_SCHEMA,

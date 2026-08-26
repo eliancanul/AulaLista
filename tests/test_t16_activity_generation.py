@@ -122,7 +122,7 @@ def test_generate_activities_validates_each_proposal_structurally():
     invalid = valid_proposal()
     invalid["micro_lesson"] = ""  # rompe la estructura a propósito
 
-    def fake_propose(subtopic_title, context, count):
+    def fake_propose(subtopic_title, context, count, *, feedback_issues=None):
         return invalid if subtopic_title.startswith("Resta") else valid_proposal()
 
     with patch.object(pipeline, "propose_activities", side_effect=fake_propose):
