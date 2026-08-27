@@ -1,12 +1,14 @@
 <header class="site-header">
   <div class="site-header-inner">
-    <a class="wordmark" href="{% url 'tutor-sessions' %}" aria-label="AulaLista, sesiones docentes">Aula<span>Lista</span></a>
+    <a class="wordmark" href="{% url 'tutor-home' %}" aria-label="AulaLista, inicio docente">Aula<span>Lista</span></a>
     <span class="demo-badge">Demostración sintética</span>
     <nav class="top-nav" aria-label="Sección docente">
-      <a href="{% url 'tutor-sessions' %}">Sesiones</a>
-      <a href="{% url 'tutor-roadmaps' %}">Roadmaps</a>
+      <a href="{% url 'tutor-home' %}">Inicio</a>
+      <a href="{% url 'tutor-roadmaps' %}">Avance curricular</a>
+      <a href="{% url 'tutor-curriculum' %}">Currícula y autoría</a>
       <a href="{% url 'tutor-import-upload' %}">Importar currícula</a>
-      <a href="/cms/">Wagtail</a>
+      <a href="{% url 'tutor-sessions' %}">Sesiones</a>
+      <a href="{% url 'tutor-results' %}">Resultados grupales</a>
     </nav>
   </div>
 </header>

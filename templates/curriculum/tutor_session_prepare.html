@@ -12,7 +12,7 @@
     {% include "curriculum/tutor_nav.html" %}
     <main id="contenido" class="shell narrow-shell teacher-page">
       <header class="view-heading"><p class="eyebrow">PREPARACIÓN DOCENTE · PASO 1</p><h1>Prepara la sesión.</h1><p class="lede">Revisa el paquete publicado, indica el tamaño del grupo y elige el camino que acompañarás.</p></header>
-      <section class="session-card session-card--prepare" aria-labelledby="snapshot-heading"><div class="session-card-heading"><div><p class="card-kicker">CONTENIDO FIJO</p><h2 id="snapshot-heading">{{ snapshot.payload.title }}</h2></div><span class="status status--prepared">Preparada</span></div><p class="snapshot">DemoPackage · versión {{ snapshot.version }} · {{ snapshot.sha256|slice:':8' }}</p><p class="microcopy">El snapshot publicado queda fijado a esta sesión. No representa contenido curricular validado por esta demostración.</p></section>
+      <section class="session-card session-card--prepare" aria-labelledby="snapshot-heading"><div class="session-card-heading"><div><p class="card-kicker">CONTENIDO FIJO</p><h2 id="snapshot-heading">{{ snapshot.payload.title }}</h2></div><span class="status status--prepared">Preparada</span></div><p class="snapshot">Contenido sintético · versión {{ snapshot.version }} · huella {{ snapshot.sha256|slice:':8' }}</p><p class="microcopy">El snapshot publicado queda fijado a esta sesión. No representa contenido curricular validado por esta demostración.</p></section>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
       <form method="post" class="status-card preparation-form">
         {% csrf_token %}
@@ -20,7 +20,7 @@
         <h2>¿Cómo será el grupo?</h2>
         <div class="form-grid"><label for="student-count">Estudiantes indicados<input id="student-count" name="student_count" inputmode="numeric" required></label><label for="device-count">Dispositivos disponibles<input id="device-count" name="device_count" inputmode="numeric" required></label></div>
         <label for="roadmap-snapshot">Roadmap publicado <span class="optional">(opcional)</span></label>
-        <select id="roadmap-snapshot" name="roadmap_snapshot_id"><option value="">Sin roadmap</option>{% for roadmap in roadmaps %}<option value="{{ roadmap.pk }}">{{ roadmap.title|default:"Roadmap" }} · versión {{ roadmap.version }}</option>{% endfor %}</select>
+        <select id="roadmap-snapshot" name="roadmap"><option value="">Sin roadmap</option>{% for roadmap in roadmaps %}<option value="{{ roadmap.pk }}">{{ roadmap.title|default:"Roadmap" }} · versión {{ roadmap.version }}</option>{% endfor %}</select>
         <p class="field-help">El roadmap conserva unidades, lecciones y actividades en un orden fijo.</p>
         <button class="button button-primary button-large" type="submit">Preparar distribución <span aria-hidden="true">→</span></button>
       </form>
