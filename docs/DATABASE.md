@@ -15,7 +15,7 @@ por `tests/test_t24_database_contracts.py`.
 | `CurriculumProgress` | Confirmación manual docente | Tema actual/trabajado; nunca lo modifica la actividad estudiantil |
 | `StudentRoadmapProgress` | Recorrido individual pseudónimo | Actividades completadas y reactivos correctos persistidos por turno; eliminable con los datos temporales |
 | `CurriculumImportJob` | Staging del pipeline PDF→actividades | El más complejo; ver máquinas de estado abajo |
-| `ClassroomSession` | Ejecución de una sesión de aula | Congela un snapshot base y, si aplica, un roadmap cuyos nodos resuelven todos sus snapshots de paquete |
+| `ClassroomSession` | Ejecución de una sesión de aula | Conserva la maestra que la preparó, congela un snapshot base y, si aplica, un roadmap cuyos nodos resuelven todos sus snapshots de paquete |
 | `ClassroomGroup` | Etiqueta docente para agrupar sesiones | No tiene roster ni datos de alumnos; una sesión puede no tener salón |
 | `DeviceAssignment` | Cupo por dispositivo en una sesión | |
 | `StudentTurn` | Turno de participación estudiantil | Genera una `participant_key` UUID aleatoria, sin derivarla de apodo ni dispositivo |

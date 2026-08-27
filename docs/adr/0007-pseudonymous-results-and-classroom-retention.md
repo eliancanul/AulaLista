@@ -24,7 +24,9 @@ salón sin destruir el historial curricular.
 3. La lectura docente ofrece agregados por sesión/salón como superficie
    principal. El registro individual de una sesión muestra una etiqueta de ocho
    caracteres y estado por actividad como señal de observación; no muestra UUID
-   completo, apodo ni lenguaje diagnóstico o de calificación.
+   completo, apodo ni lenguaje diagnóstico o de calificación. Las
+   exportaciones usan esa misma etiqueta corta, sin UUID de resultado ni de
+   participante.
 4. `PseudonymousSurveyResponse` guarda sólo un entero de 1 a 5. La maestra ve
    exclusivamente el promedio grupal; las respuestas libres históricas se
    eliminan en la migración de cambio de contrato.

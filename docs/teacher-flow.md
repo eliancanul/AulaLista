@@ -63,6 +63,8 @@ Una corrección de una actividad publicada crea una nueva revisión y, al public
 La maestra puede crear un `ClassroomGroup` con un nombre corto (por ejemplo,
 `6° A`) y elegirlo opcionalmente al preparar una sesión. El salón sólo agrupa
 sesiones: no contiene lista de alumnos, cuentas ni identificadores de dispositivo.
+La sesión preparada desde esta superficie queda vinculada a esa maestra; otra
+cuenta docente no puede consultar, exportar ni borrar sus resultados.
 
 La vista de resultados empieza con agregados por sesión y por salón. Al abrir una
 sesión cerrada, la maestra puede consultar el registro individual seudónimo:

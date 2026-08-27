@@ -654,6 +654,13 @@ class ClassroomSession(models.Model):
         null=True,
         blank=True,
     )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
+        null=True,
+        blank=True,
+    )
     result_batch_id = models.UUIDField(
         "lote opaco de resultados",
         default=uuid.uuid4,
@@ -712,7 +719,13 @@ class ClassroomSession(models.Model):
         ]
 
     @classmethod
-    def start_from_snapshot(cls, snapshot, roadmap_snapshot=None, classroom_group=None):
+    def start_from_snapshot(
+        cls,
+        snapshot,
+        roadmap_snapshot=None,
+        classroom_group=None,
+        teacher=None,
+    ):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
@@ -732,6 +745,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            created_by=teacher,
         )
 
     @classmethod
@@ -743,6 +757,7 @@ class ClassroomSession(models.Model):
         device_count,
         roadmap_snapshot=None,
         classroom_group=None,
+        teacher=None,
     ):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
@@ -767,6 +782,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            created_by=teacher,
             status=cls.STATUS_PREPARED,
             student_count=int(str(student_count).strip()),
             device_count=int(str(device_count).strip()),

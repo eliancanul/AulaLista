@@ -50,7 +50,7 @@ _Avoid_: validación de IA, revisión automática.
 Ejecución temporal de una actividad publicada para un conjunto de participantes y dispositivos. Una sesión conserva la versión publicada con la que comenzó.
 _Avoid_: curso, instancia editable.
 
-Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva un `PublishedPackageSnapshot` base y, cuando usa camino, un `PublishedRoadmapSnapshot` inmutables. El roadmap congela además la referencia al snapshot de paquete de cada actividad: cambiar el contenido editorial no modifica una sesión ya iniciada.
+Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva la maestra que la preparó, un `PublishedPackageSnapshot` base y, cuando usa camino, un `PublishedRoadmapSnapshot` inmutables. El roadmap congela además la referencia al snapshot de paquete de cada actividad: cambiar el contenido editorial no modifica una sesión ya iniciada.
 
 **ClassroomGroup**:
 Etiqueta corta creada por la maestra para agrupar `ClassroomSession`, por ejemplo `6° A`. No contiene lista, cuenta, nombre ni otro dato de alumnos. Puede no elegirse: una sesión sin salón sigue siendo válida.

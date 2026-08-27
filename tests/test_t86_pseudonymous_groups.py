@@ -109,12 +109,24 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     persisted = json.dumps(list(PseudonymousResult.objects.values()), default=str, ensure_ascii=False)
     assert "Apodo privado" not in persisted
 
-    page = tutor_client().get(reverse("tutor-session-results", args=[session.pk]))
+    client = tutor_client()
+    page = client.get(reverse("tutor-session-results", args=[session.pk]))
     assert page.status_code == 200
     assert "Registro individual seudónimo" in page.text
     assert str(first.participant_key) not in page.text
     assert str(first.participant_key)[:8] in page.text
     assert "Diagnóstico" not in page.text
+    json_export = client.post(
+        reverse("tutor-session-export", args=[session.pk]), {"format": "json"}
+    )
+    csv_export = client.post(
+        reverse("tutor-session-export", args=[session.pk]), {"format": "csv"}
+    )
+    assert json_export.status_code == csv_export.status_code == 200
+    for response in (json_export, csv_export):
+        assert str(first.participant_key) not in response.text
+        assert str(results[0].id) not in response.text
+        assert "participant_label" in response.text
 
 
 def test_group_aggregates_stay_with_the_selected_classroom_group():
@@ -123,11 +135,18 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     snapshot = published_snapshot()
     group = ClassroomGroup.objects.create(name="6° A", created_by=owner)
     other_group = ClassroomGroup.objects.create(name="6° B", created_by=other_owner)
-    first = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1, classroom_group=group)
-    second = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1, classroom_group=other_group)
+    first = ClassroomSession.prepare_from_snapshot(
+        snapshot, 1, 1, classroom_group=group, teacher=owner
+    )
+    second = ClassroomSession.prepare_from_snapshot(
+        snapshot, 1, 1, classroom_group=other_group, teacher=other_owner
+    )
     first.close()
     second.close()
-    result(first, uuid.uuid4(), "activity-1")
+    group_result = result(first, uuid.uuid4(), "activity-1")
+    group_result.help_requests = [{"kind": "hint"}]
+    group_result.technical_errors = [{"message": "local"}]
+    group_result.save(update_fields=["help_requests", "technical_errors"])
     result(second, uuid.uuid4(), "activity-1")
     PseudonymousSurveyResponse.objects.create(
         result_batch_id=first.result_batch_id,
@@ -142,6 +161,10 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     assert page.status_code == 200
     assert "6° A" in page.text
     assert "4.0 / 5" in page.text
+    assert "Distribución de actividades" in page.text
+    assert ">1</strong> ayudas solicitadas" in page.text
+    assert ">1</strong> errores técnicos" in page.text
+    assert snapshot.sha256[:8] in page.text
     assert client.get(reverse("tutor-group-results", args=[other_group.pk])).status_code == 404
 
 
@@ -158,7 +181,12 @@ def test_close_school_year_erases_only_group_results_and_surveys_preserving_curr
     )
     group = ClassroomGroup.objects.create(name="6° A", created_by=owner)
     session = ClassroomSession.prepare_from_snapshot(
-        snapshot, 1, 1, roadmap_snapshot=roadmap, classroom_group=group
+        snapshot,
+        1,
+        1,
+        roadmap_snapshot=roadmap,
+        classroom_group=group,
+        teacher=owner,
     )
     session.close()
     result(session, uuid.uuid4(), "activity-1")
@@ -202,3 +230,27 @@ def test_new_group_routes_require_a_staff_teacher_and_close_year_is_post_only():
     staff = Client()
     staff.force_login(owner)
     assert staff.get(reverse("tutor-group-close-year", args=[group.pk])).status_code == 405
+
+
+def test_session_result_routes_reject_another_staff_teacher():
+    owner = get_user_model().objects.create_user(username="session-owner", is_staff=True)
+    other = get_user_model().objects.create_user(username="session-other", is_staff=True)
+    snapshot = published_snapshot("Sesión privada")
+    session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1, teacher=owner)
+    session.close()
+    stored = result(session, uuid.uuid4(), "activity-1")
+    other_client = Client()
+    other_client.force_login(other)
+
+    protected = [
+        ("get", reverse("tutor-session-review", args=[session.pk])),
+        ("get", reverse("tutor-session-results", args=[session.pk])),
+        ("post", reverse("tutor-session-export", args=[session.pk]), {"format": "json"}),
+        ("post", reverse("tutor-session-results-delete", args=[session.pk])),
+        ("post", reverse("tutor-result-delete", args=[session.pk, stored.pk])),
+    ]
+    for method, url, *data in protected:
+        assert getattr(other_client, method)(url, *(data or [])).status_code == 404
+
+    assert other_client.get(reverse("tutor-results")).status_code == 200
+    assert "Sesión privada" not in other_client.get(reverse("tutor-results")).text

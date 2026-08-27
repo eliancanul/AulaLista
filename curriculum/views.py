@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.http import (
     HttpResponse,
@@ -733,7 +734,7 @@ def tutor_sessions(request):
     any additional classroom state.
     """
     sessions = (
-        ClassroomSession.objects.select_related(
+        _teacher_sessions(request).select_related(
             "snapshot", "snapshot__package", "classroom_group"
         )
         .order_by("-started_at", "-id")[:20]
@@ -871,6 +872,7 @@ def tutor_session_prepare(request, snapshot_id):
                 request.POST.get("device_count"),
                 roadmap_snapshot=roadmap_snapshot,
                 classroom_group=classroom_group,
+                teacher=request.user,
             )
         except ValidationError as error:
             # Keep contract errors explicit; authentication is handled by the
@@ -898,13 +900,37 @@ def _session_join_context(request, session):
     }
 
 
+def _teacher_sessions(request):
+    """Return sessions owned by this teacher plus unowned legacy sessions.
+
+    Sessions created through the teacher UI always record ``created_by``. Rows
+    from before #86 have no recoverable owner, so they retain the historic
+    staff-only access boundary rather than being reassigned to a guessed user.
+    """
+
+    return ClassroomSession.objects.filter(
+        Q(created_by=request.user) | Q(created_by__isnull=True)
+    )
+
+
+def _teacher_session_or_404(request, session_id, queryset=None):
+    queryset = queryset if queryset is not None else ClassroomSession.objects
+    return get_object_or_404(
+        queryset.filter(
+            Q(created_by=request.user) | Q(created_by__isnull=True)
+        ),
+        pk=session_id,
+    )
+
+
 @teacher_required
 def tutor_session_review(request, session_id):
-    session = get_object_or_404(
+    session = _teacher_session_or_404(
+        request,
+        session_id,
         ClassroomSession.objects.select_related(
             "snapshot", "roadmap_snapshot", "classroom_group"
         ).prefetch_related("device_assignments"),
-        pk=session_id,
     )
     results = list(
         PseudonymousResult.objects.filter(
@@ -950,8 +976,10 @@ def tutor_session_review(request, session_id):
 @teacher_required
 def tutor_session_active(request, session_id):
     """Authenticated operational view; aliases exist only in active state."""
-    session = get_object_or_404(
-        ClassroomSession.objects.select_related("snapshot"), pk=session_id
+    session = _teacher_session_or_404(
+        request,
+        session_id,
+        ClassroomSession.objects.select_related("snapshot"),
     )
     active_turns = StudentTurn.objects.none()
     if session.status == ClassroomSession.STATUS_ACTIVE:
@@ -1007,7 +1035,7 @@ def tutor_session_projection(request, session_id):
 
 @require_POST
 def tutor_session_confirm(request, session_id):
-    session = get_object_or_404(ClassroomSession, pk=session_id)
+    session = _teacher_session_or_404(request, session_id)
     try:
         session.confirm()
     except ValidationError as error:
@@ -1028,7 +1056,7 @@ def tutor_session_confirm(request, session_id):
 
 @require_POST
 def tutor_session_close(request, session_id):
-    session = get_object_or_404(ClassroomSession, pk=session_id)
+    session = _teacher_session_or_404(request, session_id)
     try:
         session.close()
     except ValidationError as error:
@@ -1166,7 +1194,7 @@ def _individual_result_register(results, session):
 def tutor_results(request):
     """List closed sessions with group statistics only."""
 
-    sessions = ClassroomSession.objects.filter(
+    sessions = _teacher_sessions(request).filter(
         status=ClassroomSession.STATUS_CLOSED
     ).select_related(
         "snapshot", "snapshot__package", "roadmap_snapshot", "classroom_group"
@@ -1240,11 +1268,12 @@ def tutor_group_results(request, group_id):
 def tutor_session_results(request, session_id):
     """Show one session's group summary, never an individual dossier."""
 
-    session = get_object_or_404(
+    session = _teacher_session_or_404(
+        request,
+        session_id,
         ClassroomSession.objects.select_related(
             "snapshot", "snapshot__package", "roadmap_snapshot"
         ),
-        pk=session_id,
     )
     aggregate = _result_aggregate(
         PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
@@ -1273,7 +1302,7 @@ def tutor_group_close_year(request, group_id):
     group = get_object_or_404(ClassroomGroup, pk=group_id, created_by=request.user)
     if request.POST.get("confirm") != "CERRAR":
         return HttpResponseBadRequest(
-            "Confirma el cierre de año escribiendo CERRAR. No se borró ningún dato."
+            "Confirma el cierre de año antes de borrar. No se borró ningún dato."
         )
     with transaction.atomic():
         batch_ids = list(
@@ -1298,8 +1327,7 @@ def _session_survey_responses(session):
 
 def _result_export_payload(result):
     return {
-        "id": str(result.id),
-        "participant_key": str(result.participant_key),
+        "participant_label": str(result.participant_key)[:8],
         "activity_id": result.activity_id,
         "snapshot_id": result.snapshot_id,
         "snapshot_version": result.snapshot_version,
@@ -1317,7 +1345,7 @@ def _result_export_payload(result):
 
 @require_POST
 def tutor_session_export(request, session_id):
-    session = get_object_or_404(ClassroomSession, pk=session_id)
+    session = _teacher_session_or_404(request, session_id)
     if session.status != ClassroomSession.STATUS_CLOSED:
         return HttpResponseBadRequest("Sólo se pueden exportar sesiones cerradas.")
     results = PseudonymousResult.objects.filter(
@@ -1342,8 +1370,7 @@ def tutor_session_export(request, session_id):
         writer = csv.DictWriter(
             output,
             fieldnames=[
-                "id",
-                "participant_key",
+                "participant_label",
                 "activity_id",
                 "snapshot_id",
                 "snapshot_version",
@@ -1382,7 +1409,7 @@ def tutor_session_export(request, session_id):
 
 @require_POST
 def tutor_session_results_delete(request, session_id):
-    session = get_object_or_404(ClassroomSession, pk=session_id)
+    session = _teacher_session_or_404(request, session_id)
     if session.status != ClassroomSession.STATUS_CLOSED:
         return HttpResponseBadRequest("Sólo se pueden eliminar resultados de una sesión cerrada.")
     result_ids = request.POST.getlist("result_id")
@@ -1406,7 +1433,7 @@ def tutor_session_results_delete(request, session_id):
 
 @require_POST
 def tutor_result_delete(request, session_id, result_id):
-    session = get_object_or_404(ClassroomSession, pk=session_id)
+    session = _teacher_session_or_404(request, session_id)
     if session.status != ClassroomSession.STATUS_CLOSED:
         return HttpResponseBadRequest("Sólo se pueden eliminar resultados de una sesión cerrada.")
     result = get_object_or_404(
