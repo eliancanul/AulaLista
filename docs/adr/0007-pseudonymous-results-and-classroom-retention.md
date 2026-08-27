@@ -33,6 +33,10 @@ salón sin destruir el historial curricular.
 5. El cierre de año por salón requiere docente autenticada, POST y confirmación
    visible. Borra resultados y encuestas de ese salón, y conserva paquetes,
    snapshots, roadmaps, `CurriculumProgress` y sesiones sin sus resultados.
+6. Las rutas sensibles de una sesión requieren la maestra registrada al
+   prepararla. La migración sólo recupera esa relación cuando el salón existente
+   ya la prueba; una sesión histórica sin propietaria no se atribuye por
+   inferencia ni queda accesible por estas rutas.
 
 ## Consecuencias
 

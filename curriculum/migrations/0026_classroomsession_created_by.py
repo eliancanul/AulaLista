@@ -32,6 +32,18 @@ def recreate_sqlite_guards(apps, schema_editor):
     ).create_snapshot_guards(apps, schema_editor)
 
 
+def backfill_group_session_owners(apps, schema_editor):
+    """Recover ownership only when the existing group already proves it."""
+
+    Session = apps.get_model("curriculum", "ClassroomSession")
+    Group = apps.get_model("curriculum", "ClassroomGroup")
+    for group in Group.objects.exclude(created_by__isnull=True).iterator():
+        Session.objects.filter(
+            classroom_group_id=group.pk,
+            created_by__isnull=True,
+        ).update(created_by_id=group.created_by_id)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -52,5 +64,6 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
+        migrations.RunPython(backfill_group_session_owners, migrations.RunPython.noop),
         migrations.RunPython(recreate_sqlite_guards, drop_sqlite_guards),
     ]

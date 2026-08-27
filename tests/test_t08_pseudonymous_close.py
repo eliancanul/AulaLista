@@ -32,7 +32,7 @@ from curriculum.views import (  # noqa: E402
 )
 
 
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -454,12 +454,13 @@ def test_duplicate_names_produce_independent_nameless_results_and_exports():
     results = list(
         PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id)
     )
-    review = tutor_client().get(reverse("tutor-session-review", args=[session.pk]))
-    get_export = tutor_client().get(reverse("tutor-session-export", args=[session.pk]))
-    export = tutor_client().post(reverse("tutor-session-export", args=[session.pk]),
+    teacher = tutor_client_for_sessions(session)
+    review = teacher.get(reverse("tutor-session-review", args=[session.pk]))
+    get_export = teacher.get(reverse("tutor-session-export", args=[session.pk]))
+    export = teacher.post(reverse("tutor-session-export", args=[session.pk]),
         {"format": "json"},
     )
-    csv_export = tutor_client().post(reverse("tutor-session-export", args=[session.pk]),
+    csv_export = teacher.post(reverse("tutor-session-export", args=[session.pk]),
         {"format": "csv"},
     )
 
@@ -494,7 +495,7 @@ def test_delete_requires_explicit_post_and_can_delete_selected_or_all_results():
     other_result = PseudonymousResult.objects.get(
         result_batch_id=other.result_batch_id,
     )
-    scoped_client = tutor_client()
+    scoped_client = tutor_client_for_sessions(session, other)
     wrong_session_delete = scoped_client.post(
         reverse("tutor-result-delete", args=[session.pk, other_result.pk]),
     )
@@ -511,7 +512,7 @@ def test_delete_requires_explicit_post_and_can_delete_selected_or_all_results():
     assert list(PseudonymousResult.objects.values_list("pk", flat=True)) == [
         other_result.pk
     ]
-    bulk_delete = tutor_client().post(reverse("tutor-session-results-delete", args=[other.pk]),
+    bulk_delete = scoped_client.post(reverse("tutor-session-results-delete", args=[other.pk]),
     )
     assert bulk_delete.status_code == 200
     # Borrar todos los resultados también elimina las respuestas de encuesta del lote.

@@ -29,7 +29,7 @@ from curriculum.survey import (  # noqa: E402
 )
 
 
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -226,14 +226,15 @@ def test_teacher_review_shows_survey_aggregate_and_export_includes_it():
     first.post(url, valid_post_data(rating="3"))
     second.post(url, valid_post_data(rating="5"))
 
-    review = tutor_client().get(reverse("tutor-session-review", args=[session.pk]))
+    teacher = tutor_client_for_sessions(session)
+    review = teacher.get(reverse("tutor-session-review", args=[session.pk]))
     assert review.status_code == 200
     assert 'data-survey-aggregate' in review.text
     assert "promedio grupal de estrellas" in review.text
     assert "4.0 / 5" in review.text
 
     session.close()
-    export = tutor_client().post(reverse("tutor-session-export", args=[session.pk]),
+    export = teacher.post(reverse("tutor-session-export", args=[session.pk]),
         {"format": "json"},
     )
     assert export.status_code == 200
@@ -258,7 +259,8 @@ def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_
     session.close()
 
     result = PseudonymousResult.objects.get()
-    individual = tutor_client().post(
+    teacher = tutor_client_for_sessions(session)
+    individual = teacher.post(
         reverse(
             "tutor-result-delete",
             args=[session.pk, result.pk],
@@ -267,7 +269,7 @@ def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_
     assert individual.status_code == 200
     assert PseudonymousSurveyResponse.objects.count() == 1
 
-    delete_all = tutor_client().post(reverse("tutor-session-results-delete", args=[session.pk]),
+    delete_all = teacher.post(reverse("tutor-session-results-delete", args=[session.pk]),
     )
     assert delete_all.status_code == 200
     body = delete_all.json()

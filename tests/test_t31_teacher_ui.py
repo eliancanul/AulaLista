@@ -21,7 +21,7 @@ from curriculum.models import (  # noqa: E402
     PublishedRoadmapSnapshot,
     PseudonymousResult,
 )
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 pytestmark = pytest.mark.django_db
 
@@ -148,7 +148,7 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
         technical_errors=[{"message": "local"}],
     )
 
-    client = tutor_client()
+    client = tutor_client_for_sessions(session)
     listing = client.get(reverse("tutor-results"))
     detail = client.get(reverse("tutor-session-results", args=[session.pk]))
     for response in (listing, detail):
@@ -167,7 +167,9 @@ def test_empty_group_results_are_explicit():
     snapshot = published_snapshot("Sin resultados")
     session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
     session.close()
-    response = tutor_client().get(reverse("tutor-session-results", args=[session.pk]))
+    response = tutor_client_for_sessions(session).get(
+        reverse("tutor-session-results", args=[session.pk])
+    )
     assert response.status_code == 200
     assert "no tiene resultados agregados" in response.text
     assert "Registro individual seudónimo" in response.text

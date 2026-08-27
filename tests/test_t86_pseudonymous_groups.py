@@ -24,7 +24,7 @@ from curriculum.models import (  # noqa: E402
     PseudonymousResult,
     PseudonymousSurveyResponse,
 )
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -109,7 +109,7 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     persisted = json.dumps(list(PseudonymousResult.objects.values()), default=str, ensure_ascii=False)
     assert "Apodo privado" not in persisted
 
-    client = tutor_client()
+    client = tutor_client_for_sessions(session)
     page = client.get(reverse("tutor-session-results", args=[session.pk]))
     assert page.status_code == 200
     assert "Registro individual seudónimo" in page.text
