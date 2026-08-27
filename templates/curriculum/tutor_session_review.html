@@ -8,106 +8,34 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <h1>Revisar preparación</h1>
-      <p data-session-status>Estado: {{ session.get_status_display }}</p>
-      {% if join_url %}
-        <section class="status-card" aria-label="Acceso común de dispositivos">
-          <h2>Acceso común de dispositivos</h2>
-          <p>Comparte un único enlace o QR; cada navegador se incorpora solo:</p>
-          <p><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p>
-          <div class="qr" aria-label="Código QR de la sesión">{{ join_qr_svg|safe }}</div>
-        </section>
-      {% endif %}
-      <p>Paquete publicado: {{ session.snapshot.payload.title }} · {{ snapshot_label }}</p>
-      {% if session.roadmap_snapshot %}
-        <p>Roadmap fijado: {{ session.roadmap_snapshot.title|default:"Roadmap" }} · versión {{ session.roadmap_snapshot.version }} · {{ session.roadmap_snapshot.sha256|slice:":8" }}</p>
-      {% else %}
-        <p>Sin roadmap publicado fijado a esta sesión.</p>
-      {% endif %}
-      <p>Estudiantes indicados: {{ session.student_count }}</p>
-      <p>Dispositivos preparados: {{ session.device_count }}</p>
+    <main id="contenido" class="shell teacher-page">
+      <header class="view-heading view-heading--split"><div><p class="eyebrow">VISTA DOCENTE · PREPARAR Y ACTIVAR</p><h1>Una mirada antes de abrir el aula.</h1><p class="lede">Confirma la distribución, revisa el camino y activa sólo cuando el grupo esté listo.</p></div><span class="role-pill">Decisión de la maestra</span></header>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-      <table>
-        <thead>
-          <tr>
-            <th>Dispositivo</th>
-            <th>Capacidad asignada</th>
-            <th>Capacidad restante</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for assignment in assignments %}
-            <tr>
-              <td>{{ assignment.label }}</td>
-              <td>{{ assignment.assigned_capacity }}</td>
-              <td>{{ assignment.remaining_capacity }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% if session.status == "active" %}
-        <p><a href="{% url 'tutor-session-active' session.pk %}">Abrir modo activo</a></p>
+      <section class="review-grid">
+        <article class="session-card session-card--review" aria-labelledby="review-session-heading">
+          <div class="session-card-heading"><div><p class="card-kicker">SESIÓN DE AULA · {{ session.get_status_display|upper }}</p><h2 id="review-session-heading">{{ session.snapshot.payload.title }}</h2></div><span class="status status--{{ session.status }}">{{ session.get_status_display }}</span></div>
+          <p class="snapshot">Paquete publicado · {{ snapshot_label }}</p>
+          {% if session.roadmap_snapshot %}<p class="snapshot">Roadmap fijado · {{ session.roadmap_snapshot.title|default:"Roadmap" }} · versión {{ session.roadmap_snapshot.version }} · {{ session.roadmap_snapshot.sha256|slice:':8' }}</p>{% else %}<p class="snapshot">Sin roadmap publicado fijado a esta sesión.</p>{% endif %}
+          <div class="review-facts"><span><strong>{{ session.student_count|default:"—" }}</strong> estudiantes indicados</span><span><strong>{{ session.device_count|default:"—" }}</strong> dispositivos preparados</span></div>
+          {% if session.status == "prepared" %}<form method="post" action="{% url 'tutor-session-confirm' session.pk %}">{% csrf_token %}<button class="button button-primary button-large" type="submit">Confirmar y activar sesión <span aria-hidden="true">→</span></button></form><p class="microcopy">Activar es una decisión explícita de la maestra.</p>{% elif session.status == "active" %}<a class="button button-primary button-large" href="{% url 'tutor-session-active' session.pk %}">Abrir modo activo <span aria-hidden="true">→</span></a>{% endif %}
+        </article>
+        <aside class="roadmap-summary" aria-labelledby="roadmap-summary-heading"><p class="card-kicker">RESUMEN DEL CAMINO</p><h2 id="roadmap-summary-heading">Unidades, lecciones y actividades</h2>{% if session.roadmap_snapshot %}<p>El camino está fijado para esta sesión y no cambia con una corrección posterior.</p><ul><li>Roadmap: <strong>{{ session.roadmap_snapshot.title|default:"Roadmap" }}</strong></li><li>Versión: <strong>{{ session.roadmap_snapshot.version }}</strong></li><li>Estado: <strong>listo para revisión docente</strong></li></ul>{% else %}<p>Esta sesión usa un paquete único, sin roadmap publicado.</p>{% endif %}<span class="synthetic-label">DEMOSTRACIÓN SINTÉTICA</span></aside>
+      </section>
+
+      {% if join_url %}
+        <section class="join-preview" aria-labelledby="join-heading"><div><p class="card-kicker">ENTRADA COMÚN · SÓLO ACTIVA</p><h2 id="join-heading">Acceso común de dispositivos</h2><p>Comparte un único enlace o QR; cada navegador se incorpora de forma independiente.</p><p><a class="join-link" data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p><span class="local-only">QR local · sin red externa</span></div><div class="qr" aria-label="Código QR sintético de la sesión">{{ join_qr_svg|safe }}</div></section>
       {% endif %}
-      {% if session.status == "prepared" %}
-        <form method="post" action="{% url 'tutor-session-confirm' session.pk %}">
-          {% csrf_token %}
-          <button class="button-primary" type="submit">Confirmar y activar sesión</button>
-        </form>
-      {% endif %}
-      {% if session.status == "prepared" or session.status == "active" %}
-        <form method="post" action="{% url 'tutor-session-close' session.pk %}">
-          {% csrf_token %}
-          <button class="button-danger" type="submit">Cerrar sesión y conservar métricas anónimas</button>
-        </form>
-      {% endif %}
+
+      <section class="distribution-panel" aria-labelledby="distribution-heading"><div class="section-heading"><div><p class="eyebrow">DISTRIBUCIÓN</p><h2 id="distribution-heading">Capacidad preparada</h2></div><span class="synthetic-label">SIN IDENTIDADES</span></div><table><thead><tr><th>Dispositivo</th><th>Capacidad asignada</th><th>Capacidad restante</th></tr></thead><tbody>{% for assignment in assignments %}<tr><td>{{ assignment.label }}</td><td>{{ assignment.assigned_capacity }}</td><td>{{ assignment.remaining_capacity }}</td></tr>{% endfor %}</tbody></table></section>
+
+      {% if session.status == "prepared" or session.status == "active" %}<form method="post" action="{% url 'tutor-session-close' session.pk %}" class="destructive-action">{% csrf_token %}<button class="button button-danger" type="submit">Cerrar sesión y conservar métricas seudónimas</button></form>{% endif %}
       {% if session.status == "closed" %}
-        <section aria-label="Agregados sin nombres">
-          <h2>Agregados</h2>
-          <p>Resultados: {{ result_aggregate.count }}</p>
-          <p>Completados: {{ result_aggregate.completed_count }}</p>
-          <p>Puntuación total: {{ result_aggregate.score_total }}</p>
-          <p>Puntuación promedio: {{ result_aggregate.score_average }}</p>
-          <p>Ayudas solicitadas: {{ result_aggregate.help_count }}</p>
-          <p>Errores técnicos: {{ result_aggregate.technical_error_count }}</p>
-        </section>
-        <form method="post" action="{% url 'tutor-session-export' session.pk %}">
-          {% csrf_token %}
-          <input type="hidden" name="format" value="json">
-          <button class="button-secondary" type="submit">Exportar JSON</button>
-        </form>
-        <form method="post" action="{% url 'tutor-session-export' session.pk %}">
-          {% csrf_token %}
-          <input type="hidden" name="format" value="csv">
-          <button class="button-secondary" type="submit">Exportar CSV</button>
-        </form>
-        <form method="post" action="{% url 'tutor-session-results-delete' session.pk %}">
-          {% csrf_token %}
-          <button class="button-danger" type="submit">Eliminar resultados</button>
-        </form>
+        <section class="results-summary" aria-label="Agregados sin identidades"><div class="section-heading"><div><p class="eyebrow">RESULTADOS AGREGADOS</p><h2>Agregados · resumen de la sesión</h2></div><span class="synthetic-label">ELIMINABLE · SEUDÓNIMO</span></div><div class="result-facts"><span><strong>{{ result_aggregate.count }}</strong> registros</span><span><strong>{{ result_aggregate.completed_count }}</strong> completados</span><span><strong>{{ result_aggregate.score_total }}</strong> puntuación total</span><span><strong>{{ result_aggregate.score_average }}</strong> puntuación promedio</span><span><strong>{{ result_aggregate.help_count }}</strong> ayudas</span><span><strong>{{ result_aggregate.technical_error_count }}</strong> errores técnicos</span></div><div class="supporting-actions"><form method="post" action="{% url 'tutor-session-export' session.pk %}">{% csrf_token %}<input type="hidden" name="format" value="json"><button class="button button-secondary" type="submit">Exportar JSON</button></form><form method="post" action="{% url 'tutor-session-export' session.pk %}">{% csrf_token %}<input type="hidden" name="format" value="csv"><button class="button button-secondary" type="submit">Exportar CSV</button></form><form method="post" action="{% url 'tutor-session-results-delete' session.pk %}">{% csrf_token %}<button class="button button-danger" type="submit">Eliminar resultados</button></form></div></section>
       {% endif %}
-      {% if survey_response_count %}
-        <section aria-label="Encuesta de los alumnos" data-survey-aggregate>
-          <h2>Encuesta de los alumnos ({{ survey_response_count }} respuestas)</h2>
-          {% for question_id, totals in survey_aggregate.totals.items %}
-            <h3>{{ question_id }}</h3>
-            <ul>
-              {% for choice, count in totals.items %}
-                <li>{{ choice }}: {{ count }}</li>
-              {% endfor %}
-            </ul>
-          {% endfor %}
-          {% if survey_aggregate.open_texts %}
-            <h3>Comentarios abiertos</h3>
-            <ul>
-              {% for text in survey_aggregate.open_texts %}
-                <li>{{ text }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </section>
-      {% endif %}
+      {% if survey_response_count %}<section class="results-summary" data-survey-aggregate aria-label="Encuesta agregada"><h2>Encuesta de los alumnos ({{ survey_response_count }} respuestas)</h2>{% for question_id, totals in survey_aggregate.totals.items %}<h3>{{ question_id }}</h3><ul>{% for choice, count in totals.items %}<li>{{ choice }}: {{ count }}</li>{% endfor %}</ul>{% endfor %}{% if survey_aggregate.open_texts %}<h3>Comentarios abiertos</h3><ul>{% for text in survey_aggregate.open_texts %}<li>{{ text }}</li>{% endfor %}</ul>{% endif %}</section>{% endif %}
+      <p class="back-link"><a href="{% url 'tutor-sessions' %}">← Volver a sesiones</a></p>
     </main>
   </body>
 </html>

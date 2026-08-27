@@ -3,30 +3,24 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AulaLista · proyección</title>
+    <title>AulaLista · proyección de aula</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/session_active.css' %}">
   </head>
   <body class="projection">
-    <main>
-      <p class="eyebrow">AULALISTA · PROYECCIÓN</p>
-      <h1>Actividad de aula</h1>
-      <p class="status" data-session-status>Estado: {{ session.get_status_display }}</p>
-      <section class="projection-count" aria-label="Participantes">
-        <strong data-participant-count>{{ participant_count }}</strong>
-        <span>participantes</span>
-      </section>
+    <main class="projection-shell">
+      <header class="projection-heading"><p class="eyebrow">AULALISTA · PROYECCIÓN PÚBLICA</p><span class="demo-badge">Demostración sintética</span><h1>Entrada al aula</h1><p class="status" data-session-status>Estado de la sesión: <strong>{{ session.get_status_display }}</strong></p><p class="projection-participant-summary">Participantes: {{ participant_count }}</p></header>
       {% if join_url %}
-        <section class="join-panel" aria-label="Entrada a la actividad">
-          <p>Escanea para entrar desde la red local</p>
-          <div class="qr" aria-label="Código QR de entrada">{{ join_qr_svg|safe }}</div>
-          <p><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p>
+        <section class="projection-grid" aria-label="Entrada a la actividad">
+          <div class="join-panel"><p class="card-kicker">ESCANEA PARA ENTRAR</p><div class="qr" aria-label="Código QR sintético de entrada">{{ join_qr_svg|safe }}</div><p class="projection-route"><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p><p class="microcopy">Si no puedes escanear, escribe la ruta local.</p></div>
+          <section class="projection-count" aria-label="Participantes"><span class="count-number" data-participant-count>{{ participant_count }}</span><span>participantes presentes</span><small>El conteo es local; no es asistencia oficial.</small></section>
         </section>
       {% elif session.status == "prepared" %}
-        <p class="notice">La actividad aparecerá aquí cuando la maestra la active.</p>
+        <section class="projection-notice"><h2>La actividad aparecerá aquí cuando la maestra la active.</h2><p>La sesión está preparada y espera una confirmación humana.</p></section>
       {% else %}
-        <p class="notice">Esta actividad está cerrada.</p>
+        <section class="projection-notice"><h2>Esta actividad está cerrada.</h2><p>La entrada ya no está disponible.</p></section>
       {% endif %}
+      <p class="projection-boundary">Sin apodos proyectados · sin identidades · sin red externa</p>
     </main>
   </body>
 </html>

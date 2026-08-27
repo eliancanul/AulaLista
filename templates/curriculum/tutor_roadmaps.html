@@ -3,55 +3,38 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AulaLista · avance curricular</title>
+    <title>AulaLista · roadmaps docentes</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/teacher_landing.css' %}">
   </head>
   <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <h1>Avance curricular</h1>
-      <p>La maestra confirma qué tema está actual o ya fue trabajado. Esta decisión es independiente del recorrido individual del alumnado.</p>
+    <main id="contenido" class="shell">
+      <header class="landing-header"><p class="eyebrow">CAMINO CURRICULAR · CONTROL DOCENTE</p><h1>Publicar un camino legible.</h1><p class="lead">Ordena unidades, lecciones y actividades a partir de snapshots publicados. El avance docente se confirma aquí y nunca se infiere del recorrido individual.</p></header>
+      <section class="authority-boundary" aria-labelledby="publish-heading"><div class="boundary-mark" aria-hidden="true">✓</div><div><h2 id="publish-heading">Publicación bajo autoridad humana</h2><p>Selecciona paquetes ya publicados por <strong>EditorialReviewer</strong>. La maestra decide el orden y confirma el avance.</p></div></section>
 
-      <section class="status-card" aria-labelledby="publish-roadmap-heading">
-        <h2 id="publish-roadmap-heading">Publicar un roadmap</h2>
-        <p>La publicación es una decisión humana. Cada paquete seleccionado se convierte en una actividad de una unidad ordenada y conserva su snapshot.</p>
+      <section class="roadmap-form-card" aria-labelledby="publish-roadmap-heading">
+        <div class="section-heading"><div><p class="eyebrow">NUEVO ROADMAP</p><h2 id="publish-roadmap-heading">Construir la ruta</h2></div><span class="synthetic-label">DATOS SINTÉTICOS</span></div>
+        <p>La publicación fija el contenido; una corrección posterior no cambia las sesiones ya iniciadas.</p>
         {% if publication_error %}<p class="error" role="alert">{{ publication_error }}</p>{% endif %}
-        <form method="post">
+        <form method="post" class="roadmap-publish-form">
           {% csrf_token %}
-          <label>
-            Nombre del roadmap
-            <input name="title" maxlength="160" required>
-          </label>
+          <label for="roadmap-title">Nombre del roadmap</label><input id="roadmap-title" name="title" maxlength="160" required>
           {% if package_snapshots %}
-            <fieldset>
-              <legend>Paquetes publicados, en el orden elegido</legend>
-              {% for package_snapshot in package_snapshots %}
-                <label>
-                  <input type="checkbox" name="package_snapshot_ids" value="{{ package_snapshot.pk }}">
-                  {{ package_snapshot.payload.title|default:package_snapshot.package.title }} · versión {{ package_snapshot.version }}
-                </label>
-              {% endfor %}
-            </fieldset>
-            <button class="button-primary" type="submit">Publicar roadmap</button>
-          {% else %}
-            <p>No hay paquetes publicados para incluir.</p>
-          {% endif %}
+            <fieldset class="snapshot-checklist"><legend>Paquetes publicados, en el orden elegido</legend>{% for package_snapshot in package_snapshots %}<label><input type="checkbox" name="package_snapshot_ids" value="{{ package_snapshot.pk }}"> <span>{{ package_snapshot.payload.title|default:package_snapshot.package.title }}<small>versión {{ package_snapshot.version }}</small></span></label>{% endfor %}</fieldset>
+            <button class="button button-primary" type="submit">Publicar roadmap</button>
+          {% else %}<p class="empty-note">No hay paquetes publicados para incluir.</p>{% endif %}
         </form>
       </section>
 
-      {% if roadmap_cards %}
-        {% for card in roadmap_cards %}
-          <section class="session-card" aria-labelledby="roadmap-{{ card.snapshot.pk }}">
-            <h2 id="roadmap-{{ card.snapshot.pk }}">{{ card.snapshot.title|default:"Roadmap publicado" }} · versión {{ card.snapshot.version }}</h2>
-            <p>Snapshot publicado: {{ card.snapshot.sha256|slice:":8" }}</p>
-            <p>{{ card.progress_count }} confirmaciones docentes</p>
-            <a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual</a>
-          </section>
-        {% endfor %}
-      {% else %}
-        <p>No hay roadmaps publicados todavía.</p>
-      {% endif %}
+      <section class="published-roadmaps" aria-labelledby="published-heading">
+        <div class="section-heading"><div><p class="eyebrow">ROADMAPS PUBLICADOS</p><h2 id="published-heading">Avance docente</h2></div><span class="synthetic-label">SIN PERSISTENCIA ADICIONAL</span></div>
+        {% if roadmap_cards %}
+          <div class="roadmap-card-grid">{% for card in roadmap_cards %}<article class="roadmap-card"><div class="card-topline"><span class="signal-dot" aria-hidden="true"></span><span>ROADMAP PUBLICADO</span></div><h3>{{ card.snapshot.title|default:"Roadmap publicado" }}</h3><p>Versión {{ card.snapshot.version }} · snapshot {{ card.snapshot.sha256|slice:':8' }}</p><p><strong>{{ card.progress_count }}</strong> confirmaciones docentes</p><a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual <span aria-hidden="true">→</span></a></article>{% endfor %}</div>
+        {% else %}<p class="empty-note">No hay roadmaps publicados todavía.</p>{% endif %}
+      </section>
     </main>
+    <footer class="site-footer shell"><span>AulaLista · roadmap local</span><span>Demostración sintética · avance humano separado</span></footer>
   </body>
 </html>

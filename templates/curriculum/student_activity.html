@@ -3,82 +3,93 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ snapshot_payload.title }}</title>
+    <title>{{ snapshot_payload.title }} · AulaLista</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
-    <main>
-      <p class="notice" id="session-status">Estado de la sesión: <span data-session-status>{{ session.get_status_display }}</span></p>
-      {% if turn %}<p>Turno local: {{ turn.display_name }}</p>{% endif %}
-      <h1>{{ snapshot_payload.title }}</h1>
-      <p>{{ snapshot_payload.objective }}</p>
-      <p>{{ snapshot_payload.micro_lesson }}</p>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="public-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
+        <span class="demo-badge">Demostración sintética</span>
+        <nav class="top-nav" aria-label="Navegación del estudiante">
+          {% if roadmap_states %}<a href="{% url 'student-roadmap' session.pk %}">Camino</a>{% endif %}
+          <a href="{% url 'student-session-survey' session.pk %}">Encuesta</a>
+        </nav>
+      </div>
+    </header>
+    <main id="contenido" class="shell activity-page">
+      <div class="activity-topline">
+        <p class="eyebrow">ACTIVIDAD EN AULA · SESIÓN LOCAL</p>
+        <span class="status-chip status-chip--live" data-session-status>Estado: {{ session.get_status_display }}</span>
+      </div>
+      <section class="activity-heading" aria-labelledby="activity-title">
+        <div>
+          <h1 id="activity-title">{{ snapshot_payload.title }}</h1>
+          <p class="lede">{{ snapshot_payload.objective }}</p>
+        </div>
+        {% if turn %}<p class="local-only">Apodo local temporal: {{ turn.display_name }}</p>{% endif %}
+      </section>
 
       {% if roadmap_completed %}
-        <section class="status-card" aria-live="polite">
-          <h2>Recorrido completado</h2>
-          <p>Has completado todas las actividades de este recorrido.</p>
-        </section>
-      {% endif %}
-      {% if roadmap_states %}
-        <section class="status-card" aria-labelledby="roadmap-status-heading">
-          <h2 id="roadmap-status-heading">Tu recorrido</h2>
-          <p>Este progreso es pseudónimo y no cambia el avance curricular docente.</p>
-          <ul aria-label="Estados del recorrido">
-            {% for item in roadmap_states %}
-              <li>{{ item.title }}: <strong>{{ item.state }}</strong></li>
-            {% endfor %}
-          </ul>
-          <p><a href="{% url 'student-roadmap' session.pk %}">Ver camino completo</a></p>
-        </section>
-      {% endif %}
-      {% if roadmap_progress and not activity_questions and roadmap_progress.current_activity_id %}
-        <form method="post" action="{% url 'student-roadmap-complete' session.pk roadmap_progress.current_activity_id %}" class="page-actions">
-          {% csrf_token %}
-          <button class="button-primary" type="submit">Marcar actividad como completada</button>
-        </form>
-      {% endif %}
-      {% if activity_completed %}
-        <section class="status-card" aria-live="polite">
-          <h2>Actividad completada</h2>
-          <p>COMPLETADA en tu recorrido. El avance docente permanece bajo control de la maestra.</p>
+        <section class="status-card completion-card" aria-live="polite">
+          <span class="status-mark" aria-hidden="true">✓</span>
+          <div><h2>Recorrido completado</h2><p>Has terminado el camino individual disponible para esta sesión.</p></div>
         </section>
       {% endif %}
 
-      {% for question in activity_questions %}
-        <section class="question-card">
-          <h2>{{ question.value.prompt }}</h2>
-          <form method="post" action="{% url 'student-question-answer' session.pk question.index %}">
-            {% csrf_token %}
-            <fieldset class="choice-list">
-              <legend>Elige una opción</legend>
-              {% for option in question.value.options %}
-                <label>
-                  <input type="radio" name="option_position" value="{{ option.position }}" required>
-                  <span>{{ option.position }}. {{ option.text }}</span>
-                </label>
+      <div class="activity-layout">
+        <article class="lesson-card card-paper">
+          <p class="card-kicker">Microlección publicada</p>
+          <p class="lesson-copy">{{ snapshot_payload.micro_lesson }}</p>
+          {% if roadmap_states %}
+            <div class="mini-roadmap" aria-labelledby="mini-roadmap-heading">
+              <h2 id="mini-roadmap-heading">Tu siguiente paso</h2>
+              {% for item in roadmap_states %}
+                <div class="mini-roadmap-row state-{{ item.state|lower }}"><span aria-hidden="true">{% if item.state == "COMPLETADA" %}✓{% elif item.state == "ACTUAL" %}→{% else %}○{% endif %}</span><span>{{ item.title }}</span><strong>{{ item.state }}</strong></div>
               {% endfor %}
-            </fieldset>
-            <div class="question-actions">
-              <button class="button-primary" type="submit">Responder</button>
+              <a class="text-link" href="{% url 'student-roadmap' session.pk %}">Ver unidades, lecciones y actividades →</a>
             </div>
-          </form>
-          {% if question.hint_capability %}
-            <form method="post" action="{% url 'student-question-assistance' session.pk question.index %}">
-              {% csrf_token %}
-              <input type="hidden" name="kind" value="hint">
-              <input type="hidden" name="hint_index" value="{{ question.hint_index }}">
-              <input type="hidden" name="hint_capability" value="{{ question.hint_capability }}">
-              <button class="button-secondary" type="submit">Solicitar pista</button>
-            </form>
           {% endif %}
-        </section>
-      {% endfor %}
+        </article>
+
+        <div class="question-stack">
+          {% if not activity_questions and not roadmap_completed %}
+            <section class="status-card empty-state"><h2>Actividad preparada</h2><p>No hay preguntas para mostrar en este momento.</p></section>
+          {% endif %}
+          {% for question in activity_questions %}
+            <section class="question-card" aria-labelledby="question-{{ question.index }}">
+              <div class="question-meta"><span class="card-kicker">REACTIVO {{ forloop.counter }}</span><span class="status-chip status-chip--soft">Respuesta local</span></div>
+              <h2 id="question-{{ question.index }}">{{ question.value.prompt }}</h2>
+              <form method="post" action="{% url 'student-question-answer' session.pk question.index %}">
+                {% csrf_token %}
+                <fieldset class="choice-list">
+                  <legend>Elige una opción</legend>
+                  {% for option in question.value.options %}
+                    <label><input type="radio" name="option_position" value="{{ option.position }}" required><span>{{ option.position }}. {{ option.text }}</span></label>
+                  {% endfor %}
+                </fieldset>
+                <div class="question-actions"><button class="button button-primary" type="submit">Responder</button></div>
+              </form>
+              {% if question.hint_capability %}
+                <form method="post" action="{% url 'student-question-assistance' session.pk question.index %}" class="support-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="kind" value="hint">
+                  <input type="hidden" name="hint_index" value="{{ question.hint_index }}">
+                  <input type="hidden" name="hint_capability" value="{{ question.hint_capability }}">
+                  <button class="button button-secondary" type="submit">Solicitar pista</button>
+                </form>
+              {% endif %}
+            </section>
+          {% endfor %}
+        </div>
+      </div>
 
       {% if practice_result %}
-        <section class="status-card" data-practice-result aria-live="polite">
-          <h2>Resultado</h2>
+        <section class="status-card result-card" data-practice-result aria-live="polite">
+          <p class="card-kicker">Respuesta procesada por reglas explícitas</p>
+          <h2>Resultado de este reactivo</h2>
           <p>{% if practice_result.is_correct %}Respuesta correcta{% else %}Respuesta incorrecta{% endif %}</p>
           <p>Puntuación: {{ practice_result.score }}</p>
           <p>{{ practice_result.feedback }}</p>
@@ -87,36 +98,35 @@
               {% csrf_token %}
               <input type="hidden" name="kind" value="explanation">
               <input type="hidden" name="explanation_capability" value="{{ explanation_capability }}">
-              <button class="button-secondary" type="submit">Solicitar explicación final</button>
+              <button class="button button-secondary" type="submit">Solicitar explicación final</button>
             </form>
           {% endif %}
         </section>
       {% endif %}
 
       {% if assistance %}
-        <section class="status-card" data-regulated-assistance aria-live="polite">
-          <h2>Ayuda reglada</h2>
-          <p>{{ assistance.text }}</p>
-          <p>La ayuda no modifica la puntuación.</p>
+        <section class="status-card assistance-card" data-regulated-assistance aria-live="polite">
+          <p class="card-kicker">Ayuda autorizada</p><h2>Ayuda reglada</h2>
+          <p>{{ assistance.text }}</p><p class="microcopy">La ayuda no modifica la puntuación.</p>
           {% if assistance.next_hint_index != None %}
             <form method="post" action="{% url 'student-question-assistance' session.pk assistance_question_index %}">
-              {% csrf_token %}
-              <input type="hidden" name="kind" value="hint">
-              <input type="hidden" name="hint_index" value="{{ assistance.next_hint_index }}">
-              <input type="hidden" name="hint_capability" value="{{ next_hint_capability }}">
-              <button class="button-secondary" type="submit">Solicitar siguiente pista</button>
+              {% csrf_token %}<input type="hidden" name="kind" value="hint"><input type="hidden" name="hint_index" value="{{ assistance.next_hint_index }}"><input type="hidden" name="hint_capability" value="{{ next_hint_capability }}">
+              <button class="button button-secondary" type="submit">Solicitar siguiente pista</button>
             </form>
           {% endif %}
         </section>
       {% endif %}
 
-      {% if turn %}
-        <form method="post" action="{% url 'student-turn-ready' session.pk %}" class="page-actions">
-          {% csrf_token %}
-          <button class="button-primary" type="submit">Listo</button>
+      {% if roadmap_progress and not activity_questions and roadmap_progress.current_activity_id %}
+        <form method="post" action="{% url 'student-roadmap-complete' session.pk roadmap_progress.current_activity_id %}" class="page-actions">
+          {% csrf_token %}<button class="button button-primary" type="submit">Marcar actividad como completada</button>
         </form>
       {% endif %}
-      <p class="page-actions"><a href="{% url 'student-session-survey' session.pk %}">Encuesta de la actividad</a></p>
+      {% if activity_completed %}<section class="status-card" aria-live="polite"><h2>Actividad completada</h2><p>COMPLETADA en tu recorrido. El avance docente permanece bajo control de la maestra.</p></section>{% endif %}
+      {% if turn %}
+        <form method="post" action="{% url 'student-turn-ready' session.pk %}" class="page-actions"><button class="button button-primary" type="submit">Listo</button>{% csrf_token %}</form>
+      {% endif %}
+      <p class="privacy-note">Este recorrido es temporal, pseudónimo y local. No es una calificación ni evidencia de aprendizaje.</p>
     </main>
   </body>
 </html>

@@ -52,7 +52,7 @@ def test_local_css_has_focus_targets_and_non_color_feedback():
 
     assert "focus-visible" in css
     assert "min-block-size: 2.75rem" in css
-    assert "outline: 4px solid #17202a" in css
+    assert "outline: 4px solid var(--color-focus)" in css
     assert ".button-secondary" in css
     assert ".button-danger" in css
     assert ".error" in css

@@ -8,7 +8,15 @@
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   </head>
   <body>
-    <main>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="public-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
+        <span class="demo-badge">Demostración sintética</span>
+      </div>
+    </header>
+    <main id="contenido" class="shell narrow-shell">
+      <p class="eyebrow">CIERRE DE SESIÓN · RESPUESTA LOCAL</p>
       <h1>Encuesta de la actividad</h1>
       <p class="notice">Tus respuestas son anónimas: no se guardan con tu apodo, turno ni dispositivo.</p>
       {% if already_submitted %}
