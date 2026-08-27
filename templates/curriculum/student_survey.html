@@ -18,7 +18,7 @@
     <main id="contenido" class="shell narrow-shell">
       <p class="eyebrow">CIERRE DE SESIÓN · RESPUESTA LOCAL</p>
       <h1>Encuesta de la actividad</h1>
-      <p class="notice">Tus respuestas son anónimas: no se guardan con tu apodo, turno ni dispositivo.</p>
+      <p class="notice">Tu respuesta se guarda sólo como parte del promedio del grupo.</p>
       {% if already_submitted %}
         <section class="status-card" data-survey-thanks aria-live="polite">
           <h2>Gracias por tu opinión</h2>
@@ -29,22 +29,17 @@
         <form method="post" class="survey-form">
           {% csrf_token %}
           {% for question in survey_questions %}
-            <fieldset class="question-card">
+            <fieldset class="question-card star-rating">
               <legend>{{ question.prompt }}</legend>
-              {% if question.type == "choice" %}
-                <div class="choice-list">
-                  {% for choice in question.choices %}
-                    <label>
-                      <input type="radio" name="{{ question.id }}" value="{{ choice }}" required>
-                      <span>{{ choice }}</span>
-                    </label>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <label>
-                  <textarea name="{{ question.id }}" rows="3" maxlength="{{ question.max_length }}"></textarea>
-                </label>
-              {% endif %}
+              <div class="star-choice-list" role="radiogroup" aria-label="{{ question.prompt }}">
+                {% for choice in question.choices %}
+                  <label>
+                    <input type="radio" name="{{ question.id }}" value="{{ choice }}" required>
+                    <span aria-hidden="true">{% if choice == 1 %}★{% elif choice == 2 %}★★{% elif choice == 3 %}★★★{% elif choice == 4 %}★★★★{% else %}★★★★★{% endif %}</span>
+                    <span class="sr-only">{{ choice }} de 5 estrellas</span>
+                  </label>
+                {% endfor %}
+              </div>
             </fieldset>
           {% endfor %}
           <button class="button-primary" type="submit">Enviar encuesta</button>

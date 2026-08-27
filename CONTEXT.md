@@ -52,12 +52,16 @@ _Avoid_: curso, instancia editable.
 
 Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva un `PublishedPackageSnapshot` base y, cuando usa camino, un `PublishedRoadmapSnapshot` inmutables. El roadmap congela además la referencia al snapshot de paquete de cada actividad: cambiar el contenido editorial no modifica una sesión ya iniciada.
 
+**ClassroomGroup**:
+Etiqueta corta creada por la maestra para agrupar `ClassroomSession`, por ejemplo `6° A`. No contiene lista, cuenta, nombre ni otro dato de alumnos. Puede no elegirse: una sesión sin salón sigue siendo válida.
+_Avoid_: lista nominal, grupo de estudiantes.
+
 **LocalDeviceQueue**:
 Cola local asociada a un `DeviceAssignment`, identificada mediante un identificador opaco del nodo y limitada por una capacidad asignada. No contiene nombres, matrículas ni otras identidades estudiantiles.
 _Avoid_: lista nominal, grupo por nombre.
 
 **StudentTurn**:
-Intento individual realizado durante una `ClassroomSession`. Usa un identificador aleatorio local y no equivale al nombre o apodo que pueda mostrarse temporalmente en la interfaz.
+Intento individual realizado durante una `ClassroomSession`. Genera una `participant_key` UUID aleatoria, nunca derivada del apodo, dispositivo o nombre. El apodo sólo puede existir durante la sesión y no equivale a identidad.
 _Avoid_: cuenta estudiantil, identidad del estudiante.
 
 **DeviceAssignment**:
@@ -75,5 +79,9 @@ Ayuda autorizada por el paquete publicado, como una pista, una analogía o una e
 _Avoid_: tutor autónomo, respuesta libre.
 
 **PseudonymousResult**:
-Métrica individual conservada después del cierre sin la relación temporal entre nombre, dispositivo e intento. Es eliminable y no requiere nombre, correo, matrícula ni contraseña.
+Métrica individual conservada después del cierre sin la relación temporal entre nombre, dispositivo e intento. Incluye sólo la `participant_key` para agrupar actividades del mismo participante; en UI se muestra una etiqueta opaca corta, nunca el UUID completo. Es eliminable y no requiere nombre, correo, matrícula ni contraseña.
 _Avoid_: expediente estudiantil, historial personal.
+
+**PseudonymousSurveyResponse**:
+Una valoración numérica de 1 a 5 estrellas para la dinámica. No se vincula a turno, dispositivo ni participante; la maestra sólo consulta el promedio grupal.
+_Avoid_: comentario libre, respuesta individual, evaluación del alumno.

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · salones</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {% include "curriculum/tutor_nav.html" %}
+    <main id="contenido" class="shell narrow-shell teacher-page">
+      <header class="view-heading"><p class="eyebrow">ORGANIZACIÓN DOCENTE · SALONES</p><h1>Salones de aula.</h1><p class="lede">Crea nombres cortos para agrupar sesiones. El salón no guarda listas ni datos de alumnos.</p></header>
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" class="status-card preparation-form">
+        {% csrf_token %}
+        <label for="group-name">Nombre corto del salón<input id="group-name" name="name" maxlength="80" placeholder="6° A" required></label>
+        <p class="field-help">Sólo se guarda este nombre para organizar sesiones.</p>
+        <button class="button button-primary" type="submit">Crear salón</button>
+      </form>
+      <section class="results-summary" aria-labelledby="groups-heading">
+        <div class="section-heading"><div><p class="eyebrow">SALONES DISPONIBLES</p><h2 id="groups-heading">Tus salones</h2></div></div>
+        {% if classroom_groups %}
+          <ul>{% for group in classroom_groups %}<li><strong>{{ group.name }}</strong> · <a href="{% url 'tutor-group-results' group.pk %}">ver resultados agregados</a>{% if group.sessions.exists %} · <span>{{ group.sessions.count }} sesiones</span>{% endif %}<form method="post" action="{% url 'tutor-group-close-year' group.pk %}" class="destructive-action">{% csrf_token %}<label><input type="checkbox" name="confirm" value="CERRAR" required> Confirmo borrar los resultados y encuestas de este salón.</label><button class="button button-danger" type="submit">Cerrar año escolar</button></form></li>{% endfor %}</ul>
+        {% else %}
+          <p class="empty-note">Todavía no hay salones.</p>
+        {% endif %}
+      </section>
+      <p class="back-link"><a href="{% url 'tutor-sessions' %}">← Volver a sesiones</a></p>
+    </main>
+  </body>
+</html>

@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import uuid
 
 import django
 import pytest
@@ -122,6 +123,7 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
     session.close()
     PseudonymousResult.objects.create(
         result_batch_id=session.result_batch_id,
+        participant_key=uuid.uuid4(),
         snapshot_id=snapshot.pk,
         snapshot_version=snapshot.version,
         snapshot_sha256=snapshot.sha256,
@@ -134,6 +136,7 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
     )
     PseudonymousResult.objects.create(
         result_batch_id=session.result_batch_id,
+        participant_key=uuid.uuid4(),
         snapshot_id=snapshot.pk,
         snapshot_version=snapshot.version,
         snapshot_sha256=snapshot.sha256,
@@ -153,9 +156,9 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
         assert "2 participantes" in response.text
         assert "1 actividades completadas" in response.text
         assert "60" in response.text
-        assert "Registro individual pendiente de política de privacidad" in response.text
         assert "Luna" not in response.text
         assert str(PseudonymousResult.objects.first().id) not in response.text
+    assert "Registro individual seudónimo" in detail.text
     assert "versión 1" in detail.text
     assert snapshot.sha256[:8] in detail.text
 
@@ -167,4 +170,4 @@ def test_empty_group_results_are_explicit():
     response = tutor_client().get(reverse("tutor-session-results", args=[session.pk]))
     assert response.status_code == 200
     assert "no tiene resultados agregados" in response.text
-    assert "Registro individual pendiente de política de privacidad" in response.text
+    assert "Registro individual seudónimo" in response.text

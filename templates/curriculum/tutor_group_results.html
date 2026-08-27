@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · resultados del salón</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {% include "curriculum/tutor_nav.html" %}
+    <main id="contenido" class="shell narrow-shell teacher-page">
+      <header class="view-heading"><p class="eyebrow">RESULTADOS · SALÓN</p><h1>{{ group.name }}</h1><p class="lede">Resumen agregado de las sesiones del salón. Es una señal para orientar la siguiente mirada docente, no un diagnóstico ni una calificación.</p></header>
+      <section class="results-summary" aria-labelledby="group-summary-heading"><p class="eyebrow">ESTADÍSTICAS AGREGADAS</p><h2 id="group-summary-heading">Resumen del salón</h2>{% if aggregate.count %}<div class="result-facts"><span><strong>{{ aggregate.participants }}</strong> participantes</span><span><strong>{{ aggregate.activities_completed }}</strong> actividades completadas</span><span><strong>{{ aggregate.duration_total_seconds }}</strong> s de duración agregada</span></div>{% else %}<p class="empty-note">El salón todavía no tiene resultados agregados.</p>{% endif %}</section>
+      <section class="results-summary" aria-label="Promedio grupal de estrellas"><p class="eyebrow">OPINIÓN DEL GRUPO</p><h2>Promedio de estrellas</h2>{% if survey_aggregate.rating_average %}<p class="rating-average"><strong>{{ survey_aggregate.rating_average|floatformat:1 }} / 5</strong> promedio grupal de estrellas</p>{% else %}<p class="empty-note">Todavía no hay calificaciones de estrellas.</p>{% endif %}</section>
+      <section class="results-section" aria-labelledby="sessions-heading"><p class="eyebrow">HISTORIAL</p><h2 id="sessions-heading">Sesiones del salón</h2>{% if sessions %}<ul>{% for session in sessions %}<li><a href="{% url 'tutor-session-results' session.pk %}">{{ session.snapshot.payload.title|default:session.snapshot.package.title }}</a></li>{% endfor %}</ul>{% else %}<p class="empty-note">No hay sesiones cerradas para este salón.</p>{% endif %}</section>
+      <p class="back-link"><a href="{% url 'tutor-groups' %}">← Volver a salones</a></p>
+    </main>
+  </body>
+</html>

@@ -58,6 +58,29 @@ Una corrección de una actividad publicada crea una nueva revisión y, al public
 | Sesión activa | Monitorear y cerrar | Cambiar su snapshot |
 | Sesión cerrada | Consultar/exportar/eliminar resultados permitidos | Aceptar nuevas respuestas |
 
+## Salones, lectura y cierre de año
+
+La maestra puede crear un `ClassroomGroup` con un nombre corto (por ejemplo,
+`6° A`) y elegirlo opcionalmente al preparar una sesión. El salón sólo agrupa
+sesiones: no contiene lista de alumnos, cuentas ni identificadores de dispositivo.
+
+La vista de resultados empieza con agregados por sesión y por salón. Al abrir una
+sesión cerrada, la maestra puede consultar el registro individual seudónimo:
+actividades `Completado` o `Interrumpido` agrupadas bajo una etiqueta opaca de
+ocho caracteres. Es una señal para mirar más de cerca; no es diagnóstico,
+calificación ni identidad. Nunca se muestran apodos ni UUID completos.
+
+Al terminar un año, la maestra confirma explícitamente la acción de cerrar año
+para un salón. La acción requiere sesión docente autenticada y POST: elimina los
+resultados seudónimos y las valoraciones de estrellas de las sesiones del salón,
+pero conserva las sesiones históricas, currícula, snapshots, roadmaps y
+`CurriculumProgress` docente. Los estados vacíos comunican que no quedan datos
+conservados para ese salón.
+
+La encuesta estudiantil sólo pregunta «¿Te gustó la dinámica?» con 1–5 estrellas.
+La maestra ve únicamente el promedio grupal; no hay comentarios libres ni
+respuestas por alumno.
+
 ## Dos progresos que no se colapsan
 
 `CurriculumProgress` es el avance curricular que la maestra confirma manualmente desde la pantalla **Avance curricular** (`/tutor/roadmaps/`). Registra que una unidad, lección o tema está `ACTUAL` o `TRABAJADO`; no implica dominio. El sistema puede sugerir un siguiente tema, pero la sugerencia no es una transición de estado.

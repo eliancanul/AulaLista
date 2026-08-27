@@ -15,7 +15,6 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError
 from django.db import transaction
-
 from django.utils import timezone
 from django.http import (
     HttpResponse,
@@ -41,6 +40,7 @@ from curriculum.ephemeral import (
     update_ephemeral_turn_summary,
 )
 from curriculum.models import (
+    ClassroomGroup,
     ClassroomSession,
     CurriculumImportJob,
     CurriculumPackage,
@@ -733,7 +733,9 @@ def tutor_sessions(request):
     any additional classroom state.
     """
     sessions = (
-        ClassroomSession.objects.select_related("snapshot", "snapshot__package")
+        ClassroomSession.objects.select_related(
+            "snapshot", "snapshot__package", "classroom_group"
+        )
         .order_by("-started_at", "-id")[:20]
     )
     session_cards = []
@@ -763,6 +765,7 @@ def tutor_sessions(request):
             {
                 "session": session,
                 "title": title,
+                "group_name": session.classroom_group.name if session.classroom_group else "Sin salón",
                 "state": session.get_status_display(),
                 "participant_count": participant_count,
                 "participant_label": (
@@ -795,18 +798,53 @@ def tutor_sessions(request):
     return render(
         request,
         "curriculum/tutor_sessions.html",
-        {"session_cards": session_cards, "snapshots": snapshots},
+        {
+            "session_cards": session_cards,
+            "snapshots": snapshots,
+            "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
+        },
     )
 
 
 @teacher_required
+@require_http_methods(["GET", "POST"])
+def tutor_groups(request):
+    """Create and list classroom labels; this view never contains a roster."""
 
+    if request.method == "POST":
+        group = ClassroomGroup(
+            name=request.POST.get("name", ""),
+            created_by=request.user,
+        )
+        try:
+            group.full_clean()
+            group.save()
+        except (ValidationError, IntegrityError) as error:
+            return render(
+                request,
+                "curriculum/tutor_groups.html",
+                {
+                    "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
+                    "error": str(error),
+                },
+                status=400,
+            )
+        return redirect("tutor-groups")
+    return render(
+        request,
+        "curriculum/tutor_groups.html",
+        {"classroom_groups": ClassroomGroup.objects.filter(created_by=request.user)},
+    )
+
+
+@teacher_required
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
     snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
     context = {
         "snapshot": snapshot,
         "roadmaps": PublishedRoadmapSnapshot.objects.all()[:20],
+        "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
     }
     if request.method == "POST":
         try:
@@ -819,11 +857,20 @@ def tutor_session_prepare(request, snapshot_id):
                     PublishedRoadmapSnapshot,
                     pk=roadmap_id,
                 )
+            classroom_group = None
+            group_id = request.POST.get("classroom_group")
+            if group_id:
+                classroom_group = get_object_or_404(
+                    ClassroomGroup,
+                    pk=group_id,
+                    created_by=request.user,
+                )
             session = ClassroomSession.prepare_from_snapshot(
                 snapshot,
                 request.POST.get("student_count"),
                 request.POST.get("device_count"),
                 roadmap_snapshot=roadmap_snapshot,
+                classroom_group=classroom_group,
             )
         except ValidationError as error:
             # Keep contract errors explicit; authentication is handled by the
@@ -855,7 +902,7 @@ def _session_join_context(request, session):
 def tutor_session_review(request, session_id):
     session = get_object_or_404(
         ClassroomSession.objects.select_related(
-            "snapshot", "roadmap_snapshot"
+            "snapshot", "roadmap_snapshot", "classroom_group"
         ).prefetch_related("device_assignments"),
         pk=session_id,
     )
@@ -891,6 +938,9 @@ def tutor_session_review(request, session_id):
             "result_aggregate": _result_aggregate(results, session=session),
             "survey_aggregate": survey_aggregate(survey_responses),
             "survey_response_count": survey_responses.count(),
+            "individual_register": _individual_result_register(results, session)
+            if session.status == ClassroomSession.STATUS_CLOSED
+            else [],
             **join_context,
         },
     )
@@ -1002,13 +1052,7 @@ def tutor_session_close(request, session_id):
 
 
 def _result_aggregate(results, session=None):
-    """Build group-only metrics without exposing a participant record.
-
-    Results intentionally have no participant relationship.  For a roadmap,
-    closure writes one aggregate row per activity and turn, so the number of
-    turns is derived from the fixed activity count rather than presented as a
-    list of individuals.
-    """
+    """Build group-only metrics, counting a participant key once."""
 
     results = list(results)
     completed_count = sum(
@@ -1017,16 +1061,8 @@ def _result_aggregate(results, session=None):
     abandoned_count = sum(
         result.state == PseudonymousResult.STATE_ABANDONED for result in results
     )
-    participant_count = len(results)
-    if session is not None and session.roadmap_snapshot_id and results:
-        # Closure emits one row per turn *and per activity*.  A turn that
-        # abandons midway still receives rows for the roadmap activities, so
-        # dividing by the number of activities is not a participant count.
-        # Results intentionally do not retain a turn/participant key; the
-        # largest per-activity row set is the conservative count recoverable
-        # from this deliberately unlinkable data.
-        rows_by_activity = Counter(result.snapshot_id for result in results)
-        participant_count = max(rows_by_activity.values(), default=0)
+    participant_keys = {result.participant_key for result in results}
+    participant_count = len(participant_keys)
     durations = [
         result.duration_seconds
         for result in results
@@ -1072,13 +1108,69 @@ def _result_aggregate(results, session=None):
     }
 
 
+def _individual_result_register(results, session):
+    """Prepare the opt-in teacher register with short opaque labels only."""
+
+    from curriculum.roadmap import ordered_activities
+
+    results = list(results)
+    activity_titles = {}
+    if session.roadmap_snapshot_id:
+        snapshot_ids = {
+            activity.get("package_snapshot_id")
+            for activity in ordered_activities(session.roadmap_snapshot.payload)
+            if activity.get("package_snapshot_id") is not None
+        }
+        snapshots = {
+            snapshot.pk: snapshot
+            for snapshot in PublishedPackageSnapshot.objects.filter(pk__in=snapshot_ids)
+        }
+        for activity in ordered_activities(session.roadmap_snapshot.payload):
+            activity_id = str(activity.get("id", ""))
+            snapshot = snapshots.get(activity.get("package_snapshot_id"))
+            activity_titles[activity_id] = (
+                activity.get("title")
+                or (snapshot.payload.get("title") if snapshot else "")
+                or "Actividad"
+            )
+
+    grouped = {}
+    for result in results:
+        participant_key = str(result.participant_key)
+        activity_key = result.activity_id or f"snapshot-{result.snapshot_id}"
+        if activity_key not in activity_titles:
+            snapshot = PublishedPackageSnapshot.objects.filter(
+                pk=result.snapshot_id
+            ).first()
+            activity_titles[activity_key] = (
+                (snapshot.payload.get("title") if snapshot else "")
+                or "Actividad"
+            )
+        participant = grouped.setdefault(
+            participant_key,
+            {
+                "label": participant_key[:8],
+                "activities": [],
+            },
+        )
+        participant["activities"].append(
+            {
+                "title": activity_titles[activity_key],
+                "state": result.get_state_display(),
+            }
+        )
+    return sorted(grouped.values(), key=lambda item: item["label"])
+
+
 @teacher_required
 def tutor_results(request):
     """List closed sessions with group statistics only."""
 
     sessions = ClassroomSession.objects.filter(
         status=ClassroomSession.STATUS_CLOSED
-    ).select_related("snapshot", "snapshot__package", "roadmap_snapshot")[:30]
+    ).select_related(
+        "snapshot", "snapshot__package", "roadmap_snapshot", "classroom_group"
+    )[:30]
     result_cards = []
     for session in sessions:
         aggregate = _result_aggregate(
@@ -1086,10 +1178,61 @@ def tutor_results(request):
             session=session,
         )
         result_cards.append({"session": session, "aggregate": aggregate})
+    groups = ClassroomGroup.objects.filter(created_by=request.user)
+    group_cards = []
+    for group in groups:
+        group_sessions = list(
+            ClassroomSession.objects.filter(
+                classroom_group=group,
+                status=ClassroomSession.STATUS_CLOSED,
+            )
+        )
+        if not group_sessions:
+            continue
+        batch_ids = [session.result_batch_id for session in group_sessions]
+        group_cards.append(
+            {
+                "group": group,
+                "aggregate": _result_aggregate(
+                    PseudonymousResult.objects.filter(result_batch_id__in=batch_ids)
+                ),
+                "survey": survey_aggregate(
+                    PseudonymousSurveyResponse.objects.filter(
+                        result_batch_id__in=batch_ids
+                    )
+                ),
+            }
+        )
     return render(
         request,
         "curriculum/tutor_results.html",
-        {"result_cards": result_cards},
+        {"result_cards": result_cards, "group_cards": group_cards},
+    )
+
+
+@teacher_required
+def tutor_group_results(request, group_id):
+    group = get_object_or_404(ClassroomGroup, pk=group_id, created_by=request.user)
+    sessions = ClassroomSession.objects.filter(
+        classroom_group=group,
+        status=ClassroomSession.STATUS_CLOSED,
+    )
+    batch_ids = sessions.values_list("result_batch_id", flat=True)
+    return render(
+        request,
+        "curriculum/tutor_group_results.html",
+        {
+            "group": group,
+            "sessions": sessions,
+            "aggregate": _result_aggregate(
+                PseudonymousResult.objects.filter(result_batch_id__in=batch_ids)
+            ),
+            "survey_aggregate": survey_aggregate(
+                PseudonymousSurveyResponse.objects.filter(
+                    result_batch_id__in=batch_ids
+                )
+            ),
+        },
     )
 
 
@@ -1107,11 +1250,44 @@ def tutor_session_results(request, session_id):
         PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
         session=session,
     )
+    results = PseudonymousResult.objects.filter(
+        result_batch_id=session.result_batch_id
+    )
     return render(
         request,
         "curriculum/tutor_session_results.html",
-        {"session": session, "aggregate": aggregate},
+        {
+            "session": session,
+            "aggregate": aggregate,
+            "individual_register": _individual_result_register(results, session),
+            "survey_aggregate": survey_aggregate(_session_survey_responses(session)),
+        },
     )
+
+
+@teacher_required
+@require_POST
+def tutor_group_close_year(request, group_id):
+    """Explicitly erase only a group's results and star ratings."""
+
+    group = get_object_or_404(ClassroomGroup, pk=group_id, created_by=request.user)
+    if request.POST.get("confirm") != "CERRAR":
+        return HttpResponseBadRequest(
+            "Confirma el cierre de año escribiendo CERRAR. No se borró ningún dato."
+        )
+    with transaction.atomic():
+        batch_ids = list(
+            ClassroomSession.objects.filter(classroom_group=group).values_list(
+                "result_batch_id", flat=True
+            )
+        )
+        deleted_results, _ = PseudonymousResult.objects.filter(
+            result_batch_id__in=batch_ids
+        ).delete()
+        deleted_surveys, _ = PseudonymousSurveyResponse.objects.filter(
+            result_batch_id__in=batch_ids
+        ).delete()
+    return redirect("tutor-groups")
 
 
 def _session_survey_responses(session):
@@ -1123,6 +1299,8 @@ def _session_survey_responses(session):
 def _result_export_payload(result):
     return {
         "id": str(result.id),
+        "participant_key": str(result.participant_key),
+        "activity_id": result.activity_id,
         "snapshot_id": result.snapshot_id,
         "snapshot_version": result.snapshot_version,
         "snapshot_sha256": result.snapshot_sha256,
@@ -1165,6 +1343,8 @@ def tutor_session_export(request, session_id):
             output,
             fieldnames=[
                 "id",
+                "participant_key",
+                "activity_id",
                 "snapshot_id",
                 "snapshot_version",
                 "snapshot_sha256",
@@ -1282,7 +1462,7 @@ def student_session_survey(request, session_id):
         result_batch_id=session.result_batch_id,
         snapshot_id=session.snapshot_id,
         snapshot_version=session.snapshot.version,
-        answers=answers,
+        rating=answers,
     )
     cache.set(submitted_key, True, timeout=SURVEY_SUBMITTED_TTL)
     context["already_submitted"] = True

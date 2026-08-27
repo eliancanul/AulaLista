@@ -21,6 +21,9 @@
         <div class="form-grid"><label for="student-count">Estudiantes indicados<input id="student-count" name="student_count" inputmode="numeric" required></label><label for="device-count">Dispositivos disponibles<input id="device-count" name="device_count" inputmode="numeric" required></label></div>
         <label for="roadmap-snapshot">Roadmap publicado <span class="optional">(opcional)</span></label>
         <select id="roadmap-snapshot" name="roadmap"><option value="">Sin roadmap</option>{% for roadmap in roadmaps %}<option value="{{ roadmap.pk }}">{{ roadmap.title|default:"Roadmap" }} · versión {{ roadmap.version }}</option>{% endfor %}</select>
+        <label for="classroom-group">Salón <span class="optional">(opcional)</span></label>
+        <select id="classroom-group" name="classroom_group"><option value="">Sin salón</option>{% for group in classroom_groups %}<option value="{{ group.pk }}">{{ group.name }}</option>{% endfor %}</select>
+        <p class="field-help">El salón sólo agrupa esta sesión y no contiene datos de alumnos.</p>
         <p class="field-help">El roadmap conserva unidades, lecciones y actividades en un orden fijo.</p>
         <button class="button button-primary button-large" type="submit">Preparar distribución <span aria-hidden="true">→</span></button>
       </form>
