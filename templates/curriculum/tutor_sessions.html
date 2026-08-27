@@ -18,7 +18,7 @@
 
       <section class="authority-boundary" aria-labelledby="authority-heading">
         <div class="boundary-mark" aria-hidden="true">✓</div>
-        <div><h2 id="authority-heading">La activación es una decisión humana</h2><p>La IA solo propone. <strong>EditorialReviewer</strong> revisa, aprueba y publica; la maestra prepara y activa la <em>ClassroomSession</em>.</p><p class="muted">La asistencia, la ayuda y el progreso visual no son evidencia de aprendizaje.</p></div>
+        <div><h2 id="authority-heading">La activación es una decisión humana</h2><p>La IA solo propone. <strong>EditorialReviewer</strong> revisa, aprueba y publica; la maestra prepara y activa la sesión de aula.</p><p class="muted">La asistencia, la ayuda y el progreso visual no son evidencia de aprendizaje.</p></div>
       </section>
 
       <section class="session-section" aria-labelledby="sessions-heading">
@@ -34,7 +34,7 @@
                   <a class="primary-action" href="{{ card.action_url }}">{{ card.action_label }} <span aria-hidden="true">→</span></a>
                   <div class="supporting-actions"><a href="{{ card.projection_url }}">Abrir proyección pública</a><a href="{{ card.review_url }}">Ver revisión</a></div>
                 {% else %}
-                  <a class="primary-action" href="{{ card.action_url }}">{% if card.session.status == "stopped" %}{{ card.action_label }}{% else %}{{ card.action_label }} <span aria-hidden="true">→</span>{% endif %}</a>
+                  <a class="primary-action" href="{{ card.action_url }}">{% if card.session.status == "stopped" %}{{ card.action_label }}{% else %}{{ card.action_label }} <span aria-hidden="true">→</span>{% endif %}</a>{% if card.session.status == "closed" %}<div class="supporting-actions"><a href="{{ card.results_url }}">Abrir resultados grupales</a></div>{% endif %}
                 {% endif %}
               </article>
             {% endfor %}

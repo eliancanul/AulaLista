@@ -107,6 +107,12 @@ input, select { inline-size: 100%; min-block-size: 44px; padding: .6rem .7rem; b
 .roadmap-card { padding: 1.35rem; }
 .roadmap-card h3 { margin-block: 1.2rem .35rem; }
 .roadmap-card p { font-size: .85rem; }
+.roadmap-node-preview { display: grid; gap: .4rem; margin: 1rem 0 .2rem; padding: .8rem .9rem .8rem 1.8rem; border-block: 1px solid var(--color-line); color: var(--color-muted); font-size: .78rem; }
+.roadmap-node-preview li { padding-block: .25rem; }
+.roadmap-node-preview li span:first-child { display: inline; }
+.roadmap-node-preview li strong { color: var(--color-action-dark); font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; }
+.roadmap-node-preview li > span:nth-child(2) { margin-inline-start: .4rem; font-weight: 750; }
+.roadmap-node-preview a { display: inline-block; margin-inline-start: .4rem; font-weight: 750; }
 .roadmap-card .primary-action { margin-block-start: .7rem; }
 .teacher-roadmap { padding: 1.35rem; }
 .teacher-path-list { display: grid; gap: .6rem; }

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · currícula y autoría</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {% include "curriculum/tutor_nav.html" %}
+    <main id="contenido" class="shell teacher-page">
+      <header class="view-heading view-heading--split">
+        <div><p class="eyebrow">CURRÍCULA · AUTORÍA HUMANA</p><h1>Revisa antes de llevar al aula.</h1><p class="lede">Aquí se reúnen las propuestas importadas, los borradores corregibles y las actividades publicadas que ya pueden formar parte de un camino.</p></div>
+        <a class="primary-action primary-action--large" href="{% url 'tutor-import-upload' %}">Importar currícula <span aria-hidden="true">→</span></a>
+      </header>
+
+      <section class="authority-boundary" aria-labelledby="editorial-boundary-heading">
+        <div class="boundary-mark" aria-hidden="true">✓</div>
+        <div><h2 id="editorial-boundary-heading">La publicación siempre es humana</h2><p>La IA puede proponer una estructura o una actividad. Una persona <strong>EditorialReviewer</strong> revisa, corrige, aprueba y publica el contenido que llega al aula.</p><p class="muted">Un borrador no es una actividad lista para estudiantes; la validación estructural tampoco sustituye la revisión docente.</p></div>
+      </section>
+
+      <section class="editorial-section" aria-labelledby="imports-heading">
+        <div class="section-heading"><div><p class="eyebrow">PROPUESTAS DE CURRÍCULA</p><h2 id="imports-heading">Importaciones y puntos de revisión</h2></div><span class="synthetic-label">LOCAL · SIN WAN</span></div>
+        {% if imports %}
+          <div class="editorial-list">{% for job in imports %}<article class="editorial-card"><div><p class="card-kicker">PROPUESTA DE LA CURRÍCULA</p><h3>Currícula cargada</h3><p>Estado: <strong>{{ job.get_status_display }}</strong>{% if job.page_count %} · {{ job.page_count }} páginas{% endif %}</p></div><a class="secondary-action" href="{% url 'tutor-import-detail' job.pk %}">Revisar propuesta <span aria-hidden="true">→</span></a></article>{% endfor %}</div>
+        {% else %}<p class="empty-note">Aún no hay currículas cargadas. Puedes comenzar con un PDF local.</p>{% endif %}
+      </section>
+
+      <section class="editorial-section" aria-labelledby="drafts-heading">
+        <div class="section-heading"><div><p class="eyebrow">BORRADORES Y PUBLICACIÓN</p><h2 id="drafts-heading">Contenido bajo revisión</h2></div><span class="synthetic-label">DECISIÓN HUMANA</span></div>
+        {% if package_cards %}
+          <div class="editorial-list">{% for card in package_cards %}<article class="editorial-card"><div><p class="card-kicker">{% if card.is_published %}ACTIVIDAD PUBLICADA{% else %}BORRADOR EDITABLE{% endif %}</p><h3>{{ card.package.title|default:"Actividad sin título" }}</h3><p>Estado: <strong>{{ card.editorial_state }}</strong></p>{% if card.is_published %}<p class="microcopy">La versión publicada es inmutable y puede seleccionarse para una sesión.</p>{% else %}<p class="microcopy">Corrige el borrador y envíalo al flujo de revisión humana.</p>{% endif %}</div>{% if card.is_published %}<a class="secondary-action" href="{% url 'tutor-package-detail' card.published_snapshot.pk %}">Abrir actividad publicada <span aria-hidden="true">→</span></a>{% else %}<a class="secondary-action" href="{{ card.editor_url }}">Corregir borrador <span aria-hidden="true">→</span></a>{% endif %}</article>{% endfor %}</div>
+        {% else %}<p class="empty-note">No hay borradores todavía. Las propuestas convertidas aparecerán aquí para revisión.</p>{% endif %}
+      </section>
+
+      <section class="editorial-section" aria-labelledby="published-heading">
+        <div class="section-heading"><div><p class="eyebrow">ACTIVIDADES DISPONIBLES</p><h2 id="published-heading">Publicadas para preparar</h2></div><span class="synthetic-label">SNAPSHOT INMUTABLE</span></div>
+        {% if published_snapshots %}<ul class="published-content-list">{% for snapshot in published_snapshots %}<li><span><strong>{{ snapshot.payload.title|default:snapshot.package.title }}</strong><small>Versión {{ snapshot.version }} · huella {{ snapshot.sha256|slice:':8' }}</small></span><a href="{% url 'tutor-package-detail' snapshot.pk %}">Revisar actividad publicada</a></li>{% endfor %}</ul>{% else %}<p class="empty-note">No hay actividades publicadas. La publicación aparecerá después de la revisión humana.</p>{% endif %}
+      </section>
+    </main>
+    <footer class="site-footer shell"><span>AulaLista · autoría local</span><span>La IA propone; las personas deciden.</span></footer>
+  </body>
+</html>

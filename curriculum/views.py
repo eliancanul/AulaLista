@@ -1,5 +1,6 @@
 import csv
 import hashlib
+from collections import Counter
 import io
 import json
 import threading
@@ -493,7 +494,7 @@ def student_turn_ready(request, session_id):
 def tutor_roadmaps(request):
     """Publish a teacher-selected roadmap and confirm its curriculum position."""
 
-    from curriculum.roadmap import ordered_nodes
+    from curriculum.roadmap import ordered_activities, ordered_nodes
 
     package_snapshots = list(
         PublishedPackageSnapshot.objects.select_related("package").order_by(
@@ -502,7 +503,10 @@ def tutor_roadmaps(request):
     )
     publication_error = None
     if request.method == "POST":
-        selected_ids = request.POST.getlist("package_snapshot_ids")
+        selected_ids = request.POST.getlist("package")
+        if not selected_ids:
+            # Compatibility with previously rendered teacher forms.
+            selected_ids = request.POST.getlist("package_snapshot_ids")
         if not selected_ids:
             selected_ids = request.POST.getlist("package_snapshot_id")
         snapshots_by_id = {str(snapshot.pk): snapshot for snapshot in package_snapshots}
@@ -525,13 +529,30 @@ def tutor_roadmaps(request):
             item.node_id: item
             for item in snapshot.curriculum_progress.select_related("confirmed_by")
         }
+        snapshot_by_id = {
+            str(item.pk): item for item in package_snapshots
+        }
+        activity_by_id = {
+            activity["id"]: activity
+            for activity in ordered_activities(snapshot.payload)
+        }
+        nodes = []
+        for node in ordered_nodes(snapshot.payload):
+            activity = activity_by_id.get(node["id"], {})
+            activity_snapshot = snapshot_by_id.get(
+                str(activity.get("package_snapshot_id"))
+            )
+            nodes.append(
+                {
+                    **node,
+                    "progress": progress.get(node["id"]),
+                    "activity_snapshot": activity_snapshot,
+                }
+            )
         cards.append(
             {
                 "snapshot": snapshot,
-                "nodes": [
-                    {**node, "progress": progress.get(node["id"])}
-                    for node in ordered_nodes(snapshot.payload)
-                ],
+                "nodes": nodes,
                 "progress_count": len(progress),
             }
         )
@@ -551,10 +572,37 @@ def tutor_roadmaps(request):
 def tutor_roadmap_progress(request, snapshot_id):
     """Record only an explicit teacher decision; students have no route here."""
 
-    from curriculum.roadmap import ordered_nodes
+    from curriculum.roadmap import ordered_activities, ordered_nodes
 
     snapshot = get_object_or_404(PublishedRoadmapSnapshot, pk=snapshot_id)
     nodes = ordered_nodes(snapshot.payload)
+    activity_by_id = {
+        activity["id"]: activity
+        for activity in ordered_activities(snapshot.payload)
+    }
+    package_snapshot_ids = {
+        str(activity.get("package_snapshot_id"))
+        for activity in activity_by_id.values()
+        if activity.get("package_snapshot_id") is not None
+    }
+    activity_snapshots = {
+        str(item.pk): item
+        for item in PublishedPackageSnapshot.objects.filter(pk__in=package_snapshot_ids)
+    }
+    progress = {
+        item.node_id: item
+        for item in snapshot.curriculum_progress.select_related("confirmed_by")
+    }
+    nodes = [
+        {
+            **node,
+            "activity_snapshot": activity_snapshots.get(
+                str(activity_by_id.get(node["id"], {}).get("package_snapshot_id"))
+            ),
+            "progress": progress.get(node["id"]),
+        }
+        for node in nodes
+    ]
     if request.method == "POST":
         node_id = str(request.POST.get("node_id", "")).strip()
         allowed = {node["id"] for node in nodes}
@@ -581,16 +629,98 @@ def tutor_roadmap_progress(request, snapshot_id):
             )
         return redirect("tutor-roadmap-progress", snapshot_id=snapshot.pk)
 
-    progress = {
-        item.node_id: item
-        for item in snapshot.curriculum_progress.select_related("confirmed_by")
-    }
     return render(
         request,
         "curriculum/tutor_roadmap_progress.html",
+        {"snapshot": snapshot, "nodes": nodes},
+    )
+
+
+@teacher_required
+def tutor_home(request):
+    """Canonical teacher entry point, backed by the existing session console.
+
+    ``/tutor/`` is deliberately not a second dashboard: it renders the same
+    operational landing as the sessions route so a teacher can enter the
+    workflow after login and continue through the existing paths.
+    """
+
+    return tutor_sessions(request)
+
+
+@teacher_required
+def tutor_curriculum(request):
+    """Teacher-facing index for imported proposals, drafts, and publications."""
+
+    packages = list(CurriculumPackage.objects.order_by("-updated_at", "-id")[:30])
+    published_snapshots_by_package = {}
+    for snapshot in PublishedPackageSnapshot.objects.order_by(
+        "-published_at", "-id"
+    ):
+        published_snapshots_by_package.setdefault(snapshot.package_id, snapshot)
+    published_package_ids = set(published_snapshots_by_package)
+    package_cards = []
+    for package in packages:
+        workflow_state = package.current_workflow_state
+        if package.pk in published_package_ids:
+            editorial_state = "Publicado"
+        elif workflow_state is not None:
+            editorial_state = workflow_state.get_status_display()
+        else:
+            editorial_state = "Borrador editable"
+        package_cards.append(
+            {
+                "package": package,
+                "editorial_state": editorial_state,
+                "editor_url": reverse(
+                    package.snippet_viewset.get_url_name("edit"),
+                    args=[package.pk],
+                ),
+                "is_published": package.pk in published_package_ids,
+                "published_snapshot": published_snapshots_by_package.get(package.pk),
+            }
+        )
+
+    return render(
+        request,
+        "curriculum/tutor_curriculum.html",
+        {
+            "imports": CurriculumImportJob.objects.order_by("-updated_at", "-id")[:20],
+            "package_cards": package_cards,
+            "published_snapshots": PublishedPackageSnapshot.objects.select_related(
+                "package"
+            ).order_by("-published_at", "-id")[:20],
+        },
+    )
+
+
+@teacher_required
+def tutor_package_detail(request, snapshot_id):
+    """Show one immutable published activity in teacher language."""
+
+    snapshot = get_object_or_404(
+        PublishedPackageSnapshot.objects.select_related("package"),
+        pk=snapshot_id,
+    )
+    payload = snapshot.payload or {}
+    questions = []
+    for question in payload.get("questions", []) or []:
+        value = question.get("value", question) if isinstance(question, dict) else {}
+        value = value if isinstance(value, dict) else {}
+        questions.append(
+            {
+                "prompt": value.get("prompt", ""),
+                "options": value.get("options", []) or [],
+                "hints": value.get("hints", []) or [],
+            }
+        )
+    return render(
+        request,
+        "curriculum/tutor_package_detail.html",
         {
             "snapshot": snapshot,
-            "nodes": [{**node, "progress": progress.get(node["id"])} for node in nodes],
+            "payload": payload,
+            "questions": questions,
         },
     )
 
@@ -653,6 +783,9 @@ def tutor_sessions(request):
                 "projection_url": reverse(
                     "session-projection", args=[session.pk]
                 ),
+                "results_url": reverse(
+                    "tutor-session-results", args=[session.pk]
+                ),
             }
         )
     snapshots = (
@@ -678,7 +811,9 @@ def tutor_session_prepare(request, snapshot_id):
     if request.method == "POST":
         try:
             roadmap_snapshot = None
-            roadmap_id = request.POST.get("roadmap_snapshot_id")
+            roadmap_id = request.POST.get("roadmap") or request.POST.get(
+                "roadmap_snapshot_id"
+            )
             if roadmap_id:
                 roadmap_snapshot = get_object_or_404(
                     PublishedRoadmapSnapshot,
@@ -753,7 +888,7 @@ def tutor_session_review(request, session_id):
                 f"versión {session.snapshot.version} · "
                 f"{session.snapshot.sha256[:8]}"
             ),
-            "result_aggregate": _result_aggregate(results),
+            "result_aggregate": _result_aggregate(results, session=session),
             "survey_aggregate": survey_aggregate(survey_responses),
             "survey_response_count": survey_responses.count(),
             **join_context,
@@ -856,7 +991,8 @@ def tutor_session_close(request, session_id):
                 "result_aggregate": _result_aggregate(
                     PseudonymousResult.objects.filter(
                         result_batch_id=session.result_batch_id,
-                    )
+                    ),
+                    session=session,
                 ),
                 "error": str(error),
             },
@@ -865,22 +1001,117 @@ def tutor_session_close(request, session_id):
     return redirect("tutor-session-review", session_id=session.pk)
 
 
-def _result_aggregate(results):
+def _result_aggregate(results, session=None):
+    """Build group-only metrics without exposing a participant record.
+
+    Results intentionally have no participant relationship.  For a roadmap,
+    closure writes one aggregate row per activity and turn, so the number of
+    turns is derived from the fixed activity count rather than presented as a
+    list of individuals.
+    """
+
     results = list(results)
+    completed_count = sum(
+        result.state == PseudonymousResult.STATE_COMPLETED for result in results
+    )
+    abandoned_count = sum(
+        result.state == PseudonymousResult.STATE_ABANDONED for result in results
+    )
+    participant_count = len(results)
+    if session is not None and session.roadmap_snapshot_id and results:
+        # Closure emits one row per turn *and per activity*.  A turn that
+        # abandons midway still receives rows for the roadmap activities, so
+        # dividing by the number of activities is not a participant count.
+        # Results intentionally do not retain a turn/participant key; the
+        # largest per-activity row set is the conservative count recoverable
+        # from this deliberately unlinkable data.
+        rows_by_activity = Counter(result.snapshot_id for result in results)
+        participant_count = max(rows_by_activity.values(), default=0)
+    durations = [
+        result.duration_seconds
+        for result in results
+        if result.duration_seconds is not None
+    ]
+    score_total = sum(result.score for result in results)
+    snapshot_labels = sorted(
+        {
+            f"versión {result.snapshot_version} · {result.snapshot_sha256[:8]}"
+            for result in results
+            if result.snapshot_sha256
+        }
+    )
+    distribution = {
+        "Completadas": completed_count,
+        "Interrumpidas": abandoned_count,
+    }
     return {
+        # Existing keys are retained for the review surface and old exports.
         "count": len(results),
-        "completed_count": sum(
-            result.state == PseudonymousResult.STATE_COMPLETED for result in results
-        ),
-        "score_total": sum(result.score for result in results),
-        "score_average": (
-            sum(result.score for result in results) / len(results) if results else 0
-        ),
+        "completed_count": completed_count,
+        "score_total": score_total,
+        "score_average": score_total / len(results) if results else 0,
         "help_count": sum(len(result.help_requests or []) for result in results),
         "technical_error_count": sum(
             len(result.technical_errors or []) for result in results
         ),
+        # Teacher-facing group vocabulary.
+        "participants": participant_count,
+        "participant_count": participant_count,
+        "activities_completed": completed_count,
+        "distribution": distribution,
+        "result_distribution": distribution,
+        "duration_total_seconds": sum(durations),
+        "duration_average_seconds": (
+            sum(durations) / len(durations) if durations else 0
+        ),
+        "snapshot_labels": snapshot_labels,
+        "snapshot_versions": sorted({result.snapshot_version for result in results}),
+        "snapshot_hashes": sorted(
+            {result.snapshot_sha256[:8] for result in results if result.snapshot_sha256}
+        ),
     }
+
+
+@teacher_required
+def tutor_results(request):
+    """List closed sessions with group statistics only."""
+
+    sessions = ClassroomSession.objects.filter(
+        status=ClassroomSession.STATUS_CLOSED
+    ).select_related("snapshot", "snapshot__package", "roadmap_snapshot")[:30]
+    result_cards = []
+    for session in sessions:
+        aggregate = _result_aggregate(
+            PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
+            session=session,
+        )
+        result_cards.append({"session": session, "aggregate": aggregate})
+    return render(
+        request,
+        "curriculum/tutor_results.html",
+        {"result_cards": result_cards},
+    )
+
+
+@teacher_required
+def tutor_session_results(request, session_id):
+    """Show one session's group summary, never an individual dossier."""
+
+    session = get_object_or_404(
+        ClassroomSession.objects.select_related(
+            "snapshot", "snapshot__package", "roadmap_snapshot"
+        ),
+        pk=session_id,
+    )
+    aggregate = _result_aggregate(
+        PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
+        session=session,
+    )
+    return render(
+        request,
+        "curriculum/tutor_session_results.html",
+        {"session": session, "aggregate": aggregate},
+    )
 
 
 def _session_survey_responses(session):

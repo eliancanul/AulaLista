@@ -22,7 +22,7 @@
           {% csrf_token %}
           <label for="roadmap-title">Nombre del roadmap</label><input id="roadmap-title" name="title" maxlength="160" required>
           {% if package_snapshots %}
-            <fieldset class="snapshot-checklist"><legend>Paquetes publicados, en el orden elegido</legend>{% for package_snapshot in package_snapshots %}<label><input type="checkbox" name="package_snapshot_ids" value="{{ package_snapshot.pk }}"> <span>{{ package_snapshot.payload.title|default:package_snapshot.package.title }}<small>versión {{ package_snapshot.version }}</small></span></label>{% endfor %}</fieldset>
+            <fieldset class="snapshot-checklist"><legend>Paquetes publicados, en el orden elegido</legend>{% for package_snapshot in package_snapshots %}<label><input type="checkbox" name="package" value="{{ package_snapshot.pk }}"> <span>{{ package_snapshot.payload.title|default:package_snapshot.package.title }}<small>versión {{ package_snapshot.version }}</small></span></label>{% endfor %}</fieldset>
             <button class="button button-primary" type="submit">Publicar roadmap</button>
           {% else %}<p class="empty-note">No hay paquetes publicados para incluir.</p>{% endif %}
         </form>
@@ -31,7 +31,7 @@
       <section class="published-roadmaps" aria-labelledby="published-heading">
         <div class="section-heading"><div><p class="eyebrow">ROADMAPS PUBLICADOS</p><h2 id="published-heading">Avance docente</h2></div><span class="synthetic-label">SIN PERSISTENCIA ADICIONAL</span></div>
         {% if roadmap_cards %}
-          <div class="roadmap-card-grid">{% for card in roadmap_cards %}<article class="roadmap-card"><div class="card-topline"><span class="signal-dot" aria-hidden="true"></span><span>ROADMAP PUBLICADO</span></div><h3>{{ card.snapshot.title|default:"Roadmap publicado" }}</h3><p>Versión {{ card.snapshot.version }} · snapshot {{ card.snapshot.sha256|slice:':8' }}</p><p><strong>{{ card.progress_count }}</strong> confirmaciones docentes</p><a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual <span aria-hidden="true">→</span></a></article>{% endfor %}</div>
+          <div class="roadmap-card-grid">{% for card in roadmap_cards %}<article class="roadmap-card"><div class="card-topline"><span class="signal-dot" aria-hidden="true"></span><span>ROADMAP PUBLICADO</span></div><h3>{{ card.snapshot.title|default:"Roadmap publicado" }}</h3><p>Versión {{ card.snapshot.version }} · huella {{ card.snapshot.sha256|slice:':8' }}</p><ol class="roadmap-node-preview" aria-label="Camino curricular">{% for node in card.nodes %}<li><span><strong>{{ node.kind }}</strong> · {{ node.title }}</span><span>{% if node.progress %}{{ node.progress.get_status_display }}{% else %}Sin confirmar{% endif %}</span>{% if node.activity_snapshot %}<a href="{% url 'tutor-package-detail' node.activity_snapshot.pk %}">Actividad publicada</a>{% endif %}</li>{% empty %}<li>Este camino no tiene temas seleccionables.</li>{% endfor %}</ol><p><strong>{{ card.progress_count }}</strong> confirmaciones docentes</p><a class="primary-action" href="{% url 'tutor-roadmap-progress' card.snapshot.pk %}">Configurar avance manual <span aria-hidden="true">→</span></a></article>{% endfor %}</div>
         {% else %}<p class="empty-note">No hay roadmaps publicados todavía.</p>{% endif %}
       </section>
     </main>

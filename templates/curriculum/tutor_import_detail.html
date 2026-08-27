@@ -197,10 +197,11 @@
       {% if job.status == "converted" %}
         <section aria-label="Borradores generados" class="status-card">
           <h2>Borradores generados ({{ drafts_count }})</h2>
-          <p>Los borradores etiquetados "asistido por IA" esperan revisión, aprobación y publicación humanas en Wagtail. La IA no publica.</p>
+          <p>Los borradores etiquetados "asistido por IA" esperan corrección, revisión, aprobación y publicación humanas. La IA no publica.</p>
           <ul>
-            {% for draft in drafts %}<li><a href="/cms/">{{ draft.title }}</a></li>{% endfor %}
+            {% for draft in drafts %}<li>{{ draft.title }}</li>{% endfor %}
           </ul>
+          <a class="button-secondary" href="{% url 'tutor-curriculum' %}">Ir a currícula y autoría <span aria-hidden="true">→</span></a>
         </section>
       {% endif %}
     </main>

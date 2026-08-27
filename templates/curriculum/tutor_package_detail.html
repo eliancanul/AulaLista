@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · actividad publicada</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {% include "curriculum/tutor_nav.html" %}
+    <main id="contenido" class="shell narrow-shell teacher-page">
+      <header class="view-heading">
+        <p class="eyebrow">ACTIVIDAD PUBLICADA · REVISIÓN DOCENTE</p>
+        <h1>{{ payload.title|default:snapshot.package.title|default:"Actividad publicada" }}</h1>
+        <p class="lede">Revisa el contenido exacto que se conservará al preparar una sesión.</p>
+      </header>
+      <section class="authority-boundary" aria-labelledby="snapshot-boundary-heading"><div class="boundary-mark" aria-hidden="true">✓</div><div><h2 id="snapshot-boundary-heading">Contenido fijado por publicación humana</h2><p>Esta versión no cambia si después corriges el borrador. La maestra puede seleccionarla para preparar una sesión.</p></div></section>
+
+      <section class="published-activity" aria-labelledby="activity-content-heading">
+        <div class="section-heading"><div><p class="eyebrow">CONTENIDO PARA EL AULA</p><h2 id="activity-content-heading">Objetivo y microlección</h2></div><span class="synthetic-label">DEMOSTRACIÓN SINTÉTICA</span></div>
+        <p class="published-meta">Versión {{ snapshot.version }} · huella {{ snapshot.sha256|slice:':8' }}</p>
+        {% if payload.objective %}<h3>Objetivo</h3><p>{{ payload.objective }}</p>{% endif %}
+        {% if payload.micro_lesson %}<h3>Microlección</h3><p class="lesson-copy">{{ payload.micro_lesson }}</p>{% endif %}
+        {% if questions %}<h3>Actividades de práctica</h3><div class="published-questions">{% for question in questions %}<article class="question-card"><p class="card-kicker">REACTIVO {{ forloop.counter }}</p><h4>{{ question.prompt }}</h4>{% if question.options %}<ul>{% for option in question.options %}<li>{{ option.text|default:"Opción sin etiqueta" }}</li>{% endfor %}</ul>{% endif %}{% if question.hints %}<p class="microcopy"><strong>Pistas autorizadas:</strong> {{ question.hints|join:", " }}</p>{% endif %}</article>{% endfor %}</div>{% else %}<p class="empty-note">Esta actividad todavía no tiene reactivos de práctica publicados.</p>{% endif %}
+        {% if payload.final_explanation %}<h3>Explicación final autorizada</h3><p>{{ payload.final_explanation }}</p>{% endif %}
+      </section>
+      <div class="page-actions"><a class="button button-primary button-large" href="{% url 'tutor-session-prepare' snapshot.pk %}">Preparar sesión con esta actividad <span aria-hidden="true">→</span></a><a class="back-link" href="{% url 'tutor-curriculum' %}">← Volver a currícula y autoría</a></div>
+    </main>
+  </body>
+</html>
