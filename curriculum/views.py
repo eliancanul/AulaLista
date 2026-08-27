@@ -1,5 +1,6 @@
 import csv
 import hashlib
+from collections import Counter
 import io
 import json
 import threading
@@ -588,12 +589,17 @@ def tutor_roadmap_progress(request, snapshot_id):
         str(item.pk): item
         for item in PublishedPackageSnapshot.objects.filter(pk__in=package_snapshot_ids)
     }
+    progress = {
+        item.node_id: item
+        for item in snapshot.curriculum_progress.select_related("confirmed_by")
+    }
     nodes = [
         {
             **node,
             "activity_snapshot": activity_snapshots.get(
                 str(activity_by_id.get(node["id"], {}).get("package_snapshot_id"))
             ),
+            "progress": progress.get(node["id"]),
         }
         for node in nodes
     ]
@@ -623,17 +629,10 @@ def tutor_roadmap_progress(request, snapshot_id):
             )
         return redirect("tutor-roadmap-progress", snapshot_id=snapshot.pk)
 
-    progress = {
-        item.node_id: item
-        for item in snapshot.curriculum_progress.select_related("confirmed_by")
-    }
     return render(
         request,
         "curriculum/tutor_roadmap_progress.html",
-        {
-            "snapshot": snapshot,
-            "nodes": [{**node, "progress": progress.get(node["id"])} for node in nodes],
-        },
+        {"snapshot": snapshot, "nodes": nodes},
     )
 
 
@@ -1018,14 +1017,16 @@ def _result_aggregate(results, session=None):
     abandoned_count = sum(
         result.state == PseudonymousResult.STATE_ABANDONED for result in results
     )
-    activity_count = 0
-    if session is not None and session.roadmap_snapshot_id:
-        from curriculum.roadmap import ordered_activities
-
-        activity_count = len(ordered_activities(session.roadmap_snapshot.payload))
     participant_count = len(results)
-    if activity_count > 0 and results:
-        participant_count = len(results) // activity_count
+    if session is not None and session.roadmap_snapshot_id and results:
+        # Closure emits one row per turn *and per activity*.  A turn that
+        # abandons midway still receives rows for the roadmap activities, so
+        # dividing by the number of activities is not a participant count.
+        # Results intentionally do not retain a turn/participant key; the
+        # largest per-activity row set is the conservative count recoverable
+        # from this deliberately unlinkable data.
+        rows_by_activity = Counter(result.snapshot_id for result in results)
+        participant_count = max(rows_by_activity.values(), default=0)
     durations = [
         result.duration_seconds
         for result in results
