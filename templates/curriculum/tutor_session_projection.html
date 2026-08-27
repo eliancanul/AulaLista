@@ -12,7 +12,7 @@
       <header class="projection-heading"><p class="eyebrow">AULALISTA · PROYECCIÓN PÚBLICA</p><span class="demo-badge">Demostración sintética</span><h1>Entrada al aula</h1><p class="status" data-session-status>Estado de la sesión: <strong>{{ session.get_status_display }}</strong></p><p class="projection-participant-summary">Participantes: {{ participant_count }}</p></header>
       {% if join_url %}
         <section class="projection-grid" aria-label="Entrada a la actividad">
-          <div class="join-panel"><p class="card-kicker">ESCANEA PARA ENTRAR</p><div class="qr" aria-label="Código QR sintético de entrada">{{ join_qr_svg|safe }}</div><p class="projection-route"><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p><p class="microcopy">Si no puedes escanear, escribe la ruta local.</p></div>
+          <div class="join-panel"><p class="card-kicker">{% if join_qr_svg %}ESCANEA O ESCRIBE PARA ENTRAR{% else %}ESCRIBE PARA ENTRAR{% endif %}</p>{% if join_qr_svg %}<div class="qr" aria-label="Código QR real de entrada">{{ join_qr_svg|safe }}</div>{% endif %}<p class="projection-route"><a data-session-join-url href="{{ join_url }}">{{ join_url }}</a></p><p class="microcopy">Si no puedes escanear, escribe la ruta local.</p>{% if not join_url_is_configured %}<p class="microcopy" role="alert">{{ join_url_notice }}</p>{% endif %}</div>
           <section class="projection-count" aria-label="Participantes"><span class="count-number" data-participant-count>{{ participant_count }}</span><span>participantes presentes</span><small>El conteo es local; no es asistencia oficial.</small></section>
         </section>
       {% elif session.status == "prepared" %}

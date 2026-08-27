@@ -29,6 +29,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
 
+from health.lan import lan_url_notice, session_join_url
 from health.qr import qr_svg
 
 from curriculum.ephemeral import (
@@ -703,8 +704,19 @@ def tutor_session_prepare(request, snapshot_id):
     return render(request, "curriculum/tutor_session_prepare.html", context)
 
 
-@teacher_required
+def _session_join_context(request, session):
+    """Return one explicit LAN join URL and its safe degraded state."""
 
+    join_url, configured = session_join_url(request, session.pk)
+    return {
+        "join_url": join_url,
+        "join_qr_svg": qr_svg(join_url) if configured else "",
+        "join_url_is_configured": configured,
+        "join_url_notice": lan_url_notice(configured),
+    }
+
+
+@teacher_required
 def tutor_session_review(request, session_id):
     session = get_object_or_404(
         ClassroomSession.objects.select_related(
@@ -718,13 +730,11 @@ def tutor_session_review(request, session_id):
         )
     )
     survey_responses = _session_survey_responses(session)
-    join_url = ""
-    join_qr_svg = ""
-    if session.status == ClassroomSession.STATUS_ACTIVE:
-        join_url = request.build_absolute_uri(
-            reverse("student-session-join", args=[session.pk])
-        )
-        join_qr_svg = qr_svg(join_url)
+    join_context = (
+        _session_join_context(request, session)
+        if session.status == ClassroomSession.STATUS_ACTIVE
+        else {"join_url": "", "join_qr_svg": ""}
+    )
     labeled_assignments = [
         {
             "label": f"Dispositivo {position}",
@@ -746,8 +756,7 @@ def tutor_session_review(request, session_id):
             "result_aggregate": _result_aggregate(results),
             "survey_aggregate": survey_aggregate(survey_responses),
             "survey_response_count": survey_responses.count(),
-            "join_url": join_url,
-            "join_qr_svg": join_qr_svg,
+            **join_context,
         },
     )
 
@@ -765,13 +774,11 @@ def tutor_session_active(request, session_id):
             assignment__session_id=session.pk,
             status=StudentTurn.STATUS_ACTIVE,
         ).exclude(display_name="").order_by("started_at", "pk")
-    join_url = ""
-    join_qr_svg = ""
-    if session.status == ClassroomSession.STATUS_ACTIVE:
-        join_url = request.build_absolute_uri(
-            reverse("student-session-join", args=[session.pk])
-        )
-        join_qr_svg = qr_svg(join_url)
+    join_context = (
+        _session_join_context(request, session)
+        if session.status == ClassroomSession.STATUS_ACTIVE
+        else {"join_url": "", "join_qr_svg": ""}
+    )
     return render(
         request,
         "curriculum/tutor_session_active.html",
@@ -779,8 +786,7 @@ def tutor_session_active(request, session_id):
             "session": session,
             "active_turns": active_turns,
             "participant_count": active_turns.count(),
-            "join_url": join_url,
-            "join_qr_svg": join_qr_svg,
+            **join_context,
             "snapshot_label": (
                 f"versión {session.snapshot.version} · {session.snapshot.sha256[:8]}"
             ),
@@ -794,25 +800,20 @@ def tutor_session_projection(request, session_id):
     # Intentionally public: this is a classroom projection, not a teacher action.
     session = get_object_or_404(ClassroomSession, pk=session_id)
     participant_count = 0
-    join_url = ""
-    join_qr_svg = ""
+    join_context = {"join_url": "", "join_qr_svg": ""}
     if session.status == ClassroomSession.STATUS_ACTIVE:
         participant_count = StudentTurn.objects.filter(
             assignment__session_id=session.pk,
             status=StudentTurn.STATUS_ACTIVE,
         ).count()
-        join_url = request.build_absolute_uri(
-            reverse("student-session-join", args=[session.pk])
-        )
-        join_qr_svg = qr_svg(join_url)
+        join_context = _session_join_context(request, session)
     return render(
         request,
         "curriculum/tutor_session_projection.html",
         {
             "session": session,
             "participant_count": participant_count,
-            "join_url": join_url,
-            "join_qr_svg": join_qr_svg,
+            **join_context,
         },
     )
 

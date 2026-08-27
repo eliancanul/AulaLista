@@ -27,6 +27,21 @@ En revisión docente (ActivityReview)
      Sesión cerrada
 ```
 
+### Entrada común por LAN
+
+Cuando la sesión está activa, la revisión docente, el control activo y la
+proyección pública muestran el mismo enlace
+`/student/sessions/<id>/join/`. El enlace se construye con la base explícita de
+`AULALISTA_LAN_URL`, por ejemplo `http://192.168.1.20:8000`; el QR local
+codifica la URL completa, no un código o etiqueta intermedia. La URL escrita
+permanece visible como alternativa en las tres superficies.
+
+Si `AULALISTA_LAN_URL` falta o no es una URL `http(s)` válida, no se inventa
+una IP ni se genera un QR potencialmente inutilizable: se muestra el enlace
+visible del host de la petición junto con un aviso para configurar la base
+LAN. Para una prueba física, el servidor debe escuchar en `0.0.0.0` y el
+operador debe verificar la dirección desde la misma red.
+
 Una corrección de una actividad publicada crea una nueva revisión y, al publicarse, un `PublishedPackageSnapshot` nuevo. La maestra publica el camino desde **Avance curricular**, seleccionando y ordenando snapshots de paquetes; cada actividad queda vinculada a su snapshot exacto dentro del `PublishedRoadmapSnapshot`. Al preparar una sesión se fija el roadmap y un snapshot base; una sesión ya iniciada conserva todas las versiones con las que comenzó.
 
 ## Estados y autoridad
