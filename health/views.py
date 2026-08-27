@@ -1,8 +1,8 @@
 from urllib.parse import urlsplit
 
-from django.conf import settings
 from django.shortcuts import render
 
+from health.lan import explicit_lan_url
 from health.qr import qr_svg
 
 
@@ -11,7 +11,7 @@ def health_page(request):
 
 
 def local_access(request):
-    configured_url = settings.AULALISTA_LAN_URL
+    configured_url = explicit_lan_url()
     parsed_url = urlsplit(configured_url)
     local_url = (
         configured_url

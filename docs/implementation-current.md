@@ -20,7 +20,8 @@ continuidad real durante una emergencia.
 - Python 3.13, Django 5.2, Wagtail 7.4 y SQLite.
 - SQLite usa WAL, `synchronous=NORMAL` y `busy_timeout=5000`.
 - Caché local `LocMemCache`; el alcance actual es un solo proceso WSGI.
-- Recursos estáticos servidos desde `static/`, sin dependencias remotas.
+- Recursos estáticos servidos desde `static/`, sin dependencias remotas; el
+  QR se codifica localmente con Segno y se renderiza como SVG inline.
 - WSGI reproducible en `scripts/run_wsgi.py`.
 - Verificación de paquete en `scripts/verify_local_package.py`.
 - Empaquetado para MacBook Air en `scripts/package_macos.sh`.
@@ -59,10 +60,18 @@ continuidad real durante una emergencia.
 
 ## Acceso LAN
 
-La ruta `/access/` muestra una URL textual y un QR generado localmente. La URL
-se configura explícitamente con `AULALISTA_LAN_URL`; la aplicación no inventa
-una IP ni detecta interfaces automáticamente. Si el QR falla, la dirección
-textual sigue disponible.
+La ruta `/access/` muestra una URL textual y un QR generado localmente. En una
+sesión activa, revisión, modo activo y proyección muestran el mismo enlace
+completo `/student/sessions/<id>/join/`. Segno codifica directamente esa URL
+con corrección de errores M y una zona blanca de cuatro módulos; no hay CDN,
+WAN ni servicio externo.
+
+La base se configura explícitamente con `AULALISTA_LAN_URL` (origen o base
+`/student/`); la aplicación no inventa una IP ni detecta interfaces
+automáticamente. La URL textual siempre queda visible como alternativa. Si
+falta o es inválida la configuración, se muestra el host actual sólo como
+enlace manual y un aviso; no se genera un QR que pudiera apuntar a
+`localhost`.
 
 Ejemplo:
 
@@ -73,11 +82,12 @@ AULALISTA_LAN_URL=http://192.168.1.20:8000/student/ \
 
 La verificación automatizada bloquea DNS, sockets externos y `urlopen` durante
 la demostración sintética. La prueba física con dos teléfonos y WAN
-desconectada aún debe realizarse en la LAN real.
+desconectada aún debe realizarse en la LAN real; la guía está en
+`docs/qr-lan-test.md`.
 
 ## Robustez y evidencia
 
-- Suite actual: 98 pruebas.
+- Suite actual: 238 pruebas.
 - T10: 30 clientes simulados en secuencia controlada, 90 operaciones, cero
   errores, cero pérdida de datos y p95 por operación menor a 2 segundos en la
   máquina de prueba.

@@ -134,12 +134,20 @@ AULALISTA_LAN_URL=http://192.168.1.20:8000/student/ \
 ```
 
 Después, abre `http://192.168.1.20:8000/access/` en la MacBook para mostrar la
-dirección en texto y su código QR. El QR se genera dentro de AulaLista y el CSS
-se sirve desde `static/`; no hay CDN, servicio externo, DNS público ni consulta
-WAN. Si no se configura `AULALISTA_LAN_URL`, la página muestra la instrucción
-en lugar de inventar una IP. El operador debe verificar que la dirección
-pertenezca a la LAN actual; AulaLista no detecta automáticamente interfaces ni
-garantiza que una IP siga siendo la misma después de cambiar de red.
+dirección en texto y su código QR. Al activar una sesión, las vistas de
+revisión, modo activo y proyección usan esa misma base para mostrar la URL
+completa `.../student/sessions/<id>/join/`; el QR codifica directamente esa
+URL. El QR se genera dentro de AulaLista y el CSS se sirve desde `static/`; no
+hay CDN, servicio externo, DNS público ni consulta WAN. La variable puede ser
+el origen (`http://192.168.1.20:8000`) o la base histórica `/student/`; no se
+inventa ninguna IP. Si no se configura `AULALISTA_LAN_URL`, las vistas de
+sesión muestran sólo el enlace manual del host actual, sin QR, y un aviso de
+configuración. El operador debe verificar que la dirección pertenezca a la
+LAN actual; AulaLista no detecta automáticamente interfaces ni garantiza que
+una IP siga siendo la misma después de cambiar de red.
+
+La guía paso a paso para comprobar el flujo con dos teléfonos y WAN
+desconectada está en [`docs/qr-lan-test.md`](qr-lan-test.md).
 
 ### Comprobación manual antes de una clase
 

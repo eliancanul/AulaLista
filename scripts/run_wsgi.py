@@ -13,7 +13,9 @@ class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="127.0.0.1")
+    # The local node must be reachable by phones on the same LAN. Operators
+    # can still pass --host 127.0.0.1 when they intentionally want loopback.
+    parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
 

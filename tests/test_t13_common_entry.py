@@ -221,7 +221,8 @@ def test_tutor_review_shows_one_link_and_qr_only_while_active():
     assert f'data-session-join-url href="http://testserver{join_path(session.pk)}"' in (
         active_page.text
     )
-    assert "<svg" in active_page.text
+    assert "data-qr-value" not in active_page.text
+    assert "AULALISTA_LAN_URL" in active_page.text
 
 
 def test_sequential_multi_browser_joins_stay_consistent_under_sqlite_single_writer():
