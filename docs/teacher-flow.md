@@ -65,8 +65,9 @@ La maestra puede crear un `ClassroomGroup` con un nombre corto (por ejemplo,
 sesiones: no contiene lista de alumnos, cuentas ni identificadores de dispositivo.
 La sesión preparada desde esta superficie queda vinculada a esa maestra; otra
 cuenta docente no puede consultar, exportar ni borrar sus resultados. Una
-sesión histórica sin maestra recuperable no se expone por estas rutas, en vez de
-atribuirla a una cuenta por inferencia.
+sesión histórica sin maestra recuperable se marca durante la migración y conserva
+únicamente el límite histórico de personal autenticado; no se atribuye a una
+cuenta por inferencia ni convierte las sesiones nuevas sin propietaria en legado.
 
 La vista de resultados empieza con agregados por sesión y por salón. Al abrir una
 sesión cerrada, la maestra puede consultar el registro individual seudónimo:

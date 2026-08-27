@@ -661,6 +661,11 @@ class ClassroomSession(models.Model):
         null=True,
         blank=True,
     )
+    legacy_owner_unresolved = models.BooleanField(
+        "propietaria histórica no recuperable",
+        default=False,
+        editable=False,
+    )
     result_batch_id = models.UUIDField(
         "lote opaco de resultados",
         default=uuid.uuid4,

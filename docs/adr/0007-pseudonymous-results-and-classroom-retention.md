@@ -35,8 +35,9 @@ salón sin destruir el historial curricular.
    snapshots, roadmaps, `CurriculumProgress` y sesiones sin sus resultados.
 6. Las rutas sensibles de una sesión requieren la maestra registrada al
    prepararla. La migración sólo recupera esa relación cuando el salón existente
-   ya la prueba; una sesión histórica sin propietaria no se atribuye por
-   inferencia ni queda accesible por estas rutas.
+   ya la prueba; una sesión histórica sin propietaria se marca explícitamente y
+   conserva sólo el límite histórico de personal autenticado. Una sesión nueva
+   sin esa marca no obtiene ese acceso por omisión.
 
 ## Consecuencias
 

@@ -1,6 +1,7 @@
 """Issue #86: group-level retention and the bounded pseudonymous register."""
 
 import hashlib
+import importlib
 import json
 import os
 import uuid
@@ -8,6 +9,7 @@ import uuid
 import django
 import pytest
 from django.contrib.auth import get_user_model
+from django.apps import apps as django_apps
 from django.test import Client
 from django.urls import reverse
 
@@ -165,6 +167,11 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     assert ">1</strong> ayudas solicitadas" in page.text
     assert ">1</strong> errores técnicos" in page.text
     assert snapshot.sha256[:8] in page.text
+    summary = client.get(reverse("tutor-results"))
+    assert summary.status_code == 200
+    assert ">1</strong> ayudas solicitadas" in summary.text
+    assert ">1</strong> errores técnicos" in summary.text
+    assert snapshot.sha256[:8] in summary.text
     assert client.get(reverse("tutor-group-results", args=[other_group.pk])).status_code == 404
 
 
@@ -254,3 +261,32 @@ def test_session_result_routes_reject_another_staff_teacher():
 
     assert other_client.get(reverse("tutor-results")).status_code == 200
     assert "Sesión privada" not in other_client.get(reverse("tutor-results")).text
+
+
+def test_migration_marks_preexisting_unowned_session_as_legacy_without_granting_new_sessions_that_access():
+    snapshot = published_snapshot("Sesión histórica")
+    historical = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
+    historical.close()
+    assert historical.created_by_id is None
+    assert historical.legacy_owner_unresolved is False
+
+    migration = importlib.import_module(
+        "curriculum.migrations.0026_classroomsession_created_by"
+    )
+    migration.backfill_legacy_session_ownership(django_apps, None)
+    historical.refresh_from_db()
+    assert historical.created_by_id is None
+    assert historical.legacy_owner_unresolved is True
+
+    teacher = Client()
+    teacher.force_login(
+        get_user_model().objects.create_user(username="legacy-staff", is_staff=True)
+    )
+    assert teacher.get(
+        reverse("tutor-session-results", args=[historical.pk])
+    ).status_code == 200
+
+    fresh = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
+    fresh.close()
+    assert fresh.legacy_owner_unresolved is False
+    assert teacher.get(reverse("tutor-session-results", args=[fresh.pk])).status_code == 404

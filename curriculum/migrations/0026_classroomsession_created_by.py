@@ -32,8 +32,8 @@ def recreate_sqlite_guards(apps, schema_editor):
     ).create_snapshot_guards(apps, schema_editor)
 
 
-def backfill_group_session_owners(apps, schema_editor):
-    """Recover ownership only when the existing group already proves it."""
+def backfill_legacy_session_ownership(apps, schema_editor):
+    """Recover ownership only when data proves it; mark every other old row."""
 
     Session = apps.get_model("curriculum", "ClassroomSession")
     Group = apps.get_model("curriculum", "ClassroomGroup")
@@ -42,6 +42,9 @@ def backfill_group_session_owners(apps, schema_editor):
             classroom_group_id=group.pk,
             created_by__isnull=True,
         ).update(created_by_id=group.created_by_id)
+    Session.objects.filter(created_by__isnull=True).update(
+        legacy_owner_unresolved=True,
+    )
 
 
 class Migration(migrations.Migration):
@@ -64,6 +67,15 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
-        migrations.RunPython(backfill_group_session_owners, migrations.RunPython.noop),
+        migrations.AddField(
+            model_name="classroomsession",
+            name="legacy_owner_unresolved",
+            field=models.BooleanField(
+                default=False,
+                editable=False,
+                verbose_name="propietaria histórica no recuperable",
+            ),
+        ),
+        migrations.RunPython(backfill_legacy_session_ownership, migrations.RunPython.noop),
         migrations.RunPython(recreate_sqlite_guards, drop_sqlite_guards),
     ]

@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.http import (
     HttpResponse,
@@ -900,15 +901,19 @@ def _session_join_context(request, session):
 
 
 def _teacher_sessions(request):
-    """Return only sessions explicitly owned by this teacher."""
+    """Return owned sessions and the explicitly marked pre-#86 legacy rows."""
 
-    return ClassroomSession.objects.filter(created_by=request.user)
+    return ClassroomSession.objects.filter(
+        Q(created_by=request.user) | Q(legacy_owner_unresolved=True)
+    )
 
 
 def _teacher_session_or_404(request, session_id, queryset=None):
     queryset = queryset if queryset is not None else ClassroomSession.objects
     return get_object_or_404(
-        queryset.filter(created_by=request.user),
+        queryset.filter(
+            Q(created_by=request.user) | Q(legacy_owner_unresolved=True)
+        ),
         pk=session_id,
     )
 
