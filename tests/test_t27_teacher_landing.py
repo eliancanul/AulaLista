@@ -8,7 +8,7 @@ from django.test import Client
 from django.urls import reverse
 
 from curriculum.models import ClassroomSession, CurriculumPackage, PublishedPackageSnapshot
-from helpers import tutor_client
+from helpers import tutor_client, tutor_client_for_sessions
 
 pytestmark = pytest.mark.django_db
 
@@ -61,7 +61,9 @@ def test_landing_has_state_actions_and_participant_waiting_language():
     stopped = ClassroomSession.prepare_from_snapshot(published, 2, 1)
     stopped.stop()
 
-    text = tutor_client().get(reverse("tutor-sessions")).text
+    text = tutor_client_for_sessions(
+        prepared, active_waiting, active_progress, closed, stopped
+    ).get(reverse("tutor-sessions")).text
     assert text.count("Revisar y activar") == 1
     assert text.count("Esperando participantes") == 1
     assert text.count("Actividad en progreso") == 1

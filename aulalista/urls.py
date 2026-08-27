@@ -25,6 +25,9 @@ from curriculum.views import (
     tutor_curriculum,
     tutor_package_detail,
     tutor_results,
+    tutor_groups,
+    tutor_group_results,
+    tutor_group_close_year,
     tutor_session_results,
     tutor_session_confirm,
     tutor_session_close,
@@ -77,6 +80,17 @@ urlpatterns = [
     ),
     path("tutor/autoria/", tutor_curriculum, name="tutor-authoring"),
     path("tutor/resultados/", tutor_results, name="tutor-results"),
+    path("tutor/salones/", tutor_groups, name="tutor-groups"),
+    path(
+        "tutor/salones/<int:group_id>/resultados/",
+        tutor_group_results,
+        name="tutor-group-results",
+    ),
+    path(
+        "tutor/salones/<int:group_id>/cerrar-ano/",
+        tutor_group_close_year,
+        name="tutor-group-close-year",
+    ),
     path(
         "tutor/sessions/<int:session_id>/results/",
         tutor_session_results,

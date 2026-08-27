@@ -24,3 +24,15 @@ def tutor_client(username=None):
     client = Client()
     client.force_login(user)
     return client
+
+
+def tutor_client_for_sessions(*sessions, username=None):
+    """Create the teacher that owns the explicitly supplied test sessions."""
+
+    from curriculum.models import ClassroomSession
+
+    client = tutor_client(username=username)
+    ClassroomSession.objects.filter(pk__in=[session.pk for session in sessions]).update(
+        created_by_id=client.session["_auth_user_id"],
+    )
+    return client

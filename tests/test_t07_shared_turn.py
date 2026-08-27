@@ -615,10 +615,16 @@ def test_sql_and_bulk_active_turns_reject_blank_or_overlong_names():
             cursor.execute(
                 """
                 INSERT INTO curriculum_studentturn
-                    (id, assignment_id, display_name, status, started_at, completed_at)
-                VALUES (%s, %s, %s, 'active', %s, NULL)
+                    (id, participant_key, assignment_id, display_name, status, started_at, completed_at)
+                VALUES (%s, %s, %s, %s, 'active', %s, NULL)
                 """,
-                [uuid.uuid4().hex, assignment.pk, valid_name, timezone.now()],
+                [
+                    uuid.uuid4().hex,
+                    uuid.uuid4().hex,
+                    assignment.pk,
+                    valid_name,
+                    timezone.now(),
+                ],
             )
 
     assert StudentTurn.objects.get().display_name == valid_name

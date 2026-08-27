@@ -29,6 +29,7 @@
               <article class="session-card" data-session-status>
                 <div class="session-card-heading"><div><p class="card-kicker">SESIÓN DE AULA</p><h3>{{ card.title }}</h3></div><span class="status status--{{ card.session.status }}">{{ card.state }}</span></div>
                 <p class="snapshot">Publicado · versión {{ card.session.snapshot.version }} · {{ card.session.snapshot.sha256|slice:':8' }}</p>
+                <p class="microcopy">Salón: <strong>{{ card.group_name }}</strong></p>
                 {% if card.session.status == "active" %}
                   <p class="participant-state">{{ card.participant_count }} {{ card.participant_label }} · {% if card.participant_count == 0 %}espera de participantes{% else %}actividad en progreso{% endif %}</p>
                   <a class="primary-action" href="{{ card.action_url }}">{{ card.action_label }} <span aria-hidden="true">→</span></a>
@@ -42,6 +43,12 @@
         {% else %}
           <p class="empty-note">Todavía no hay sesiones. Elige un snapshot publicado para preparar la primera.</p>
         {% endif %}
+      </section>
+
+      <section class="individual-empty" aria-labelledby="groups-heading">
+        <div class="section-heading"><div><p class="eyebrow">ORGANIZACIÓN LOCAL</p><h2 id="groups-heading">Salones</h2></div><a class="secondary-action" href="{% url 'tutor-groups' %}">Administrar salones</a></div>
+        <p>Un salón sólo agrupa sesiones; no contiene datos ni listas de alumnos.</p>
+        {% if classroom_groups %}<ul>{% for group in classroom_groups %}<li><strong>{{ group.name }}</strong> · <a href="{% url 'tutor-group-results' group.pk %}">ver resultados del salón</a></li>{% endfor %}</ul>{% else %}<p class="empty-note">Todavía no hay salones. Crea uno para elegirlo al preparar una sesión.</p>{% endif %}
       </section>
 
       <section class="snapshot-choices" aria-labelledby="snapshots-heading">

@@ -13,7 +13,7 @@ from django.urls import reverse
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aulalista.settings")
 django.setup()
 
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -85,7 +85,7 @@ def test_sessions_listing_shows_statuses_in_teacher_language():
     active = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
     active.confirm()
 
-    listing = tutor_client().get(reverse("tutor-sessions"))
+    listing = tutor_client_for_sessions(prepared, active).get(reverse("tutor-sessions"))
     assert listing.status_code == 200
     assert "Preparada" in listing.text
     assert "Activa" in listing.text
@@ -182,8 +182,9 @@ def test_staff_teacher_can_access_import_and_review_routes():
     )
     session = ClassroomSession.prepare_from_snapshot(snapshot, 2, 2)
 
-    upload_page = tutor_client().get(reverse("tutor-import-upload"))
-    review = tutor_client().get(reverse("tutor-session-review", args=[session.pk]))
+    client = tutor_client_for_sessions(session)
+    upload_page = client.get(reverse("tutor-import-upload"))
+    review = client.get(reverse("tutor-session-review", args=[session.pk]))
 
     assert upload_page.status_code == 200
     assert "tutor_nav" not in upload_page.text  # include renders as nav content

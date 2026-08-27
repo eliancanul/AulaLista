@@ -17,7 +17,7 @@ from curriculum.models import (  # noqa: E402
     PublishedPackageSnapshot,
     StudentTurn,
 )
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 pytestmark = pytest.mark.django_db
 
@@ -47,9 +47,10 @@ def test_routes_split_teacher_control_from_public_projection_by_role():
     closed.confirm()
     closed.close()
 
-    assert tutor_client().get(reverse("tutor-session-active", args=[prepared.pk])).status_code == 200
-    assert tutor_client().get(reverse("tutor-session-active", args=[active.pk])).status_code == 200
-    assert tutor_client().get(reverse("tutor-session-active", args=[closed.pk])).status_code == 200
+    teacher = tutor_client_for_sessions(prepared, active, closed)
+    assert teacher.get(reverse("tutor-session-active", args=[prepared.pk])).status_code == 200
+    assert teacher.get(reverse("tutor-session-active", args=[active.pk])).status_code == 200
+    assert teacher.get(reverse("tutor-session-active", args=[closed.pk])).status_code == 200
     for session in (prepared, active, closed):
         response = Client().get(reverse("session-projection", args=[session.pk]))
         assert response.status_code == 200
@@ -66,7 +67,9 @@ def test_authenticated_teacher_active_control_shows_only_active_aliases():
     assignment = session.device_assignments.get()
     assignment.reserve_turn("Luna")
 
-    response = tutor_client().get(reverse("tutor-session-active", args=[session.pk]))
+    response = tutor_client_for_sessions(session).get(
+        reverse("tutor-session-active", args=[session.pk])
+    )
 
     assert response.status_code == 200
     assert response["Cache-Control"] == "max-age=0, no-cache, no-store, must-revalidate, private"
@@ -99,7 +102,7 @@ def test_reservation_counts_on_both_surfaces_and_authenticated_close_purges_sess
     session = ClassroomSession.prepare_from_snapshot(published_snapshot(), 2, 1)
     session.confirm()
     assignment = session.device_assignments.get()
-    teacher = tutor_client()
+    teacher = tutor_client_for_sessions(session)
     public = Client()
     control_url = reverse("tutor-session-active", args=[session.pk])
     projection_url = reverse("session-projection", args=[session.pk])
@@ -140,15 +143,16 @@ def test_prepared_and_closed_surfaces_have_no_aliases_and_get_cannot_change_stat
     closed = ClassroomSession.prepare_from_snapshot(published_snapshot(), 2, 1)
     closed.confirm()
     closed.close()
+    teacher = tutor_client_for_sessions(prepared, active, closed)
 
     for session in (prepared, closed):
         for name in ("tutor-session-active", "session-projection"):
-            page = (tutor_client() if name.startswith("tutor") else Client()).get(reverse(name, args=[session.pk]))
+            page = (teacher if name.startswith("tutor") else Client()).get(reverse(name, args=[session.pk]))
             assert "SeBorraAlCerrar" not in page.text
             assert "join" not in page.text.lower() or session.status == "active"
 
     for name in ("tutor-session-confirm", "tutor-session-close"):
-        response = tutor_client().get(reverse(name, args=[prepared.pk]))
+        response = teacher.get(reverse(name, args=[prepared.pk]))
         assert response.status_code == 405
     active.refresh_from_db()
     assert active.status == ClassroomSession.STATUS_ACTIVE

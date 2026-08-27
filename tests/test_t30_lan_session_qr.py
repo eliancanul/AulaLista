@@ -16,7 +16,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aulalista.settings")
 django.setup()
 
 from curriculum.models import ClassroomSession, CurriculumPackage, PublishedPackageSnapshot  # noqa: E402
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -65,9 +65,10 @@ def decode_generated_svg(svg):
 def test_all_production_session_surfaces_encode_exact_lan_join_url():
     session = active_session()
     expected = f"{LAN_BASE}{reverse('student-session-join', args=[session.pk])}"
+    teacher = tutor_client_for_sessions(session)
     surfaces = (
-        (tutor_client(), reverse("tutor-session-review", args=[session.pk])),
-        (tutor_client(), reverse("tutor-session-active", args=[session.pk])),
+        (teacher, reverse("tutor-session-review", args=[session.pk])),
+        (teacher, reverse("tutor-session-active", args=[session.pk])),
         (Client(), reverse("session-projection", args=[session.pk])),
     )
 
@@ -87,10 +88,11 @@ def test_all_production_session_surfaces_encode_exact_lan_join_url():
 def test_session_surfaces_degrade_to_visible_current_host_link_without_qr():
     session = active_session()
     expected = f"http://testserver{reverse('student-session-join', args=[session.pk])}"
+    teacher = tutor_client_for_sessions(session)
 
     for client, path in (
-        (tutor_client(), reverse("tutor-session-review", args=[session.pk])),
-        (tutor_client(), reverse("tutor-session-active", args=[session.pk])),
+        (teacher, reverse("tutor-session-review", args=[session.pk])),
+        (teacher, reverse("tutor-session-active", args=[session.pk])),
         (Client(), reverse("session-projection", args=[session.pk])),
     ):
         response = client.get(path)

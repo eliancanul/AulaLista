@@ -29,7 +29,7 @@ from curriculum.survey import (  # noqa: E402
 )
 
 
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 
 pytestmark = pytest.mark.django_db
@@ -110,29 +110,18 @@ def bound_client(session):
 
 
 def valid_post_data(**overrides):
-    data = {
-        "claridad": "Sí",
-        "pistas": "Más o menos",
-        "mas_actividades": "Sí",
-        "comentario": "Me gustó la actividad.",
-    }
+    data = {"rating": "4"}
     data.update(overrides)
     return data
 
 
 def test_validate_survey_answers_normalizes_and_rejects_invalid():
-    answers = validate_survey_answers(valid_post_data())
-    assert answers == [
-        {"question_id": "claridad", "choice": "Sí"},
-        {"question_id": "pistas", "choice": "Más o menos"},
-        {"question_id": "mas_actividades", "choice": "Sí"},
-        {"question_id": "comentario", "text": "Me gustó la actividad."},
-    ]
+    assert validate_survey_answers(valid_post_data()) == 4
 
-    with pytest.raises(SurveyContractError, match="clara"):
-        validate_survey_answers(valid_post_data(claridad=""))
-    with pytest.raises(SurveyContractError, match="no es una opción válida"):
-        validate_survey_answers(valid_post_data(pistas="Tal vez"))
+    with pytest.raises(SurveyContractError, match="1 a 5"):
+        validate_survey_answers({})
+    with pytest.raises(SurveyContractError, match="entre 1 y 5"):
+        validate_survey_answers(valid_post_data(rating="6"))
 
 
 def test_survey_flow_stores_pseudonymous_response_once_per_device():
@@ -152,7 +141,7 @@ def test_survey_flow_stores_pseudonymous_response_once_per_device():
     assert response.result_batch_id == session.result_batch_id
     assert response.snapshot_id == session.snapshot_id
     assert response.snapshot_version == session.snapshot.version
-    assert len(response.answers) == len(STUDENT_SURVEY_QUESTIONS)
+    assert response.rating == 4
 
     duplicate = client.post(url, valid_post_data())
     assert duplicate.status_code == 400
@@ -167,12 +156,12 @@ def test_second_device_can_answer_independently_and_no_identity_is_linked():
     first, assignment_one = bound_client(session)
     second, assignment_two = bound_client(session)
 
-    first.post(url, valid_post_data(comentario="Primera opinión"))
-    second.post(url, valid_post_data(comentario="Segunda opinión"))
+    first.post(url, valid_post_data(rating="3"))
+    second.post(url, valid_post_data(rating="5"))
 
     assert PseudonymousSurveyResponse.objects.count() == 2
     stored = json.dumps(
-        list(PseudonymousSurveyResponse.objects.values("answers")),
+        list(PseudonymousSurveyResponse.objects.values("rating")),
         ensure_ascii=False,
     )
     assert "Luna" not in stored
@@ -224,7 +213,7 @@ def test_close_preserves_survey_responses_without_temporal_relations():
         result_batch_id=session.result_batch_id,
     )
     assert surveys.count() == 1
-    assert surveys.get().answers[0]["choice"] == "Sí"
+    assert surveys.get().rating == 4
 
 
 def test_teacher_review_shows_survey_aggregate_and_export_includes_it():
@@ -234,24 +223,24 @@ def test_teacher_review_shows_survey_aggregate_and_export_includes_it():
     url = reverse("student-session-survey", args=[session.pk])
     first, _a = bound_client(session)
     second, _b = bound_client(session)
-    first.post(url, valid_post_data(comentario="Más reactivos visuales"))
-    second.post(url, valid_post_data(mas_actividades="No", comentario=""))
+    first.post(url, valid_post_data(rating="3"))
+    second.post(url, valid_post_data(rating="5"))
 
-    review = tutor_client().get(reverse("tutor-session-review", args=[session.pk]))
+    teacher = tutor_client_for_sessions(session)
+    review = teacher.get(reverse("tutor-session-review", args=[session.pk]))
     assert review.status_code == 200
     assert 'data-survey-aggregate' in review.text
-    assert "Encuesta de los alumnos (2 respuestas)" in review.text
-    assert "Más reactivos visuales" in review.text
+    assert "promedio grupal de estrellas" in review.text
+    assert "4.0 / 5" in review.text
 
     session.close()
-    export = tutor_client().post(reverse("tutor-session-export", args=[session.pk]),
+    export = teacher.post(reverse("tutor-session-export", args=[session.pk]),
         {"format": "json"},
     )
     assert export.status_code == 200
     payload = json.loads(export.text)
     assert payload["survey"]["response_count"] == 2
-    assert payload["survey"]["totals"]["mas_actividades"] == {"Sí": 1, "Más o menos": 0, "No": 1}
-    assert payload["survey"]["open_texts"] == ["Más reactivos visuales"]
+    assert payload["survey"]["rating_average"] == 4
 
 
 def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_do_not():
@@ -270,7 +259,8 @@ def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_
     session.close()
 
     result = PseudonymousResult.objects.get()
-    individual = tutor_client().post(
+    teacher = tutor_client_for_sessions(session)
+    individual = teacher.post(
         reverse(
             "tutor-result-delete",
             args=[session.pk, result.pk],
@@ -279,7 +269,7 @@ def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_
     assert individual.status_code == 200
     assert PseudonymousSurveyResponse.objects.count() == 1
 
-    delete_all = tutor_client().post(reverse("tutor-session-results-delete", args=[session.pk]),
+    delete_all = teacher.post(reverse("tutor-session-results-delete", args=[session.pk]),
     )
     assert delete_all.status_code == 200
     body = delete_all.json()

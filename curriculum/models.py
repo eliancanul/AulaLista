@@ -581,6 +581,46 @@ class CurriculumProgress(models.Model):
         return progress
 
 
+class ClassroomGroup(models.Model):
+    """A teacher-created classroom label with no student roster."""
+
+    name = models.CharField("nombre del salón", max_length=80)
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="classroom_groups",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name", "id"]
+        verbose_name = "ClassroomGroup"
+        verbose_name_plural = "ClassroomGroups"
+        constraints = [
+            models.UniqueConstraint(
+                fields=("created_by", "name"),
+                name="unique_teacher_classroom_group_name",
+            )
+        ]
+
+    def clean(self):
+        self.name = str(self.name or "").strip()
+        if not self.name:
+            raise ValidationError("El salón requiere un nombre corto.")
+        if len(self.name) > 80:
+            raise ValidationError("El salón no puede superar 80 caracteres.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.name = str(self.name or "").strip()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class ClassroomSession(models.Model):
     """An activity and roadmap fixed to immutable published snapshots."""
 
@@ -606,6 +646,25 @@ class ClassroomSession(models.Model):
         related_name="classroom_sessions",
         null=True,
         blank=True,
+    )
+    classroom_group = models.ForeignKey(
+        "ClassroomGroup",
+        on_delete=models.SET_NULL,
+        related_name="sessions",
+        null=True,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
+        null=True,
+        blank=True,
+    )
+    legacy_owner_unresolved = models.BooleanField(
+        "propietaria histórica no recuperable",
+        default=False,
+        editable=False,
     )
     result_batch_id = models.UUIDField(
         "lote opaco de resultados",
@@ -665,7 +724,13 @@ class ClassroomSession(models.Model):
         ]
 
     @classmethod
-    def start_from_snapshot(cls, snapshot, roadmap_snapshot=None):
+    def start_from_snapshot(
+        cls,
+        snapshot,
+        roadmap_snapshot=None,
+        classroom_group=None,
+        teacher=None,
+    ):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
@@ -684,12 +749,20 @@ class ClassroomSession(models.Model):
         return cls.objects.create(
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
+            classroom_group=classroom_group,
+            created_by=teacher,
         )
 
     @classmethod
     @transaction.atomic
     def prepare_from_snapshot(
-        cls, snapshot, student_count, device_count, roadmap_snapshot=None
+        cls,
+        snapshot,
+        student_count,
+        device_count,
+        roadmap_snapshot=None,
+        classroom_group=None,
+        teacher=None,
     ):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
@@ -713,6 +786,8 @@ class ClassroomSession(models.Model):
         session = cls.objects.create(
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
+            classroom_group=classroom_group,
+            created_by=teacher,
             status=cls.STATUS_PREPARED,
             student_count=int(str(student_count).strip()),
             device_count=int(str(device_count).strip()),
@@ -925,6 +1000,8 @@ class ClassroomSession(models.Model):
                             snapshot_id=result_snapshot.pk,
                             snapshot_version=result_snapshot.version,
                             snapshot_sha256=result_snapshot.sha256,
+                            participant_key=turn.participant_key,
+                            activity_id=activity_id or "actividad-0",
                             state=state,
                             duration_seconds=duration_seconds,
                             responses=activity_responses,
@@ -1095,6 +1172,12 @@ class StudentTurn(models.Model):
         default=uuid.uuid4,
         editable=False,
     )
+    participant_key = models.UUIDField(
+        "clave seudónima del participante",
+        default=uuid.uuid4,
+        editable=False,
+        db_index=True,
+    )
     assignment = models.ForeignKey(
         DeviceAssignment,
         on_delete=models.CASCADE,
@@ -1170,14 +1253,19 @@ class StudentTurn(models.Model):
 
     def save(self, *args, **kwargs):
         if self._state.adding:
+            # Mint the key at the turn boundary. It is never derived from the
+            # temporary apodo, device, or any other user-provided value.
+            self.participant_key = uuid.uuid4()
             if self.status == self.STATUS_ACTIVE:
                 self.display_name = self.normalize_display_name(self.display_name)
             elif self.status == self.STATUS_COMPLETED:
                 self.display_name = ""
         else:
             original = type(self).objects.filter(pk=self.pk).values(
-                "assignment_id", "status", "display_name"
+                "assignment_id", "participant_key", "status", "display_name"
             ).first()
+            if original and original["participant_key"] != self.participant_key:
+                raise ValidationError("La clave seudónima de un turno queda fijada.")
             if original and original["assignment_id"] != self.assignment_id:
                 raise ValidationError("La asignación de un turno queda fijada.")
             if original and original["status"] == self.STATUS_COMPLETED:
@@ -1402,7 +1490,7 @@ class StudentRoadmapProgress(models.Model):
 
 
 class PseudonymousResult(models.Model):
-    """An erasable result that has no relationship to a classroom participant."""
+    """An erasable result grouped only by a random participant key."""
 
     STATE_COMPLETED = "completed"
     STATE_ABANDONED = "abandoned"
@@ -1415,6 +1503,16 @@ class PseudonymousResult(models.Model):
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
+    )
+    participant_key = models.UUIDField(
+        "clave seudónima del participante",
+        db_index=True,
+    )
+    activity_id = models.CharField(
+        "actividad opaca",
+        max_length=160,
+        blank=True,
+        default="",
     )
     result_batch_id = models.UUIDField(
         "lote opaco de resultados",
@@ -1586,12 +1684,7 @@ class CurriculumImportJob(models.Model):
 
 
 class PseudonymousSurveyResponse(models.Model):
-    """An erasable survey answer with no relationship to any participant.
-
-    Like PseudonymousResult, it carries only opaque batch/snapshot references;
-    it never stores turn ids, device identifiers or display names, and no
-    database key connects it to who submitted it.
-    """
+    """An erasable group survey rating with no participant relationship."""
 
     id = models.UUIDField(
         primary_key=True,
@@ -1604,13 +1697,32 @@ class PseudonymousSurveyResponse(models.Model):
     )
     snapshot_id = models.PositiveBigIntegerField("id del snapshot")
     snapshot_version = models.PositiveIntegerField("versión del snapshot")
-    answers = models.JSONField("respuestas de la encuesta", default=list)
+    rating = models.PositiveSmallIntegerField("calificación de estrellas")
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-submitted_at", "-id"]
         verbose_name = "PseudonymousSurveyResponse"
         verbose_name_plural = "PseudonymousSurveyResponses"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(rating__gte=1, rating__lte=5),
+                name="survey_rating_between_one_and_five",
+            )
+        ]
+
+    def clean(self):
+        try:
+            rating = int(self.rating)
+        except (TypeError, ValueError):
+            rating = None
+        if rating is None or not 1 <= rating <= 5:
+            raise ValidationError("La calificación debe estar entre 1 y 5 estrellas.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Survey {self.pk} (batch {str(self.result_batch_id)[:8]})"
