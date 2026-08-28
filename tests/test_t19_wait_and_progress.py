@@ -123,6 +123,8 @@ def test_extract_runs_in_background_and_wait_page_reports_it():
         )
     job.refresh_from_db()
     assert job.status == CurriculumImportJob.STATUS_TOPICS_PROPOSED
+    assert job.progress_started_at is not None
+    assert job.progress_finished_at >= job.progress_started_at
     # Once done, the waiting page hands control back to the review panel.
     response = client.get(reverse("tutor-import-wait", args=[job.pk]))
     assert response.status_code == 302
@@ -156,6 +158,7 @@ def test_generate_activities_interrupted_keeps_partial_results():
     assert len(job.activities) == 1
     assert job.activities[0]["subtopic_title"] == "Suma de fracciones"
     assert "modelo sin respuesta" in job.error_message
+    assert job.progress_finished_at >= job.progress_started_at
 
 
 def test_wait_page_shows_live_counter_and_duration_warning():

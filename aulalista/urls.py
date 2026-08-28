@@ -21,6 +21,7 @@ from curriculum.views import (
     tutor_import_log_md,
     tutor_import_upload,
     tutor_import_wait,
+    tutor_import_status,
     tutor_home,
     tutor_curriculum,
     tutor_package_detail,
@@ -111,6 +112,11 @@ urlpatterns = [
         "tutor/imports/<int:job_id>/espera/",
         tutor_import_wait,
         name="tutor-import-wait",
+    ),
+    path(
+        "tutor/imports/<int:job_id>/estado/",
+        tutor_import_status,
+        name="tutor-import-status",
     ),
     path(
         "tutor/imports/<int:job_id>/bitacora.md",

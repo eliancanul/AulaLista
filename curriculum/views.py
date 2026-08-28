@@ -1656,6 +1656,9 @@ def _run_import_job_stage(job_id, stage, payload=None):
                     job.llm_trace = list(job.llm_trace) + entries
                     job.save(update_fields=["llm_trace", "updated_at"])
         finally:
+            CurriculumImportJob.objects.filter(pk=job_id).update(
+                progress_finished_at=timezone.now()
+            )
             from django.db import connection
 
             connection.close()
@@ -1664,24 +1667,22 @@ def _run_import_job_stage(job_id, stage, payload=None):
 def _start_import_stage(request, job, stage, payload=None):
     """Mark the stage as running and hand it to the background runner."""
 
-    if job.progress_stage:
-        # A stage is already running; just watch it instead of starting twice.
-        return redirect("tutor-import-wait", job_id=job.pk)
-    job.progress_stage = stage
-    job.progress_done = 0
-    job.progress_total = 0
-    job.progress_started_at = timezone.now()
-    job.error_message = ""
-    job.save(
-        update_fields=[
-            "progress_stage",
-            "progress_done",
-            "progress_total",
-            "progress_started_at",
-            "error_message",
-            "updated_at",
-        ]
+    started_at = timezone.now()
+    claimed = CurriculumImportJob.objects.filter(
+        pk=job.pk,
+        progress_stage="",
+    ).update(
+        progress_stage=stage,
+        progress_done=0,
+        progress_total=0,
+        progress_started_at=started_at,
+        progress_finished_at=None,
+        error_message="",
+        updated_at=started_at,
     )
+    if not claimed:
+        # Compare-and-set closes the stale-request race: only one worker starts.
+        return redirect("tutor-import-wait", job_id=job.pk)
     _import_stage_runner()(_run_import_job_stage, job.pk, stage, payload)
     return redirect("tutor-import-wait", job_id=job.pk)
 
@@ -1697,31 +1698,42 @@ IMPORT_STAGE_WAIT_MESSAGES = {
 IMPORT_STAGE_TIMEOUT = timedelta(minutes=90)
 
 
+def _release_stale_import_stage(job):
+    stale = bool(
+        job.progress_stage
+        and job.progress_started_at
+        and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
+    )
+    if not stale:
+        return False
+    job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
+    job.error_message = (
+        "El asistente virtual tardó demasiado y el proceso se detuvo. "
+        "Puedes reintentarlo."
+    )
+    job.save(
+        update_fields=[
+            "progress_stage",
+            "progress_finished_at",
+            "error_message",
+            "updated_at",
+        ]
+    )
+    return True
+
+
 @teacher_required
 @require_http_methods(["GET"])
 def tutor_import_wait(request, job_id):
-    """Waiting page that polls the job while an LLM stage runs (#32/#36).
-
-    The page refreshes itself every few seconds; once the stage clears, the
-    teacher lands back on the review panel automatically.
-    """
+    """Waiting shell updated by incremental polling while a stage runs."""
 
     job = get_object_or_404(
         CurriculumImportJob,
         pk=job_id,
         created_by=request.user,
     )
-    stale = bool(
-        job.progress_started_at
-        and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
-    )
-    if stale:
-        job.progress_stage = ""
-        job.error_message = (
-            "El asistente virtual tardó demasiado y el proceso se detuvo. "
-            "Puedes reintentarlo."
-        )
-        job.save(update_fields=["progress_stage", "error_message", "updated_at"])
+    _release_stale_import_stage(job)
     if not job.progress_stage:
         return redirect("tutor-import-detail", job_id=job.pk)
     return render(
@@ -1729,11 +1741,68 @@ def tutor_import_wait(request, job_id):
         "curriculum/tutor_import_wait.html",
         {
             "job": job,
+            "progress_state": _import_progress_state(job),
             "wait_message": IMPORT_STAGE_WAIT_MESSAGES.get(
                 job.progress_stage,
                 "El asistente virtual está trabajando…",
             ),
         },
+    )
+
+
+def _import_progress_state(job):
+    if job.progress_stage:
+        if job.progress_done:
+            return "partial"
+        if job.progress_total:
+            return "working"
+        return "waiting"
+    if job.error_message:
+        return "error"
+    return "finished"
+
+
+IMPORT_PROGRESS_LABELS = {
+    "waiting": "Esperando al asistente",
+    "working": "El asistente está trabajando",
+    "partial": "Hay un resultado parcial guardado",
+    "finished": "Generación terminada",
+    "error": "La generación se interrumpió",
+}
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_status(request, job_id):
+    """Small owner-scoped polling payload; never starts or repeats work."""
+
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+    _release_stale_import_stage(job)
+    state = _import_progress_state(job)
+    return JsonResponse(
+        {
+            "state": state,
+            "label": IMPORT_PROGRESS_LABELS[state],
+            "stage": job.progress_stage,
+            "done": job.progress_done,
+            "total": job.progress_total,
+            "error": job.error_message,
+            "started_at": (
+                job.progress_started_at.isoformat()
+                if job.progress_started_at is not None
+                else None
+            ),
+            "finished_at": (
+                job.progress_finished_at.isoformat()
+                if job.progress_finished_at is not None
+                else None
+            ),
+            "redirect_url": reverse("tutor-import-detail", args=[job.pk]),
+        }
     )
 
 

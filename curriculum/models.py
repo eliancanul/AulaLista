@@ -1820,6 +1820,12 @@ class CurriculumImportJob(models.Model):
         blank=True,
         editable=False,
     )
+    progress_finished_at = models.DateTimeField(
+        "fin de la etapa",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     llm_trace = models.JSONField(
         "bitácora técnica del modelo local",
         default=list,
