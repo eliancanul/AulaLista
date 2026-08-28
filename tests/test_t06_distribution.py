@@ -36,9 +36,10 @@ from helpers import tutor_client  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
-def published_snapshot(title="Paquete T06"):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def published_snapshot(title="Paquete T06", owner=None):
+    owner = owner or get_user_model().objects.create_user(username=f"publisher-{title}")
+    package = CurriculumPackage.objects.create(title=title, created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {
         "title": title,
         "objective": "Distinguir una idea principal.",
@@ -58,9 +59,7 @@ def published_snapshot(title="Paquete T06"):
         payload=payload,
         sha256=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(
-            username=f"publisher-{title}",
-        ),
+        published_by=owner,
     )
 
 
@@ -107,8 +106,9 @@ def test_capacity_guard_rejects_overflow_unless_explicitly_authorized():
 
 
 def test_tutor_reviews_local_opaque_device_queues_without_student_identity():
-    snapshot = published_snapshot()
     client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot = published_snapshot(owner=owner)
 
     response = client.post(
         reverse("tutor-session-prepare", args=[snapshot.pk]),
@@ -131,8 +131,10 @@ def test_tutor_reviews_local_opaque_device_queues_without_student_identity():
 
 
 def test_prepared_session_is_not_active_or_available_to_students():
-    snapshot = published_snapshot()
-    response = tutor_client().post(reverse("tutor-session-prepare", args=[snapshot.pk]),
+    client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot = published_snapshot(owner=owner)
+    response = client.post(reverse("tutor-session-prepare", args=[snapshot.pk]),
         {"student_count": "2", "device_count": "1"},
     )
     session = ClassroomSession.objects.get()
@@ -145,8 +147,9 @@ def test_prepared_session_is_not_active_or_available_to_students():
 
 
 def test_tutor_confirmation_activates_once_and_keeps_snapshot_pinned():
-    snapshot = published_snapshot()
     client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot = published_snapshot(owner=owner)
     prepare = client.post(
         reverse("tutor-session-prepare", args=[snapshot.pk]),
         {"student_count": "5", "device_count": "2"},

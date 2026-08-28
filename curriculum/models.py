@@ -28,7 +28,7 @@ from wagtail.models import (
 )
 from wagtail.permissions import ModelPermissionPolicy
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet, WorkflowActionView
+from wagtail.snippets.views.snippets import CreateView, SnippetViewSet, WorkflowActionView
 
 from curriculum.distribution import calculate_distribution, validate_distribution
 
@@ -143,6 +143,14 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
             "True si el borrador fue generado con asistencia de IA. No implica "
             "validación pedagógica ni autorización de publicación."
         ),
+    )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="curriculum_packages",
+        null=True,
+        blank=True,
+        editable=False,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -263,6 +271,20 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         )
         super().save(*args, **kwargs)
 
+    def save_revision(self, *args, user=None, **kwargs):
+        """Require explicit ownership before an authenticated revision save."""
+
+        if user is not None and getattr(user, "is_authenticated", False):
+            if self.created_by_id is None:
+                raise ValidationError(
+                    "El borrador sin propietaria requiere atribución explícita antes de guardar una revisión."
+                )
+            if self.created_by_id != user.pk:
+                raise ValidationError(
+                    "Sólo la maestra propietaria puede guardar una revisión curricular."
+                )
+        return super().save_revision(*args, user=user, **kwargs)
+
     @transaction.atomic
     def publish(
         self,
@@ -276,6 +298,10 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         if user is None or not getattr(user, "is_authenticated", False):
             raise ValidationError(
                 "La publicación requiere una persona autenticada y aprobación humana."
+            )
+        if self.created_by_id != user.pk:
+            raise ValidationError(
+                "La publicación requiere a la maestra propietaria de la currícula."
             )
         if not user.groups.filter(name=EDITORIAL_REVIEWER_GROUP_NAME).exists():
             raise ValidationError(
@@ -421,6 +447,8 @@ class PublishedRoadmapSnapshot(models.Model):
         snapshots = list(package_snapshots)
         if not snapshots:
             raise ValidationError("Selecciona al menos un paquete publicado.")
+        if any(snapshot.package.created_by_id != teacher.pk for snapshot in snapshots):
+            raise ValidationError("Cada actividad debe pertenecer a la currícula de la maestra.")
         snapshot_ids = [snapshot.pk for snapshot in snapshots]
         if any(snapshot_id is None for snapshot_id in snapshot_ids):
             raise ValidationError("Cada actividad requiere un snapshot publicado existente.")
@@ -491,6 +519,14 @@ class PublishedRoadmapSnapshot(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             raise ValidationError("Un snapshot de roadmap publicado es inmutable.")
+        from curriculum.roadmap import duplicate_activity_ids
+
+        duplicates = duplicate_activity_ids(self.payload)
+        if duplicates:
+            joined = ", ".join(duplicates)
+            raise ValidationError(
+                f"El roadmap contiene IDs de actividad duplicados: {joined}."
+            )
         self.sha256 = _canonical_payload_sha256(self.payload)
         return super().save(*args, **kwargs)
 
@@ -563,6 +599,8 @@ class CurriculumProgress(models.Model):
             or not teacher.is_active
         ):
             raise ValidationError("El avance curricular requiere una maestra autenticada activa.")
+        if roadmap_snapshot.published_by_id != teacher.pk:
+            raise ValidationError("El roadmap debe pertenecer a la maestra autenticada.")
         node_id = str(node_id or "").strip()
         if not node_id:
             raise ValidationError("El avance curricular requiere un tema.")
@@ -619,6 +657,106 @@ class ClassroomGroup(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class GroupRoadmapProgress(models.Model):
+    """Shared, ephemeral navigation cursor for one classroom session."""
+
+    session = models.OneToOneField(
+        "ClassroomSession", on_delete=models.CASCADE, related_name="group_roadmap_progress"
+    )
+    roadmap_snapshot = models.ForeignKey(
+        PublishedRoadmapSnapshot, on_delete=models.PROTECT, related_name="group_progress"
+    )
+    completed_activity_ids = models.JSONField(default=list, blank=True)
+    current_activity_id = models.CharField(max_length=160, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def for_session(cls, session):
+        if session.roadmap_snapshot_id is None:
+            return None
+        progress, _ = cls.objects.get_or_create(
+            session=session,
+            defaults={"roadmap_snapshot_id": session.roadmap_snapshot_id},
+        )
+        if progress.roadmap_snapshot_id != session.roadmap_snapshot_id:
+            raise ValidationError("El progreso grupal no corresponde al snapshot de la sesión.")
+        from curriculum.roadmap import ordered_activity_ids
+        activity_ids = ordered_activity_ids(progress.roadmap_snapshot.payload)
+        if not activity_ids:
+            return progress
+        completed = list(dict.fromkeys(str(value) for value in (progress.completed_activity_ids or [])))
+        current = progress.current_activity_id if progress.current_activity_id in activity_ids else ""
+        if not current:
+            current = next((value for value in activity_ids if value not in completed), "")
+            if current != progress.current_activity_id or completed != progress.completed_activity_ids:
+                progress.current_activity_id = current
+                progress.completed_activity_ids = completed
+                progress.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return progress
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = type(self).objects.filter(pk=self.pk).values(
+                "session_id", "roadmap_snapshot_id"
+            ).first()
+            if original and (original["session_id"] != self.session_id or
+                             original["roadmap_snapshot_id"] != self.roadmap_snapshot_id):
+                raise ValidationError("El progreso grupal y su snapshot quedan fijados.")
+        if self.session.roadmap_snapshot_id != self.roadmap_snapshot_id:
+            raise ValidationError("El progreso grupal debe usar el snapshot fijado a la sesión.")
+        return super().save(*args, **kwargs)
+
+    def states(self):
+        from curriculum.roadmap import states_for_group_progress
+        return states_for_group_progress(
+            self.roadmap_snapshot.payload,
+            self.completed_activity_ids,
+            self.current_activity_id or None,
+        )
+
+    def complete_activity(self, activity_id):
+        from curriculum.roadmap import ordered_activity_ids
+        activity_id = str(activity_id)
+        ids = ordered_activity_ids(self.roadmap_snapshot.payload)
+        if activity_id not in ids:
+            raise ValidationError("La actividad no existe en el roadmap publicado.")
+        completed = list(dict.fromkeys(str(value) for value in self.completed_activity_ids))
+        current = self.current_activity_id or next((value for value in ids if value not in completed), "")
+        if activity_id != current:
+            raise ValidationError("La actividad todavía no es el paso actual del grupo.")
+        if activity_id not in completed:
+            completed.append(activity_id)
+        self.completed_activity_ids = completed
+        self.current_activity_id = next((value for value in ids if value not in completed), "")
+        self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return self
+
+    def advance_to(self, activity_id):
+        from curriculum.roadmap import ordered_activity_ids
+        ids = ordered_activity_ids(self.roadmap_snapshot.payload)
+        activity_id = str(activity_id)
+        if activity_id not in ids:
+            raise ValidationError("La actividad no existe en el roadmap publicado.")
+        completed = list(dict.fromkeys(str(value) for value in (self.completed_activity_ids or [])))
+        if ids and len(set(completed)) == len(ids):
+            raise ValidationError("El roadmap grupal ya está completo.")
+        current_id = self.current_activity_id if self.current_activity_id in ids else next(
+            (value for value in ids if value not in completed), ""
+        )
+        if current_id != self.current_activity_id:
+            self.current_activity_id = current_id
+            self.completed_activity_ids = completed
+            self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        current_index = ids.index(current_id) if current_id in ids else -1
+        target_index = ids.index(activity_id)
+        if target_index <= current_index:
+            raise ValidationError("El avance grupal debe seleccionar un paso posterior.")
+        self.completed_activity_ids = list(dict.fromkeys([*completed, *ids[:target_index]]))
+        self.current_activity_id = activity_id
+        self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return self
 
 
 class ClassroomSession(models.Model):
@@ -724,6 +862,30 @@ class ClassroomSession(models.Model):
         ]
 
     @classmethod
+    def _validate_teacher_snapshot_ownership(
+        cls,
+        *,
+        teacher,
+        snapshot,
+        roadmap_snapshot,
+    ):
+        if teacher is None:
+            return
+        if snapshot.package.created_by_id != teacher.pk:
+            raise ValidationError(
+                "El snapshot curricular debe pertenecer a la maestra propietaria de la sesión."
+            )
+        if roadmap_snapshot is None:
+            return
+        has_foreign_package = PublishedPackageSnapshot.objects.filter(
+            pk__in=roadmap_snapshot.package_snapshot_ids()
+        ).exclude(package__created_by_id=teacher.pk).exists()
+        if roadmap_snapshot.published_by_id != teacher.pk or has_foreign_package:
+            raise ValidationError(
+                "El roadmap debe pertenecer a la maestra propietaria de la sesión."
+            )
+
+    @classmethod
     def start_from_snapshot(
         cls,
         snapshot,
@@ -734,7 +896,9 @@ class ClassroomSession(models.Model):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
-            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            published_snapshot = PublishedPackageSnapshot.objects.select_related(
+                "package"
+            ).get(pk=snapshot.pk)
             published_roadmap = (
                 PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
                 if roadmap_snapshot is not None
@@ -742,6 +906,11 @@ class ClassroomSession(models.Model):
             )
             if published_roadmap is not None:
                 published_roadmap.validate_package_snapshots()
+            cls._validate_teacher_snapshot_ownership(
+                teacher=teacher,
+                snapshot=published_snapshot,
+                roadmap_snapshot=published_roadmap,
+            )
         except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
                 "La sesión requiere snapshots publicados existentes."
@@ -767,7 +936,9 @@ class ClassroomSession(models.Model):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
-            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            published_snapshot = PublishedPackageSnapshot.objects.select_related(
+                "package"
+            ).get(pk=snapshot.pk)
             published_roadmap = (
                 PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
                 if roadmap_snapshot is not None
@@ -776,6 +947,11 @@ class ClassroomSession(models.Model):
             capacities = calculate_distribution(student_count, device_count)
             if published_roadmap is not None:
                 published_roadmap.validate_package_snapshots()
+            cls._validate_teacher_snapshot_ownership(
+                teacher=teacher,
+                snapshot=published_snapshot,
+                roadmap_snapshot=published_roadmap,
+            )
         except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
                 "La sesión requiere snapshots publicados existentes."
@@ -1433,7 +1609,7 @@ class StudentRoadmapProgress(models.Model):
         snapshot_id = snapshot_id or self.package_snapshot_id
         return PublishedPackageSnapshot.objects.get(pk=snapshot_id)
 
-    def complete_activity(self, activity_id, *, package_snapshot=None):
+    def complete_activity(self, activity_id, *, package_snapshot=None, enforce_current=True):
         """Complete one eligible activity without touching CurriculumProgress."""
 
         self._assert_session_snapshots()
@@ -1450,17 +1626,17 @@ class StudentRoadmapProgress(models.Model):
         activities = self.available_activity_ids()
         if activity_id not in activities:
             raise ValidationError("La actividad no existe en el roadmap publicado.")
-        if activity_id != self.current_activity_id():
+        if enforce_current and activity_id != self.current_activity_id():
             raise ValidationError("La actividad todavía no está habilitada en este recorrido.")
         self.completed_activity_ids = list(dict.fromkeys([*completed_ids, activity_id]))
         self.save(update_fields=["completed_activity_ids", "updated_at"])
         return self
 
-    def record_correct_answer(self, activity_id, question_index, question_count):
+    def record_correct_answer(self, activity_id, question_index, question_count, *, enforce_current=True):
         """Persist a correct response and complete its activity immediately."""
 
         activity_id = str(activity_id)
-        if activity_id != self.current_activity_id():
+        if enforce_current and activity_id != self.current_activity_id():
             raise ValidationError("La actividad todavía no está habilitada en este recorrido.")
         try:
             question_index = int(question_index)
@@ -1476,7 +1652,7 @@ class StudentRoadmapProgress(models.Model):
         self.correct_question_indices = correct
         self.save(update_fields=["correct_question_indices", "updated_at"])
         if len(indices) == question_count:
-            self.complete_activity(activity_id)
+            self.complete_activity(activity_id, enforce_current=enforce_current)
             return True
         return False
 
@@ -1595,6 +1771,14 @@ class CurriculumImportJob(models.Model):
         "PDF de la currícula",
         upload_to=curriculum_import_pdf_path,
     )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="curriculum_import_jobs",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     status = models.CharField(
         "estado",
         max_length=24,
@@ -1640,6 +1824,12 @@ class CurriculumImportJob(models.Model):
     )
     progress_started_at = models.DateTimeField(
         "inicio de la etapa",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    progress_finished_at = models.DateTimeField(
+        "fin de la etapa",
         null=True,
         blank=True,
         editable=False,
@@ -1763,9 +1953,46 @@ class EditorialReviewerWorkflowActionView(WorkflowActionView):
         return super().dispatch(request, *args, **kwargs)
 
 
+class CurriculumPackageCreateView(CreateView):
+    """Assign new Wagtail drafts explicitly before their first revision."""
+
+    def save_instance(self):
+        self.form.instance.created_by = self.request.user
+        return super().save_instance()
+
+
 class CurriculumPackageViewSet(SnippetViewSet):
     model = CurriculumPackage
+    add_view_class = CurriculumPackageCreateView
     workflow_action_view_class = EditorialReviewerWorkflowActionView
+    permission_policy = None
+
+
+class CurriculumPackagePermissionPolicy(ModelPermissionPolicy):
+    """Keep Wagtail snippet reads and writes within the teacher owner."""
+
+    def user_has_permission_for_instance(self, user, action, instance):
+        owns_instance = user.is_superuser or instance.created_by_id == user.pk
+        return owns_instance and super().user_has_permission_for_instance(
+            user, action, instance
+        )
+
+    def instances_user_has_any_permission_for(self, user, actions):
+        queryset = super().instances_user_has_any_permission_for(user, actions)
+        if user.is_superuser:
+            return queryset
+        return queryset.filter(created_by=user)
+
+    def users_with_any_permission_for_instance(self, actions, instance):
+        queryset = super().users_with_any_permission_for_instance(actions, instance)
+        if instance.created_by_id is None:
+            return queryset.filter(is_superuser=True)
+        return queryset.filter(models.Q(pk=instance.created_by_id) | models.Q(is_superuser=True))
+
+
+CurriculumPackageViewSet.permission_policy = CurriculumPackagePermissionPolicy(
+    CurriculumPackage
+)
 
 
 register_snippet(CurriculumPackageViewSet)

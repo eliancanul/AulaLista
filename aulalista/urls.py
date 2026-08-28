@@ -21,6 +21,7 @@ from curriculum.views import (
     tutor_import_log_md,
     tutor_import_upload,
     tutor_import_wait,
+    tutor_import_status,
     tutor_home,
     tutor_curriculum,
     tutor_package_detail,
@@ -36,6 +37,7 @@ from curriculum.views import (
     tutor_session_results_delete,
     tutor_session_review,
     tutor_session_active,
+    tutor_session_roadmap_advance,
     tutor_roadmaps,
     tutor_roadmap_progress,
     tutor_session_projection,
@@ -112,6 +114,11 @@ urlpatterns = [
         name="tutor-import-wait",
     ),
     path(
+        "tutor/imports/<int:job_id>/estado/",
+        tutor_import_status,
+        name="tutor-import-status",
+    ),
+    path(
         "tutor/imports/<int:job_id>/bitacora.md",
         tutor_import_log_md,
         name="tutor-import-log-md",
@@ -155,6 +162,11 @@ urlpatterns = [
         "tutor/sessions/<int:session_id>/active/",
         tutor_session_active,
         name="tutor-session-active",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/roadmap/advance/",
+        tutor_session_roadmap_advance,
+        name="tutor-session-roadmap-advance",
     ),
     path(
         "sessions/<int:session_id>/projection/",

@@ -10,5 +10,14 @@
       <a href="{% url 'tutor-groups' %}">Salones</a>
       <a href="{% url 'tutor-results' %}">Resultados grupales</a>
     </nav>
+    <div class="account-actions" aria-label="Cuenta">
+      <a class="account-profile-link" href="{% url 'wagtailadmin_account' %}" aria-label="Perfil docente" title="Perfil docente">
+        <span class="account-profile-icon" aria-hidden="true">●</span>
+      </a>
+      <form method="post" action="{% url 'wagtailadmin_logout' %}">
+        {% csrf_token %}
+        <button type="submit">Cerrar sesión</button>
+      </form>
+    </div>
   </div>
 </header>

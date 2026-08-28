@@ -21,20 +21,20 @@
         <div>
           <p class="eyebrow">CAMINO DE APRENDIZAJE · ESTUDIANTE</p>
           <h1>{{ roadmap_snapshot.title|default:"Tu camino" }}</h1>
-          <p class="lede">Unidades, lecciones y actividades en orden. Tu recorrido individual es temporal y pseudónimo.</p>
+          <p class="lede">Unidades, lecciones y actividades en orden. Avance compartido de la sesión; cambia al completar el paso actual o por avance docente.</p>
         </div>
-        <div class="progress-badge" data-demo="synthetic"><span>AVANCE INDIVIDUAL</span><strong>Recorrido local</strong><small>No es puntuación</small></div>
+        <div class="progress-badge" data-demo="synthetic"><span>{% if roadmap_is_shared %}AVANCE DEL GRUPO{% else %}AVANCE INDIVIDUAL{% endif %}</span><strong>Recorrido local</strong><small>No es puntuación</small></div>
       </header>
 
       <div class="progress-boundary" role="note">
-        <strong>Dos avances, dos decisiones.</strong>
-        <span>La maestra confirma el avance docente; las actividades completadas aquí solo describen este recorrido individual.</span>
+        <strong>Avance compartido de la sesión.</strong>
+        <span>No muestra estados ni identidades individuales.</span>
       </div>
 
-      {% if roadmap_progress and roadmap_progress.current_activity_id is None and roadmap_progress.completed_activity_ids %}
+      {% if roadmap_completed %}
         <section class="status-card completion-card" aria-live="polite">
           <span class="status-mark" aria-hidden="true">✓</span>
-          <div><h2>Recorrido completado</h2><p>Has completado todas las actividades de este recorrido. Esto no declara aprendizaje ni cambia el avance docente.</p></div>
+          <div><h2>Recorrido completado</h2><p>El grupo ha completado todas las actividades de este recorrido. Esto no declara aprendizaje.</p></div>
         </section>
       {% endif %}
 
@@ -72,11 +72,11 @@
           </div>
           <aside class="legend-card" aria-labelledby="legend-heading">
             <h2 id="legend-heading">Cómo leer el camino</h2>
-            <div class="legend-row"><span class="legend-icon viewed-icon">✓</span><span><strong>COMPLETADA</strong><small>Actividad terminada en este recorrido.</small></span></div>
-            <div class="legend-row"><span class="legend-icon current-icon">→</span><span><strong>ACTUAL</strong><small>Siguiente paso individual.</small></span></div>
+            <div class="legend-row"><span class="legend-icon viewed-icon">✓</span><span><strong>COMPLETADA</strong><small>{% if roadmap_is_shared %}Actividad completada por el grupo.{% else %}Actividad terminada en este recorrido.{% endif %}</small></span></div>
+            <div class="legend-row"><span class="legend-icon current-icon">→</span><span><strong>ACTUAL</strong><small>{% if roadmap_is_shared %}Siguiente paso del grupo.{% else %}Siguiente paso individual.{% endif %}</small></span></div>
             <div class="legend-row"><span class="legend-icon available-icon">○</span><span><strong>DISPONIBLE</strong><small>Preparada para después.</small></span></div>
             <div class="legend-row"><span class="legend-icon locked-icon">·</span><span><strong>BLOQUEADA</strong><small>La decisión docente la mantiene cerrada.</small></span></div>
-            <p class="legend-foot">VISTO y el avance docente se confirman por separado. Ningún estado es una calificación.</p>
+            <p class="legend-foot">Los estados son navegación, no calificación. El paso cambia al completar la actividad actual o por avance docente.</p>
           </aside>
         </section>
       {% else %}

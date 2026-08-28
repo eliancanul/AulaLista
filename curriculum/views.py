@@ -4,16 +4,19 @@ from collections import Counter
 import io
 import json
 import threading
+import time
+import unicodedata
 import uuid
 from datetime import timedelta
 from functools import wraps
 
 from django.conf import settings
+from django.contrib import messages
 from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
-from django.db import IntegrityError
+from django.db import IntegrityError, OperationalError
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -43,6 +46,7 @@ from curriculum.ephemeral import (
 from curriculum.models import (
     ClassroomGroup,
     ClassroomSession,
+    GroupRoadmapProgress,
     CurriculumImportJob,
     CurriculumPackage,
     CurriculumProgress,
@@ -498,7 +502,9 @@ def tutor_roadmaps(request):
     from curriculum.roadmap import ordered_activities, ordered_nodes
 
     package_snapshots = list(
-        PublishedPackageSnapshot.objects.select_related("package").order_by(
+        PublishedPackageSnapshot.objects.filter(
+            package__created_by=request.user
+        ).select_related("package").order_by(
             "-published_at", "-id"
         )
     )
@@ -523,7 +529,9 @@ def tutor_roadmaps(request):
         else:
             return redirect("tutor-roadmaps")
 
-    snapshots = list(PublishedRoadmapSnapshot.objects.all()[:20])
+    snapshots = list(
+        PublishedRoadmapSnapshot.objects.filter(published_by=request.user)[:20]
+    )
     cards = []
     for snapshot in snapshots:
         progress = {
@@ -575,7 +583,11 @@ def tutor_roadmap_progress(request, snapshot_id):
 
     from curriculum.roadmap import ordered_activities, ordered_nodes
 
-    snapshot = get_object_or_404(PublishedRoadmapSnapshot, pk=snapshot_id)
+    snapshot = get_object_or_404(
+        PublishedRoadmapSnapshot,
+        pk=snapshot_id,
+        published_by=request.user,
+    )
     nodes = ordered_nodes(snapshot.payload)
     activity_by_id = {
         activity["id"]: activity
@@ -588,7 +600,10 @@ def tutor_roadmap_progress(request, snapshot_id):
     }
     activity_snapshots = {
         str(item.pk): item
-        for item in PublishedPackageSnapshot.objects.filter(pk__in=package_snapshot_ids)
+        for item in PublishedPackageSnapshot.objects.filter(
+            pk__in=package_snapshot_ids,
+            package__created_by=request.user,
+        )
     }
     progress = {
         item.node_id: item
@@ -653,9 +668,15 @@ def tutor_home(request):
 def tutor_curriculum(request):
     """Teacher-facing index for imported proposals, drafts, and publications."""
 
-    packages = list(CurriculumPackage.objects.order_by("-updated_at", "-id")[:30])
+    packages = list(
+        CurriculumPackage.objects.filter(created_by=request.user).order_by(
+            "-updated_at", "-id"
+        )[:30]
+    )
     published_snapshots_by_package = {}
-    for snapshot in PublishedPackageSnapshot.objects.order_by(
+    for snapshot in PublishedPackageSnapshot.objects.filter(
+        package__created_by=request.user
+    ).order_by(
         "-published_at", "-id"
     ):
         published_snapshots_by_package.setdefault(snapshot.package_id, snapshot)
@@ -686,11 +707,13 @@ def tutor_curriculum(request):
         request,
         "curriculum/tutor_curriculum.html",
         {
-            "imports": CurriculumImportJob.objects.order_by("-updated_at", "-id")[:20],
+            "imports": CurriculumImportJob.objects.filter(
+                created_by=request.user
+            ).order_by("-updated_at", "-id")[:20],
             "package_cards": package_cards,
-            "published_snapshots": PublishedPackageSnapshot.objects.select_related(
-                "package"
-            ).order_by("-published_at", "-id")[:20],
+            "published_snapshots": PublishedPackageSnapshot.objects.filter(
+                package__created_by=request.user
+            ).select_related("package").order_by("-published_at", "-id")[:20],
         },
     )
 
@@ -702,6 +725,7 @@ def tutor_package_detail(request, snapshot_id):
     snapshot = get_object_or_404(
         PublishedPackageSnapshot.objects.select_related("package"),
         pk=snapshot_id,
+        package__created_by=request.user,
     )
     payload = snapshot.payload or {}
     questions = []
@@ -792,8 +816,30 @@ def tutor_sessions(request):
                 ),
             }
         )
+    classroom_groups = list(
+        ClassroomGroup.objects.filter(created_by=request.user)
+        .prefetch_related("classroom_sessions")
+        .order_by("name", "id")
+    )
+    classroom_cards = []
+    for group in classroom_groups:
+        group_sessions = list(group.classroom_sessions.all())
+        active_sessions = [
+            session
+            for session in group_sessions
+            if session.status == ClassroomSession.STATUS_ACTIVE
+        ]
+        classroom_cards.append(
+            {
+                "group": group,
+                "active_sessions": active_sessions,
+                "active_count": len(active_sessions),
+                "session_count": len(group_sessions),
+            }
+        )
     snapshots = (
-        PublishedPackageSnapshot.objects.select_related("package")
+        PublishedPackageSnapshot.objects.filter(package__created_by=request.user)
+        .select_related("package")
         .order_by("-published_at", "-id")[:12]
     )
     return render(
@@ -802,7 +848,8 @@ def tutor_sessions(request):
         {
             "session_cards": session_cards,
             "snapshots": snapshots,
-            "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
+            "classroom_groups": classroom_groups,
+            "classroom_cards": classroom_cards,
         },
     )
 
@@ -841,10 +888,16 @@ def tutor_groups(request):
 @teacher_required
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
-    snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
+    snapshot = get_object_or_404(
+        PublishedPackageSnapshot,
+        pk=snapshot_id,
+        package__created_by=request.user,
+    )
     context = {
         "snapshot": snapshot,
-        "roadmaps": PublishedRoadmapSnapshot.objects.all()[:20],
+        "roadmaps": PublishedRoadmapSnapshot.objects.filter(
+            published_by=request.user
+        )[:20],
         "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
     }
     if request.method == "POST":
@@ -857,6 +910,7 @@ def tutor_session_prepare(request, snapshot_id):
                 roadmap_snapshot = get_object_or_404(
                     PublishedRoadmapSnapshot,
                     pk=roadmap_id,
+                    published_by=request.user,
                 )
             classroom_group = None
             group_id = request.POST.get("classroom_group")
@@ -987,6 +1041,22 @@ def tutor_session_active(request, session_id):
         if session.status == ClassroomSession.STATUS_ACTIVE
         else {"join_url": "", "join_qr_svg": ""}
     )
+    group_progress = GroupRoadmapProgress.for_session(session)
+    roadmap_lessons = []
+    if group_progress:
+        from curriculum.roadmap import ordered_activities
+        current_id = group_progress.current_activity_id
+        activities = ordered_activities(session.roadmap_snapshot.payload)
+        current_position = next(
+            (index for index, row in enumerate(activities) if row["id"] == current_id),
+            len(activities),
+        )
+        seen = set()
+        for position, row in enumerate(activities):
+            if row["lesson_id"] not in seen:
+                seen.add(row["lesson_id"])
+                if position > current_position:
+                    roadmap_lessons.append(row)
     return render(
         request,
         "curriculum/tutor_session_active.html",
@@ -994,12 +1064,41 @@ def tutor_session_active(request, session_id):
             "session": session,
             "active_turns": active_turns,
             "participant_count": active_turns.count(),
+            "group_roadmap_progress": group_progress,
+            "roadmap_lessons": roadmap_lessons,
             **join_context,
             "snapshot_label": (
                 f"versión {session.snapshot.version} · {session.snapshot.sha256[:8]}"
             ),
         },
     )
+
+
+@never_cache
+@teacher_required
+@require_POST
+def tutor_session_roadmap_advance(request, session_id):
+    """Move this session's shared roadmap cursor forward by teacher action."""
+    session = _teacher_session_or_404(
+        request,
+        session_id,
+        ClassroomSession.objects.select_for_update().select_related(
+            "roadmap_snapshot"
+        ),
+    )
+    if session.status != ClassroomSession.STATUS_ACTIVE or not session.roadmap_snapshot_id:
+        return HttpResponseForbidden("La sesión no tiene un roadmap activo.")
+    from curriculum.roadmap import ordered_activities
+    requested = str(request.POST.get("lesson_id", "")).strip()
+    activities = ordered_activities(session.roadmap_snapshot.payload)
+    target = next((item["id"] for item in activities if item["lesson_id"] == requested), None)
+    if target is None:
+        return HttpResponseBadRequest("Selecciona una actividad del roadmap publicado.")
+    try:
+        GroupRoadmapProgress.for_session(session).advance_to(target)
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    return redirect("tutor-session-active", session_id=session.pk)
 
 
 @never_cache
@@ -1074,28 +1173,373 @@ def tutor_session_close(request, session_id):
     return redirect("tutor-session-review", session_id=session.pk)
 
 
-def _result_aggregate(results, session=None):
-    """Build group-only metrics, counting a participant key once."""
+_RESULT_RESPONSE_REQUIRED_FIELDS = {
+    "question_index",
+    "selected_position",
+    "is_correct",
+}
+_RESULT_RESPONSE_OPTIONAL_FIELDS = {"activity_id"}
+# Sessions created before roadmap support execute one package directly.  The
+# close path records that package under this stable sentinel because there is
+# no published activity ID to resolve.
+_LEGACY_RESULT_ACTIVITY_ID = "actividad-0"
 
-    results = list(results)
+
+def _is_valid_result_response(response):
+    """Validate the exact persisted shape emitted by ``record_ephemeral_response``.
+
+    A non-empty mapping is not evidence: old rows and hand-written demo data
+    may contain arbitrary JSON.  Only a deterministic practice result with
+    the three required primitive fields (and the optional activity scope) can
+    make an activity count as worked.
+    """
+
+    if not isinstance(response, dict):
+        return False
+    keys = set(response)
+    if not _RESULT_RESPONSE_REQUIRED_FIELDS <= keys:
+        return False
+    if keys - _RESULT_RESPONSE_REQUIRED_FIELDS - _RESULT_RESPONSE_OPTIONAL_FIELDS:
+        return False
+    question_index = response.get("question_index")
+    selected_position = response.get("selected_position")
+    if (
+        isinstance(question_index, bool)
+        or not isinstance(question_index, int)
+        or question_index < 0
+        or isinstance(selected_position, bool)
+        or not isinstance(selected_position, int)
+        or selected_position < 0
+        or not isinstance(response.get("is_correct"), bool)
+    ):
+        return False
+    if "activity_id" in response and (
+        not isinstance(response["activity_id"], str)
+        or not response["activity_id"].strip()
+    ):
+        return False
+    return True
+
+
+def _valid_result_responses(result):
+    responses = result.responses if isinstance(result.responses, list) else []
+    result_activity_id = getattr(result, "activity_id", None)
+    has_result_activity_id = hasattr(result, "activity_id")
+    return [
+        response
+        for response in responses
+        if _is_valid_result_response(response)
+        and (
+            "activity_id" not in response
+            or not has_result_activity_id
+            or (
+                result_activity_id not in (None, "")
+                and str(response["activity_id"]) == str(result_activity_id)
+            )
+        )
+    ]
+
+
+def _has_valid_result_response(result):
+    """Return whether a persisted result contains at least one valid response."""
+
+    return bool(_valid_result_responses(result))
+
+
+def _result_activity_catalog(session):
+    """Index only activities available in the session's frozen roadmap."""
+
+    if session is None or not session.roadmap_snapshot_id:
+        return None
+    from curriculum.roadmap import ordered_activities
+
+    activities = ordered_activities(session.roadmap_snapshot.payload)
+    catalog = {}
+    for activity in activities:
+        activity_id = activity["id"]
+        # A legacy malformed snapshot may predate the publication guard.  It
+        # is unsafe to choose one duplicate occurrence, so make every result
+        # row fail closed instead of mixing its statistics or title.
+        if activity_id in catalog:
+            return {}
+        catalog[activity_id] = activity
+    return catalog
+
+
+def _presented_roadmap_activity_ids(session, catalog):
+    """Return roadmap activities that could have been opened in this session."""
+
+    progress = GroupRoadmapProgress.objects.filter(session_id=session.pk).first()
+    if progress is not None:
+        if progress.roadmap_snapshot_id != session.roadmap_snapshot_id:
+            # A cursor from another frozen roadmap cannot establish launch
+            # history for this session.  Keep every result projection closed.
+            return set()
+        presented = {str(value) for value in (progress.completed_activity_ids or [])}
+        if progress.current_activity_id:
+            presented.add(str(progress.current_activity_id))
+        # Corrupt/legacy progress may contain IDs outside the frozen catalog;
+        # those IDs must not influence result navigation or pending flags.
+        return presented & set(catalog)
+    # Legacy/demo rows may predate the shared cursor.  A package snapshot is
+    # not launch evidence: several later roadmap activities may reuse it.
+    # Return no unworked activities; a valid persisted result is handled as
+    # direct evidence by _result_row_activity_context instead.
+    return set()
+
+
+def _result_row_activity_context(result, session):
+    """Return safe human context for a result row, or ``None`` when invalid."""
+
+    if session is None:
+        return None
+    if str(result.result_batch_id) != str(session.result_batch_id):
+        return None
+    activity_id = str(result.activity_id or _LEGACY_RESULT_ACTIVITY_ID)
+    catalog = _result_activity_catalog(session)
+    if catalog is not None:
+        activity = catalog.get(activity_id)
+        if activity is None:
+            return None
+        # A valid persisted response is direct evidence that this activity
+        # was opened, even for legacy sessions that predate the shared
+        # cursor.  Empty/abandoned rows are not evidence: without a cursor,
+        # their activity may still be a future roadmap step.
+        progress = GroupRoadmapProgress.objects.filter(session_id=session.pk).first()
+        presented_activity_ids = _presented_roadmap_activity_ids(session, catalog)
+        if activity_id not in presented_activity_ids:
+            # A present-but-mismatched cursor is tampered/invalid state, not
+            # the legacy absence case.  Do not let a valid-looking result
+            # bypass the fail-closed roadmap boundary.
+            if progress is not None:
+                return None
+            if not _has_valid_result_response(result):
+                return None
+            # A legacy session has no cursor proving that a later activity
+            # backed by another package was launched.  Keep the conservative
+            # boundary used by its persisted base snapshot; a valid result
+            # from that snapshot is still direct evidence for the worked row.
+            expected_activity_snapshot_id = (
+                activity.get("package_snapshot_id") or session.snapshot_id
+            )
+            if str(expected_activity_snapshot_id) != str(session.snapshot_id):
+                return None
+        expected_snapshot_id = activity.get("package_snapshot_id") or session.snapshot_id
+        expected_snapshot = PublishedPackageSnapshot.objects.filter(
+            pk=expected_snapshot_id
+        ).only("pk", "version", "sha256").first()
+        if expected_snapshot is None or not _result_matches_snapshot(
+            result, expected_snapshot
+        ):
+            return None
+    else:
+        if activity_id != _LEGACY_RESULT_ACTIVITY_ID:
+            # A session without a roadmap can only have emitted the close-time
+            # sentinel.  Never let an arbitrary/future ID inherit the package
+            # title through this legacy fallback.
+            return None
+        expected_snapshot = getattr(session, "snapshot", None)
+        if expected_snapshot is None or not _result_matches_snapshot(
+            result, expected_snapshot
+        ):
+            return None
+    activity = catalog.get(activity_id) if catalog is not None else None
+    if activity is None:
+        payload = getattr(getattr(session, "snapshot", None), "payload", {}) or {}
+        return {
+            "unit_title": "Unidad",
+            "lesson_title": "Lección",
+            "activity_title": payload.get("title") or "Actividad",
+        }
+    return {
+        "unit_title": activity.get("unit_title") or "Unidad",
+        "lesson_title": activity.get("lesson_title") or "Lección",
+        "activity_title": activity.get("title") or "Actividad",
+    }
+
+
+def _result_matches_snapshot(result, snapshot):
+    """Require the complete immutable package snapshot identity on a result."""
+
+    return (
+        str(getattr(result, "snapshot_id", "")) == str(snapshot.pk)
+        and getattr(result, "snapshot_version", None) == snapshot.version
+        and getattr(result, "snapshot_sha256", None) == snapshot.sha256
+    )
+
+
+def _result_aggregate(results, session=None):
+    """Build group-only metrics from activities that received a response.
+
+    Closing a session deliberately retains an abandoned row for every
+    participant/activity so the teacher can understand what happened.  Those
+    rows are not evidence that the activity was worked.  The results surface
+    therefore first removes rows without response payloads, then collapses
+    duplicate participant/activity observations before counting activities or
+    participants.  This also makes old rows and hand-created demo data obey
+    the same contract as newly closed sessions.
+    """
+
+    result_list = list(results)
+    sessions_by_batch = {}
+    if session is None:
+        batch_ids = {str(result.result_batch_id) for result in result_list}
+        sessions_by_batch = {
+            str(item.result_batch_id): item
+            for item in ClassroomSession.objects.filter(
+                result_batch_id__in=batch_ids
+            ).select_related("snapshot", "snapshot__package", "roadmap_snapshot")
+        }
+    rows = []
+    for result in result_list:
+        result_session = session or sessions_by_batch.get(str(result.result_batch_id))
+        activity_context = _result_row_activity_context(result, result_session)
+        if activity_context is None:
+            continue
+        valid_responses = _valid_result_responses(result)
+        if not valid_responses:
+            continue
+        activity_id = str(result.activity_id or _LEGACY_RESULT_ACTIVITY_ID)
+        participant_key = str(result.participant_key)
+        batch_id = str(result.result_batch_id)
+        rows.append(
+            (batch_id, activity_id, participant_key, result, valid_responses, activity_context)
+        )
+
+    # Keep one observation per participant/activity.  Prefer a completed row,
+    # then the row with the richest response payload, and finally the newest
+    # row (the queryset's normal ordering is newest first).
+    observations = {}
+    for (
+        batch_id,
+        activity_id,
+        participant_key,
+        result,
+        valid_responses,
+        activity_context,
+    ) in rows:
+        key = (batch_id, activity_id, participant_key)
+        current = observations.get(key)
+        candidate = (result, valid_responses, activity_context)
+        if current is None:
+            observations[key] = candidate
+            continue
+        current_result, current_responses, _current_context = current
+        candidate_rank = (
+            result.state == PseudonymousResult.STATE_COMPLETED,
+            len(valid_responses),
+        )
+        current_rank = (
+            current_result.state == PseudonymousResult.STATE_COMPLETED,
+            len(current_responses),
+        )
+        if candidate_rank > current_rank:
+            observations[key] = candidate
+
+    observed = list(observations.values())
+    by_activity = {}
+    for result, valid_responses, activity_context in observed:
+        activity_id = str(result.activity_id or _LEGACY_RESULT_ACTIVITY_ID)
+        activity_key = (str(result.result_batch_id), activity_id)
+        by_activity.setdefault(activity_key, []).append(
+            (result, valid_responses, activity_context)
+        )
+
+    worked_activities = []
+    for (_, activity_id), activity_rows in by_activity.items():
+        # An activity is completed for the group when at least one valid
+        # participant observation completed it; otherwise it was participated
+        # in but interrupted.  Scores and support signals are summed across
+        # unique participant observations, never duplicate result rows.
+        completed = any(
+            result.state == PseudonymousResult.STATE_COMPLETED
+            for result, _, _ in activity_rows
+        )
+        durations = [
+            result.duration_seconds
+            for result, _, _ in activity_rows
+            if result.duration_seconds is not None
+        ]
+        responses = [
+            response
+            for _, activity_responses, _ in activity_rows
+            for response in activity_responses
+        ]
+        worked_activities.append(
+            {
+                "activity_id": activity_id,
+                "state": (
+                    PseudonymousResult.STATE_COMPLETED
+                    if completed
+                    else PseudonymousResult.STATE_ABANDONED
+                ),
+                "participants": len(activity_rows),
+                "score_total": sum(
+                    sum(1 for response in valid_responses if response["is_correct"])
+                    for _, valid_responses, _ in activity_rows
+                ),
+                "help_count": sum(
+                    len(result.help_requests or [])
+                    for result, _, _ in activity_rows
+                ),
+                "technical_error_count": sum(
+                    len(result.technical_errors or [])
+                    for result, _, _ in activity_rows
+                ),
+                "duration_total_seconds": sum(durations),
+                "response_count": len(responses),
+                "results": [result for result, _, _ in activity_rows],
+                **activity_rows[0][2],
+            }
+        )
+
+    if session is not None and session.roadmap_snapshot_id:
+        # QuerySets are intentionally newest-first for the register, but an
+        # export is a roadmap report: its rows follow the frozen curriculum
+        # order and remain deterministic across result creation timing.
+        from curriculum.roadmap import ordered_activities
+
+        activity_order = {
+            activity["id"]: index
+            for index, activity in enumerate(
+                ordered_activities(session.roadmap_snapshot.payload)
+            )
+        }
+        worked_activities.sort(
+            key=lambda activity: (
+                activity_order.get(activity["activity_id"], len(activity_order)),
+                activity["activity_id"],
+            )
+        )
+
     completed_count = sum(
-        result.state == PseudonymousResult.STATE_COMPLETED for result in results
+        activity["state"] == PseudonymousResult.STATE_COMPLETED
+        for activity in worked_activities
     )
     abandoned_count = sum(
-        result.state == PseudonymousResult.STATE_ABANDONED for result in results
+        activity["state"] == PseudonymousResult.STATE_ABANDONED
+        for activity in worked_activities
     )
-    participant_keys = {result.participant_key for result in results}
-    participant_count = len(participant_keys)
+    participant_count = len(
+        {
+            (batch_id, participant_key)
+            for batch_id, _, participant_key, _, _, _ in rows
+        }
+    )
     durations = [
         result.duration_seconds
-        for result in results
+        for result, _, _ in observed
         if result.duration_seconds is not None
     ]
-    score_total = sum(result.score for result in results)
+    score_total = sum(activity["score_total"] for activity in worked_activities)
+    response_count = sum(activity["response_count"] for activity in worked_activities)
+    activity_results = [
+        result for activity in worked_activities for result in activity["results"]
+    ]
     snapshot_labels = sorted(
         {
             f"versión {result.snapshot_version} · {result.snapshot_sha256[:8]}"
-            for result in results
+            for result in activity_results
             if result.snapshot_sha256
         }
     )
@@ -1104,19 +1548,29 @@ def _result_aggregate(results, session=None):
         "Interrumpidas": abandoned_count,
     }
     return {
-        # Existing keys are retained for the review surface and old exports.
-        "count": len(results),
+        # Compatibility keys remain available to the review surface; rendered
+        # results and exports choose only the aggregate-safe projections.
+        "count": len(worked_activities),
+        "response_count": response_count,
+        "participation_count": len(observed),
+        "activities_worked": len(worked_activities),
+        "worked_activities": worked_activities,
         "completed_count": completed_count,
         "score_total": score_total,
-        "score_average": score_total / len(results) if results else 0,
-        "help_count": sum(len(result.help_requests or []) for result in results),
+        "score_average": score_total / len(observed) if observed else 0,
+        "help_count": sum(activity["help_count"] for activity in worked_activities),
         "technical_error_count": sum(
-            len(result.technical_errors or []) for result in results
+            activity["technical_error_count"] for activity in worked_activities
         ),
         # Teacher-facing group vocabulary.
         "participants": participant_count,
         "participant_count": participant_count,
         "activities_completed": completed_count,
+        "activities_participated": len(worked_activities),
+        "is_demo": bool(
+            getattr(getattr(session, "snapshot", None), "package", None)
+            and getattr(session.snapshot.package, "is_demo", False)
+        ),
         "distribution": distribution,
         "result_distribution": distribution,
         "duration_total_seconds": sum(durations),
@@ -1124,9 +1578,9 @@ def _result_aggregate(results, session=None):
             sum(durations) / len(durations) if durations else 0
         ),
         "snapshot_labels": snapshot_labels,
-        "snapshot_versions": sorted({result.snapshot_version for result in results}),
+        "snapshot_versions": sorted({result.snapshot_version for result in activity_results}),
         "snapshot_hashes": sorted(
-            {result.snapshot_sha256[:8] for result in results if result.snapshot_sha256}
+            {result.snapshot_sha256[:8] for result in activity_results if result.snapshot_sha256}
         ),
     }
 
@@ -1134,41 +1588,17 @@ def _result_aggregate(results, session=None):
 def _individual_result_register(results, session):
     """Prepare the opt-in teacher register with short opaque labels only."""
 
-    from curriculum.roadmap import ordered_activities
-
+    # The opt-in register is the existing #86 observation surface.  It may
+    # retain an interrupted turn with no response, while the aggregate above
+    # deliberately excludes that row from worked statistics.
     results = list(results)
-    activity_titles = {}
-    if session.roadmap_snapshot_id:
-        snapshot_ids = {
-            activity.get("package_snapshot_id")
-            for activity in ordered_activities(session.roadmap_snapshot.payload)
-            if activity.get("package_snapshot_id") is not None
-        }
-        snapshots = {
-            snapshot.pk: snapshot
-            for snapshot in PublishedPackageSnapshot.objects.filter(pk__in=snapshot_ids)
-        }
-        for activity in ordered_activities(session.roadmap_snapshot.payload):
-            activity_id = str(activity.get("id", ""))
-            snapshot = snapshots.get(activity.get("package_snapshot_id"))
-            activity_titles[activity_id] = (
-                activity.get("title")
-                or (snapshot.payload.get("title") if snapshot else "")
-                or "Actividad"
-            )
 
     grouped = {}
     for result in results:
+        activity_context = _result_row_activity_context(result, session)
+        if activity_context is None:
+            continue
         participant_key = str(result.participant_key)
-        activity_key = result.activity_id or f"snapshot-{result.snapshot_id}"
-        if activity_key not in activity_titles:
-            snapshot = PublishedPackageSnapshot.objects.filter(
-                pk=result.snapshot_id
-            ).first()
-            activity_titles[activity_key] = (
-                (snapshot.payload.get("title") if snapshot else "")
-                or "Actividad"
-            )
         participant = grouped.setdefault(
             participant_key,
             {
@@ -1178,16 +1608,108 @@ def _individual_result_register(results, session):
         )
         participant["activities"].append(
             {
-                "title": activity_titles[activity_key],
+                "title": activity_context["activity_title"],
                 "state": result.get_state_display(),
             }
         )
     return sorted(grouped.values(), key=lambda item: item["label"])
 
 
+def _roadmap_results_navigation(session, aggregate, *, include_unworked=False):
+    """Return a presentation-only roadmap tree for the results screen.
+
+    The published roadmap remains the source of order and titles.  Result rows
+    only annotate activities that were actually worked; activities without a
+    response are omitted from the default view and can be explicitly shown as
+    "Sin participación" without being described as pending or deficient.
+    """
+
+    if not session.roadmap_snapshot_id:
+        return []
+    from curriculum.roadmap import ordered_activities
+
+    roadmap_activities = ordered_activities(session.roadmap_snapshot.payload)
+    catalog = _result_activity_catalog(session)
+    if catalog is None or len(catalog) != len(roadmap_activities):
+        # A legacy snapshot with duplicate activity IDs cannot be rendered
+        # safely because its title/state join is ambiguous.
+        return []
+    presented_activity_ids = _presented_roadmap_activity_ids(session, catalog)
+    worked = {
+        item["activity_id"]: item for item in aggregate.get("worked_activities", [])
+    }
+    units = []
+    unit_by_id = {}
+    lesson_by_key = {}
+    for activity in roadmap_activities:
+        result = worked.get(activity["id"])
+        if activity["id"] not in presented_activity_ids and result is None:
+            continue
+        if include_unworked and result is not None:
+            continue
+        if result is None and not include_unworked:
+            continue
+        unit = unit_by_id.get(activity["unit_id"])
+        if unit is None:
+            unit = {"title": activity["unit_title"], "lessons": []}
+            unit_by_id[activity["unit_id"]] = unit
+            units.append(unit)
+        lesson_key = (activity["unit_id"], activity["lesson_id"])
+        lesson = lesson_by_key.get(lesson_key)
+        if lesson is None:
+            lesson = {"title": activity["lesson_title"], "activities": []}
+            lesson_by_key[lesson_key] = lesson
+            unit["lessons"].append(lesson)
+        lesson["activities"].append(
+            {
+                "title": activity["title"],
+                "state": (
+                    "Completada"
+                    if result and result["state"] == PseudonymousResult.STATE_COMPLETED
+                    else "Participación registrada"
+                    if result
+                    else "Sin participación"
+                ),
+                "participants": result["participants"] if result else 0,
+            }
+        )
+    return units
+
+
+def _result_card_context(session, aggregate, *, include_unworked=False):
+    """Add the stable roadmap/session navigation data consumed by both UIs."""
+
+    from curriculum.roadmap import ordered_activities
+
+    roadmap_activities = (
+        ordered_activities(session.roadmap_snapshot.payload)
+        if session.roadmap_snapshot_id
+        else []
+    )
+    catalog = _result_activity_catalog(session)
+    roadmap_activity_ids = (
+        _presented_roadmap_activity_ids(session, catalog)
+        if catalog is not None and len(catalog) == len(roadmap_activities)
+        else set()
+    )
+    worked_activity_ids = {
+        item["activity_id"] for item in aggregate.get("worked_activities", [])
+    }
+    return {
+        "roadmap_navigation": _roadmap_results_navigation(
+            session, aggregate, include_unworked=include_unworked
+        ),
+        "has_unworked_activities": bool(
+            roadmap_activity_ids - worked_activity_ids
+        ),
+    }
+
+
 @teacher_required
 def tutor_results(request):
-    """List closed sessions with group statistics only."""
+    """List worked activities by default, with an explicit no-participation view."""
+
+    show_unworked = request.GET.get("vista") == "sin-participacion"
 
     sessions = _teacher_sessions(request).filter(
         status=ClassroomSession.STATUS_CLOSED
@@ -1195,12 +1717,22 @@ def tutor_results(request):
         "snapshot", "snapshot__package", "roadmap_snapshot", "classroom_group"
     )[:30]
     result_cards = []
+    has_unworked_sessions = False
     for session in sessions:
         aggregate = _result_aggregate(
             PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
             session=session,
         )
-        result_cards.append({"session": session, "aggregate": aggregate})
+        card = {"session": session, "aggregate": aggregate}
+        card.update(
+            _result_card_context(
+                session, aggregate, include_unworked=show_unworked
+            )
+        )
+        if card["has_unworked_activities"]:
+            has_unworked_sessions = True
+        if show_unworked or aggregate["count"]:
+            result_cards.append(card)
     groups = ClassroomGroup.objects.filter(created_by=request.user)
     group_cards = []
     for group in groups:
@@ -1229,7 +1761,12 @@ def tutor_results(request):
     return render(
         request,
         "curriculum/tutor_results.html",
-        {"result_cards": result_cards, "group_cards": group_cards},
+        {
+            "result_cards": result_cards,
+            "group_cards": group_cards,
+            "show_unworked": show_unworked,
+            "has_unworked_sessions": has_unworked_sessions,
+        },
     )
 
 
@@ -1274,17 +1811,18 @@ def tutor_session_results(request, session_id):
         PseudonymousResult.objects.filter(result_batch_id=session.result_batch_id),
         session=session,
     )
-    results = PseudonymousResult.objects.filter(
-        result_batch_id=session.result_batch_id
-    )
+    show_unworked = request.GET.get("vista") == "sin-participacion"
     return render(
         request,
         "curriculum/tutor_session_results.html",
         {
             "session": session,
             "aggregate": aggregate,
-            "individual_register": _individual_result_register(results, session),
             "survey_aggregate": survey_aggregate(_session_survey_responses(session)),
+            "show_unworked": show_unworked,
+            **_result_card_context(
+                session, aggregate, include_unworked=show_unworked
+            ),
         },
     )
 
@@ -1320,20 +1858,52 @@ def _session_survey_responses(session):
     )
 
 
-def _result_export_payload(result):
+def _result_export_payload(activity):
+    """Return one aggregate-safe activity row without technical identifiers."""
+
     return {
-        "participant_label": str(result.participant_key)[:8],
-        "activity_id": result.activity_id,
-        "snapshot_id": result.snapshot_id,
-        "snapshot_version": result.snapshot_version,
-        "snapshot_sha256": result.snapshot_sha256,
-        "state": result.state,
-        "duration_seconds": result.duration_seconds,
-        "responses": result.responses,
-        "score": result.score,
-        "help_requests": result.help_requests,
-        "technical_errors": result.technical_errors,
+        "unit_title": activity["unit_title"],
+        "lesson_title": activity["lesson_title"],
+        "activity_title": activity["activity_title"],
+        "state": (
+            "completed"
+            if activity["state"] == PseudonymousResult.STATE_COMPLETED
+            else "abandoned"
+        ),
+        "participants": activity["participants"],
+        "duration_seconds": activity["duration_total_seconds"],
+        "response_count": activity["response_count"],
+        "score": activity["score_total"],
+        "help_count": activity["help_count"],
+        "technical_error_count": activity["technical_error_count"],
     }
+
+
+def _csv_safe_text(value):
+    """Neutralize spreadsheet formulas without changing JSON/UI titles.
+
+    Spreadsheet applications may interpret a cell as a formula when a value
+    starts with ``=``, ``+``, ``-`` or ``@``.  Some importers also ignore
+    leading spaces, tabs and control characters, so inspect past that prefix
+    before deciding whether to add the literal-text apostrophe.  csv.DictWriter
+    still owns quoting and newline escaping after this narrow transformation.
+    """
+
+    if not isinstance(value, str) or not value:
+        return value
+    index = 0
+    while index < len(value):
+        character = value[index]
+        if (
+            character.isspace()
+            or unicodedata.category(character) in {"Cc", "Cf"}
+        ):
+            index += 1
+            continue
+        break
+    if index < len(value) and value[index] in "=+-@":
+        return "'" + value
+    return value
 
 
 @teacher_required
@@ -1346,18 +1916,20 @@ def tutor_session_export(request, session_id):
     results = PseudonymousResult.objects.filter(
         result_batch_id=session.result_batch_id,
     )
-    payload = [_result_export_payload(result) for result in results]
+    # The export is deliberately aggregate-only.  Participant labels,
+    # activity IDs, snapshot IDs/hashes and raw response payloads are all
+    # pseudonymous or technical identifiers and are not part of #100's
+    # /resultados/ projection surface.
+    aggregate = _result_aggregate(results, session=session)
+    payload = [_result_export_payload(activity) for activity in aggregate["worked_activities"]]
     export_format = request.POST.get("format", "json").lower()
     if export_format == "json":
         # JSON incluye también el resumen agregado de la encuesta seudonimizada.
         response = JsonResponse(
-            {
-                "results": payload,
-                "survey": survey_aggregate(_session_survey_responses(session)),
-            }
+            {"results": payload, "survey": survey_aggregate(_session_survey_responses(session))}
         )
         response["Content-Disposition"] = (
-            f'attachment; filename="aulalista-session-{session.pk}.json"'
+            'attachment; filename="aulalista-resultados.json"'
         )
         return response
     if export_format == "csv":
@@ -1365,17 +1937,16 @@ def tutor_session_export(request, session_id):
         writer = csv.DictWriter(
             output,
             fieldnames=[
-                "participant_label",
-                "activity_id",
-                "snapshot_id",
-                "snapshot_version",
-                "snapshot_sha256",
+                "unit_title",
+                "lesson_title",
+                "activity_title",
                 "state",
+                "participants",
                 "duration_seconds",
-                "responses",
+                "response_count",
                 "score",
-                "help_requests",
-                "technical_errors",
+                "help_count",
+                "technical_error_count",
             ],
         )
         writer.writeheader()
@@ -1383,18 +1954,14 @@ def tutor_session_export(request, session_id):
             writer.writerow(
                 {
                     **result,
-                    "responses": json.dumps(result["responses"], ensure_ascii=False),
-                    "help_requests": json.dumps(
-                        result["help_requests"], ensure_ascii=False
-                    ),
-                    "technical_errors": json.dumps(
-                        result["technical_errors"], ensure_ascii=False
-                    ),
+                    "unit_title": _csv_safe_text(result["unit_title"]),
+                    "lesson_title": _csv_safe_text(result["lesson_title"]),
+                    "activity_title": _csv_safe_text(result["activity_title"]),
                 }
             )
         response = HttpResponse(output.getvalue(), content_type="text/csv")
         response["Content-Disposition"] = (
-            f'attachment; filename="aulalista-session-{session.pk}.csv"'
+            'attachment; filename="aulalista-resultados.csv"'
         )
         return response
     return HttpResponseBadRequest("El formato de exportación no está disponible.")
@@ -1421,7 +1988,15 @@ def tutor_session_results_delete(request, session_id):
             result_batch_id=session.result_batch_id,
         ).delete()
     deleted, _ = queryset.delete()
-    return JsonResponse({"deleted": deleted, "surveys_deleted": deleted_surveys})
+    detail = f"{deleted} resultado"
+    if deleted != 1:
+        detail += "s"
+    if deleted_surveys:
+        detail += f" y {deleted_surveys} encuesta"
+        if deleted_surveys != 1:
+            detail += "s"
+    messages.success(request, f"Se borraron {detail} de la sesión.")
+    return redirect("tutor-home")
 
 
 @teacher_required
@@ -1437,7 +2012,8 @@ def tutor_result_delete(request, session_id, result_id):
         result_batch_id=session.result_batch_id,
     )
     result.delete()
-    return JsonResponse({"deleted": 1})
+    messages.success(request, "Se borró el resultado de la sesión.")
+    return redirect("tutor-home")
 
 
 @never_cache
@@ -1509,7 +2085,7 @@ def _import_stage_runner():
     return lambda target, *args: target(*args)
 
 
-def _run_import_job_stage(job_id, stage, payload=None):
+def _run_import_job_stage_once(job_id, stage, payload=None):
     """Worker entry point: execute one LLM stage and persist its outcome.
 
     Interruptions never discard the proposals already generated: partial
@@ -1543,17 +2119,25 @@ def _run_import_job_stage(job_id, stage, payload=None):
     except Exception as error:  # noqa: BLE001 - the worker must never die silently
         import traceback
 
+        if isinstance(error, OperationalError) and "locked" in str(error).lower():
+            # SQLite lock contention is transient while the waiting page polls;
+            # let the bounded wrapper retry the stage instead of recording a
+            # false pipeline failure.
+            raise
+
         failure_traceback = traceback.format_exc()
         job = CurriculumImportJob.objects.filter(pk=job_id).first()
         if job:
             job.status = fallback_status[stage]
             job.error_message = str(error)[:500]
             job.progress_stage = ""
+            job.progress_finished_at = timezone.now()
             job.save(
                 update_fields=[
                     "status",
                     "error_message",
                     "progress_stage",
+                    "progress_finished_at",
                     "updated_at",
                 ]
             )
@@ -1590,27 +2174,57 @@ def _run_import_job_stage(job_id, stage, payload=None):
             connection.close()
 
 
+def _run_import_job_stage(job_id, stage, payload=None):
+    """Run a stage with bounded retries for transient SQLite lock contention."""
+
+    for attempt in range(8):
+        try:
+            return _run_import_job_stage_once(job_id, stage, payload)
+        except OperationalError as error:
+            if "locked" not in str(error).lower():
+                raise
+            if attempt == 7:
+                fallback_status = {
+                    "extract": CurriculumImportJob.STATUS_FAILED,
+                    "subtopics": CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED,
+                    "activities": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
+                    "add_missing": CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
+                }
+                # The worker may be a daemon: never leave the waiting page in
+                # an unobservable running state after exhausting lock retries.
+                CurriculumImportJob.objects.filter(pk=job_id).update(
+                    status=fallback_status[stage],
+                    error_message=(
+                        "La etapa se detuvo después de varios bloqueos de la base local. "
+                        "Puedes reintentarlo."
+                    ),
+                    progress_stage="",
+                    progress_finished_at=timezone.now(),
+                    updated_at=timezone.now(),
+                )
+                return None
+            time.sleep(0.05 * (attempt + 1))
+
+
 def _start_import_stage(request, job, stage, payload=None):
     """Mark the stage as running and hand it to the background runner."""
 
-    if job.progress_stage:
-        # A stage is already running; just watch it instead of starting twice.
-        return redirect("tutor-import-wait", job_id=job.pk)
-    job.progress_stage = stage
-    job.progress_done = 0
-    job.progress_total = 0
-    job.progress_started_at = timezone.now()
-    job.error_message = ""
-    job.save(
-        update_fields=[
-            "progress_stage",
-            "progress_done",
-            "progress_total",
-            "progress_started_at",
-            "error_message",
-            "updated_at",
-        ]
+    started_at = timezone.now()
+    claimed = CurriculumImportJob.objects.filter(
+        pk=job.pk,
+        progress_stage="",
+    ).update(
+        progress_stage=stage,
+        progress_done=0,
+        progress_total=0,
+        progress_started_at=started_at,
+        progress_finished_at=None,
+        error_message="",
+        updated_at=started_at,
     )
+    if not claimed:
+        # Compare-and-set closes the stale-request race: only one worker starts.
+        return redirect("tutor-import-wait", job_id=job.pk)
     _import_stage_runner()(_run_import_job_stage, job.pk, stage, payload)
     return redirect("tutor-import-wait", job_id=job.pk)
 
@@ -1626,27 +2240,42 @@ IMPORT_STAGE_WAIT_MESSAGES = {
 IMPORT_STAGE_TIMEOUT = timedelta(minutes=90)
 
 
+def _release_stale_import_stage(job):
+    stale = bool(
+        job.progress_stage
+        and job.progress_started_at
+        and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
+    )
+    if not stale:
+        return False
+    job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
+    job.error_message = (
+        "El asistente virtual tardó demasiado y el proceso se detuvo. "
+        "Puedes reintentarlo."
+    )
+    job.save(
+        update_fields=[
+            "progress_stage",
+            "progress_finished_at",
+            "error_message",
+            "updated_at",
+        ]
+    )
+    return True
+
+
 @teacher_required
 @require_http_methods(["GET"])
 def tutor_import_wait(request, job_id):
-    """Waiting page that polls the job while an LLM stage runs (#32/#36).
+    """Waiting shell updated by incremental polling while a stage runs."""
 
-    The page refreshes itself every few seconds; once the stage clears, the
-    teacher lands back on the review panel automatically.
-    """
-
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
-    stale = bool(
-        job.progress_started_at
-        and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
     )
-    if stale:
-        job.progress_stage = ""
-        job.error_message = (
-            "El asistente virtual tardó demasiado y el proceso se detuvo. "
-            "Puedes reintentarlo."
-        )
-        job.save(update_fields=["progress_stage", "error_message", "updated_at"])
+    _release_stale_import_stage(job)
     if not job.progress_stage:
         return redirect("tutor-import-detail", job_id=job.pk)
     return render(
@@ -1654,11 +2283,68 @@ def tutor_import_wait(request, job_id):
         "curriculum/tutor_import_wait.html",
         {
             "job": job,
+            "progress_state": _import_progress_state(job),
             "wait_message": IMPORT_STAGE_WAIT_MESSAGES.get(
                 job.progress_stage,
                 "El asistente virtual está trabajando…",
             ),
         },
+    )
+
+
+def _import_progress_state(job):
+    if job.progress_stage:
+        if job.progress_done:
+            return "partial"
+        if job.progress_total:
+            return "working"
+        return "waiting"
+    if job.error_message:
+        return "error"
+    return "finished"
+
+
+IMPORT_PROGRESS_LABELS = {
+    "waiting": "Esperando al asistente",
+    "working": "El asistente está trabajando",
+    "partial": "Hay un resultado parcial guardado",
+    "finished": "Generación terminada",
+    "error": "La generación se interrumpió",
+}
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_status(request, job_id):
+    """Small owner-scoped polling payload; never starts or repeats work."""
+
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+    _release_stale_import_stage(job)
+    state = _import_progress_state(job)
+    return JsonResponse(
+        {
+            "state": state,
+            "label": IMPORT_PROGRESS_LABELS[state],
+            "stage": job.progress_stage,
+            "done": job.progress_done,
+            "total": job.progress_total,
+            "error": job.error_message,
+            "started_at": (
+                job.progress_started_at.isoformat()
+                if job.progress_started_at is not None
+                else None
+            ),
+            "finished_at": (
+                job.progress_finished_at.isoformat()
+                if job.progress_finished_at is not None
+                else None
+            ),
+            "redirect_url": reverse("tutor-import-detail", args=[job.pk]),
+        }
     )
 
 
@@ -1714,7 +2400,11 @@ def _render_technical_log_markdown(job):
 def tutor_import_log_md(request, job_id):
     """Download the full technical log as Markdown (#34)."""
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     content = _render_technical_log_markdown(job)
     response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
     response["Content-Disposition"] = (
@@ -1728,7 +2418,11 @@ def tutor_import_log_md(request, job_id):
 def tutor_import_log_json(request, job_id):
     """Download the full technical log as JSON (#34)."""
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     response = JsonResponse(list(job.llm_trace), safe=False, json_dumps_params={
         "ensure_ascii": False,
         "indent": 2,
@@ -1753,7 +2447,7 @@ def tutor_import_upload(request):
                 {"error": "Selecciona el PDF de la currícula."},
                 status=400,
             )
-        job = CurriculumImportJob.objects.create(pdf=pdf)
+        job = CurriculumImportJob.objects.create(pdf=pdf, created_by=request.user)
         return redirect("tutor-import-detail", job_id=job.pk)
     return render(request, "curriculum/tutor_import_form.html", {})
 
@@ -1770,7 +2464,11 @@ def tutor_import_detail(request, job_id):
 
     from curriculum import curriculum_import as pipeline
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     if job.progress_stage:
         # A stage is running in the background; watch it on the waiting page.
         return redirect("tutor-import-wait", job_id=job.pk)
@@ -1839,7 +2537,10 @@ def tutor_import_detail(request, job_id):
             sub["faltantes"] for group in grouped for sub in group["subs"]
         )
     if job.status == CurriculumImportJob.STATUS_CONVERTED:
-        drafts = CurriculumPackage.objects.filter(ai_assisted=True).order_by("-id")[:20]
+        drafts = CurriculumPackage.objects.filter(
+            ai_assisted=True,
+            created_by=request.user,
+        ).order_by("-id")[:20]
         context["drafts"] = drafts
         context["drafts_count"] = drafts.count()
     return render(request, "curriculum/tutor_import_detail.html", context)
@@ -1886,6 +2587,7 @@ def _import_action_extract(job, pipeline):
     job.status = CurriculumImportJob.STATUS_TOPICS_PROPOSED
     job.error_message = ""
     job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
     job.save()
     return job
 
@@ -1933,6 +2635,7 @@ def _import_action_confirm_topics(job, pipeline, topics):
     job.status = CurriculumImportJob.STATUS_SUBTOPICS_PROPOSED
     job.error_message = ""
     job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
     job.save()
     return job
 
@@ -2074,6 +2777,7 @@ def _import_action_generate_activities(job, pipeline):
     job.status = CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
     job.error_message = ""
     job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
     job.save()
     return job
 
@@ -2237,6 +2941,7 @@ def _import_action_add_missing_activities(job, pipeline):
         )
     job.error_message = ""
     job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
     job.save()
     return added
 
@@ -2301,6 +3006,7 @@ def _import_action_convert(job, post_data):
                 for question in entry["proposal"]["questions"]
             ],
             ai_assisted=True,
+            created_by=job.created_by,
         )
         created += 1
     job.status = CurriculumImportJob.STATUS_CONVERTED
@@ -2318,9 +3024,14 @@ def _unconfirmed_session_response(session):
 
 def _roadmap_context(session, turn, progress=None):
     progress = progress or (StudentRoadmapProgress.for_turn(turn) if turn is not None else None)
+    group_progress = GroupRoadmapProgress.for_session(session)
+    group_states = group_progress.states() if group_progress else []
     return {
         "roadmap_progress": progress,
-        "roadmap_states": progress.roadmap_states() if progress else [],
+        "group_roadmap_progress": group_progress,
+        "roadmap_states": group_states,
+        "roadmap_completed": bool(group_states and all(row["state"] == "COMPLETADA" for row in group_states)),
+        "roadmap_is_shared": bool(group_progress),
         "roadmap_snapshot": session.roadmap_snapshot,
     }
 
@@ -2328,9 +3039,19 @@ def _roadmap_context(session, turn, progress=None):
 def _activity_snapshot(session, progress=None):
     """Resolve the immutable package for the current roadmap activity."""
 
-    if progress is None or session.roadmap_snapshot_id is None:
+    if session.roadmap_snapshot_id is None:
         return session.snapshot
-    return progress.package_snapshot_for_activity()
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id or next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    )
+    if activity_id is None:
+        return session.snapshot
+    from curriculum.roadmap import ordered_activities
+    activity = next(row for row in ordered_activities(session.roadmap_snapshot.payload)
+                    if row["id"] == activity_id)
+    snapshot_id = activity.get("package_snapshot_id") or session.snapshot_id
+    return PublishedPackageSnapshot.objects.get(pk=snapshot_id)
 
 
 def _roadmap_activity_ids(session):
@@ -2390,13 +3111,16 @@ def student_roadmap(request, session_id):
 def _activity_context(session, **extra):
     turn = extra.get("turn")
     progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
-    roadmap_completed = bool(
-        progress
-        and session.roadmap_snapshot_id
-        and progress.current_activity_id() is None
-        and progress.completed_activity_ids
-    )
+    group = GroupRoadmapProgress.for_session(session)
+    roadmap_completed = bool(group and group.states() and all(
+        row["state"] == "COMPLETADA" for row in group.states()
+    ))
     activity_snapshot = session.snapshot if roadmap_completed else _activity_snapshot(session, progress)
+    item_activity_id = None
+    if group and not roadmap_completed:
+        item_activity_id = group.current_activity_id or next(
+            (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+        )
     context = {
         "session": session,
         "snapshot": activity_snapshot,
@@ -2404,6 +3128,7 @@ def _activity_context(session, **extra):
         "turn": turn,
         "activity_questions": [] if roadmap_completed else _activity_questions(session, turn, activity_snapshot),
         "roadmap_completed": roadmap_completed,
+        "item_activity_id": item_activity_id,
         **_roadmap_context(session, turn, progress),
     }
     context.update(extra)
@@ -2414,7 +3139,10 @@ def _activity_questions(session, turn, activity_snapshot=None):
     activity_snapshot = activity_snapshot or session.snapshot
     questions = activity_snapshot.payload.get("questions", []) or []
     progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
     activity_questions = []
     turn_id = turn.pk if turn is not None else session.pk
     for question_index, question in enumerate(questions):
@@ -2443,23 +3171,30 @@ def _activity_questions(session, turn, activity_snapshot=None):
 
 
 def _complete_activity_after_response(session, turn, question_index):
-    """Persist correctness and advance the individual route immediately."""
+    """Persist correctness and advance the shared session route immediately."""
 
     progress = StudentRoadmapProgress.for_turn(turn)
     if progress is None:
         return False
-    activity_id = progress.current_activity_id()
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id or next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    )
     if activity_id is None:
         return False
     activity_snapshot = _activity_snapshot(session, progress)
     questions = activity_snapshot.payload.get("questions", []) or []
     if not questions:
         return False
-    return progress.record_correct_answer(
+    completed = progress.record_correct_answer(
         activity_id,
         question_index,
         len(questions),
+        enforce_current=False,
     )
+    if completed:
+        group.complete_activity(activity_id)
+    return completed
 
 
 def _hint_progress_key(turn_id, question_index, activity_id=None):
@@ -2579,6 +3314,11 @@ def student_roadmap_complete(request, session_id, activity_id):
     if progress is None:
         return HttpResponseBadRequest("La sesión no tiene un roadmap publicado.")
     try:
+        group = GroupRoadmapProgress.for_session(session)
+        if activity_id != (group.current_activity_id or next(
+            (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+        )):
+            raise ValidationError("La actividad todavía no es el paso actual del grupo.")
         activity_snapshot = _activity_snapshot(session, progress)
         if activity_snapshot.payload.get("questions"):
             correct_indices = (progress.correct_question_indices or {}).get(str(activity_id), [])
@@ -2587,7 +3327,8 @@ def student_roadmap_complete(request, session_id, activity_id):
                 return HttpResponseBadRequest(
                     "La actividad requiere completar correctamente sus reactivos."
                 )
-        progress.complete_activity(activity_id, package_snapshot=activity_snapshot)
+        progress.complete_activity(activity_id, package_snapshot=activity_snapshot, enforce_current=False)
+        group.complete_activity(activity_id)
     except (ValidationError, PublishedPackageSnapshot.DoesNotExist) as error:
         return HttpResponseBadRequest(str(error))
     return redirect("student-roadmap", session_id=session_id)
@@ -2612,7 +3353,13 @@ def student_question_answer(request, session_id, question_index):
             "La respuesta requiere el turno activo y la capacidad de este dispositivo."
         )
     progress = StudentRoadmapProgress.for_turn(turn)
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
+    posted_activity_id = str(request.POST.get("activity_id", "")).strip()
+    if group and posted_activity_id != activity_id:
+        return HttpResponseBadRequest("La actividad ya cambió para el grupo.")
     try:
         result = evaluate_response(
             _activity_snapshot(session, progress).payload,
@@ -2667,7 +3414,10 @@ def student_question_assistance(request, session_id, question_index):
             "La ayuda requiere el turno activo y la capacidad de este dispositivo."
         )
     progress = StudentRoadmapProgress.for_turn(turn)
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
     activity_snapshot = _activity_snapshot(session, progress)
     kind = request.POST.get("kind", "hint")
     hint_index = None

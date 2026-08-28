@@ -42,6 +42,14 @@ button { cursor: pointer; }
 .top-nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-inline-start: auto; }
 .top-nav a { min-block-size: 44px; display: inline-flex; align-items: center; padding: .45rem 0; font-size: .84rem; font-weight: 750; text-decoration: none; }
 .top-nav a:hover { text-decoration: underline; }
+.account-actions { display: flex; align-items: center; gap: .65rem; margin-inline-start: .5rem; padding-inline-start: .9rem; border-inline-start: 1px solid var(--color-line); }
+.account-actions a, .account-actions button { min-block-size: 40px; display: inline-flex; align-items: center; padding: .4rem .6rem; border: 0; color: var(--color-action-dark); background: transparent; font-size: .78rem; font-weight: 800; text-decoration: none; }
+.account-profile-link { inline-size: 40px; justify-content: center; padding-inline: 0 !important; }
+.account-profile-icon { inline-size: 1.35rem; block-size: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.account-actions button { cursor: pointer; }
+.account-actions a:hover, .account-actions button:hover { text-decoration: underline; }
+.message-stack { margin-block-end: 1.5rem; }
+.message { margin: 0; padding: .9rem 1rem; border-inline-start: .35rem solid var(--color-completed); background: #e0f1e8; color: #145c42; font-weight: 700; }
 main { padding: clamp(2rem, 6vw, 5rem) 0 4rem; }
 h1, h2, h3, p { margin-block-start: 0; }
 h1 { max-width: 850px; margin-block-end: 1rem; font-size: clamp(2.5rem, 7vw, 5.1rem); line-height: .98; letter-spacing: -.065em; }
@@ -76,6 +84,21 @@ p { color: var(--color-muted); }
 .session-card { min-width: 0; padding: 1.35rem; display: flex; flex-direction: column; gap: .8rem; }
 .session-card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .session-card h3 { margin-block-end: 0; font-size: 1.25rem; }
+.classroom-section { margin-block: 2.5rem; }
+.section-intro { max-width: 700px; margin-block: 0 1rem; }
+.classroom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.classroom-card { min-width: 0; padding: 1.25rem; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-surface); box-shadow: 0 10px 28px rgb(23 33 43 / 5%); }
+.classroom-card--active { border-color: #8fc6a7; box-shadow: 0 12px 30px rgb(23 107 77 / 10%); }
+.classroom-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.classroom-card h3 { margin-block-end: 0; font-size: 1.25rem; }
+.classroom-metrics { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-block: 1rem; color: var(--color-muted); font-size: .82rem; }
+.classroom-metrics strong { color: var(--color-ink); font-size: 1.15rem; }
+.classroom-session-list { margin-block: 1rem; padding-block-start: .8rem; border-block-start: 1px solid var(--color-line); }
+.classroom-session-link { display: flex; justify-content: space-between; gap: .8rem; padding: .7rem 0; color: var(--color-action-dark); font-weight: 750; text-decoration: none; }
+.classroom-session-link + .classroom-session-link { border-block-start: 1px solid var(--color-line); }
+.classroom-session-link strong { white-space: nowrap; }
+.classroom-empty { margin-block: 1rem; font-size: .84rem; }
+.classroom-results-link { margin-block-start: .4rem; }
 .card-kicker { margin-block-end: .35rem; font-size: .62rem; }
 .status { padding: .45rem .65rem; border: 1px solid #a9b7bc; color: var(--color-muted); background: #eef3f0; white-space: nowrap; }
 .status--prepared { color: #704c00; border-color: #e1c26d; background: var(--color-warm); }
@@ -130,6 +153,6 @@ input, select { inline-size: 100%; min-block-size: 44px; padding: .6rem .7rem; b
 .node-decision .button { min-block-size: var(--target-min); padding: .5rem .7rem; }
 .error { padding: .9rem 1rem; border-inline-start: .35rem solid var(--color-error); background: #fbe8ee; color: var(--color-error); }
 .site-footer { display: flex; justify-content: space-between; gap: 1rem; width: min(1180px, calc(100% - 2rem)); margin-inline: auto; padding: 1rem 0 1.5rem; border-block-start: 1px solid var(--color-line); color: var(--color-muted); font-size: .75rem; }
-@media (max-width: 760px) { .landing-header--split { display: block; } .landing-header--split .primary-action { margin-block-start: 1rem; } .session-grid, .roadmap-card-grid { grid-template-columns: 1fr; } .teacher-node { grid-template-columns: 2rem minmax(0, 1fr); } .node-decision { grid-column: 2; } }
-@media (max-width: 560px) { .site-header-inner { min-height: 64px; flex-wrap: wrap; padding-block: .6rem; } .top-nav { order: 3; inline-size: 100%; margin-inline-start: 0; justify-content: space-between; } .top-nav a { min-block-size: 40px; } .demo-badge { margin-inline-start: auto; font-size: .58rem; } main { padding-block: 2.2rem 3rem; } .session-card, .snapshot-choices, .roadmap-form-card, .roadmap-card, .teacher-roadmap { padding: 1rem; } .snapshot-choices li { align-items: flex-start; flex-direction: column; } .teacher-node { grid-template-columns: 1.8rem minmax(0, 1fr); gap: .65rem; padding: .75rem; } .teacher-node-marker { inline-size: 1.8rem; block-size: 1.8rem; } .node-decision { grid-column: 1 / -1; } .node-decision .button { inline-size: 100%; } .authority-boundary { padding: .85rem; } .site-footer { flex-direction: column; } }
+@media (max-width: 760px) { .landing-header--split { display: block; } .landing-header--split .primary-action { margin-block-start: 1rem; } .session-grid, .roadmap-card-grid, .classroom-grid { grid-template-columns: 1fr; } .teacher-node { grid-template-columns: 2rem minmax(0, 1fr); } .node-decision { grid-column: 2; } }
+@media (max-width: 560px) { .site-header-inner { min-height: 64px; flex-wrap: wrap; padding-block: .6rem; } .top-nav { order: 3; inline-size: 100%; margin-inline-start: 0; justify-content: space-between; } .top-nav a { min-block-size: 40px; } .account-actions { order: 2; margin-inline-start: auto; padding-inline-start: .5rem; } .demo-badge { margin-inline-start: auto; font-size: .58rem; } main { padding-block: 2.2rem 3rem; } .session-card, .snapshot-choices, .roadmap-form-card, .roadmap-card, .teacher-roadmap, .classroom-card { padding: 1rem; } .snapshot-choices li { align-items: flex-start; flex-direction: column; } .teacher-node { grid-template-columns: 1.8rem minmax(0, 1fr); gap: .65rem; padding: .75rem; } .teacher-node-marker { inline-size: 1.8rem; block-size: 1.8rem; } .node-decision { grid-column: 1 / -1; } .node-decision .button { inline-size: 100%; } .authority-boundary { padding: .85rem; } .site-footer { flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

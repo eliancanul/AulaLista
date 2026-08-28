@@ -39,6 +39,20 @@ continuidad real durante una emergencia.
    retroalimentación, pistas y explicación final.
 5. Una corrección genera otro snapshot; no modifica los snapshots anteriores.
 
+## Estado en vivo del asistente de autoría
+
+La causa reproducida de la recarga aparente era un `meta refresh` cada dos
+segundos en la página de espera, no una reconexión del modelo. La espera usa
+ahora polling JSON incremental y JavaScript local: actualiza sólo estado y
+contador, conserva resultados parciales y reintenta la consulta tras una
+desconexión sin iniciar otra generación.
+
+Los estados visibles son esperando, trabajando, parcial, terminado y error.
+Cada etapa persiste `progress_started_at` y `progress_finished_at`; las pruebas
+de generación exitosa e interrumpida verifican ambos extremos de la medición.
+Un timeout libera el trabajo como error recuperable y deja la revisión humana
+como autoridad: el asistente no aprueba ni publica.
+
 ## Flujo de aula
 
 - El tutor prepara una `ClassroomSession` con distribución determinista entre

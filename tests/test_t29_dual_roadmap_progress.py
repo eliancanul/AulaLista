@@ -29,9 +29,12 @@ from helpers import tutor_client  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
-def _snapshot(title, version=1, question_count=1):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def _snapshot(title, version=1, question_count=1, owner=None):
+    publisher = owner or get_user_model().objects.create_user(
+        username=f"publisher-{title}-{version}"
+    )
+    package = CurriculumPackage.objects.create(title=title, created_by=publisher)
+    revision = package.save_revision(user=publisher)
     payload = {
         "title": title,
         "objective": "Practicar una respuesta.",
@@ -69,11 +72,11 @@ def _snapshot(title, version=1, question_count=1):
         payload=payload,
         sha256=hashlib.sha256(canonical.encode()).hexdigest(),
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username=f"publisher-{title}-{version}"),
+        published_by=publisher,
     )
 
 
-def _roadmap(title="Camino", version=1, package_snapshot_id=None):
+def _roadmap(title="Camino", version=1, package_snapshot_id=None, owner=None):
     activity = {"id": f"actividad-{version}", "title": "Practicar una respuesta"}
     if package_snapshot_id is not None:
         activity["package_snapshot_id"] = package_snapshot_id
@@ -98,7 +101,9 @@ def _roadmap(title="Camino", version=1, package_snapshot_id=None):
         version=version,
         payload=payload,
         sha256="the-model-computes-this",
-        published_by=get_user_model().objects.create_user(username=f"roadmap-publisher-{title}-{version}"),
+        published_by=owner or get_user_model().objects.create_user(
+            username=f"roadmap-publisher-{title}-{version}"
+        ),
     )
 
 
@@ -121,9 +126,10 @@ def _start(client, session, assignment, name="Luna"):
 
 
 def test_teacher_marks_topic_worked_without_student_activity_completion():
-    package = _snapshot("Tema trabajado")
-    roadmap = _roadmap(package_snapshot_id=package.pk)
     teacher = tutor_client()
+    teacher_user = get_user_model().objects.get(pk=teacher.session["_auth_user_id"])
+    package = _snapshot("Tema trabajado", owner=teacher_user)
+    roadmap = _roadmap(package_snapshot_id=package.pk, owner=teacher_user)
 
     response = teacher.post(
         reverse("tutor-roadmap-progress", args=[roadmap.pk]),
@@ -137,10 +143,10 @@ def test_teacher_marks_topic_worked_without_student_activity_completion():
 
 
 def test_student_completion_changes_only_the_pseudonymous_route():
-    package = _snapshot("Separación")
-    roadmap = _roadmap(package_snapshot_id=package.pk)
     teacher = tutor_client(username="teacher-separation")
     teacher_user = get_user_model().objects.get(username="teacher-separation")
+    package = _snapshot("Separación", owner=teacher_user)
+    roadmap = _roadmap(package_snapshot_id=package.pk, owner=teacher_user)
     CurriculumProgress.confirm(
         roadmap_snapshot=roadmap,
         node_id="leccion-1",
@@ -154,7 +160,7 @@ def test_student_completion_changes_only_the_pseudonymous_route():
 
     response = client.post(
         reverse("student-question-answer", args=[session.pk, 0]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
 
     student_progress = StudentRoadmapProgress.objects.get()
@@ -175,7 +181,7 @@ def test_two_students_have_independent_pseudonymous_routes():
     assert _start(first, session, assignments[0], "Luna").status_code == 302
     assert _start(second, session, assignments[1], "Luna").status_code == 302
 
-    first.post(reverse("student-question-answer", args=[session.pk, 0]), {"option_position": 1})
+    first.post(reverse("student-question-answer", args=[session.pk, 0]), {"option_position": 1, "activity_id": "actividad-1"})
 
     progress = list(StudentRoadmapProgress.objects.order_by("created_at", "id"))
     assert len(progress) == 2
@@ -230,7 +236,7 @@ def test_roadmap_traverses_three_activities_backed_by_different_package_snapshot
     for index, package in enumerate(packages):
         response = client.post(
             reverse("student-question-answer", args=[session.pk, 0]),
-            {"option_position": 1},
+            {"option_position": 1, "activity_id": f"u{index}:l0:a0"},
         )
         assert response.status_code == 200
         progress.refresh_from_db()
@@ -245,9 +251,10 @@ def test_roadmap_traverses_three_activities_backed_by_different_package_snapshot
 
 
 def test_teacher_can_publish_roadmap_and_prepare_session_from_it():
-    first = _snapshot("Publicable uno")
-    second = _snapshot("Publicable dos")
     teacher = tutor_client(username="roadmap-publisher-teacher")
+    teacher_user = get_user_model().objects.get(username="roadmap-publisher-teacher")
+    first = _snapshot("Publicable uno", owner=teacher_user)
+    second = _snapshot("Publicable dos", owner=teacher_user)
 
     response = teacher.post(
         reverse("tutor-roadmaps"),
@@ -322,9 +329,9 @@ def test_published_roadmap_snapshot_is_immutable():
 
 
 def test_curriculum_progress_rejects_node_outside_roadmap():
-    package = _snapshot("Nodo validado")
-    roadmap = _roadmap(package_snapshot_id=package.pk)
     teacher = get_user_model().objects.create_user(username="node-validator", is_staff=True)
+    package = _snapshot("Nodo validado", owner=teacher)
+    roadmap = _roadmap(package_snapshot_id=package.pk, owner=teacher)
     with pytest.raises(ValidationError, match="pertenece"):
         CurriculumProgress.confirm(
             roadmap_snapshot=roadmap,
@@ -343,14 +350,14 @@ def test_correct_answers_survive_ephemeral_summary_eviction():
 
     client.post(
         reverse("student-question-answer", args=[session.pk, 0]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
     from django.core.cache import cache
     from curriculum.ephemeral import ephemeral_session_summary_key
     cache.delete(ephemeral_session_summary_key(session.pk))
     client.post(
         reverse("student-question-answer", args=[session.pk, 1]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
 
     progress = StudentRoadmapProgress.objects.get()

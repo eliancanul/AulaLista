@@ -6,6 +6,7 @@ from unittest.mock import patch
 import django
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
@@ -471,7 +472,7 @@ def test_duplicate_names_produce_independent_nameless_results_and_exports():
     assert get_export.status_code == 405
     assert export.status_code == 200
     assert "Luna" not in export.text
-    assert "participant_label" in export.text
+    assert "participant_label" not in export.text
     for result in results:
         assert str(result.id) not in export.text
         assert str(result.participant_key) not in export.text
@@ -508,13 +509,16 @@ def test_delete_requires_explicit_post_and_can_delete_selected_or_all_results():
 
     assert wrong_session_delete.status_code == 404
     assert get_delete.status_code == 405
-    assert delete_one.status_code == 200
+    assert delete_one.status_code == 302
+    assert delete_one["Location"] == reverse("tutor-home")
+    assert any("Se borró el resultado" in str(message) for message in get_messages(delete_one.wsgi_request))
     assert list(PseudonymousResult.objects.values_list("pk", flat=True)) == [
         other_result.pk
     ]
     bulk_delete = scoped_client.post(reverse("tutor-session-results-delete", args=[other.pk]),
     )
-    assert bulk_delete.status_code == 200
+    assert bulk_delete.status_code == 302
+    assert bulk_delete["Location"] == reverse("tutor-home")
+    assert any("Se borraron 1 resultado" in str(message) for message in get_messages(bulk_delete.wsgi_request))
     # Borrar todos los resultados también elimina las respuestas de encuesta del lote.
-    assert bulk_delete.json() == {"deleted": 1, "surveys_deleted": 0}
     assert not PseudonymousResult.objects.exists()

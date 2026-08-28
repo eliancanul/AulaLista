@@ -50,6 +50,12 @@ _Avoid_: paquete piloto, material aprobado.
 Recorrido editorial y operativo mediante el que una persona docente selecciona un tema, prepara una actividad, la revisa, la publica y ejecuta una sesión. Sus estados expresan autoridad y disponibilidad, no progreso automático del aprendizaje.
 _Avoid_: flujo automático, pipeline de IA.
 
+Cada `CurriculumPackage`, propuesta de importación y borrador asistido pertenece
+a la cuenta de la maestra que lo creó. Listar, revisar, editar, publicar, incluir
+en un roadmap o lanzar una actividad conserva ese límite de propiedad. La
+propiedad no concede publicación automática: `EditorialReviewer` y la revisión
+humana continúan siendo obligatorios.
+
 **CurriculumProgress**:
 Registro del tema curricular que una persona docente confirma como actual o trabajado dentro de un curso. Puede recibir una sugerencia del sistema, pero no avanza por crear, publicar o cerrar una actividad sin confirmación humana.
 _Avoid_: dominio automático, avance de IA.
@@ -61,6 +67,14 @@ _Avoid_: roadmap vivo, secuencia inferida.
 **StudentRoadmapProgress**:
 Recorrido individual, temporal y pseudónimo que registra actividades completadas y calcula la siguiente actividad habilitada leyendo la secuencia del roadmap y el snapshot de paquete referenciado por cada actividad. La decisión de compleción y los reactivos correctos se persisten al responder; no dependen de la caché efímera. No es cuenta, expediente, aprobación curricular, dominio ni calificación; al cerrar la sesión se elimina con el turno temporal.
 _Avoid_: progreso docente automático, identidad estudiantil.
+
+**GroupRoadmapProgress**:
+Registro temporal 1:1 con una `ClassroomSession` que conserva el cursor y las
+actividades completadas por el grupo sobre el `PublishedRoadmapSnapshot` fijado.
+Todos los turnos de la sesión leen el mismo estado; una respuesta válida puede
+avanzar el grupo y una maestra puede adelantarlo manualmente desde el control
+autenticado. No sustituye `CurriculumProgress` ni conserva identidad.
+_Avoid_: progreso individual, dominio, aprobación curricular.
 
 **ActivityDraft**:
 Propuesta editable de actividad asociada a un tema y a fuentes curriculares concretas. Puede ser producida con asistencia automática, pero no es publicable hasta atravesar la revisión y aprobación humana.

@@ -32,9 +32,12 @@ from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
-def published_snapshot(title="Actividad #86"):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def published_snapshot(title="Actividad #86", owner=None):
+    owner = owner or get_user_model().objects.create_user(
+        username=f"publisher-{CurriculumPackage.objects.count() + 1}"
+    )
+    package = CurriculumPackage.objects.create(title=title, created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {"title": title, "objective": "Objetivo", "questions": []}
     digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
@@ -45,11 +48,12 @@ def published_snapshot(title="Actividad #86"):
         payload=payload,
         sha256=digest,
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username=f"publisher-{package.pk}"),
+        published_by=owner,
     )
 
 
-def three_activity_roadmap(snapshot):
+def three_activity_roadmap(snapshot, owner=None):
+    owner = owner or get_user_model().objects.create_user(username=f"roadmap-{snapshot.pk}")
     return PublishedRoadmapSnapshot.objects.create(
         title="Tres actividades",
         version=1,
@@ -69,7 +73,7 @@ def three_activity_roadmap(snapshot):
             }],
         },
         sha256="ignored-by-model",
-        published_by=get_user_model().objects.create_user(username=f"roadmap-{snapshot.pk}"),
+        published_by=owner,
     )
 
 
@@ -83,7 +87,7 @@ def result(session, participant_key, activity_id, state=PseudonymousResult.STATE
         snapshot_sha256=session.snapshot.sha256,
         state=state,
         duration_seconds=20,
-        responses=[],
+        responses=[{"question_index": 0, "selected_position": 1, "is_correct": False}],
         score=0,
         help_requests=[],
         technical_errors=[],
@@ -114,9 +118,9 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     client = tutor_client_for_sessions(session)
     page = client.get(reverse("tutor-session-results", args=[session.pk]))
     assert page.status_code == 200
-    assert "Registro individual seudónimo" in page.text
+    assert "Registro individual seudónimo" not in page.text
     assert str(first.participant_key) not in page.text
-    assert str(first.participant_key)[:8] in page.text
+    assert str(first.participant_key)[:8] not in page.text
     assert "Diagnóstico" not in page.text
     json_export = client.post(
         reverse("tutor-session-export", args=[session.pk]), {"format": "json"}
@@ -128,28 +132,42 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     for response in (json_export, csv_export):
         assert str(first.participant_key) not in response.text
         assert str(results[0].id) not in response.text
-        assert "participant_label" in response.text
+        assert "participant_label" not in response.text
 
 
 def test_group_aggregates_stay_with_the_selected_classroom_group():
     owner = get_user_model().objects.create_user(username="maestra", is_staff=True)
     other_owner = get_user_model().objects.create_user(username="otra", is_staff=True)
-    snapshot = published_snapshot()
+    snapshot = published_snapshot(owner=owner)
+    other_snapshot = published_snapshot("Actividad del otro grupo", owner=other_owner)
     group = ClassroomGroup.objects.create(name="6° A", created_by=owner)
     other_group = ClassroomGroup.objects.create(name="6° B", created_by=other_owner)
     first = ClassroomSession.prepare_from_snapshot(
         snapshot, 1, 1, classroom_group=group, teacher=owner
     )
     second = ClassroomSession.prepare_from_snapshot(
-        snapshot, 1, 1, classroom_group=other_group, teacher=other_owner
+        other_snapshot, 1, 1, classroom_group=other_group, teacher=other_owner
     )
     first.close()
     second.close()
-    group_result = result(first, uuid.uuid4(), "activity-1")
+    group_result = result(first, uuid.uuid4(), "actividad-0")
     group_result.help_requests = [{"kind": "hint"}]
     group_result.technical_errors = [{"message": "local"}]
     group_result.save(update_fields=["help_requests", "technical_errors"])
-    result(second, uuid.uuid4(), "activity-1")
+    PseudonymousResult.objects.create(
+        result_batch_id=first.result_batch_id,
+        participant_key=uuid.uuid4(),
+        snapshot_id=snapshot.pk,
+        snapshot_version=snapshot.version,
+        snapshot_sha256=snapshot.sha256,
+        state=PseudonymousResult.STATE_ABANDONED,
+        duration_seconds=20,
+        responses=[],
+        score=0,
+        help_requests=[],
+        technical_errors=[],
+    )
+    result(second, uuid.uuid4(), "actividad-0")
     PseudonymousSurveyResponse.objects.create(
         result_batch_id=first.result_batch_id,
         snapshot_id=snapshot.pk,
@@ -166,20 +184,21 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     assert "Distribución de actividades" in page.text
     assert ">1</strong> ayudas solicitadas" in page.text
     assert ">1</strong> errores técnicos" in page.text
-    assert snapshot.sha256[:8] in page.text
+    assert ">1</strong> participantes" in page.text
+    assert snapshot.sha256[:8] not in page.text
     summary = client.get(reverse("tutor-results"))
     assert summary.status_code == 200
     assert ">1</strong> ayudas solicitadas" in summary.text
     assert ">1</strong> errores técnicos" in summary.text
-    assert snapshot.sha256[:8] in summary.text
+    assert snapshot.sha256[:8] not in summary.text
     assert client.get(reverse("tutor-group-results", args=[other_group.pk])).status_code == 404
 
 
 def test_close_school_year_erases_only_group_results_and_surveys_preserving_curriculum_and_sessions():
     client = tutor_client("year-close-teacher")
     owner = get_user_model().objects.get(username="year-close-teacher")
-    snapshot = published_snapshot()
-    roadmap = three_activity_roadmap(snapshot)
+    snapshot = published_snapshot(owner=owner)
+    roadmap = three_activity_roadmap(snapshot, owner=owner)
     CurriculumProgress.confirm(
         roadmap_snapshot=roadmap,
         node_id="unit-1",
@@ -242,7 +261,7 @@ def test_new_group_routes_require_a_staff_teacher_and_close_year_is_post_only():
 def test_session_result_routes_reject_another_staff_teacher():
     owner = get_user_model().objects.create_user(username="session-owner", is_staff=True)
     other = get_user_model().objects.create_user(username="session-other", is_staff=True)
-    snapshot = published_snapshot("Sesión privada")
+    snapshot = published_snapshot("Sesión privada", owner=owner)
     session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1, teacher=owner)
     session.close()
     stored = result(session, uuid.uuid4(), "activity-1")

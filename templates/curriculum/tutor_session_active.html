@@ -15,6 +15,24 @@
       <section class="session-card active-summary" aria-labelledby="active-summary-heading"><div><p class="card-kicker">CONTENIDO FIJO</p><h2 id="active-summary-heading">{{ session.snapshot.payload.title }}</h2><p class="snapshot">{{ snapshot_label }} · sesión local</p></div><div class="active-controls"><a class="button button-secondary" href="{% url 'tutor-session-review' session.pk %}">Ver preparación</a>{% if session.status == "active" %}<form method="post" action="{% url 'tutor-session-close' session.pk %}">{% csrf_token %}<button class="button button-danger" type="submit">Cerrar sesión</button></form>{% endif %}</div></section>
 
       {% if session.status == "active" %}
+        {% if session.roadmap_snapshot_id %}
+          <section class="session-card" aria-labelledby="roadmap-control-heading">
+            <div class="panel-heading"><div><p class="card-kicker">ROADMAP PUBLICADO</p><h2 id="roadmap-control-heading">Avance del grupo</h2></div></div>
+            <p>La maestra puede mover el cursor de esta sesión hacia adelante.</p>
+            {% if roadmap_lessons %}
+              <form method="post" action="{% url 'tutor-session-roadmap-advance' session.pk %}">
+                {% csrf_token %}
+                <label for="group-roadmap-activity">Siguiente lección</label>
+                <select id="group-roadmap-activity" name="lesson_id">
+                  {% for row in roadmap_lessons %}<option value="{{ row.lesson_id }}">{{ row.unit_title }} · {{ row.lesson_title }}</option>{% endfor %}
+                </select>
+                <button class="button button-primary" type="submit">Adelantar grupo</button>
+              </form>
+            {% else %}
+              <p class="empty-note">No hay lecciones posteriores al paso actual.</p>
+            {% endif %}
+          </section>
+        {% endif %}
         <section class="active-grid" aria-label="Operación de sesión activa">
           <article class="projector-card" aria-labelledby="projector-heading"><div class="panel-heading"><div><p class="card-kicker">PARA PROYECTAR · ENTRADA DEL GRUPO</p><h2 id="projector-heading">Escanea o escribe el enlace local</h2></div>{% if join_qr_svg %}<span class="local-only">QR local · corrección M</span>{% else %}<span class="local-only">Sólo enlace manual</span>{% endif %}</div><div class="qr-wrap">{% if join_qr_svg %}<div class="qr" aria-label="Código QR real de la sesión">{{ join_qr_svg|safe }}</div>{% endif %}<div><p class="join-number">Enlace de esta sesión</p><a class="join-link" data-session-join-url href="{{ join_url }}">{{ join_url }}</a><p class="microcopy">La ruta no contiene una identidad ni una dirección externa.</p>{% if not join_url_is_configured %}<p class="microcopy" role="alert">{{ join_url_notice }}</p>{% endif %}</div></div><div class="count-block" aria-live="polite" aria-label="{{ participant_count }} participantes"><span class="count-number" data-participant-count>{{ participant_count }}</span><span>participantes presentes<br><small>No es asistencia oficial</small></span></div></article>
           <article class="roster-card" aria-labelledby="roster-heading"><div class="panel-heading"><div><p class="card-kicker">CONTROL AUTENTICADO</p><h2 id="roster-heading">Apodos en esta sesión</h2></div><span class="synthetic-label">NO SE PROYECTAN</span></div>{% if active_turns %}<ul class="alias-list" aria-live="polite">{% for turn in active_turns %}<li>{{ turn.display_name }}</li>{% endfor %}</ul>{% else %}<p class="empty-note">Esperando participantes.</p>{% endif %}<p class="monitor-note">Los apodos son temporales, pseudónimos y visibles sólo en este control docente. Se purgan al cerrar.</p></article>

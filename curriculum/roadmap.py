@@ -74,6 +74,8 @@ def ordered_activities(payload, *, package_snapshot_id=None):
                         "package_snapshot_id": _activity_snapshot_id(
                             activity, package_snapshot_id
                         ),
+                        "unit_id": unit_id,
+                        "lesson_id": lesson_id,
                         "unit_index": unit_index,
                         "lesson_index": lesson_index,
                         "activity_index": activity_index,
@@ -99,6 +101,8 @@ def ordered_activities(payload, *, package_snapshot_id=None):
                     "package_snapshot_id": _activity_snapshot_id(
                         activity, package_snapshot_id
                     ),
+                    "unit_id": "u0",
+                    "lesson_id": "u0:l0",
                     "unit_index": 0,
                     "lesson_index": 0,
                     "activity_index": index,
@@ -170,6 +174,22 @@ def ordered_activity_ids(payload, *, package_snapshot_id=None):
     ]
 
 
+def duplicate_activity_ids(payload):
+    """Return explicit activity IDs that occur more than once in a roadmap.
+
+    Activity IDs are the stable join key between a roadmap and persisted
+    results.  A duplicate therefore makes both navigation and result titles
+    ambiguous; callers must reject the roadmap or treat it as unsafe rather
+    than silently selecting one occurrence.
+    """
+
+    counts = {}
+    for activity in ordered_activities(payload):
+        activity_id = activity["id"]
+        counts[activity_id] = counts.get(activity_id, 0) + 1
+    return sorted(activity_id for activity_id, count in counts.items() if count > 1)
+
+
 def states_for_progress(payload, completed_activity_ids, *, package_snapshot_id=None):
     """Return flat rows with explicit, deterministic roadmap states."""
 
@@ -193,6 +213,28 @@ def states_for_progress(payload, completed_activity_ids, *, package_snapshot_id=
         elif index == first_incomplete:
             state = "ACTUAL"
         elif first_incomplete is not None and index == first_incomplete + 1:
+            state = "DISPONIBLE"
+        else:
+            state = "BLOQUEADA"
+        rows.append({**activity, "state": state})
+    return rows
+
+
+def states_for_group_progress(payload, completed_activity_ids, current_activity_id=None):
+    """Derive the same navigation state for every client in a session."""
+    activities = ordered_activities(payload)
+    completed = {str(value) for value in (completed_activity_ids or [])}
+    ids = [item["id"] for item in activities]
+    current = str(current_activity_id) if current_activity_id in ids else None
+    if current is None:
+        current = next((item_id for item_id in ids if item_id not in completed), None)
+    rows = []
+    for index, activity in enumerate(activities):
+        if activity["id"] in completed:
+            state = "COMPLETADA"
+        elif activity["id"] == current:
+            state = "ACTUAL"
+        elif current is not None and index == ids.index(current) + 1:
             state = "DISPONIBLE"
         else:
             state = "BLOQUEADA"
