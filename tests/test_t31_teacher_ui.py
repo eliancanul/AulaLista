@@ -26,9 +26,12 @@ from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
-def published_snapshot(title="Actividad UI"):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def published_snapshot(title="Actividad UI", owner=None):
+    owner = owner or get_user_model().objects.create_user(
+        username=f"publisher-{CurriculumPackage.objects.count() + 1}"
+    )
+    package = CurriculumPackage.objects.create(title=title, created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {
         "title": title,
         "objective": "Practicar una idea.",
@@ -44,11 +47,12 @@ def published_snapshot(title="Actividad UI"):
         payload=payload,
         sha256=digest,
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username=f"publisher-{package.pk}"),
+        published_by=owner,
     )
 
 
-def published_roadmap(snapshot):
+def published_roadmap(snapshot, owner=None):
+    owner = owner or get_user_model().objects.create_user(username="roadmap-editor")
     return PublishedRoadmapSnapshot.objects.create(
         title="Camino del grupo",
         version=1,
@@ -69,7 +73,7 @@ def published_roadmap(snapshot):
             }],
         },
         sha256="ignored-by-model",
-        published_by=get_user_model().objects.create_user(username="roadmap-editor"),
+        published_by=owner,
     )
 
 
@@ -93,9 +97,10 @@ def test_new_teacher_surfaces_require_staff_login():
 
 
 def test_teacher_navigation_reaches_published_activity_and_prepare():
-    snapshot = published_snapshot()
-    roadmap = published_roadmap(snapshot)
     client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot = published_snapshot(owner=owner)
+    roadmap = published_roadmap(snapshot, owner=owner)
 
     home = client.get(reverse("tutor-home"))
     assert home.status_code == 200

@@ -498,7 +498,9 @@ def tutor_roadmaps(request):
     from curriculum.roadmap import ordered_activities, ordered_nodes
 
     package_snapshots = list(
-        PublishedPackageSnapshot.objects.select_related("package").order_by(
+        PublishedPackageSnapshot.objects.filter(
+            package__created_by=request.user
+        ).select_related("package").order_by(
             "-published_at", "-id"
         )
     )
@@ -523,7 +525,9 @@ def tutor_roadmaps(request):
         else:
             return redirect("tutor-roadmaps")
 
-    snapshots = list(PublishedRoadmapSnapshot.objects.all()[:20])
+    snapshots = list(
+        PublishedRoadmapSnapshot.objects.filter(published_by=request.user)[:20]
+    )
     cards = []
     for snapshot in snapshots:
         progress = {
@@ -575,7 +579,11 @@ def tutor_roadmap_progress(request, snapshot_id):
 
     from curriculum.roadmap import ordered_activities, ordered_nodes
 
-    snapshot = get_object_or_404(PublishedRoadmapSnapshot, pk=snapshot_id)
+    snapshot = get_object_or_404(
+        PublishedRoadmapSnapshot,
+        pk=snapshot_id,
+        published_by=request.user,
+    )
     nodes = ordered_nodes(snapshot.payload)
     activity_by_id = {
         activity["id"]: activity
@@ -588,7 +596,10 @@ def tutor_roadmap_progress(request, snapshot_id):
     }
     activity_snapshots = {
         str(item.pk): item
-        for item in PublishedPackageSnapshot.objects.filter(pk__in=package_snapshot_ids)
+        for item in PublishedPackageSnapshot.objects.filter(
+            pk__in=package_snapshot_ids,
+            package__created_by=request.user,
+        )
     }
     progress = {
         item.node_id: item
@@ -653,9 +664,15 @@ def tutor_home(request):
 def tutor_curriculum(request):
     """Teacher-facing index for imported proposals, drafts, and publications."""
 
-    packages = list(CurriculumPackage.objects.order_by("-updated_at", "-id")[:30])
+    packages = list(
+        CurriculumPackage.objects.filter(created_by=request.user).order_by(
+            "-updated_at", "-id"
+        )[:30]
+    )
     published_snapshots_by_package = {}
-    for snapshot in PublishedPackageSnapshot.objects.order_by(
+    for snapshot in PublishedPackageSnapshot.objects.filter(
+        package__created_by=request.user
+    ).order_by(
         "-published_at", "-id"
     ):
         published_snapshots_by_package.setdefault(snapshot.package_id, snapshot)
@@ -686,11 +703,13 @@ def tutor_curriculum(request):
         request,
         "curriculum/tutor_curriculum.html",
         {
-            "imports": CurriculumImportJob.objects.order_by("-updated_at", "-id")[:20],
+            "imports": CurriculumImportJob.objects.filter(
+                created_by=request.user
+            ).order_by("-updated_at", "-id")[:20],
             "package_cards": package_cards,
-            "published_snapshots": PublishedPackageSnapshot.objects.select_related(
-                "package"
-            ).order_by("-published_at", "-id")[:20],
+            "published_snapshots": PublishedPackageSnapshot.objects.filter(
+                package__created_by=request.user
+            ).select_related("package").order_by("-published_at", "-id")[:20],
         },
     )
 
@@ -702,6 +721,7 @@ def tutor_package_detail(request, snapshot_id):
     snapshot = get_object_or_404(
         PublishedPackageSnapshot.objects.select_related("package"),
         pk=snapshot_id,
+        package__created_by=request.user,
     )
     payload = snapshot.payload or {}
     questions = []
@@ -793,7 +813,8 @@ def tutor_sessions(request):
             }
         )
     snapshots = (
-        PublishedPackageSnapshot.objects.select_related("package")
+        PublishedPackageSnapshot.objects.filter(package__created_by=request.user)
+        .select_related("package")
         .order_by("-published_at", "-id")[:12]
     )
     return render(
@@ -841,10 +862,16 @@ def tutor_groups(request):
 @teacher_required
 @require_http_methods(["GET", "POST"])
 def tutor_session_prepare(request, snapshot_id):
-    snapshot = get_object_or_404(PublishedPackageSnapshot, pk=snapshot_id)
+    snapshot = get_object_or_404(
+        PublishedPackageSnapshot,
+        pk=snapshot_id,
+        package__created_by=request.user,
+    )
     context = {
         "snapshot": snapshot,
-        "roadmaps": PublishedRoadmapSnapshot.objects.all()[:20],
+        "roadmaps": PublishedRoadmapSnapshot.objects.filter(
+            published_by=request.user
+        )[:20],
         "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
     }
     if request.method == "POST":
@@ -857,6 +884,7 @@ def tutor_session_prepare(request, snapshot_id):
                 roadmap_snapshot = get_object_or_404(
                     PublishedRoadmapSnapshot,
                     pk=roadmap_id,
+                    published_by=request.user,
                 )
             classroom_group = None
             group_id = request.POST.get("classroom_group")
@@ -1635,7 +1663,11 @@ def tutor_import_wait(request, job_id):
     teacher lands back on the review panel automatically.
     """
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     stale = bool(
         job.progress_started_at
         and timezone.now() - job.progress_started_at > IMPORT_STAGE_TIMEOUT
@@ -1714,7 +1746,11 @@ def _render_technical_log_markdown(job):
 def tutor_import_log_md(request, job_id):
     """Download the full technical log as Markdown (#34)."""
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     content = _render_technical_log_markdown(job)
     response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
     response["Content-Disposition"] = (
@@ -1728,7 +1764,11 @@ def tutor_import_log_md(request, job_id):
 def tutor_import_log_json(request, job_id):
     """Download the full technical log as JSON (#34)."""
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     response = JsonResponse(list(job.llm_trace), safe=False, json_dumps_params={
         "ensure_ascii": False,
         "indent": 2,
@@ -1753,7 +1793,7 @@ def tutor_import_upload(request):
                 {"error": "Selecciona el PDF de la currícula."},
                 status=400,
             )
-        job = CurriculumImportJob.objects.create(pdf=pdf)
+        job = CurriculumImportJob.objects.create(pdf=pdf, created_by=request.user)
         return redirect("tutor-import-detail", job_id=job.pk)
     return render(request, "curriculum/tutor_import_form.html", {})
 
@@ -1770,7 +1810,11 @@ def tutor_import_detail(request, job_id):
 
     from curriculum import curriculum_import as pipeline
 
-    job = get_object_or_404(CurriculumImportJob, pk=job_id)
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
     if job.progress_stage:
         # A stage is running in the background; watch it on the waiting page.
         return redirect("tutor-import-wait", job_id=job.pk)
@@ -1839,7 +1883,10 @@ def tutor_import_detail(request, job_id):
             sub["faltantes"] for group in grouped for sub in group["subs"]
         )
     if job.status == CurriculumImportJob.STATUS_CONVERTED:
-        drafts = CurriculumPackage.objects.filter(ai_assisted=True).order_by("-id")[:20]
+        drafts = CurriculumPackage.objects.filter(
+            ai_assisted=True,
+            created_by=request.user,
+        ).order_by("-id")[:20]
         context["drafts"] = drafts
         context["drafts_count"] = drafts.count()
     return render(request, "curriculum/tutor_import_detail.html", context)
@@ -2301,6 +2348,7 @@ def _import_action_convert(job, post_data):
                 for question in entry["proposal"]["questions"]
             ],
             ai_assisted=True,
+            created_by=job.created_by,
         )
         created += 1
     job.status = CurriculumImportJob.STATUS_CONVERTED

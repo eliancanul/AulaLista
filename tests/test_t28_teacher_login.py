@@ -19,16 +19,20 @@ from curriculum.models import CurriculumPackage, PublishedPackageSnapshot  # noq
 pytestmark = pytest.mark.django_db
 
 
-def published_snapshot():
-    package = CurriculumPackage.objects.create(title="Sesión autenticada")
-    revision = package.save_revision()
+def published_snapshot(owner=None):
+    owner = owner or get_user_model().objects.create_user(username="publisher")
+    package = CurriculumPackage.objects.create(
+        title="Sesión autenticada",
+        created_by=owner,
+    )
+    revision = package.save_revision(user=owner)
     return PublishedPackageSnapshot.objects.create(
         package=package,
         version=1,
         payload={"title": package.title, "questions": []},
         sha256="a" * 64,
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username="publisher"),
+        published_by=owner,
     )
 
 
@@ -45,12 +49,12 @@ def test_anonymous_prepare_is_redirected_to_wagtail_login_with_destination():
 
 
 def test_authorized_staff_teacher_can_prepare_a_session():
-    snapshot = published_snapshot()
     teacher = get_user_model().objects.create_user(
         username="teacher",
         password="test-password",
         is_staff=True,
     )
+    snapshot = published_snapshot(owner=teacher)
     client = Client()
     client.force_login(teacher)
 
@@ -96,13 +100,13 @@ def test_authenticated_user_without_teacher_permissions_gets_403_without_mutatio
 def test_wagtail_login_returns_to_requested_teacher_page_and_rejects_open_redirects(
     malicious_next,
 ):
-    snapshot = published_snapshot()
-    target = reverse("tutor-session-prepare", args=[snapshot.pk])
     user = get_user_model().objects.create_user(
         username="returning-teacher",
         password="test-password",
         is_staff=True,
     )
+    snapshot = published_snapshot(owner=user)
+    target = reverse("tutor-session-prepare", args=[snapshot.pk])
     client = Client()
 
     # Exercise the complete protected-view flow: redirect to login, then back

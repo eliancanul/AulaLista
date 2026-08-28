@@ -32,9 +32,12 @@ from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
-def published_snapshot(title="Actividad #86"):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def published_snapshot(title="Actividad #86", owner=None):
+    owner = owner or get_user_model().objects.create_user(
+        username=f"publisher-{CurriculumPackage.objects.count() + 1}"
+    )
+    package = CurriculumPackage.objects.create(title=title, created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {"title": title, "objective": "Objetivo", "questions": []}
     digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
@@ -45,11 +48,12 @@ def published_snapshot(title="Actividad #86"):
         payload=payload,
         sha256=digest,
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username=f"publisher-{package.pk}"),
+        published_by=owner,
     )
 
 
-def three_activity_roadmap(snapshot):
+def three_activity_roadmap(snapshot, owner=None):
+    owner = owner or get_user_model().objects.create_user(username=f"roadmap-{snapshot.pk}")
     return PublishedRoadmapSnapshot.objects.create(
         title="Tres actividades",
         version=1,
@@ -69,7 +73,7 @@ def three_activity_roadmap(snapshot):
             }],
         },
         sha256="ignored-by-model",
-        published_by=get_user_model().objects.create_user(username=f"roadmap-{snapshot.pk}"),
+        published_by=owner,
     )
 
 
@@ -178,8 +182,8 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
 def test_close_school_year_erases_only_group_results_and_surveys_preserving_curriculum_and_sessions():
     client = tutor_client("year-close-teacher")
     owner = get_user_model().objects.get(username="year-close-teacher")
-    snapshot = published_snapshot()
-    roadmap = three_activity_roadmap(snapshot)
+    snapshot = published_snapshot(owner=owner)
+    roadmap = three_activity_roadmap(snapshot, owner=owner)
     CurriculumProgress.confirm(
         roadmap_snapshot=roadmap,
         node_id="unit-1",

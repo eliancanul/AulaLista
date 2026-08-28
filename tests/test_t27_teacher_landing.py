@@ -13,9 +13,12 @@ from helpers import tutor_client, tutor_client_for_sessions
 pytestmark = pytest.mark.django_db
 
 
-def snapshot(title, version=1):
-    package = CurriculumPackage.objects.create(title=title)
-    revision = package.save_revision()
+def snapshot(title, version=1, owner=None):
+    owner = owner or get_user_model().objects.create_user(
+        username=f"editor-{CurriculumPackage.objects.count() + 1}"
+    )
+    package = CurriculumPackage.objects.create(title=title, created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {"title": title, "questions": []}
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return PublishedPackageSnapshot.objects.create(
@@ -24,13 +27,15 @@ def snapshot(title, version=1):
         payload=payload,
         sha256=hashlib.sha256(canonical.encode()).hexdigest(),
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(username=f"editor-{package.pk}"),
+        published_by=owner,
     )
 
 
 def test_landing_is_authorized_and_offers_recent_published_choices():
-    published = snapshot("Actividad publicada", version=4)
-    response = tutor_client().get(reverse("tutor-sessions"))
+    client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    published = snapshot("Actividad publicada", version=4, owner=owner)
+    response = client.get(reverse("tutor-sessions"))
 
     assert response.status_code == 200
     assert "Actividad publicada" in response.text

@@ -23,11 +23,12 @@ UUID_RE = re.compile(
 )
 
 
-def _published_snapshot():
+def _published_snapshot(owner=None):
     from curriculum.models import CurriculumPackage, PublishedPackageSnapshot
 
-    package = CurriculumPackage.objects.create(title="Paquete flujo")
-    revision = package.save_revision()
+    owner = owner or get_user_model().objects.create_user(username="publisher-flujo")
+    package = CurriculumPackage.objects.create(title="Paquete flujo", created_by=owner)
+    revision = package.save_revision(user=owner)
     payload = {"title": "Paquete flujo", "questions": []}
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return PublishedPackageSnapshot.objects.create(
@@ -36,9 +37,7 @@ def _published_snapshot():
         payload=payload,
         sha256=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
         source_revision=revision,
-        published_by=get_user_model().objects.create_user(
-            username=f"publisher-{package.pk}",
-        ),
+        published_by=owner,
     )
 
 
@@ -103,8 +102,9 @@ def test_full_journey_prepare_activate_close_results_from_ui():
     Ninguna pantalla del maestro muestra identificadores técnicos crudos.
     """
 
-    snapshot = _published_snapshot()
     client = tutor_client()
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot = _published_snapshot(owner=owner)
     pages = {}
 
     prepare_redirect = client.post(

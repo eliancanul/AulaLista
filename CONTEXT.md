@@ -50,6 +50,12 @@ _Avoid_: paquete piloto, material aprobado.
 Recorrido editorial y operativo mediante el que una persona docente selecciona un tema, prepara una actividad, la revisa, la publica y ejecuta una sesión. Sus estados expresan autoridad y disponibilidad, no progreso automático del aprendizaje.
 _Avoid_: flujo automático, pipeline de IA.
 
+Cada `CurriculumPackage`, propuesta de importación y borrador asistido pertenece
+a la cuenta de la maestra que lo creó. Listar, revisar, editar, publicar, incluir
+en un roadmap o lanzar una actividad conserva ese límite de propiedad. La
+propiedad no concede publicación automática: `EditorialReviewer` y la revisión
+humana continúan siendo obligatorios.
+
 **CurriculumProgress**:
 Registro del tema curricular que una persona docente confirma como actual o trabajado dentro de un curso. Puede recibir una sugerencia del sistema, pero no avanza por crear, publicar o cerrar una actividad sin confirmación humana.
 _Avoid_: dominio automático, avance de IA.

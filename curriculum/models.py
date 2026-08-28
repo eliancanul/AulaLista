@@ -144,6 +144,14 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
             "validación pedagógica ni autorización de publicación."
         ),
     )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="curriculum_packages",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -263,6 +271,21 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         )
         super().save(*args, **kwargs)
 
+    def save_revision(self, *args, user=None, **kwargs):
+        """Claim an unowned draft on its first authenticated Wagtail save."""
+
+        if (
+            self.pk
+            and self.created_by_id is None
+            and user is not None
+            and getattr(user, "is_authenticated", False)
+        ):
+            type(self).objects.filter(pk=self.pk, created_by__isnull=True).update(
+                created_by=user
+            )
+            self.created_by = user
+        return super().save_revision(*args, user=user, **kwargs)
+
     @transaction.atomic
     def publish(
         self,
@@ -276,6 +299,10 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         if user is None or not getattr(user, "is_authenticated", False):
             raise ValidationError(
                 "La publicación requiere una persona autenticada y aprobación humana."
+            )
+        if self.created_by_id != user.pk:
+            raise ValidationError(
+                "La publicación requiere a la maestra propietaria de la currícula."
             )
         if not user.groups.filter(name=EDITORIAL_REVIEWER_GROUP_NAME).exists():
             raise ValidationError(
@@ -421,6 +448,8 @@ class PublishedRoadmapSnapshot(models.Model):
         snapshots = list(package_snapshots)
         if not snapshots:
             raise ValidationError("Selecciona al menos un paquete publicado.")
+        if any(snapshot.package.created_by_id != teacher.pk for snapshot in snapshots):
+            raise ValidationError("Cada actividad debe pertenecer a la currícula de la maestra.")
         snapshot_ids = [snapshot.pk for snapshot in snapshots]
         if any(snapshot_id is None for snapshot_id in snapshot_ids):
             raise ValidationError("Cada actividad requiere un snapshot publicado existente.")
@@ -563,6 +592,8 @@ class CurriculumProgress(models.Model):
             or not teacher.is_active
         ):
             raise ValidationError("El avance curricular requiere una maestra autenticada activa.")
+        if roadmap_snapshot.published_by_id != teacher.pk:
+            raise ValidationError("El roadmap debe pertenecer a la maestra autenticada.")
         node_id = str(node_id or "").strip()
         if not node_id:
             raise ValidationError("El avance curricular requiere un tema.")
@@ -1595,6 +1626,14 @@ class CurriculumImportJob(models.Model):
         "PDF de la currícula",
         upload_to=curriculum_import_pdf_path,
     )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="curriculum_import_jobs",
+        null=True,
+        blank=True,
+        editable=False,
+    )
     status = models.CharField(
         "estado",
         max_length=24,
@@ -1766,6 +1805,34 @@ class EditorialReviewerWorkflowActionView(WorkflowActionView):
 class CurriculumPackageViewSet(SnippetViewSet):
     model = CurriculumPackage
     workflow_action_view_class = EditorialReviewerWorkflowActionView
+    permission_policy = None
+
+
+class CurriculumPackagePermissionPolicy(ModelPermissionPolicy):
+    """Keep Wagtail snippet reads and writes within the teacher owner."""
+
+    def user_has_permission_for_instance(self, user, action, instance):
+        owns_instance = user.is_superuser or instance.created_by_id == user.pk
+        return owns_instance and super().user_has_permission_for_instance(
+            user, action, instance
+        )
+
+    def instances_user_has_any_permission_for(self, user, actions):
+        queryset = super().instances_user_has_any_permission_for(user, actions)
+        if user.is_superuser:
+            return queryset
+        return queryset.filter(created_by=user)
+
+    def users_with_any_permission_for_instance(self, actions, instance):
+        queryset = super().users_with_any_permission_for_instance(actions, instance)
+        if instance.created_by_id is None:
+            return queryset.filter(is_superuser=True)
+        return queryset.filter(models.Q(pk=instance.created_by_id) | models.Q(is_superuser=True))
+
+
+CurriculumPackageViewSet.permission_policy = CurriculumPackagePermissionPolicy(
+    CurriculumPackage
+)
 
 
 register_snippet(CurriculumPackageViewSet)
