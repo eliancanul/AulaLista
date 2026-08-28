@@ -11,6 +11,7 @@
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
     <main id="contenido" class="shell teacher-home">
+      {% if messages %}<div class="message-stack" aria-live="polite">{% for message in messages %}<p class="message message--{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
       <header class="landing-header landing-header--split">
         <div><p class="eyebrow">OPERACIÓN DOCENTE · AULA DIRECTA</p><h1>Prepara, activa, acompaña.</h1><p class="lead">Una vista despejada para elegir el siguiente paso de la sesión sin perder el camino curricular.</p></div>
         <a class="primary-action primary-action--large" href="{% if snapshots %}{% url 'tutor-session-prepare' snapshots.0.pk %}{% else %}{% url 'tutor-import-upload' %}{% endif %}">Preparar sesión <span aria-hidden="true">→</span></a>
@@ -45,10 +46,25 @@
         {% endif %}
       </section>
 
-      <section class="individual-empty" aria-labelledby="groups-heading">
-        <div class="section-heading"><div><p class="eyebrow">ORGANIZACIÓN LOCAL</p><h2 id="groups-heading">Salones</h2></div><a class="secondary-action" href="{% url 'tutor-groups' %}">Administrar salones</a></div>
-        <p>Un salón sólo agrupa sesiones; no contiene datos ni listas de alumnos.</p>
-        {% if classroom_groups %}<ul>{% for group in classroom_groups %}<li><strong>{{ group.name }}</strong> · <a href="{% url 'tutor-group-results' group.pk %}">ver resultados del salón</a></li>{% endfor %}</ul>{% else %}<p class="empty-note">Todavía no hay salones. Crea uno para elegirlo al preparar una sesión.</p>{% endif %}
+      <section class="classroom-section" aria-labelledby="groups-heading">
+        <div class="section-heading"><div><p class="eyebrow">ORGANIZACIÓN LOCAL</p><h2 id="groups-heading">Tus salones</h2></div><a class="secondary-action" href="{% url 'tutor-groups' %}">Administrar salones</a></div>
+        <p class="section-intro">Un salón agrupa sesiones para orientarte; no contiene listas ni datos nominales de alumnos.</p>
+        {% if classroom_cards %}
+          <div class="classroom-grid">
+            {% for card in classroom_cards %}
+              <article class="classroom-card{% if card.active_count %} classroom-card--active{% endif %}">
+                <div class="classroom-card-header"><div><p class="card-kicker">SALÓN</p><h3>{{ card.group.name }}</h3></div><span class="status {% if card.active_count %}status--active{% else %}status--closed{% endif %}">{% if card.active_count %}Activo{% else %}En espera{% endif %}</span></div>
+                <div class="classroom-metrics"><span><strong>{{ card.active_count }}</strong> sesiones activas</span><span><strong>{{ card.session_count }}</strong> sesiones totales</span></div>
+                {% if card.active_sessions %}
+                  <div class="classroom-session-list"><p class="card-kicker">AHORA EN EL AULA</p>{% for session in card.active_sessions %}<a class="classroom-session-link" href="{% url 'tutor-session-active' session.pk %}"><span>{{ session.snapshot.payload.title|default:session.snapshot.package.title }}</span><strong>Abrir control →</strong></a>{% endfor %}</div>
+                {% else %}
+                  <p class="empty-note classroom-empty">No hay una sesión activa. Puedes preparar la siguiente desde un snapshot publicado.</p>
+                {% endif %}
+                <a class="secondary-action classroom-results-link" href="{% url 'tutor-group-results' card.group.pk %}">Ver resultados agregados</a>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}<p class="empty-note">Todavía no hay salones. Crea uno para elegirlo al preparar una sesión.</p>{% endif %}
       </section>
 
       <section class="snapshot-choices" aria-labelledby="snapshots-heading">

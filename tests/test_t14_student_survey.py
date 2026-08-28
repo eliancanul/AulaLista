@@ -4,6 +4,7 @@ import os
 import django
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
@@ -266,12 +267,14 @@ def test_deleting_all_results_also_deletes_their_surveys_but_individual_results_
             args=[session.pk, result.pk],
         ),
     )
-    assert individual.status_code == 200
+    assert individual.status_code == 302
+    assert individual["Location"] == reverse("tutor-home")
+    assert any("Se borró el resultado" in str(message) for message in get_messages(individual.wsgi_request))
     assert PseudonymousSurveyResponse.objects.count() == 1
 
     delete_all = teacher.post(reverse("tutor-session-results-delete", args=[session.pk]),
     )
-    assert delete_all.status_code == 200
-    body = delete_all.json()
-    assert body["surveys_deleted"] == 1
+    assert delete_all.status_code == 302
+    assert delete_all["Location"] == reverse("tutor-home")
+    assert any("encuesta" in str(message) for message in get_messages(delete_all.wsgi_request))
     assert not PseudonymousSurveyResponse.objects.exists()

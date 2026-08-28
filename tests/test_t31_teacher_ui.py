@@ -107,6 +107,8 @@ def test_teacher_navigation_reaches_published_activity_and_prepare():
     assert reverse("tutor-roadmaps") in home.text
     assert reverse("tutor-curriculum") in home.text
     assert reverse("tutor-results") in home.text
+    assert reverse("wagtailadmin_account") in home.text
+    assert reverse("wagtailadmin_logout") in home.text
 
     curriculum = client.get(reverse("tutor-curriculum"))
     assert "Actividad UI" in curriculum.text

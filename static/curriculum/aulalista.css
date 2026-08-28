@@ -57,6 +57,12 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .top-nav { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-inline-start: auto; }
 .top-nav a { min-block-size: var(--target-min); display: inline-flex; align-items: center; padding: .45rem 0; color: var(--color-action-dark); font-size: .85rem; font-weight: 700; text-decoration: none; }
 .top-nav a:hover { text-decoration: underline; }
+.account-actions { display: flex; align-items: center; gap: .5rem; margin-inline-start: .5rem; padding-inline-start: .75rem; border-inline-start: 1px solid var(--color-line); }
+.account-actions a, .account-actions button { min-block-size: var(--target-min); display: inline-flex; align-items: center; padding: .35rem .5rem; border: 0; color: var(--color-action-dark); background: transparent; font-size: .78rem; font-weight: 800; text-decoration: none; }
+.account-actions button { cursor: pointer; }
+.account-actions a:hover, .account-actions button:hover { text-decoration: underline; }
+.message-stack { margin-block-end: 1.5rem; }
+.message { margin: 0; padding: .9rem 1rem; border-inline-start: .35rem solid var(--color-completed); background: var(--color-completed-soft); color: #145c42; font-weight: 700; }
 
 main { padding: clamp(2rem, 6vw, 5rem) 0 4rem; }
 .home-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: clamp(2rem, 8vw, 7rem); align-items: center; margin-block-end: clamp(2.5rem, 7vw, 5rem); }
@@ -306,6 +312,7 @@ pre, code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
   .site-header-inner { min-height: 64px; flex-wrap: wrap; padding-block: .6rem; }
   .top-nav { order: 3; inline-size: 100%; margin-inline-start: 0; justify-content: space-between; }
   .top-nav a { min-block-size: 40px; }
+  .account-actions { order: 2; margin-inline-start: auto; }
   .demo-badge { margin-inline-start: auto; font-size: .58rem; }
   main { padding-block: 2.2rem 3rem; }
   .choice-grid, .form-grid { grid-template-columns: 1fr; }

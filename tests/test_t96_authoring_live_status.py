@@ -48,6 +48,7 @@ def test_wait_page_polls_incrementally_without_full_page_refresh():
     assert '<meta http-equiv="refresh"' not in response.text
     assert reverse("tutor-import-status", args=[job.pk]) in response.text
     assert "curriculum/assistant_progress.js" in response.text
+    assert 'id="assistant-progress-counter"' in response.text
 
 
 @pytest.mark.parametrize(

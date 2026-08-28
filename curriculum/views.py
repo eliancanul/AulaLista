@@ -9,6 +9,7 @@ from datetime import timedelta
 from functools import wraps
 
 from django.conf import settings
+from django.contrib import messages
 from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -813,6 +814,27 @@ def tutor_sessions(request):
                 ),
             }
         )
+    classroom_groups = list(
+        ClassroomGroup.objects.filter(created_by=request.user)
+        .prefetch_related("classroom_sessions")
+        .order_by("name", "id")
+    )
+    classroom_cards = []
+    for group in classroom_groups:
+        group_sessions = list(group.classroom_sessions.all())
+        active_sessions = [
+            session
+            for session in group_sessions
+            if session.status == ClassroomSession.STATUS_ACTIVE
+        ]
+        classroom_cards.append(
+            {
+                "group": group,
+                "active_sessions": active_sessions,
+                "active_count": len(active_sessions),
+                "session_count": len(group_sessions),
+            }
+        )
     snapshots = (
         PublishedPackageSnapshot.objects.filter(package__created_by=request.user)
         .select_related("package")
@@ -824,7 +846,8 @@ def tutor_sessions(request):
         {
             "session_cards": session_cards,
             "snapshots": snapshots,
-            "classroom_groups": ClassroomGroup.objects.filter(created_by=request.user),
+            "classroom_groups": classroom_groups,
+            "classroom_cards": classroom_cards,
         },
     )
 
@@ -1492,7 +1515,15 @@ def tutor_session_results_delete(request, session_id):
             result_batch_id=session.result_batch_id,
         ).delete()
     deleted, _ = queryset.delete()
-    return JsonResponse({"deleted": deleted, "surveys_deleted": deleted_surveys})
+    detail = f"{deleted} resultado"
+    if deleted != 1:
+        detail += "s"
+    if deleted_surveys:
+        detail += f" y {deleted_surveys} encuesta"
+        if deleted_surveys != 1:
+            detail += "s"
+    messages.success(request, f"Se borraron {detail} de la sesión.")
+    return redirect("tutor-home")
 
 
 @teacher_required
@@ -1508,7 +1539,8 @@ def tutor_result_delete(request, session_id, result_id):
         result_batch_id=session.result_batch_id,
     )
     result.delete()
-    return JsonResponse({"deleted": 1})
+    messages.success(request, "Se borró el resultado de la sesión.")
+    return redirect("tutor-home")
 
 
 @never_cache

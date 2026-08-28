@@ -35,8 +35,9 @@
         return;
       }
     } catch (_pollingError) {
-      error.textContent = "No se pudo consultar al asistente. Se intentará de nuevo sin duplicar la generación.";
+      error.textContent = "No se pudo actualizar el estado del asistente. Reintentando automáticamente sin duplicar la generación.";
       error.hidden = false;
+      retry.hidden = false;
     }
     window.setTimeout(poll, 2000);
   };
