@@ -2,6 +2,32 @@
 
 AulaLista es un nodo educativo local para ofrecer actividades de aprendizaje cuando no hay acceso a Internet. Su contenido público está gobernado por personas y su funcionamiento inicial debe poder demostrarse sin alumnado real ni afirmar validación pedagógica no realizada.
 
+## Coordinación institucional
+
+**School**:
+Ámbito institucional estable que conserva salones, adscripciones y auditoría aunque cambien las personas con autoridad sobre él. No contiene por sí mismo un roster estudiantil.
+_Avoid_: propiedad del Director, cuenta institucional.
+
+**Director**:
+Persona humana autorizada para decidir adscripciones docentes y acciones de coordinación dentro de una `School`. Su autoridad institucional no incluye administrar credenciales ni publicar currícula.
+_Avoid_: propietario de la Escuela, administrador técnico.
+
+**PlatformAdministrator**:
+Persona responsable de cuentas, credenciales, roles y cambios técnicos. Esa capacidad no le concede autoridad para decidir adscripciones docentes ni publicación curricular.
+_Avoid_: Director, autoridad editorial.
+
+**TeacherAssignment**:
+Relación institucional con vigencia e historia que vincula una cuenta docente existente con un `ClassroomGroup` dentro de una `School`. No equivale a autoría, propiedad de currícula ni propiedad del salón.
+_Avoid_: creador del salón, propietario docente.
+
+**CoordinationAction**:
+Siguiente decisión o paso institucional confirmado por una persona autorizada, con responsable, fecha objetivo y estado. Puede apoyarse en un resumen agregado, pero no es una inferencia, alerta ni decisión automática.
+_Avoid_: recomendación de IA, score de riesgo, evaluación laboral.
+
+**ClassroomRoadmapSummary**:
+Proyección agregada por salón y periodo que declara su fuente, actualización y datos faltantes. No es progreso nominal, ranking, diagnóstico ni evidencia de aprendizaje.
+_Avoid_: expediente estudiantil, semáforo de riesgo, clasificación de docentes.
+
 ## Currículo y publicación
 
 **CurriculumPackage**:
@@ -53,8 +79,8 @@ _Avoid_: curso, instancia editable.
 Una `ClassroomSession` puede estar en preparación mientras una persona revisa su distribución; solo una confirmación humana explícita la vuelve activa y disponible para actividad estudiantil. La sesión conserva la maestra que la preparó, un `PublishedPackageSnapshot` base y, cuando usa camino, un `PublishedRoadmapSnapshot` inmutables. El roadmap congela además la referencia al snapshot de paquete de cada actividad: cambiar el contenido editorial no modifica una sesión ya iniciada.
 
 **ClassroomGroup**:
-Etiqueta corta creada por la maestra para agrupar `ClassroomSession`, por ejemplo `6° A`. No contiene lista, cuenta, nombre ni otro dato de alumnos. Puede no elegirse: una sesión sin salón sigue siendo válida.
-_Avoid_: lista nominal, grupo de estudiantes.
+Salón institucional perteneciente a una `School`, distinguido por grado, grupo y una etiqueta legible. Agrupa `ClassroomSession`, pero no contiene lista, cuenta, nombre ni otro dato de alumnos.
+_Avoid_: propiedad del Director, propiedad de la maestra, lista nominal.
 
 **LocalDeviceQueue**:
 Cola local asociada a un `DeviceAssignment`, identificada mediante un identificador opaco del nodo y limitada por una capacidad asignada. No contiene nombres, matrículas ni otras identidades estudiantiles.
