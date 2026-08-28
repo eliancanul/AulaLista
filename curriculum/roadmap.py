@@ -174,6 +174,22 @@ def ordered_activity_ids(payload, *, package_snapshot_id=None):
     ]
 
 
+def duplicate_activity_ids(payload):
+    """Return explicit activity IDs that occur more than once in a roadmap.
+
+    Activity IDs are the stable join key between a roadmap and persisted
+    results.  A duplicate therefore makes both navigation and result titles
+    ambiguous; callers must reject the roadmap or treat it as unsafe rather
+    than silently selecting one occurrence.
+    """
+
+    counts = {}
+    for activity in ordered_activities(payload):
+        activity_id = activity["id"]
+        counts[activity_id] = counts.get(activity_id, 0) + 1
+    return sorted(activity_id for activity_id, count in counts.items() if count > 1)
+
+
 def states_for_progress(payload, completed_activity_ids, *, package_snapshot_id=None):
     """Return flat rows with explicit, deterministic roadmap states."""
 

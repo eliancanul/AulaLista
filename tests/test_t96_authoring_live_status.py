@@ -8,6 +8,7 @@ import django
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import OperationalError
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -107,6 +108,35 @@ def test_worker_records_start_and_finish_without_losing_partial_state():
     assert job.progress_done == 1
     assert job.progress_started_at is not None
     assert job.progress_finished_at >= job.progress_started_at
+
+
+def test_persistent_sqlite_lock_finishes_stage_as_recoverable_error():
+    _teacher, _client, job = owned_job(stage="activities")
+    locked = OperationalError("database is locked")
+    with patch(
+        "curriculum.views._run_import_job_stage_once",
+        side_effect=locked,
+    ), patch("curriculum.views.time.sleep"):
+        _run_import_job_stage(job.pk, "activities")
+
+    job.refresh_from_db()
+    assert job.progress_stage == ""
+    assert job.progress_finished_at is not None
+    assert job.status == CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
+    assert "bloque" in job.error_message.lower()
+
+
+def test_non_lock_operational_error_is_not_hidden_by_retry_wrapper():
+    _teacher, _client, job = owned_job(stage="activities")
+    with patch(
+        "curriculum.views._run_import_job_stage_once",
+        side_effect=OperationalError("disk I/O error"),
+    ):
+        with pytest.raises(OperationalError, match="disk I/O error"):
+            _run_import_job_stage(job.pk, "activities")
+
+    job.refresh_from_db()
+    assert job.progress_stage == "activities"
 
 
 def test_stale_request_cannot_start_a_duplicate_generation():

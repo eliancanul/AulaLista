@@ -519,6 +519,14 @@ class PublishedRoadmapSnapshot(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             raise ValidationError("Un snapshot de roadmap publicado es inmutable.")
+        from curriculum.roadmap import duplicate_activity_ids
+
+        duplicates = duplicate_activity_ids(self.payload)
+        if duplicates:
+            joined = ", ".join(duplicates)
+            raise ValidationError(
+                f"El roadmap contiene IDs de actividad duplicados: {joined}."
+            )
         self.sha256 = _canonical_payload_sha256(self.payload)
         return super().save(*args, **kwargs)
 

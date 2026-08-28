@@ -87,7 +87,7 @@ def result(session, participant_key, activity_id, state=PseudonymousResult.STATE
         snapshot_sha256=session.snapshot.sha256,
         state=state,
         duration_seconds=20,
-        responses=[],
+        responses=[{"question_index": 0, "selected_position": 1, "is_correct": False}],
         score=0,
         help_requests=[],
         technical_errors=[],
@@ -118,9 +118,9 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     client = tutor_client_for_sessions(session)
     page = client.get(reverse("tutor-session-results", args=[session.pk]))
     assert page.status_code == 200
-    assert "Registro individual seudónimo" in page.text
+    assert "Registro individual seudónimo" not in page.text
     assert str(first.participant_key) not in page.text
-    assert str(first.participant_key)[:8] in page.text
+    assert str(first.participant_key)[:8] not in page.text
     assert "Diagnóstico" not in page.text
     json_export = client.post(
         reverse("tutor-session-export", args=[session.pk]), {"format": "json"}
@@ -132,7 +132,7 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
     for response in (json_export, csv_export):
         assert str(first.participant_key) not in response.text
         assert str(results[0].id) not in response.text
-        assert "participant_label" in response.text
+        assert "participant_label" not in response.text
 
 
 def test_group_aggregates_stay_with_the_selected_classroom_group():
@@ -150,11 +150,24 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     )
     first.close()
     second.close()
-    group_result = result(first, uuid.uuid4(), "activity-1")
+    group_result = result(first, uuid.uuid4(), "actividad-0")
     group_result.help_requests = [{"kind": "hint"}]
     group_result.technical_errors = [{"message": "local"}]
     group_result.save(update_fields=["help_requests", "technical_errors"])
-    result(second, uuid.uuid4(), "activity-1")
+    PseudonymousResult.objects.create(
+        result_batch_id=first.result_batch_id,
+        participant_key=uuid.uuid4(),
+        snapshot_id=snapshot.pk,
+        snapshot_version=snapshot.version,
+        snapshot_sha256=snapshot.sha256,
+        state=PseudonymousResult.STATE_ABANDONED,
+        duration_seconds=20,
+        responses=[],
+        score=0,
+        help_requests=[],
+        technical_errors=[],
+    )
+    result(second, uuid.uuid4(), "actividad-0")
     PseudonymousSurveyResponse.objects.create(
         result_batch_id=first.result_batch_id,
         snapshot_id=snapshot.pk,
@@ -171,12 +184,13 @@ def test_group_aggregates_stay_with_the_selected_classroom_group():
     assert "Distribución de actividades" in page.text
     assert ">1</strong> ayudas solicitadas" in page.text
     assert ">1</strong> errores técnicos" in page.text
-    assert snapshot.sha256[:8] in page.text
+    assert ">1</strong> participantes" in page.text
+    assert snapshot.sha256[:8] not in page.text
     summary = client.get(reverse("tutor-results"))
     assert summary.status_code == 200
     assert ">1</strong> ayudas solicitadas" in summary.text
     assert ">1</strong> errores técnicos" in summary.text
-    assert snapshot.sha256[:8] in summary.text
+    assert snapshot.sha256[:8] not in summary.text
     assert client.get(reverse("tutor-group-results", args=[other_group.pk])).status_code == 404
 
 

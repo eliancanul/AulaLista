@@ -162,7 +162,7 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
         snapshot_sha256=snapshot.sha256,
         state=PseudonymousResult.STATE_COMPLETED,
         duration_seconds=40,
-        responses=[],
+        responses=[{"question_index": 0, "selected_position": 1, "is_correct": True}],
         score=1,
         help_requests=[{"kind": "hint"}],
         technical_errors=[],
@@ -175,7 +175,7 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
         snapshot_sha256=snapshot.sha256,
         state=PseudonymousResult.STATE_ABANDONED,
         duration_seconds=20,
-        responses=[],
+        responses=[{"question_index": 0, "selected_position": 1, "is_correct": False}],
         score=0,
         help_requests=[],
         technical_errors=[{"message": "local"}],
@@ -191,18 +191,33 @@ def test_group_results_show_required_metrics_and_privacy_empty_state():
         assert "60" in response.text
         assert "Luna" not in response.text
         assert str(PseudonymousResult.objects.first().id) not in response.text
-    assert "Registro individual seudónimo" in detail.text
-    assert "versión 1" in detail.text
-    assert snapshot.sha256[:8] in detail.text
+    assert "Registro individual seudónimo" not in detail.text
+    assert "snapshot_sha256" not in detail.text
 
 
 def test_empty_group_results_are_explicit():
     snapshot = published_snapshot("Sin resultados")
     session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1)
     session.close()
+    # A retained close-time row without a response is not evidence that the
+    # activity was worked and must follow the same empty-state contract.
+    PseudonymousResult.objects.create(
+        result_batch_id=session.result_batch_id,
+        participant_key=uuid.uuid4(),
+        snapshot_id=snapshot.pk,
+        snapshot_version=snapshot.version,
+        snapshot_sha256=snapshot.sha256,
+        state=PseudonymousResult.STATE_ABANDONED,
+        duration_seconds=20,
+        responses=[],
+        score=0,
+        help_requests=[],
+        technical_errors=[],
+    )
     response = tutor_client_for_sessions(session).get(
         reverse("tutor-session-results", args=[session.pk])
     )
     assert response.status_code == 200
-    assert "no tiene resultados agregados" in response.text
-    assert "Registro individual seudónimo" in response.text
+    assert "Aún no hay actividades trabajadas" in response.text
+    assert "Volver al Roadmap" in response.text
+    assert "Registro individual seudónimo" not in response.text

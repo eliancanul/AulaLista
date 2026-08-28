@@ -472,7 +472,7 @@ def test_duplicate_names_produce_independent_nameless_results_and_exports():
     assert get_export.status_code == 405
     assert export.status_code == 200
     assert "Luna" not in export.text
-    assert "participant_label" in export.text
+    assert "participant_label" not in export.text
     for result in results:
         assert str(result.id) not in export.text
         assert str(result.participant_key) not in export.text
