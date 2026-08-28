@@ -59,6 +59,8 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .top-nav a:hover { text-decoration: underline; }
 .account-actions { display: flex; align-items: center; gap: .5rem; margin-inline-start: .5rem; padding-inline-start: .75rem; border-inline-start: 1px solid var(--color-line); }
 .account-actions a, .account-actions button { min-block-size: var(--target-min); display: inline-flex; align-items: center; padding: .35rem .5rem; border: 0; color: var(--color-action-dark); background: transparent; font-size: .78rem; font-weight: 800; text-decoration: none; }
+.account-profile-link { inline-size: var(--target-min); justify-content: center; padding-inline: 0 !important; }
+.account-profile-icon { inline-size: 1.35rem; block-size: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .account-actions button { cursor: pointer; }
 .account-actions a:hover, .account-actions button:hover { text-decoration: underline; }
 .message-stack { margin-block-end: 1.5rem; }

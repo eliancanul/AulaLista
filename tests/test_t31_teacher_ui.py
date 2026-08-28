@@ -8,6 +8,7 @@ import uuid
 import django
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import Client
 from django.urls import reverse
 
@@ -108,6 +109,9 @@ def test_teacher_navigation_reaches_published_activity_and_prepare():
     assert reverse("tutor-curriculum") in home.text
     assert reverse("tutor-results") in home.text
     assert reverse("wagtailadmin_account") in home.text
+    assert 'class="account-profile-icon"' in home.text
+    assert 'aria-label="Perfil docente"' in home.text
+    assert ">Perfil</a>" not in home.text
     assert reverse("wagtailadmin_logout") in home.text
 
     curriculum = client.get(reverse("tutor-curriculum"))
@@ -122,6 +126,28 @@ def test_teacher_navigation_reaches_published_activity_and_prepare():
     assert "Ver actividad publicada" in progress.text
     assert 'name="node_id" value="activity-1"' in progress.text
     assert reverse("tutor-package-detail", args=[snapshot.pk]) in progress.text
+
+
+def test_teacher_account_actions_use_wagtail_profile_and_post_logout():
+    client = tutor_client()
+    user = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    user.user_permissions.add(
+        Permission.objects.get(
+            content_type__app_label="wagtailadmin",
+            codename="access_admin",
+        )
+    )
+
+    profile = client.get(reverse("wagtailadmin_account"))
+    assert profile.status_code == 200
+
+    logout_url = reverse("wagtailadmin_logout")
+    assert client.get(logout_url).status_code == 405
+
+    logout = client.post(logout_url)
+    assert logout.status_code == 302
+    assert logout["Location"].startswith(reverse("wagtailadmin_login"))
+    assert "_auth_user_id" not in client.session
 
 
 def test_group_results_show_required_metrics_and_privacy_empty_state():
