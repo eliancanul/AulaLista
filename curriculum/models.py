@@ -28,7 +28,7 @@ from wagtail.models import (
 )
 from wagtail.permissions import ModelPermissionPolicy
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet, WorkflowActionView
+from wagtail.snippets.views.snippets import CreateView, SnippetViewSet, WorkflowActionView
 
 from curriculum.distribution import calculate_distribution, validate_distribution
 
@@ -272,18 +272,17 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         super().save(*args, **kwargs)
 
     def save_revision(self, *args, user=None, **kwargs):
-        """Claim an unowned draft on its first authenticated Wagtail save."""
+        """Require explicit ownership before an authenticated revision save."""
 
-        if (
-            self.pk
-            and self.created_by_id is None
-            and user is not None
-            and getattr(user, "is_authenticated", False)
-        ):
-            type(self).objects.filter(pk=self.pk, created_by__isnull=True).update(
-                created_by=user
-            )
-            self.created_by = user
+        if user is not None and getattr(user, "is_authenticated", False):
+            if self.created_by_id is None:
+                raise ValidationError(
+                    "El borrador sin propietaria requiere atribución explícita antes de guardar una revisión."
+                )
+            if self.created_by_id != user.pk:
+                raise ValidationError(
+                    "Sólo la maestra propietaria puede guardar una revisión curricular."
+                )
         return super().save_revision(*args, user=user, **kwargs)
 
     @transaction.atomic
@@ -755,6 +754,30 @@ class ClassroomSession(models.Model):
         ]
 
     @classmethod
+    def _validate_teacher_snapshot_ownership(
+        cls,
+        *,
+        teacher,
+        snapshot,
+        roadmap_snapshot,
+    ):
+        if teacher is None:
+            return
+        if snapshot.package.created_by_id != teacher.pk:
+            raise ValidationError(
+                "El snapshot curricular debe pertenecer a la maestra propietaria de la sesión."
+            )
+        if roadmap_snapshot is None:
+            return
+        has_foreign_package = PublishedPackageSnapshot.objects.filter(
+            pk__in=roadmap_snapshot.package_snapshot_ids()
+        ).exclude(package__created_by_id=teacher.pk).exists()
+        if roadmap_snapshot.published_by_id != teacher.pk or has_foreign_package:
+            raise ValidationError(
+                "El roadmap debe pertenecer a la maestra propietaria de la sesión."
+            )
+
+    @classmethod
     def start_from_snapshot(
         cls,
         snapshot,
@@ -765,7 +788,9 @@ class ClassroomSession(models.Model):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
-            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            published_snapshot = PublishedPackageSnapshot.objects.select_related(
+                "package"
+            ).get(pk=snapshot.pk)
             published_roadmap = (
                 PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
                 if roadmap_snapshot is not None
@@ -773,6 +798,11 @@ class ClassroomSession(models.Model):
             )
             if published_roadmap is not None:
                 published_roadmap.validate_package_snapshots()
+            cls._validate_teacher_snapshot_ownership(
+                teacher=teacher,
+                snapshot=published_snapshot,
+                roadmap_snapshot=published_roadmap,
+            )
         except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
                 "La sesión requiere snapshots publicados existentes."
@@ -798,7 +828,9 @@ class ClassroomSession(models.Model):
         if not snapshot or snapshot.pk is None:
             raise ValidationError("La sesión requiere un snapshot publicado existente.")
         try:
-            published_snapshot = PublishedPackageSnapshot.objects.get(pk=snapshot.pk)
+            published_snapshot = PublishedPackageSnapshot.objects.select_related(
+                "package"
+            ).get(pk=snapshot.pk)
             published_roadmap = (
                 PublishedRoadmapSnapshot.objects.get(pk=roadmap_snapshot.pk)
                 if roadmap_snapshot is not None
@@ -807,6 +839,11 @@ class ClassroomSession(models.Model):
             capacities = calculate_distribution(student_count, device_count)
             if published_roadmap is not None:
                 published_roadmap.validate_package_snapshots()
+            cls._validate_teacher_snapshot_ownership(
+                teacher=teacher,
+                snapshot=published_snapshot,
+                roadmap_snapshot=published_roadmap,
+            )
         except (PublishedPackageSnapshot.DoesNotExist, PublishedRoadmapSnapshot.DoesNotExist) as error:
             raise ValidationError(
                 "La sesión requiere snapshots publicados existentes."
@@ -1802,8 +1839,17 @@ class EditorialReviewerWorkflowActionView(WorkflowActionView):
         return super().dispatch(request, *args, **kwargs)
 
 
+class CurriculumPackageCreateView(CreateView):
+    """Assign new Wagtail drafts explicitly before their first revision."""
+
+    def save_instance(self):
+        self.form.instance.created_by = self.request.user
+        return super().save_instance()
+
+
 class CurriculumPackageViewSet(SnippetViewSet):
     model = CurriculumPackage
+    add_view_class = CurriculumPackageCreateView
     workflow_action_view_class = EditorialReviewerWorkflowActionView
     permission_policy = None
 

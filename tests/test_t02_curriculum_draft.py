@@ -93,6 +93,9 @@ def test_authorized_editorial_reviewer_can_save_an_incomplete_draft_in_wagtail()
 
     assert response.status_code == 200
     assert "Fracciones: borrador Wagtail" in response.text
+    assert CurriculumPackage.objects.get(
+        title="Fracciones: borrador Wagtail"
+    ).created_by.username == "editorial-reviewer"
 
 
 def test_wagtail_editor_can_save_an_incomplete_draft_and_see_structural_missing_fields():

@@ -23,7 +23,7 @@ from curriculum.models import CurriculumPackage, PublishedPackageSnapshot, Workf
 pytestmark = pytest.mark.django_db
 
 
-def valid_package():
+def valid_package(owner=None):
     return CurriculumPackage.objects.create(
         title="Fracciones: partes de un todo",
         objective="Reconocer partes iguales de un todo.",
@@ -52,6 +52,7 @@ def valid_package():
             )
         ],
         final_explanation="El denominador cuenta las partes iguales.",
+        created_by=owner,
     )
 
 
@@ -76,13 +77,16 @@ def editorial_reviewer():
     return user
 
 
-def incomplete_package():
-    return CurriculumPackage.objects.create(title="Paquete incompleto")
+def incomplete_package(owner=None):
+    return CurriculumPackage.objects.create(
+        title="Paquete incompleto",
+        created_by=owner,
+    )
 
 
 def test_publication_rejects_structurally_incomplete_package_before_creating_snapshot():
     reviewer = editorial_reviewer()
-    package = incomplete_package()
+    package = incomplete_package(reviewer)
     assert package.structural_validation()["is_valid"] is False
     package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
@@ -113,7 +117,7 @@ def test_publication_rejects_structurally_incomplete_package_before_creating_sna
 
 def test_domain_publish_rejects_invalid_revision_even_with_recorded_human_approval():
     reviewer = editorial_reviewer()
-    package = incomplete_package()
+    package = incomplete_package(reviewer)
     revision = package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
     task_state = workflow_state.current_task_state
@@ -129,7 +133,7 @@ def test_domain_publish_rejects_invalid_revision_even_with_recorded_human_approv
 
 def test_structural_validation_blocks_stale_incomplete_revision_even_if_package_is_completed_later():
     reviewer = editorial_reviewer()
-    package = incomplete_package()
+    package = incomplete_package(reviewer)
     stale_revision = package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
     task_state = workflow_state.current_task_state
@@ -152,7 +156,7 @@ def test_structural_validation_blocks_stale_incomplete_revision_even_if_package_
 
 def test_publication_without_human_approval_is_rejected():
     reviewer = editorial_reviewer()
-    package = valid_package()
+    package = valid_package(reviewer)
     revision = package.save_revision(user=reviewer)
 
     with pytest.raises(ValidationError, match="aprobación humana"):
@@ -174,7 +178,7 @@ def test_publication_path_rejects_an_authenticated_user_outside_editorial_review
             codename="change_curriculumpackage",
         )
     )
-    package = valid_package()
+    package = valid_package(unauthorized)
     revision = package.save_revision(user=unauthorized)
 
     with pytest.raises(ValidationError, match="EditorialReviewer"):
@@ -185,7 +189,7 @@ def test_publication_path_rejects_an_authenticated_user_outside_editorial_review
 
 def test_editorial_reviewer_approves_valid_revision_and_creates_snapshot():
     reviewer = editorial_reviewer()
-    package = valid_package()
+    package = valid_package(reviewer)
     revision = package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
     task_state = workflow_state.current_task_state
@@ -217,7 +221,7 @@ def test_editorial_reviewer_approves_valid_revision_and_creates_snapshot():
 
 def test_correction_creates_a_new_auditable_snapshot_without_changing_snapshot_one():
     reviewer = editorial_reviewer()
-    package = valid_package()
+    package = valid_package(reviewer)
     revision_1 = package.save_revision(user=reviewer)
     workflow_state_1 = package.get_workflow().start(package, user=reviewer)
     task_state_1 = workflow_state_1.current_task_state
@@ -281,7 +285,7 @@ def test_authenticated_staff_without_editorial_reviewer_role_cannot_approve():
             codename="change_curriculumpackage",
         ),
     )
-    package = valid_package()
+    package = valid_package(reviewer)
     package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
     task_state = workflow_state.current_task_state
@@ -304,7 +308,7 @@ def test_authenticated_staff_without_editorial_reviewer_role_cannot_approve():
 
 def test_published_snapshot_rejects_mass_updates_and_deletes_at_database_boundary():
     reviewer = editorial_reviewer()
-    package = valid_package()
+    package = valid_package(reviewer)
     revision = package.save_revision(user=reviewer)
     workflow_state = package.get_workflow().start(package, user=reviewer)
     task_state = workflow_state.current_task_state

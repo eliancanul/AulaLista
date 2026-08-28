@@ -138,14 +138,15 @@ def test_closing_roadmap_session_groups_two_participants_across_three_activities
 def test_group_aggregates_stay_with_the_selected_classroom_group():
     owner = get_user_model().objects.create_user(username="maestra", is_staff=True)
     other_owner = get_user_model().objects.create_user(username="otra", is_staff=True)
-    snapshot = published_snapshot()
+    snapshot = published_snapshot(owner=owner)
+    other_snapshot = published_snapshot("Actividad del otro grupo", owner=other_owner)
     group = ClassroomGroup.objects.create(name="6° A", created_by=owner)
     other_group = ClassroomGroup.objects.create(name="6° B", created_by=other_owner)
     first = ClassroomSession.prepare_from_snapshot(
         snapshot, 1, 1, classroom_group=group, teacher=owner
     )
     second = ClassroomSession.prepare_from_snapshot(
-        snapshot, 1, 1, classroom_group=other_group, teacher=other_owner
+        other_snapshot, 1, 1, classroom_group=other_group, teacher=other_owner
     )
     first.close()
     second.close()
@@ -246,7 +247,7 @@ def test_new_group_routes_require_a_staff_teacher_and_close_year_is_post_only():
 def test_session_result_routes_reject_another_staff_teacher():
     owner = get_user_model().objects.create_user(username="session-owner", is_staff=True)
     other = get_user_model().objects.create_user(username="session-other", is_staff=True)
-    snapshot = published_snapshot("Sesión privada")
+    snapshot = published_snapshot("Sesión privada", owner=owner)
     session = ClassroomSession.prepare_from_snapshot(snapshot, 1, 1, teacher=owner)
     session.close()
     stored = result(session, uuid.uuid4(), "activity-1")

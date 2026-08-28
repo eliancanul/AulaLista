@@ -7,6 +7,7 @@ import os
 import django
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import Client
@@ -16,6 +17,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aulalista.settings")
 django.setup()
 
 from curriculum.models import (  # noqa: E402
+    ClassroomSession,
     CurriculumImportJob,
     CurriculumPackage,
     PublishedPackageSnapshot,
@@ -47,6 +49,31 @@ def snapshot(owner, title):
         payload=payload,
         sha256=digest,
         source_revision=revision,
+        published_by=owner,
+    )
+
+
+def roadmap(owner, package_snapshot, title):
+    return PublishedRoadmapSnapshot.objects.create(
+        title=title,
+        version=PublishedRoadmapSnapshot.objects.count() + 1,
+        payload={
+            "title": title,
+            "units": [{
+                "id": "unit-1",
+                "title": "Unidad",
+                "lessons": [{
+                    "id": "lesson-1",
+                    "title": "Lección",
+                    "activities": [{
+                        "id": "activity-1",
+                        "title": package_snapshot.payload["title"],
+                        "package_snapshot_id": package_snapshot.pk,
+                    }],
+                }],
+            }],
+        },
+        sha256="computed-by-model",
         published_by=owner,
     )
 
@@ -124,3 +151,52 @@ def test_a_teacher_cannot_publish_another_teachers_package():
 
     with pytest.raises(Exception, match="propietaria"):
         package.publish(object(), user=other)
+
+
+@pytest.mark.parametrize("factory", ["prepare", "start"])
+def test_session_factories_reject_cross_owner_snapshot_and_roadmap(factory):
+    owner, _ = teacher(f"maestra-factory-{factory}")
+    other, _ = teacher(f"maestra-otra-{factory}")
+    own_snapshot = snapshot(owner, f"Actividad propia {factory}")
+    other_snapshot = snapshot(other, f"Actividad ajena {factory}")
+    own_roadmap = roadmap(owner, own_snapshot, f"Roadmap propio {factory}")
+    other_roadmap = roadmap(other, other_snapshot, f"Roadmap ajeno {factory}")
+    mixed_roadmap = roadmap(owner, other_snapshot, f"Roadmap mixto {factory}")
+
+    def invoke(package_snapshot, published_roadmap):
+        if factory == "prepare":
+            return ClassroomSession.prepare_from_snapshot(
+                package_snapshot,
+                1,
+                1,
+                roadmap_snapshot=published_roadmap,
+                teacher=owner,
+            )
+        return ClassroomSession.start_from_snapshot(
+            package_snapshot,
+            roadmap_snapshot=published_roadmap,
+            teacher=owner,
+        )
+
+    with pytest.raises(ValidationError, match="propietaria"):
+        invoke(other_snapshot, own_roadmap)
+    with pytest.raises(ValidationError, match="propietaria"):
+        invoke(own_snapshot, other_roadmap)
+    with pytest.raises(ValidationError, match="propietaria"):
+        invoke(own_snapshot, mixed_roadmap)
+    assert not ClassroomSession.objects.exists()
+
+
+def test_unowned_draft_cannot_be_claimed_implicitly_by_saving_a_revision():
+    first, _ = teacher("maestra-reclamo-uno")
+    second, _ = teacher("maestra-reclamo-dos")
+    unowned = CurriculumPackage.objects.create(title="Legado sin atribución")
+
+    with pytest.raises(ValidationError, match="atribución explícita"):
+        unowned.save_revision(user=first)
+    unowned.refresh_from_db()
+    assert unowned.created_by_id is None
+
+    owned = CurriculumPackage.objects.create(title="Borrador propio", created_by=first)
+    with pytest.raises(ValidationError, match="propietaria"):
+        owned.save_revision(user=second)
