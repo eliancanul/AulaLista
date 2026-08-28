@@ -43,6 +43,7 @@ from curriculum.ephemeral import (
 from curriculum.models import (
     ClassroomGroup,
     ClassroomSession,
+    GroupRoadmapProgress,
     CurriculumImportJob,
     CurriculumPackage,
     CurriculumProgress,
@@ -1015,6 +1016,22 @@ def tutor_session_active(request, session_id):
         if session.status == ClassroomSession.STATUS_ACTIVE
         else {"join_url": "", "join_qr_svg": ""}
     )
+    group_progress = GroupRoadmapProgress.for_session(session)
+    roadmap_lessons = []
+    if group_progress:
+        from curriculum.roadmap import ordered_activities
+        current_id = group_progress.current_activity_id
+        activities = ordered_activities(session.roadmap_snapshot.payload)
+        current_position = next(
+            (index for index, row in enumerate(activities) if row["id"] == current_id),
+            len(activities),
+        )
+        seen = set()
+        for position, row in enumerate(activities):
+            if row["lesson_id"] not in seen:
+                seen.add(row["lesson_id"])
+                if position > current_position:
+                    roadmap_lessons.append(row)
     return render(
         request,
         "curriculum/tutor_session_active.html",
@@ -1022,12 +1039,38 @@ def tutor_session_active(request, session_id):
             "session": session,
             "active_turns": active_turns,
             "participant_count": active_turns.count(),
+            "group_roadmap_progress": group_progress,
+            "roadmap_lessons": roadmap_lessons,
             **join_context,
             "snapshot_label": (
                 f"versión {session.snapshot.version} · {session.snapshot.sha256[:8]}"
             ),
         },
     )
+
+
+@never_cache
+@teacher_required
+@require_POST
+def tutor_session_roadmap_advance(request, session_id):
+    """Move this session's shared roadmap cursor forward by teacher action."""
+    session = get_object_or_404(
+        ClassroomSession.objects.select_for_update().select_related("roadmap_snapshot"),
+        pk=session_id,
+    )
+    if session.status != ClassroomSession.STATUS_ACTIVE or not session.roadmap_snapshot_id:
+        return HttpResponseForbidden("La sesión no tiene un roadmap activo.")
+    from curriculum.roadmap import ordered_activities
+    requested = str(request.POST.get("lesson_id", "")).strip()
+    activities = ordered_activities(session.roadmap_snapshot.payload)
+    target = next((item["id"] for item in activities if item["lesson_id"] == requested), None)
+    if target is None:
+        return HttpResponseBadRequest("Selecciona una actividad del roadmap publicado.")
+    try:
+        GroupRoadmapProgress.for_session(session).advance_to(target)
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    return redirect("tutor-session-active", session_id=session.pk)
 
 
 @never_cache
@@ -2366,9 +2409,14 @@ def _unconfirmed_session_response(session):
 
 def _roadmap_context(session, turn, progress=None):
     progress = progress or (StudentRoadmapProgress.for_turn(turn) if turn is not None else None)
+    group_progress = GroupRoadmapProgress.for_session(session)
+    group_states = group_progress.states() if group_progress else []
     return {
         "roadmap_progress": progress,
-        "roadmap_states": progress.roadmap_states() if progress else [],
+        "group_roadmap_progress": group_progress,
+        "roadmap_states": group_states,
+        "roadmap_completed": bool(group_states and all(row["state"] == "COMPLETADA" for row in group_states)),
+        "roadmap_is_shared": bool(group_progress),
         "roadmap_snapshot": session.roadmap_snapshot,
     }
 
@@ -2376,9 +2424,19 @@ def _roadmap_context(session, turn, progress=None):
 def _activity_snapshot(session, progress=None):
     """Resolve the immutable package for the current roadmap activity."""
 
-    if progress is None or session.roadmap_snapshot_id is None:
+    if session.roadmap_snapshot_id is None:
         return session.snapshot
-    return progress.package_snapshot_for_activity()
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id or next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    )
+    if activity_id is None:
+        return session.snapshot
+    from curriculum.roadmap import ordered_activities
+    activity = next(row for row in ordered_activities(session.roadmap_snapshot.payload)
+                    if row["id"] == activity_id)
+    snapshot_id = activity.get("package_snapshot_id") or session.snapshot_id
+    return PublishedPackageSnapshot.objects.get(pk=snapshot_id)
 
 
 def _roadmap_activity_ids(session):
@@ -2438,13 +2496,16 @@ def student_roadmap(request, session_id):
 def _activity_context(session, **extra):
     turn = extra.get("turn")
     progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
-    roadmap_completed = bool(
-        progress
-        and session.roadmap_snapshot_id
-        and progress.current_activity_id() is None
-        and progress.completed_activity_ids
-    )
+    group = GroupRoadmapProgress.for_session(session)
+    roadmap_completed = bool(group and group.states() and all(
+        row["state"] == "COMPLETADA" for row in group.states()
+    ))
     activity_snapshot = session.snapshot if roadmap_completed else _activity_snapshot(session, progress)
+    item_activity_id = None
+    if group and not roadmap_completed:
+        item_activity_id = group.current_activity_id or next(
+            (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+        )
     context = {
         "session": session,
         "snapshot": activity_snapshot,
@@ -2452,6 +2513,7 @@ def _activity_context(session, **extra):
         "turn": turn,
         "activity_questions": [] if roadmap_completed else _activity_questions(session, turn, activity_snapshot),
         "roadmap_completed": roadmap_completed,
+        "item_activity_id": item_activity_id,
         **_roadmap_context(session, turn, progress),
     }
     context.update(extra)
@@ -2462,7 +2524,10 @@ def _activity_questions(session, turn, activity_snapshot=None):
     activity_snapshot = activity_snapshot or session.snapshot
     questions = activity_snapshot.payload.get("questions", []) or []
     progress = StudentRoadmapProgress.for_turn(turn) if turn is not None else None
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
     activity_questions = []
     turn_id = turn.pk if turn is not None else session.pk
     for question_index, question in enumerate(questions):
@@ -2491,23 +2556,30 @@ def _activity_questions(session, turn, activity_snapshot=None):
 
 
 def _complete_activity_after_response(session, turn, question_index):
-    """Persist correctness and advance the individual route immediately."""
+    """Persist correctness and advance the shared session route immediately."""
 
     progress = StudentRoadmapProgress.for_turn(turn)
     if progress is None:
         return False
-    activity_id = progress.current_activity_id()
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id or next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    )
     if activity_id is None:
         return False
     activity_snapshot = _activity_snapshot(session, progress)
     questions = activity_snapshot.payload.get("questions", []) or []
     if not questions:
         return False
-    return progress.record_correct_answer(
+    completed = progress.record_correct_answer(
         activity_id,
         question_index,
         len(questions),
+        enforce_current=False,
     )
+    if completed:
+        group.complete_activity(activity_id)
+    return completed
 
 
 def _hint_progress_key(turn_id, question_index, activity_id=None):
@@ -2627,6 +2699,11 @@ def student_roadmap_complete(request, session_id, activity_id):
     if progress is None:
         return HttpResponseBadRequest("La sesión no tiene un roadmap publicado.")
     try:
+        group = GroupRoadmapProgress.for_session(session)
+        if activity_id != (group.current_activity_id or next(
+            (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+        )):
+            raise ValidationError("La actividad todavía no es el paso actual del grupo.")
         activity_snapshot = _activity_snapshot(session, progress)
         if activity_snapshot.payload.get("questions"):
             correct_indices = (progress.correct_question_indices or {}).get(str(activity_id), [])
@@ -2635,7 +2712,8 @@ def student_roadmap_complete(request, session_id, activity_id):
                 return HttpResponseBadRequest(
                     "La actividad requiere completar correctamente sus reactivos."
                 )
-        progress.complete_activity(activity_id, package_snapshot=activity_snapshot)
+        progress.complete_activity(activity_id, package_snapshot=activity_snapshot, enforce_current=False)
+        group.complete_activity(activity_id)
     except (ValidationError, PublishedPackageSnapshot.DoesNotExist) as error:
         return HttpResponseBadRequest(str(error))
     return redirect("student-roadmap", session_id=session_id)
@@ -2660,7 +2738,13 @@ def student_question_answer(request, session_id, question_index):
             "La respuesta requiere el turno activo y la capacidad de este dispositivo."
         )
     progress = StudentRoadmapProgress.for_turn(turn)
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
+    posted_activity_id = str(request.POST.get("activity_id", "")).strip()
+    if group and posted_activity_id != activity_id:
+        return HttpResponseBadRequest("La actividad ya cambió para el grupo.")
     try:
         result = evaluate_response(
             _activity_snapshot(session, progress).payload,
@@ -2715,7 +2799,10 @@ def student_question_assistance(request, session_id, question_index):
             "La ayuda requiere el turno activo y la capacidad de este dispositivo."
         )
     progress = StudentRoadmapProgress.for_turn(turn)
-    activity_id = progress.current_activity_id() if progress else None
+    group = GroupRoadmapProgress.for_session(session)
+    activity_id = group.current_activity_id if group and group.current_activity_id else next(
+        (row["id"] for row in group.states() if row["state"] == "ACTUAL"), None
+    ) if group else None
     activity_snapshot = _activity_snapshot(session, progress)
     kind = request.POST.get("kind", "hint")
     hint_index = None

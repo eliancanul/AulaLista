@@ -36,6 +36,7 @@ from curriculum.views import (
     tutor_session_results_delete,
     tutor_session_review,
     tutor_session_active,
+    tutor_session_roadmap_advance,
     tutor_roadmaps,
     tutor_roadmap_progress,
     tutor_session_projection,
@@ -155,6 +156,11 @@ urlpatterns = [
         "tutor/sessions/<int:session_id>/active/",
         tutor_session_active,
         name="tutor-session-active",
+    ),
+    path(
+        "tutor/sessions/<int:session_id>/roadmap/advance/",
+        tutor_session_roadmap_advance,
+        name="tutor-session-roadmap-advance",
     ),
     path(
         "sessions/<int:session_id>/projection/",

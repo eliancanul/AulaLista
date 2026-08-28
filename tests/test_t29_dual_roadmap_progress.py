@@ -160,7 +160,7 @@ def test_student_completion_changes_only_the_pseudonymous_route():
 
     response = client.post(
         reverse("student-question-answer", args=[session.pk, 0]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
 
     student_progress = StudentRoadmapProgress.objects.get()
@@ -181,7 +181,7 @@ def test_two_students_have_independent_pseudonymous_routes():
     assert _start(first, session, assignments[0], "Luna").status_code == 302
     assert _start(second, session, assignments[1], "Luna").status_code == 302
 
-    first.post(reverse("student-question-answer", args=[session.pk, 0]), {"option_position": 1})
+    first.post(reverse("student-question-answer", args=[session.pk, 0]), {"option_position": 1, "activity_id": "actividad-1"})
 
     progress = list(StudentRoadmapProgress.objects.order_by("created_at", "id"))
     assert len(progress) == 2
@@ -236,7 +236,7 @@ def test_roadmap_traverses_three_activities_backed_by_different_package_snapshot
     for index, package in enumerate(packages):
         response = client.post(
             reverse("student-question-answer", args=[session.pk, 0]),
-            {"option_position": 1},
+            {"option_position": 1, "activity_id": f"u{index}:l0:a0"},
         )
         assert response.status_code == 200
         progress.refresh_from_db()
@@ -350,14 +350,14 @@ def test_correct_answers_survive_ephemeral_summary_eviction():
 
     client.post(
         reverse("student-question-answer", args=[session.pk, 0]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
     from django.core.cache import cache
     from curriculum.ephemeral import ephemeral_session_summary_key
     cache.delete(ephemeral_session_summary_key(session.pk))
     client.post(
         reverse("student-question-answer", args=[session.pk, 1]),
-        {"option_position": 1},
+        {"option_position": 1, "activity_id": "actividad-1"},
     )
 
     progress = StudentRoadmapProgress.objects.get()

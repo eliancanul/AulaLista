@@ -651,6 +651,106 @@ class ClassroomGroup(models.Model):
         return self.name
 
 
+class GroupRoadmapProgress(models.Model):
+    """Shared, ephemeral navigation cursor for one classroom session."""
+
+    session = models.OneToOneField(
+        "ClassroomSession", on_delete=models.CASCADE, related_name="group_roadmap_progress"
+    )
+    roadmap_snapshot = models.ForeignKey(
+        PublishedRoadmapSnapshot, on_delete=models.PROTECT, related_name="group_progress"
+    )
+    completed_activity_ids = models.JSONField(default=list, blank=True)
+    current_activity_id = models.CharField(max_length=160, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def for_session(cls, session):
+        if session.roadmap_snapshot_id is None:
+            return None
+        progress, _ = cls.objects.get_or_create(
+            session=session,
+            defaults={"roadmap_snapshot_id": session.roadmap_snapshot_id},
+        )
+        if progress.roadmap_snapshot_id != session.roadmap_snapshot_id:
+            raise ValidationError("El progreso grupal no corresponde al snapshot de la sesión.")
+        from curriculum.roadmap import ordered_activity_ids
+        activity_ids = ordered_activity_ids(progress.roadmap_snapshot.payload)
+        if not activity_ids:
+            return progress
+        completed = list(dict.fromkeys(str(value) for value in (progress.completed_activity_ids or [])))
+        current = progress.current_activity_id if progress.current_activity_id in activity_ids else ""
+        if not current:
+            current = next((value for value in activity_ids if value not in completed), "")
+            if current != progress.current_activity_id or completed != progress.completed_activity_ids:
+                progress.current_activity_id = current
+                progress.completed_activity_ids = completed
+                progress.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return progress
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = type(self).objects.filter(pk=self.pk).values(
+                "session_id", "roadmap_snapshot_id"
+            ).first()
+            if original and (original["session_id"] != self.session_id or
+                             original["roadmap_snapshot_id"] != self.roadmap_snapshot_id):
+                raise ValidationError("El progreso grupal y su snapshot quedan fijados.")
+        if self.session.roadmap_snapshot_id != self.roadmap_snapshot_id:
+            raise ValidationError("El progreso grupal debe usar el snapshot fijado a la sesión.")
+        return super().save(*args, **kwargs)
+
+    def states(self):
+        from curriculum.roadmap import states_for_group_progress
+        return states_for_group_progress(
+            self.roadmap_snapshot.payload,
+            self.completed_activity_ids,
+            self.current_activity_id or None,
+        )
+
+    def complete_activity(self, activity_id):
+        from curriculum.roadmap import ordered_activity_ids
+        activity_id = str(activity_id)
+        ids = ordered_activity_ids(self.roadmap_snapshot.payload)
+        if activity_id not in ids:
+            raise ValidationError("La actividad no existe en el roadmap publicado.")
+        completed = list(dict.fromkeys(str(value) for value in self.completed_activity_ids))
+        current = self.current_activity_id or next((value for value in ids if value not in completed), "")
+        if activity_id != current:
+            raise ValidationError("La actividad todavía no es el paso actual del grupo.")
+        if activity_id not in completed:
+            completed.append(activity_id)
+        self.completed_activity_ids = completed
+        self.current_activity_id = next((value for value in ids if value not in completed), "")
+        self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return self
+
+    def advance_to(self, activity_id):
+        from curriculum.roadmap import ordered_activity_ids
+        ids = ordered_activity_ids(self.roadmap_snapshot.payload)
+        activity_id = str(activity_id)
+        if activity_id not in ids:
+            raise ValidationError("La actividad no existe en el roadmap publicado.")
+        completed = list(dict.fromkeys(str(value) for value in (self.completed_activity_ids or [])))
+        if ids and len(set(completed)) == len(ids):
+            raise ValidationError("El roadmap grupal ya está completo.")
+        current_id = self.current_activity_id if self.current_activity_id in ids else next(
+            (value for value in ids if value not in completed), ""
+        )
+        if current_id != self.current_activity_id:
+            self.current_activity_id = current_id
+            self.completed_activity_ids = completed
+            self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        current_index = ids.index(current_id) if current_id in ids else -1
+        target_index = ids.index(activity_id)
+        if target_index <= current_index:
+            raise ValidationError("El avance grupal debe seleccionar un paso posterior.")
+        self.completed_activity_ids = list(dict.fromkeys([*completed, *ids[:target_index]]))
+        self.current_activity_id = activity_id
+        self.save(update_fields=["completed_activity_ids", "current_activity_id", "updated_at"])
+        return self
+
+
 class ClassroomSession(models.Model):
     """An activity and roadmap fixed to immutable published snapshots."""
 
@@ -1501,7 +1601,7 @@ class StudentRoadmapProgress(models.Model):
         snapshot_id = snapshot_id or self.package_snapshot_id
         return PublishedPackageSnapshot.objects.get(pk=snapshot_id)
 
-    def complete_activity(self, activity_id, *, package_snapshot=None):
+    def complete_activity(self, activity_id, *, package_snapshot=None, enforce_current=True):
         """Complete one eligible activity without touching CurriculumProgress."""
 
         self._assert_session_snapshots()
@@ -1518,17 +1618,17 @@ class StudentRoadmapProgress(models.Model):
         activities = self.available_activity_ids()
         if activity_id not in activities:
             raise ValidationError("La actividad no existe en el roadmap publicado.")
-        if activity_id != self.current_activity_id():
+        if enforce_current and activity_id != self.current_activity_id():
             raise ValidationError("La actividad todavía no está habilitada en este recorrido.")
         self.completed_activity_ids = list(dict.fromkeys([*completed_ids, activity_id]))
         self.save(update_fields=["completed_activity_ids", "updated_at"])
         return self
 
-    def record_correct_answer(self, activity_id, question_index, question_count):
+    def record_correct_answer(self, activity_id, question_index, question_count, *, enforce_current=True):
         """Persist a correct response and complete its activity immediately."""
 
         activity_id = str(activity_id)
-        if activity_id != self.current_activity_id():
+        if enforce_current and activity_id != self.current_activity_id():
             raise ValidationError("La actividad todavía no está habilitada en este recorrido.")
         try:
             question_index = int(question_index)
@@ -1544,7 +1644,7 @@ class StudentRoadmapProgress(models.Model):
         self.correct_question_indices = correct
         self.save(update_fields=["correct_question_indices", "updated_at"])
         if len(indices) == question_count:
-            self.complete_activity(activity_id)
+            self.complete_activity(activity_id, enforce_current=enforce_current)
             return True
         return False
 

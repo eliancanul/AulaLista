@@ -29,13 +29,12 @@
           <h1 id="activity-title">{{ snapshot_payload.title }}</h1>
           <p class="lede">{{ snapshot_payload.objective }}</p>
         </div>
-        {% if turn %}<p class="local-only">Apodo local temporal: {{ turn.display_name }}</p>{% endif %}
       </section>
 
       {% if roadmap_completed %}
         <section class="status-card completion-card" aria-live="polite">
           <span class="status-mark" aria-hidden="true">✓</span>
-          <div><h2>Recorrido completado</h2><p>Has terminado el camino individual disponible para esta sesión.</p></div>
+          <div><h2>Recorrido completado</h2><p>El grupo ha terminado el camino disponible para esta sesión.</p></div>
         </section>
       {% endif %}
 
@@ -45,7 +44,7 @@
           <p class="lesson-copy">{{ snapshot_payload.micro_lesson }}</p>
           {% if roadmap_states %}
             <div class="mini-roadmap" aria-labelledby="mini-roadmap-heading">
-              <h2 id="mini-roadmap-heading">Tu siguiente paso</h2>
+              <h2 id="mini-roadmap-heading">Siguiente paso del grupo</h2>
               {% for item in roadmap_states %}
                 <div class="mini-roadmap-row state-{{ item.state|lower }}"><span aria-hidden="true">{% if item.state == "COMPLETADA" %}✓{% elif item.state == "ACTUAL" %}→{% else %}○{% endif %}</span><span>{{ item.title }}</span><strong>{{ item.state }}</strong></div>
               {% endfor %}
@@ -64,6 +63,7 @@
               <h2 id="question-{{ question.index }}">{{ question.value.prompt }}</h2>
               <form method="post" action="{% url 'student-question-answer' session.pk question.index %}">
                 {% csrf_token %}
+                <input type="hidden" name="activity_id" value="{{ item_activity_id }}">
                 <fieldset class="choice-list">
                   <legend>Elige una opción</legend>
                   {% for option in question.value.options %}
