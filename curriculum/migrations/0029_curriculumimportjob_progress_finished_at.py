@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("curriculum", "0028_director_classroom_scope"),
+        ("curriculum", "0028_grouproadmapprogress"),
     ]
 
     operations = [

@@ -48,7 +48,7 @@ from curriculum.models import (  # noqa: E402
     ClassroomSession, CurriculumPackage, GroupRoadmapProgress,
     PublishedPackageSnapshot, PublishedRoadmapSnapshot, StudentRoadmapProgress,
 )
-from helpers import tutor_client  # noqa: E402
+from helpers import tutor_client, tutor_client_for_sessions  # noqa: E402
 
 pytestmark = pytest.mark.django_db
 
@@ -142,7 +142,7 @@ def test_missing_and_stale_answer_cannot_advance_group():
 def test_manual_lesson_advance_requires_teacher_post_csrf_and_only_forward():
     first, second = _published("a1"), _published("a2")
     session, roadmap = _active(first, second)
-    teacher = tutor_client(username="advance-teacher")
+    teacher = tutor_client_for_sessions(session, username="advance-teacher")
     url = reverse("tutor-session-roadmap-advance", args=[session.pk])
     assert teacher.get(url).status_code == 405
     assert Client().post(url, {"lesson_id": "l2"}).status_code in (302, 403)
