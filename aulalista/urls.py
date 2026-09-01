@@ -8,6 +8,7 @@ from curriculum.views import (
     director_dashboard,
     director_export,
     director_group_assign,
+    director_support_request_update,
     director_import_apply,
     director_import_preview,
     platform_director_handoff,
@@ -34,6 +35,7 @@ from curriculum.views import (
     tutor_package_detail,
     tutor_results,
     tutor_groups,
+    tutor_group_support_request,
     tutor_group_results,
     tutor_group_close_year,
     tutor_session_results,
@@ -66,6 +68,7 @@ urlpatterns = [
         name="director-group-assign",
     ),
     path("director/export/", director_export, name="director-export"),
+    path("director/apoyos/<int:request_id>/", director_support_request_update, name="director-support-request-update"),
     path("director/importar/", director_import_preview, name="director-import-preview"),
     path("director/importar/aplicar/", director_import_apply, name="director-import-apply"),
     path(
@@ -109,6 +112,7 @@ urlpatterns = [
         tutor_group_results,
         name="tutor-group-results",
     ),
+    path("tutor/salones/<int:group_id>/apoyos/", tutor_group_support_request, name="tutor-group-support-request"),
     path(
         "tutor/salones/<int:group_id>/cerrar-ano/",
         tutor_group_close_year,

@@ -79,6 +79,14 @@ modalidades, reasignación que borra historia.
 Siguiente decisión o paso institucional confirmado por una persona autorizada, con responsable, fecha objetivo y estado. Puede apoyarse en un resumen agregado, pero no es una inferencia, alerta ni decisión automática.
 _Avoid_: recomendación de IA, score de riesgo, evaluación laboral.
 
+**Solicitud de apoyo**:
+Petición manual, no nominal y acotada a un `ClassroomGroup` que una maestra dirige a Dirección para recursos, operación de sesión, comunicación general con familias o apoyo técnico/capacitación. Conserva categoría, descripción breve, responsable, fecha objetivo y estado (`pendiente`, `en atención`, `requiere aclaración`, `resuelta` o `descartada`). La maestra la crea; Dirección la atiende, solicita aclaración o la cierra; administración técnica sólo atiende las que Dirección le asigna como técnicas. No contiene nombres, motivos familiares, respuestas ni perfiles de alumnado, y sus exportaciones son sólo conteos agregados.
+_Avoid_: CRM familiar, caso individual, reporte disciplinario, recomendación automática.
+
+**Diccionario de métricas institucional**:
+Contrato visible del tablero de Dirección: actividades trabajadas, participantes únicos, posición del roadmap y sesiones cerradas. Cada métrica declara fuente, periodo, última actualización y disponibilidad. Las actividades trabajadas requieren una respuesta válida; adelantar sólo mueve el cursor y no completa. Si falta fuente, se muestra `No disponible`.
+_Avoid_: cero inferido, ranking, score, diagnóstico o evidencia de aprendizaje.
+
 **ClassroomRoadmapSummary**:
 Proyección agregada por salón y periodo que declara su fuente, actualización y
 datos faltantes; puede mostrar posición agregada del roadmap y actividades

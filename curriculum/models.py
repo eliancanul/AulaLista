@@ -1155,6 +1155,67 @@ class TeacherAssignment(models.Model):
         return locked
 
 
+class SupportRequest(models.Model):
+    """A teacher-authored, non-nominal request for institutional support."""
+
+    CATEGORY_RESOURCES = "resources"
+    CATEGORY_SESSION = "session_operation"
+    CATEGORY_FAMILIES = "family_communication"
+    CATEGORY_TECHNICAL = "technical_training"
+    CATEGORY_CHOICES = (
+        (CATEGORY_RESOURCES, "Recursos"),
+        (CATEGORY_SESSION, "Operación de sesión"),
+        (CATEGORY_FAMILIES, "Comunicación general con familias"),
+        (CATEGORY_TECHNICAL, "Apoyo técnico o capacitación"),
+    )
+    STATUS_PENDING = "pending"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_NEEDS_CLARIFICATION = "needs_clarification"
+    STATUS_RESOLVED = "resolved"
+    STATUS_DISMISSED = "dismissed"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "Pendiente"),
+        (STATUS_IN_PROGRESS, "En atención"),
+        (STATUS_NEEDS_CLARIFICATION, "Requiere aclaración"),
+        (STATUS_RESOLVED, "Resuelta"),
+        (STATUS_DISMISSED, "Descartada"),
+    )
+
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="support_requests")
+    classroom_group = models.ForeignKey("ClassroomGroup", on_delete=models.PROTECT, related_name="support_requests")
+    created_by = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="support_requests")
+    category = models.CharField(max_length=32, choices=CATEGORY_CHOICES)
+    description = models.CharField(max_length=500)
+    responsible = models.ForeignKey(
+        "auth.User", on_delete=models.PROTECT, related_name="assigned_support_requests", null=True, blank=True
+    )
+    target_date = models.DateField()
+    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def clean(self):
+        self.description = str(self.description or "").strip()
+        if not self.description:
+            raise ValidationError("La solicitud requiere una descripción breve.")
+        if self.classroom_group_id and self.school_id != self.classroom_group.school_id:
+            raise ValidationError("La solicitud debe permanecer en la School del salón.")
+        if self.responsible_id and (not self.responsible.is_active or not self.responsible.is_staff):
+            raise ValidationError("La persona responsable debe ser personal activo.")
+
+    def close(self, *, status):
+        if status not in (self.STATUS_RESOLVED, self.STATUS_DISMISSED):
+            raise ValidationError("Sólo se puede cerrar una solicitud como resuelta o descartada.")
+        self.status = status
+        self.closed_at = timezone.now()
+        self.save(update_fields=["status", "closed_at", "updated_at"])
+        return self
+
+
 class GroupRoadmapProgress(models.Model):
     """Shared, ephemeral navigation cursor for one classroom session."""
 

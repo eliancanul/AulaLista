@@ -47,6 +47,7 @@
                     <span><strong>{{ card.worked_activity_count }}</strong> actividad{% if card.worked_activity_count != 1 %}es{% endif %} trabajada{% if card.worked_activity_count != 1 %}s{% endif %}</span>
                     <span><strong>{{ card.participation_count }}</strong> participaciones agregadas</span>
                   </div>
+                  <ul class="result-facts">{% for metric in card.metrics %}<li><strong>{{ metric.label }}:</strong> {{ metric.value }} · fuente: {{ metric.source }} · periodo: {{ metric.period }} · actualización: {% if metric.updated_at %}{{ metric.updated_at|date:"Y-m-d H:i" }}{% else %}No disponible{% endif %}</li>{% endfor %}</ul>
                   {% if card.assignments %}
                     <h4>Adscripciones e historial</h4>
                     <ul>
@@ -74,6 +75,11 @@
       {% else %}
         <p class="empty-note">Aún no hay salones en tu School.</p>
       {% endif %}
+
+      <section class="results-summary" aria-labelledby="support-heading">
+        <div class="section-heading"><div><p class="eyebrow">APOYO A LA OPERACIÓN</p><h2 id="support-heading">Solicitudes de las maestras</h2></div></div>
+        {% if support_requests %}<ul>{% for item in support_requests %}<li><strong>{{ item.get_category_display }}</strong> · {{ item.classroom_group.name }} · {{ item.get_status_display }} · fecha objetivo {{ item.target_date|date:"Y-m-d" }}{% if not item.closed_at %}<form method="post" action="{% url 'director-support-request-update' item.pk %}">{% csrf_token %}<label>Responsable <select name="responsible_id"><option value="">Sin asignar</option>{% for person in support_responsibles %}<option value="{{ person.pk }}"{% if item.responsible_id == person.pk %} selected{% endif %}>{{ person.get_full_name|default:person.username }}</option>{% endfor %}</select></label><label>Actualizar estado <select name="status">{% for value, label in item.STATUS_CHOICES %}<option value="{{ value }}"{% if value == item.status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button class="button" type="submit">Confirmar</button></form>{% endif %}</li>{% endfor %}</ul>{% else %}<p class="empty-note">Sin solicitudes de apoyo.</p>{% endif %}
+      </section>
 
       <section class="results-summary" aria-labelledby="audit-heading">
         <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2 id="audit-heading">Auditoría institucional</h2></div><a class="secondary-action" href="{% url 'director-import-preview' %}">Importar Excel</a></div>

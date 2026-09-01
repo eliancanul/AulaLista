@@ -153,3 +153,17 @@ autorizan.
 ## Consequences
 
 Los permisos y la unicidad se evalúan dentro de `School`. Las adscripciones necesitan vigencia e historia propias; ni Dirección ni administración técnica obtienen por su rol autoridad editorial o acceso a datos nominales de alumnado.
+
+## Decisión D6: tablero agregado y solicitudes de apoyo
+
+El Nivel B muestra únicamente cuatro señales por salón: actividades trabajadas,
+participantes únicos, posición del roadmap y sesiones cerradas. Cada una declara
+fuente, periodo, actualización y disponibilidad; la ausencia de fuente se
+presenta como `No disponible`. La proyección se deriva de snapshots fijados y
+sesiones cerradas: adelantar no completa actividades ni crea déficit.
+
+Una maestra puede crear una `Solicitud de apoyo` no nominal para recursos,
+operación de sesión, comunicación general con familias o soporte
+técnico/capacitación. Dirección decide la atención, responsable y fecha; sólo
+las solicitudes técnicas pueden asignarse a administración técnica. La
+exportación conserva conteos por categoría y estado, nunca descripciones.

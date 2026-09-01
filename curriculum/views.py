@@ -7,7 +7,7 @@ import threading
 import time
 import unicodedata
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 
 from django.conf import settings
@@ -59,6 +59,7 @@ from curriculum.models import (
     PseudonymousResult,
     PseudonymousSurveyResponse,
     School,
+    SupportRequest,
     StudentRoadmapProgress,
     StudentTurn,
     TeacherAssignment,
@@ -251,13 +252,26 @@ def _director_export_rows(user, *, include_actions=False):
     for group in groups.select_related("school").prefetch_related(
         "sessions", "teacher_assignments__teacher"
     ).order_by("archived", "name", "id"):
-        sessions = list(group.sessions.order_by("-started_at", "-id"))
+        sessions = list(
+            group.sessions.filter(status=ClassroomSession.STATUS_CLOSED).order_by("-closed_at", "-id")
+        )
         assignments = list(
             group.teacher_assignments.order_by("-created_at", "-id")
         )
         latest = sessions[0] if sessions else None
         result_batches = [session.result_batch_id for session in sessions]
         result_qs = PseudonymousResult.objects.filter(result_batch_id__in=result_batches)
+        period = "No disponible"
+        if sessions:
+            dates = [session.closed_at.date() for session in sessions if session.closed_at]
+            period = f"{min(dates)} a {max(dates)}" if dates else "No disponible"
+        roadmap_position = "No disponible"
+        if latest and latest.roadmap_snapshot_id:
+            from curriculum.roadmap import ordered_activity_ids
+            activity_ids = ordered_activity_ids(latest.roadmap_snapshot.payload)
+            progress = GroupRoadmapProgress.objects.filter(session=latest).first()
+            if activity_ids and progress and progress.current_activity_id in activity_ids:
+                roadmap_position = f"Actividad {activity_ids.index(progress.current_activity_id) + 1} de {len(activity_ids)}"
         row = {
                 "school": school.name if school else "School legacy no atribuida",
                 "group": group.name,
@@ -272,6 +286,12 @@ def _director_export_rows(user, *, include_actions=False):
                 "roadmap_title": latest.roadmap_snapshot.title if latest and latest.roadmap_snapshot_id else "Sin roadmap",
                 "worked_activity_count": result_qs.values("activity_id").distinct().count(),
                 "participation_count": result_qs.values("participant_key").distinct().count(),
+                "metrics": [
+                    {"label": "Actividades trabajadas", "value": result_qs.values("activity_id").distinct().count() if sessions else "No disponible", "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
+                    {"label": "Participantes únicos", "value": result_qs.values("participant_key").distinct().count() if sessions else "No disponible", "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
+                    {"label": "Posición del roadmap", "value": roadmap_position, "source": "Snapshot fijado a la sesión", "period": period, "updated_at": latest.closed_at if latest else None},
+                    {"label": "Sesiones cerradas", "value": len(sessions), "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
+                ],
                 "assignments": [
                     {
                         "teacher": _presentation_name(assignment.teacher),
@@ -308,8 +328,56 @@ def director_dashboard(request):
                 {"label": _presentation_name(teacher), "token": _teacher_choice_token(teacher)}
                 for teacher in _assignable_teachers(school)
             ],
+            "support_requests": SupportRequest.objects.filter(school=school).select_related(
+                "classroom_group", "created_by", "responsible"
+            )[:20],
+            "support_responsibles": get_user_model().objects.filter(
+                is_active=True, is_staff=True
+            ).order_by("first_name", "last_name", "id"),
         },
     )
+
+
+@director_required
+@require_POST
+def director_support_request_update(request, request_id):
+    """Direction alone changes the institutional status of a support request."""
+
+    support_request = get_object_or_404(
+        SupportRequest.objects.select_related("school"),
+        pk=request_id,
+        school=_director_school(request.user),
+    )
+    status = request.POST.get("status", "")
+    if status not in dict(SupportRequest.STATUS_CHOICES):
+        return HttpResponseBadRequest("El estado de la solicitud no es válido.")
+    if support_request.closed_at:
+        return HttpResponseBadRequest("La solicitud ya está cerrada y no puede editarse.")
+    responsible_id = request.POST.get("responsible_id", "").strip()
+    if responsible_id:
+        responsible = get_user_model().objects.filter(
+            pk=responsible_id, is_active=True, is_staff=True
+        ).first()
+        if responsible is None:
+            return HttpResponseBadRequest("La persona responsable no está disponible.")
+        if _is_platform_administrator(responsible) and support_request.category != SupportRequest.CATEGORY_TECHNICAL:
+            return HttpResponseBadRequest("Administración técnica sólo atiende solicitudes técnicas.")
+        support_request.responsible = responsible
+    support_request.status = status
+    if status in (SupportRequest.STATUS_RESOLVED, SupportRequest.STATUS_DISMISSED):
+        support_request.closed_at = timezone.now()
+    support_request.save(update_fields=["status", "responsible", "closed_at", "updated_at"])
+    InstitutionalAuditEvent.record(
+        school=support_request.school,
+        actor=request.user,
+        action="support_request_updated",
+        object_type="SupportRequest",
+        object_id=support_request.pk,
+        classroom_group=support_request.classroom_group,
+        new_state={"category": support_request.category, "status": support_request.status, "responsible": _presentation_name(support_request.responsible) if support_request.responsible else ""},
+        source="manual",
+    )
+    return redirect("director-dashboard")
 
 
 @director_required
@@ -409,7 +477,7 @@ def director_export(request):
         writer.writeheader()
         for row in rows:
             writer.writerow({
-                **{key: _csv_safe_text(value) for key, value in row.items() if key != "assignments"},
+                **{key: _csv_safe_text(value) for key, value in row.items() if key not in {"assignments", "metrics"}},
                 "assignments": _csv_safe_text("; ".join(
                     f"{assignment['teacher']} ({assignment['status']})"
                     for assignment in row["assignments"]
@@ -1381,6 +1449,42 @@ def _teacher_group_or_404(request, group_id):
         ).distinct(),
         pk=group_id,
     )
+
+
+@teacher_required
+@require_POST
+def tutor_group_support_request(request, group_id):
+    """Let an assigned teacher request bounded institutional support."""
+
+    group = _teacher_group_or_404(request, group_id)
+    try:
+        target_date = datetime.strptime(request.POST.get("target_date", ""), "%Y-%m-%d").date()
+    except ValueError:
+        return HttpResponseBadRequest("Indica una fecha objetivo válida.")
+    support_request = SupportRequest(
+        school=group.school,
+        classroom_group=group,
+        created_by=request.user,
+        category=request.POST.get("category", ""),
+        description=request.POST.get("description", ""),
+        target_date=target_date,
+    )
+    try:
+        support_request.full_clean()
+        support_request.save()
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    InstitutionalAuditEvent.record(
+        school=group.school,
+        actor=request.user,
+        action="support_request_created",
+        object_type="SupportRequest",
+        object_id=support_request.pk,
+        classroom_group=group,
+        new_state={"category": support_request.category, "status": support_request.status},
+        source="manual",
+    )
+    return redirect("tutor-groups")
 
 
 @teacher_required
