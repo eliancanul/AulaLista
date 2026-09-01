@@ -2351,6 +2351,8 @@ class CurriculumImportJob(models.Model):
         blank=True,
         editable=False,
     )
+    cancel_requested = models.BooleanField(default=False, editable=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True, editable=False)
     llm_trace = models.JSONField(
         "bitácora técnica del modelo local",
         default=list,

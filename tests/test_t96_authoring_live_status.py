@@ -150,3 +150,20 @@ def test_stale_request_cannot_start_a_duplicate_generation():
     assert response.status_code == 302
     assert response["Location"] == reverse("tutor-import-wait", args=[job.pk])
     runner_factory.assert_not_called()
+
+
+def test_teacher_cancels_running_help_without_deleting_staged_work():
+    _teacher, client, job = owned_job(stage="activities", done=1, total=3)
+    job.activities = [{"title": "Borrador conservado"}]
+    job.save(update_fields=["activities"])
+
+    response = client.post(reverse("tutor-import-cancel", args=[job.pk]))
+    job.refresh_from_db()
+
+    assert response.status_code == 302
+    assert job.cancel_requested is True
+    assert job.activities == [{"title": "Borrador conservado"}]
+    _run_import_job_stage(job.pk, "activities")
+    job.refresh_from_db()
+    assert job.progress_stage == ""
+    assert job.cancelled_at is not None

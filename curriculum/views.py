@@ -2513,6 +2513,9 @@ def _run_import_job_stage_once(job_id, stage, payload=None):
     failure_traceback = ""
     try:
         job = CurriculumImportJob.objects.get(pk=job_id)
+        if job.cancel_requested:
+            _finish_cancelled_import_stage(job)
+            return
         from curriculum import curriculum_import as pipeline
 
         pipeline_module = pipeline
@@ -2527,6 +2530,9 @@ def _run_import_job_stage_once(job_id, stage, payload=None):
             _import_action_add_missing_activities(job, pipeline)
         else:
             raise ValueError(f"Etapa desconocida: {stage}")
+        job.refresh_from_db(fields=["cancel_requested"])
+        if job.cancel_requested:
+            _finish_cancelled_import_stage(job)
     except Exception as error:  # noqa: BLE001 - the worker must never die silently
         import traceback
 
@@ -2631,6 +2637,8 @@ def _start_import_stage(request, job, stage, payload=None):
         progress_started_at=started_at,
         progress_finished_at=None,
         error_message="",
+        cancel_requested=False,
+        cancelled_at=None,
         updated_at=started_at,
     )
     if not claimed:
@@ -2638,6 +2646,14 @@ def _start_import_stage(request, job, stage, payload=None):
         return redirect("tutor-import-wait", job_id=job.pk)
     _import_stage_runner()(_run_import_job_stage, job.pk, stage, payload)
     return redirect("tutor-import-wait", job_id=job.pk)
+
+
+def _finish_cancelled_import_stage(job):
+    now = timezone.now()
+    CurriculumImportJob.objects.filter(pk=job.pk, cancel_requested=True).update(
+        progress_stage="", progress_finished_at=now, cancelled_at=now,
+        error_message="La ayuda del asistente fue cancelada. Lo ya guardado sigue en revisión.", updated_at=now,
+    )
 
 
 IMPORT_STAGE_WAIT_MESSAGES = {
@@ -2701,6 +2717,17 @@ def tutor_import_wait(request, job_id):
             ),
         },
     )
+
+
+@teacher_required
+@require_POST
+def tutor_import_cancel(request, job_id):
+    job = get_object_or_404(CurriculumImportJob, pk=job_id, created_by=request.user)
+    if job.progress_stage:
+        CurriculumImportJob.objects.filter(pk=job.pk, progress_stage=job.progress_stage).update(
+            cancel_requested=True, updated_at=timezone.now()
+        )
+    return redirect("tutor-import-detail", job_id=job.pk)
 
 
 def _import_progress_state(job):

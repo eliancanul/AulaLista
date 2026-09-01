@@ -23,6 +23,7 @@ from curriculum.views import (
     student_turn_ready,
     student_turn_start,
     tutor_import_detail,
+    tutor_import_cancel,
     tutor_import_log_json,
     tutor_import_log_md,
     tutor_import_upload,
@@ -133,6 +134,7 @@ urlpatterns = [
         tutor_import_wait,
         name="tutor-import-wait",
     ),
+    path("tutor/imports/<int:job_id>/cancelar/", tutor_import_cancel, name="tutor-import-cancel"),
     path(
         "tutor/imports/<int:job_id>/estado/",
         tutor_import_status,

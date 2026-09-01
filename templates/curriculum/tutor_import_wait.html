@@ -11,6 +11,7 @@
   <body>
     {% include "curriculum/tutor_nav.html" %}
     <main>
+      <form method="post" action="{% url 'tutor-import-cancel' job.pk %}">{% csrf_token %}<button type="submit" aria-label="Cancelar ayuda y volver">← Volver</button></form>
       <h1>Importación de currícula</h1>
       <div id="assistant-wait-indicator" class="assistant-wait" role="status" data-assistant-state="{{ progress_state }}" data-status-url="{% url 'tutor-import-status' job.pk %}">
         {# Espacio reservado para una animación futura; hoy un spinner simple. #}
