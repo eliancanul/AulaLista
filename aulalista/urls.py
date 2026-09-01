@@ -5,6 +5,10 @@ from django.shortcuts import redirect
 
 from health.views import health_page, local_access
 from curriculum.views import (
+    director_dashboard,
+    director_export,
+    director_group_assign,
+    platform_director_handoff,
     student_activity,
     student_roadmap,
     student_roadmap_complete,
@@ -52,6 +56,18 @@ urlpatterns = [
     path("documents/", include("wagtail.documents.urls")),
     path("health/", health_page, name="health"),
     path("access/", local_access, name="local-access"),
+    path("director/", director_dashboard, name="director-dashboard"),
+    path(
+        "director/salones/<int:group_id>/asignar/",
+        director_group_assign,
+        name="director-group-assign",
+    ),
+    path("director/export/", director_export, name="director-export"),
+    path(
+        "platform/director/handoff/",
+        platform_director_handoff,
+        name="platform-director-handoff",
+    ),
     path("student/", student_packages, name="student-packages"),
     path(
         "student/sessions/<int:session_id>/join/",

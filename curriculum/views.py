@@ -11,6 +11,7 @@ from datetime import timedelta
 from functools import wraps
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.core import signing
 from django.core.cache import cache
@@ -44,6 +45,7 @@ from curriculum.ephemeral import (
     update_ephemeral_turn_summary,
 )
 from curriculum.models import (
+    InstitutionalAuditEvent,
     ClassroomGroup,
     ClassroomSession,
     GroupRoadmapProgress,
@@ -55,8 +57,11 @@ from curriculum.models import (
     PublishedRoadmapSnapshot,
     PseudonymousResult,
     PseudonymousSurveyResponse,
+    School,
     StudentRoadmapProgress,
     StudentTurn,
+    TeacherAssignment,
+    _is_platform_administrator,
 )
 from curriculum.practice import (
     PracticeContractError,
@@ -84,6 +89,7 @@ LOCAL_SESSION_TTL = 12 * 60 * 60
 TURN_CAPABILITY_MAX_AGE = LOCAL_SESSION_TTL
 DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
 SURVEY_SUBMITTED_TTL = LOCAL_SESSION_TTL
+DIRECTOR_TEACHER_TOKEN_SALT = "aulalista.director.teacher-choice.v1"
 
 
 def _safe_teacher_next(request):
@@ -120,9 +126,327 @@ def teacher_required(view_func):
             return HttpResponseForbidden(
                 "La sección del maestro requiere una cuenta de personal."
             )
+        if _is_director(request.user):
+            return HttpResponseForbidden(
+                "La cuenta de Director no tiene autoridad docente ni editorial."
+            )
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+def _director_school(user):
+    """Resolve the explicitly configured School for a Director, if any."""
+
+    return (
+        School.objects.filter(
+            director=user,
+            is_configured=True,
+            archived=False,
+        )
+        .order_by("id")
+        .first()
+    )
+
+
+def _is_director(user):
+    return bool(
+        getattr(user, "is_authenticated", False)
+        and user.is_active
+        and user.is_staff
+        and _director_school(user) is not None
+    )
+
+
+def director_required(view_func):
+    """Require the active institutional Director, never a technical admin."""
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(_safe_teacher_next(request))
+        if not _is_director(request.user):
+            return HttpResponseForbidden(
+                "La vista institucional requiere una cuenta de Director."
+            )
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def platform_administrator_required(view_func):
+    """Allow technical account administration without institutional authority."""
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(_safe_teacher_next(request))
+        if not _is_platform_administrator(request.user):
+            return HttpResponseForbidden(
+                "La operación técnica requiere un PlatformAdministrator."
+            )
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def _assignable_teachers(school):
+    """Active local teachers that are not bound to another School.
+
+    A local installation has one configured School, so an otherwise unbound
+    staff account is eligible for its first assignment.  Historical or active
+    assignment to another School fails closed in isolation fixtures.
+    """
+
+    if school is None:
+        return get_user_model().objects.none()
+    foreign_teacher_ids = TeacherAssignment.objects.exclude(school=school).values(
+        "teacher_id"
+    )
+    return (
+        get_user_model()
+        .objects.filter(is_active=True, is_staff=True, is_superuser=False)
+        .exclude(pk__in=foreign_teacher_ids)
+        .exclude(directed_schools__isnull=False)
+        .distinct()
+        .order_by("first_name", "last_name", "id")
+    )
+
+
+def _director_groups(user):
+    school = _director_school(user)
+    if school is None:
+        return ClassroomGroup.objects.none(), None
+    return ClassroomGroup.objects.filter(school=school), school
+
+
+def _presentation_name(user):
+    return (user.get_full_name() or "Docente asignada").strip()
+
+
+def _teacher_choice_token(user):
+    return signing.dumps({"teacher_id": user.pk}, salt=DIRECTOR_TEACHER_TOKEN_SALT, compress=True)
+
+
+def _teacher_from_choice_token(value, school):
+    try:
+        payload = signing.loads(value, salt=DIRECTOR_TEACHER_TOKEN_SALT, max_age=LOCAL_SESSION_TTL)
+    except (BadSignature, SignatureExpired, TypeError, ValueError):
+        return None
+    teacher_id = payload.get("teacher_id") if isinstance(payload, dict) else None
+    return _assignable_teachers(school).filter(pk=teacher_id).first()
+
+
+def _director_scope(user):
+    groups, school = _director_groups(user)
+    return groups.filter(archived__in=(False, True)), school
+
+
+def _director_export_rows(user, *, include_actions=False):
+    groups, school = _director_scope(user)
+    rows = []
+    for group in groups.select_related("school").prefetch_related(
+        "sessions", "teacher_assignments__teacher"
+    ).order_by("archived", "name", "id"):
+        sessions = list(group.sessions.order_by("-started_at", "-id"))
+        assignments = list(
+            group.teacher_assignments.order_by("-created_at", "-id")
+        )
+        latest = sessions[0] if sessions else None
+        result_batches = [session.result_batch_id for session in sessions]
+        result_qs = PseudonymousResult.objects.filter(result_batch_id__in=result_batches)
+        row = {
+                "school": school.name if school else "School legacy no atribuida",
+                "group": group.name,
+                "group_status": "archived" if group.archived else "active",
+                "academic_year": group.academic_year,
+                "modality": group.modality,
+                "grade": group.grade,
+                "group_key": group.group_key,
+                "shift": group.shift,
+                "session_count": len(sessions),
+                "latest_session_status": latest.get_status_display() if latest else "Sin sesiones",
+                "roadmap_title": latest.roadmap_snapshot.title if latest and latest.roadmap_snapshot_id else "Sin roadmap",
+                "worked_activity_count": result_qs.values("activity_id").distinct().count(),
+                "participation_count": result_qs.values("participant_key").distinct().count(),
+                "assignments": [
+                    {
+                        "teacher": _presentation_name(assignment.teacher),
+                        "function": assignment.function,
+                        "subject": assignment.subject,
+                        "status": assignment.get_status_display(),
+                        "valid_from": assignment.valid_from.isoformat() if assignment.valid_from else "",
+                        "valid_until": assignment.valid_until.isoformat() if assignment.valid_until else "",
+                    }
+                    for assignment in assignments
+                ],
+            }
+        if include_actions:
+            row["assignment_url"] = reverse("director-group-assign", args=[group.pk])
+        rows.append(row)
+    return rows, school
+
+
+@director_required
+@require_http_methods(["GET"])
+def director_dashboard(request):
+    """Show only Director-scoped institutional and aggregate projections."""
+
+    rows, school = _director_export_rows(request.user, include_actions=True)
+    audits = InstitutionalAuditEvent.objects.filter(school=school) if school else InstitutionalAuditEvent.objects.none()
+    return render(
+        request,
+        "curriculum/director_dashboard.html",
+        {
+            "school": school,
+            "classroom_cards": rows,
+            "audit_events": audits.order_by("-occurred_at", "-id")[:20],
+            "teachers": [
+                {"label": _presentation_name(teacher), "token": _teacher_choice_token(teacher)}
+                for teacher in _assignable_teachers(school)
+            ],
+        },
+    )
+
+
+@director_required
+@require_POST
+def director_group_assign(request, group_id):
+    """Create an append-only TeacherAssignment within the Director's School."""
+
+    groups, school = _director_groups(request.user)
+    group = get_object_or_404(groups, pk=group_id)
+    teacher_value = str(
+        request.POST.get("teacher_token")
+        or request.POST.get("teacher_id")
+        or request.POST.get("teacher")
+        or ""
+    ).strip()
+    teacher = _teacher_from_choice_token(teacher_value, school)
+    if teacher is None:
+        teachers = _assignable_teachers(school)
+        teacher = teachers.filter(pk=teacher_value).first() if teacher_value.isdigit() else teachers.filter(username=teacher_value).first()
+    if teacher is None:
+        return HttpResponseBadRequest("Selecciona una cuenta docente existente y activa.")
+    if teacher.pk == request.user.pk:
+        return HttpResponseBadRequest("Dirección no puede adscribirse a sí misma.")
+    function = str(request.POST.get("function", "")).strip()
+    subject = str(request.POST.get("subject", "")).strip()
+    try:
+        with transaction.atomic():
+            duplicate = TeacherAssignment.objects.select_for_update().filter(
+                classroom_group=group,
+                teacher=teacher,
+                status=TeacherAssignment.STATUS_ACTIVE,
+                function=function,
+                subject=subject,
+            ).exists()
+            if not duplicate:
+                TeacherAssignment.create_assignment(
+                    teacher=teacher,
+                    classroom_group=group,
+                    actor=request.user,
+                    function=function,
+                    subject=subject,
+                    source="manual",
+                )
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    return redirect("director-dashboard")
+
+
+@director_required
+@require_POST
+def director_export(request):
+    """Export institutional metadata and aggregates, never student detail."""
+
+    rows, school = _director_export_rows(request.user)
+    audits = InstitutionalAuditEvent.objects.filter(school=school).order_by("-occurred_at", "-id") if school else []
+    def audit_state(state):
+        state = state or {}
+        pairs = []
+        if "status" in state:
+            pairs.append(f"Estado: {state['status']}")
+        teacher = _audit_state_teacher(state)
+        if teacher:
+            pairs.append(f"docente: {teacher}")
+        return "; ".join(pairs) or "Sin cambio visible"
+
+    audit_rows = [
+        {
+            "actor": event.actor_display_name,
+            "role": event.actor_role,
+            "action": event.action,
+            "object": event.object_type,
+            "previous": audit_state(event.previous_state),
+            "new": audit_state(event.new_state),
+            "source": event.source,
+            "occurred_at": event.occurred_at.isoformat(),
+        }
+        for event in audits
+    ]
+    payload = {
+        "school": school.name if school else "School legacy no atribuida",
+        "groups": rows,
+        "audit": audit_rows,
+    }
+    export_format = request.POST.get("format", request.GET.get("format", "json")).lower()
+    if export_format == "json":
+        response = JsonResponse(payload)
+        response["Content-Disposition"] = 'attachment; filename="aulalista-institucional.json"'
+        return response
+    if export_format == "csv":
+        output = io.StringIO()
+        fieldnames = [
+            "school", "group", "group_status", "academic_year", "modality", "grade",
+            "group_key", "shift", "session_count", "latest_session_status", "roadmap_title",
+            "worked_activity_count", "participation_count", "assignments",
+        ]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({
+                **{key: _csv_safe_text(value) for key, value in row.items() if key != "assignments"},
+                "assignments": _csv_safe_text("; ".join(
+                    f"{assignment['teacher']} ({assignment['status']})"
+                    for assignment in row["assignments"]
+                )),
+            })
+        response = HttpResponse(output.getvalue(), content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="aulalista-institucional.csv"'
+        return response
+    return HttpResponseBadRequest("El formato de exportación no está disponible.")
+
+
+def _audit_state_teacher(state):
+    """Project an audit teacher reference without exporting an account ID."""
+
+    teacher_id = (state or {}).get("teacher_id")
+    if teacher_id is None:
+        return ""
+    teacher = get_user_model().objects.filter(pk=teacher_id).first()
+    return _presentation_name(teacher) if teacher is not None else "Cuenta histórica"
+
+
+@platform_administrator_required
+@require_POST
+def platform_director_handoff(request):
+    """Perform the explicitly authorized, atomic institutional handoff."""
+
+    if request.POST.get("confirm") != "CAMBIAR":
+        return HttpResponseBadRequest("Confirma el cambio de Dirección antes de aplicarlo.")
+    school = School.configured()
+    if school is None:
+        return HttpResponseBadRequest("No hay una School institucional configurada.")
+    director_id = str(request.POST.get("director", "")).strip()
+    new_director = get_user_model().objects.filter(pk=director_id).first()
+    if new_director is None:
+        return HttpResponseBadRequest("Selecciona una cuenta existente para Dirección.")
+    try:
+        school.handoff_director(new_director, actor=request.user, source="manual")
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    return redirect("director-dashboard")
 
 
 def student_packages(request):
@@ -955,10 +1279,16 @@ def _session_join_context(request, session):
 
 
 def _teacher_sessions(request):
-    """Return owned sessions and the explicitly marked pre-#86 legacy rows."""
+    """Return active-assignment sessions and explicitly marked legacy rows."""
 
+    assigned_groups = TeacherAssignment.objects.filter(
+        teacher=request.user,
+        status=TeacherAssignment.STATUS_ACTIVE,
+    ).values("classroom_group_id")
     return ClassroomSession.objects.filter(
-        Q(created_by=request.user) | Q(legacy_owner_unresolved=True)
+        Q(classroom_group_id__in=assigned_groups)
+        | Q(legacy_owner_unresolved=True)
+        | Q(school__isnull=True, created_by=request.user)
     )
 
 
@@ -966,9 +1296,31 @@ def _teacher_session_or_404(request, session_id, queryset=None):
     queryset = queryset if queryset is not None else ClassroomSession.objects
     return get_object_or_404(
         queryset.filter(
-            Q(created_by=request.user) | Q(legacy_owner_unresolved=True)
+            Q(
+                classroom_group_id__in=TeacherAssignment.objects.filter(
+                    teacher=request.user,
+                    status=TeacherAssignment.STATUS_ACTIVE,
+                ).values("classroom_group_id")
+            )
+            | Q(legacy_owner_unresolved=True)
+            | Q(school__isnull=True, created_by=request.user)
         ),
         pk=session_id,
+    )
+
+
+def _teacher_group_or_404(request, group_id):
+    """Resolve only a group covered by an active assignment or a legacy owner."""
+
+    return get_object_or_404(
+        ClassroomGroup.objects.filter(
+            Q(
+                teacher_assignments__teacher=request.user,
+                teacher_assignments__status=TeacherAssignment.STATUS_ACTIVE,
+            )
+            | Q(school__isnull=True, created_by=request.user)
+        ).distinct(),
+        pk=group_id,
     )
 
 
@@ -1772,7 +2124,7 @@ def tutor_results(request):
 
 @teacher_required
 def tutor_group_results(request, group_id):
-    group = get_object_or_404(ClassroomGroup, pk=group_id, created_by=request.user)
+    group = _teacher_group_or_404(request, group_id)
     sessions = ClassroomSession.objects.filter(
         classroom_group=group,
         status=ClassroomSession.STATUS_CLOSED,
@@ -1832,7 +2184,7 @@ def tutor_session_results(request, session_id):
 def tutor_group_close_year(request, group_id):
     """Explicitly erase only a group's results and star ratings."""
 
-    group = get_object_or_404(ClassroomGroup, pk=group_id, created_by=request.user)
+    group = _teacher_group_or_404(request, group_id)
     if request.POST.get("confirm") != "CERRAR":
         return HttpResponseBadRequest(
             "Confirma el cierre de año antes de borrar. No se borró ningún dato."

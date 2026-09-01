@@ -6,6 +6,7 @@ import unicodedata
 import uuid
 from datetime import datetime
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Max
@@ -34,6 +35,285 @@ from curriculum.distribution import calculate_distribution, validate_distributio
 
 
 EDITORIAL_REVIEWER_GROUP_NAME = "EditorialReviewer"
+DIRECTOR_GROUP_NAME = "Director"
+PLATFORM_ADMINISTRATOR_GROUP_NAME = "PlatformAdministrator"
+
+
+def _is_platform_administrator(user):
+    return bool(
+        getattr(user, "is_authenticated", False)
+        and user.is_active
+        and user.is_staff
+        and (
+            user.is_superuser
+            or user.groups.filter(name=PLATFORM_ADMINISTRATOR_GROUP_NAME).exists()
+        )
+    )
+
+
+class School(models.Model):
+    """The single institutional boundary configured for a local installation."""
+
+    MODALITY_PRIMARY = "primary"
+    MODALITY_SECONDARY_GENERAL = "secondary_general"
+    MODALITY_SECONDARY_TECHNICAL = "secondary_technical"
+    MODALITY_TELESECUNDARIA = "telesecundaria"
+    MODALITY_CHOICES = (
+        (MODALITY_PRIMARY, "Primaria"),
+        (MODALITY_SECONDARY_GENERAL, "Secundaria general"),
+        (MODALITY_SECONDARY_TECHNICAL, "Secundaria técnica"),
+        (MODALITY_TELESECUNDARIA, "Telesecundaria"),
+    )
+
+    name = models.CharField("nombre de la School", max_length=160)
+    modality = models.CharField(
+        "modalidad pedagógica",
+        max_length=32,
+        choices=MODALITY_CHOICES,
+        default=MODALITY_PRIMARY,
+    )
+    director = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="directed_schools",
+        null=True,
+        blank=True,
+    )
+    is_configured = models.BooleanField("School configurada", default=True)
+    archived = models.BooleanField("archivada", default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "School"
+        verbose_name_plural = "Schools"
+
+    @classmethod
+    def configured(cls):
+        """Return the active configured school, failing closed when absent."""
+
+        return cls.objects.filter(is_configured=True, archived=False).order_by("id").first()
+
+    @classmethod
+    def provision(
+        cls,
+        *,
+        name,
+        modality=MODALITY_PRIMARY,
+        director,
+        actor,
+        source="manual",
+    ):
+        """Explicitly provision the sole School and its sole active Director."""
+
+        if not _is_platform_administrator(actor):
+            raise ValidationError("La provisión requiere un PlatformAdministrator activo.")
+        if director is None or not director.is_active or not director.is_staff:
+            raise ValidationError("La provisión requiere una persona Directora activa.")
+        if _is_platform_administrator(director):
+            raise ValidationError("PlatformAdministrator y Director son funciones separadas.")
+        with transaction.atomic():
+            if cls.objects.select_for_update().exists():
+                raise ValidationError("La instalación ya tiene una School provisionada.")
+            school = cls(
+                name=name,
+                modality=modality,
+                director=director,
+                is_configured=True,
+            )
+            school._explicit_provision = True
+            school.save(force_insert=True)
+            director_group, _ = Group.objects.get_or_create(name=DIRECTOR_GROUP_NAME)
+            director.groups.add(director_group)
+            InstitutionalAuditEvent.record(
+                school=school,
+                actor=actor,
+                action="school_provisioned",
+                object_type="School",
+                object_id=school.pk,
+                new_state={
+                    "director": director.get_full_name().strip() or "Cuenta institucional",
+                    "modality": school.modality,
+                    "school": school.name,
+                },
+                source=source,
+            )
+            return school
+
+    @classmethod
+    def bootstrap(cls, *, name, modality=MODALITY_PRIMARY, director=None, actor=None):
+        """Compatibility name for explicit, fail-closed provisioning."""
+
+        if director is None or actor is None:
+            raise ValidationError("La provisión explícita requiere Director y PlatformAdministrator.")
+        return cls.provision(name=name, modality=modality, director=director, actor=actor)
+
+    def handoff_director(self, new_director, *, actor, source="manual"):
+        """Atomically replace the sole Director under technical authorization."""
+
+        if not _is_platform_administrator(actor):
+            raise ValidationError("El cambio de Dirección requiere PlatformAdministrator.")
+        if (
+            new_director is None
+            or not new_director.is_active
+            or not new_director.is_staff
+        ):
+            raise ValidationError("La nueva persona Directora debe ser una cuenta activa de personal.")
+        if _is_platform_administrator(new_director):
+            raise ValidationError("PlatformAdministrator y Director son funciones separadas.")
+        source = str(source or "").strip()
+        if not source:
+            raise ValidationError("El cambio de Dirección requiere un origen.")
+
+        with transaction.atomic():
+            locked = type(self).objects.select_for_update().select_related("director").get(
+                pk=self.pk,
+                is_configured=True,
+                archived=False,
+            )
+            previous = locked.director
+            director_group, _ = Group.objects.get_or_create(name=DIRECTOR_GROUP_NAME)
+            active_directors = list(
+                new_director.__class__.objects.select_for_update()
+                .filter(is_active=True, groups=director_group)
+                .exclude(pk=new_director.pk)
+            )
+            if previous is not None and previous.pk != new_director.pk:
+                new_director.__class__.objects.select_for_update().filter(
+                    pk=previous.pk
+                ).update(is_active=False)
+                if all(item.pk != previous.pk for item in active_directors):
+                    active_directors.append(previous)
+            for outgoing in active_directors:
+                outgoing.groups.remove(director_group)
+                if outgoing.is_active:
+                    outgoing.is_active = False
+                    outgoing.save(update_fields=["is_active"])
+            new_director.groups.add(director_group)
+            locked.director = new_director
+            locked.save(update_fields=["director"])
+            InstitutionalAuditEvent.record(
+                school=locked,
+                actor=actor,
+                action="director_handoff",
+                object_type="School",
+                object_id=locked.pk,
+                previous_state={
+                    "director": (
+                        previous.get_full_name().strip() or "Cuenta institucional"
+                    )
+                    if previous is not None
+                    else None
+                },
+                new_state={
+                    "director": new_director.get_full_name().strip()
+                    or "Cuenta institucional"
+                },
+                source=source,
+            )
+            return locked
+
+    def set_director(self, director, *, actor=None, source="manual"):
+        """Compatibility alias that preserves the authorized handoff boundary."""
+
+        return self.handoff_director(director, actor=actor, source=source)
+
+    def clean(self):
+        self.name = str(self.name or "").strip()
+        if not self.name:
+            raise ValidationError("La School requiere un nombre.")
+        if self.director_id and self.director and (
+            not self.director.is_active or not self.director.is_staff
+        ):
+            raise ValidationError("La School requiere una persona Directora activa.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not getattr(self, "_explicit_provision", False):
+            raise ValidationError("Use la provisión explícita para crear la School.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class InstitutionalAuditEvent(models.Model):
+    """Append-only institutional audit record without access credentials."""
+
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="audit_events",
+        null=True,
+        blank=True,
+    )
+    actor = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="institutional_audit_events",
+        null=True,
+        blank=True,
+    )
+    actor_display_name = models.CharField("nombre histórico de presentación", max_length=160)
+    actor_role = models.CharField("función histórica", max_length=80, blank=True)
+    action = models.CharField("acción", max_length=80)
+    object_type = models.CharField("tipo de objeto", max_length=80)
+    object_id = models.CharField("referencia interna del objeto", max_length=80, blank=True)
+    classroom_group = models.ForeignKey(
+        "ClassroomGroup",
+        on_delete=models.PROTECT,
+        related_name="audit_events",
+        null=True,
+        blank=True,
+    )
+    previous_state = models.JSONField(default=dict, blank=True)
+    new_state = models.JSONField(default=dict, blank=True)
+    source = models.CharField("origen", max_length=80, default="manual")
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["occurred_at", "id"]
+        verbose_name = "InstitutionalAuditEvent"
+        verbose_name_plural = "InstitutionalAuditEvents"
+
+    @classmethod
+    def record(cls, *, school=None, actor=None, action, object_type, object_id="", classroom_group=None,
+               previous_state=None, new_state=None, source="manual"):
+        display_name = "Sistema local"
+        role = ""
+        if actor is not None:
+            display_name = actor.get_full_name().strip() or "Cuenta institucional"
+            if _is_platform_administrator(actor):
+                role = PLATFORM_ADMINISTRATOR_GROUP_NAME
+            elif actor.groups.filter(name=DIRECTOR_GROUP_NAME).exists():
+                role = DIRECTOR_GROUP_NAME
+            else:
+                role = "Personal"
+        return cls.objects.create(
+            school=school,
+            actor=actor,
+            actor_display_name=display_name[:160],
+            actor_role=role,
+            action=action,
+            object_type=object_type,
+            object_id=str(object_id or ""),
+            classroom_group=classroom_group,
+            previous_state=previous_state or {},
+            new_state=new_state or {},
+            source=source,
+        )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("La auditoría institucional es inmutable.")
+        if not self.actor_display_name:
+            self.actor_display_name = "Sistema local"
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("La auditoría institucional no se elimina.")
+
+
+# Compatibility vocabulary for callers that used the shorter domain name.
+AuditEvent = InstitutionalAuditEvent
 
 
 def _parse_cached_datetime(value):
@@ -620,9 +900,16 @@ class CurriculumProgress(models.Model):
 
 
 class ClassroomGroup(models.Model):
-    """A teacher-created classroom label with no student roster."""
+    """An institutional classroom label with no student roster."""
 
     name = models.CharField("nombre del salón", max_length=80)
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="classroom_groups",
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey(
         "auth.User",
         on_delete=models.PROTECT,
@@ -630,6 +917,27 @@ class ClassroomGroup(models.Model):
         null=True,
         blank=True,
     )
+    # Kept nullable for pre-School rows; new institutional flows use
+    # School.director and TeacherAssignment instead of group ownership.
+    director = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="legacy_directed_classroom_groups",
+        null=True,
+        blank=True,
+    )
+    academic_year = models.CharField("ciclo escolar", max_length=32, blank=True, default="")
+    modality = models.CharField("modalidad", max_length=32, blank=True, default="")
+    grade = models.PositiveSmallIntegerField("grado", null=True, blank=True)
+    group_key = models.CharField("clave de grupo", max_length=80, blank=True, default="")
+    shift = models.CharField("turno", max_length=32, blank=True, default="")
+    legacy_school_unresolved = models.BooleanField(
+        "School histórica no recuperable",
+        default=False,
+        editable=False,
+    )
+    archived = models.BooleanField("archivado", default=False)
+    archived_at = models.DateTimeField("archivado en", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -638,8 +946,15 @@ class ClassroomGroup(models.Model):
         verbose_name_plural = "ClassroomGroups"
         constraints = [
             models.UniqueConstraint(
-                fields=("created_by", "name"),
-                name="unique_teacher_classroom_group_name",
+                fields=(
+                    "school",
+                    "academic_year",
+                    "modality",
+                    "grade",
+                    "group_key",
+                    "shift",
+                ),
+                name="unique_school_classroom_identity",
             )
         ]
 
@@ -649,14 +964,195 @@ class ClassroomGroup(models.Model):
             raise ValidationError("El salón requiere un nombre corto.")
         if len(self.name) > 80:
             raise ValidationError("El salón no puede superar 80 caracteres.")
+        if not self.group_key:
+            self.group_key = self.name
+        if self.modality not in {"", *dict(School.MODALITY_CHOICES)}:
+            raise ValidationError("La modalidad del salón no está autorizada.")
+        if self.grade is not None:
+            maximum = 6 if self.modality == School.MODALITY_PRIMARY else 3
+            if self.grade < 1 or (self.modality and self.grade > maximum):
+                raise ValidationError("El grado no corresponde a la modalidad.")
+        if self.school_id and self.school and self.school.archived and not self.archived:
+            raise ValidationError("No se puede activar un grupo de una School archivada.")
         super().clean()
 
     def save(self, *args, **kwargs):
         self.name = str(self.name or "").strip()
+        if not self.group_key:
+            self.group_key = self.name
+        if self.school_id is None:
+            self.school = School.configured()
         return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+
+    def archive(self, *, actor=None, source="manual"):
+        if self.archived:
+            return self
+        self.archived = True
+        self.archived_at = timezone.now()
+        self.save(update_fields=["archived", "archived_at"])
+        InstitutionalAuditEvent.record(
+            school=self.school,
+            actor=actor,
+            action="group_archived",
+            object_type="ClassroomGroup",
+            object_id=self.pk,
+            classroom_group=self,
+            new_state={"archived": True},
+            source=source,
+        )
+        return self
+
+
+class TeacherAssignment(models.Model):
+    """Historical institutional relationship between a teacher and group."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_ENDED = "ended"
+    STATUS_REJECTED = "rejected"
+    STATUS_ARCHIVED = "archived"
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, "Activa"),
+        (STATUS_ENDED, "Terminada"),
+        (STATUS_REJECTED, "Rechazada"),
+        (STATUS_ARCHIVED, "Archivada"),
+    )
+
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="teacher_assignments")
+    teacher = models.ForeignKey(
+        "auth.User", on_delete=models.PROTECT, related_name="teacher_assignments"
+    )
+    classroom_group = models.ForeignKey(
+        ClassroomGroup, on_delete=models.PROTECT, related_name="teacher_assignments"
+    )
+    function = models.CharField("función", max_length=120, blank=True, default="")
+    subject = models.CharField("materia", max_length=120, blank=True, default="")
+    valid_from = models.DateField("vigente desde", null=True, blank=True)
+    valid_until = models.DateField("vigente hasta", null=True, blank=True)
+    status = models.CharField("estado", max_length=16, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    assigned_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="created_teacher_assignments",
+        null=True,
+        blank=True,
+    )
+    source = models.CharField("origen", max_length=80, default="manual")
+    created_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField("terminada en", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "TeacherAssignment"
+        verbose_name_plural = "TeacherAssignments"
+
+    def clean(self):
+        if self.classroom_group_id and self.school_id:
+            group_school_id = self.classroom_group.school_id
+            if group_school_id != self.school_id:
+                raise ValidationError("La adscripción y el grupo deben pertenecer a la misma School.")
+        if self.status == self.STATUS_ACTIVE and self.teacher_id and not self.teacher.is_active:
+            raise ValidationError("Una maestra inactiva no puede recibir una adscripción activa.")
+        if self.valid_from and self.valid_until and self.valid_until < self.valid_from:
+            raise ValidationError("La vigencia de la adscripción no es válida.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        previous = None
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).values(
+                "teacher_id", "classroom_group_id", "status", "function", "subject",
+                "valid_from", "valid_until",
+            ).first()
+        if self.school_id is None and self.classroom_group_id:
+            self.school_id = self.classroom_group.school_id
+        if self.valid_from is None:
+            self.valid_from = timezone.localdate()
+        self.full_clean()
+        result = super().save(*args, **kwargs)
+        if is_new:
+            InstitutionalAuditEvent.record(
+                school=self.school,
+                actor=self.assigned_by,
+                action="assignment_created",
+                object_type="TeacherAssignment",
+                object_id=self.pk,
+                classroom_group=self.classroom_group,
+                new_state={"teacher": self.teacher_id, "status": self.status, "source": self.source},
+                source=self.source,
+            )
+        elif previous:
+            InstitutionalAuditEvent.record(
+                school=self.school,
+                actor=self.assigned_by,
+                action="assignment_changed",
+                object_type="TeacherAssignment",
+                object_id=self.pk,
+                classroom_group=self.classroom_group,
+                previous_state={
+                    key: value.isoformat() if hasattr(value, "isoformat") else value
+                    for key, value in previous.items()
+                },
+                new_state={
+                    "teacher_id": self.teacher_id,
+                    "classroom_group_id": self.classroom_group_id,
+                    "status": self.status,
+                    "function": self.function,
+                    "subject": self.subject,
+                    "valid_from": self.valid_from.isoformat() if self.valid_from else None,
+                    "valid_until": self.valid_until.isoformat() if self.valid_until else None,
+                },
+                source=self.source,
+            )
+        return result
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Una TeacherAssignment histórica no se elimina.")
+
+    @classmethod
+    def create_assignment(cls, *, teacher, classroom_group, actor=None, source="manual", **kwargs):
+        if teacher == actor:
+            raise ValidationError("Dirección no puede adscribirse a sí misma como maestra.")
+        if not teacher.is_active or not teacher.is_staff:
+            raise ValidationError("La cuenta docente debe estar activa y ser de personal.")
+        if classroom_group.school_id is None:
+            raise ValidationError("El grupo requiere una School antes de adscribir una maestra.")
+        return cls.objects.create(
+            school_id=classroom_group.school_id,
+            teacher=teacher,
+            classroom_group=classroom_group,
+            assigned_by=actor,
+            source=source,
+            **kwargs,
+        )
+
+    @transaction.atomic
+    def end(self, *, actor=None, source="manual"):
+        locked = type(self).objects.select_for_update().get(pk=self.pk)
+        if locked.status != self.STATUS_ACTIVE:
+            return locked
+        old_status = locked.status
+        locked.status = self.STATUS_ENDED
+        locked.valid_until = locked.valid_until or timezone.localdate()
+        locked.ended_at = timezone.now()
+        locked.assigned_by = actor or locked.assigned_by
+        locked.source = source
+        locked.save(update_fields=["status", "valid_until", "ended_at", "assigned_by", "source"])
+        InstitutionalAuditEvent.record(
+            school=locked.school,
+            actor=actor,
+            action="assignment_ended",
+            object_type="TeacherAssignment",
+            object_id=locked.pk,
+            classroom_group=locked.classroom_group,
+            previous_state={"status": old_status},
+            new_state={"status": locked.status},
+            source=source,
+        )
+        return locked
 
 
 class GroupRoadmapProgress(models.Model):
@@ -787,8 +1283,15 @@ class ClassroomSession(models.Model):
     )
     classroom_group = models.ForeignKey(
         "ClassroomGroup",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         related_name="sessions",
+        null=True,
+        blank=True,
+    )
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
         null=True,
         blank=True,
     )
@@ -801,6 +1304,11 @@ class ClassroomSession(models.Model):
     )
     legacy_owner_unresolved = models.BooleanField(
         "propietaria histórica no recuperable",
+        default=False,
+        editable=False,
+    )
+    legacy_school_unresolved = models.BooleanField(
+        "School histórica no recuperable",
         default=False,
         editable=False,
     )
@@ -919,6 +1427,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            school=classroom_group.school if classroom_group is not None else None,
             created_by=teacher,
         )
 
@@ -963,6 +1472,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            school=classroom_group.school if classroom_group is not None else None,
             created_by=teacher,
             status=cls.STATUS_PREPARED,
             student_count=int(str(student_count).strip()),
@@ -1016,7 +1526,8 @@ class ClassroomSession(models.Model):
     def save(self, *args, **kwargs):
         if not self._state.adding:
             original = type(self).objects.filter(pk=self.pk).values(
-                "snapshot_id", "roadmap_snapshot_id", "status", "closed_at"
+                "snapshot_id", "roadmap_snapshot_id", "status", "closed_at",
+                "classroom_group_id", "school_id",
             ).first()
             original_snapshot_id = original["snapshot_id"] if original else None
             original_roadmap_snapshot_id = (
@@ -1033,6 +1544,10 @@ class ClassroomSession(models.Model):
                 raise ValidationError(
                     "El snapshot de roadmap de una ClassroomSession queda fijado."
                 )
+            if original and original["classroom_group_id"] != self.classroom_group_id:
+                raise ValidationError("El grupo de una ClassroomSession queda fijado.")
+            if original and original["school_id"] != self.school_id:
+                raise ValidationError("La School de una ClassroomSession queda fijada.")
             if (
                 original
                 and original["status"] == self.STATUS_PREPARED
@@ -1071,6 +1586,8 @@ class ClassroomSession(models.Model):
             raise ValidationError(
                 "Una sesión T06 activa requiere una confirmación registrada."
             )
+        if self.school_id is None and self.classroom_group_id:
+            self.school_id = self.classroom_group.school_id
         return super().save(*args, **kwargs)
 
     @transaction.atomic
