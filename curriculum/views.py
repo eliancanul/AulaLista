@@ -261,6 +261,14 @@ def _director_export_rows(user, *, include_actions=False):
         latest = sessions[0] if sessions else None
         result_batches = [session.result_batch_id for session in sessions]
         result_qs = PseudonymousResult.objects.filter(result_batch_id__in=result_batches)
+        aggregate = _result_aggregate(result_qs)
+        latest_aggregate = (
+            _result_aggregate(
+                PseudonymousResult.objects.filter(result_batch_id=latest.result_batch_id),
+                session=latest,
+            )
+            if latest else None
+        )
         period = "No disponible"
         if sessions:
             dates = [session.closed_at.date() for session in sessions if session.closed_at]
@@ -284,11 +292,11 @@ def _director_export_rows(user, *, include_actions=False):
                 "session_count": len(sessions),
                 "latest_session_status": latest.get_status_display() if latest else "Sin sesiones",
                 "roadmap_title": latest.roadmap_snapshot.title if latest and latest.roadmap_snapshot_id else "Sin roadmap",
-                "worked_activity_count": result_qs.values("activity_id").distinct().count(),
-                "participation_count": result_qs.values("participant_key").distinct().count(),
+                "worked_activity_count": aggregate["activities_worked"],
+                "participation_count": latest_aggregate["participant_count"] if latest_aggregate else 0,
                 "metrics": [
-                    {"label": "Actividades trabajadas", "value": result_qs.values("activity_id").distinct().count() if sessions else "No disponible", "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
-                    {"label": "Participantes únicos", "value": result_qs.values("participant_key").distinct().count() if sessions else "No disponible", "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
+                    {"label": "Actividades trabajadas", "value": aggregate["activities_worked"] if sessions else "No disponible", "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
+                    {"label": "Participantes únicos en la última sesión cerrada", "value": latest_aggregate["participant_count"] if latest_aggregate else "No disponible", "source": "Última sesión cerrada", "period": str(latest.closed_at.date()) if latest and latest.closed_at else "No disponible", "updated_at": latest.closed_at if latest else None},
                     {"label": "Posición del roadmap", "value": roadmap_position, "source": "Snapshot fijado a la sesión", "period": period, "updated_at": latest.closed_at if latest else None},
                     {"label": "Sesiones cerradas", "value": len(sessions), "source": "Sesiones cerradas", "period": period, "updated_at": latest.closed_at if latest else None},
                 ],
