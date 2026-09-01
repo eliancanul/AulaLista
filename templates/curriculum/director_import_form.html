@@ -1,0 +1,10 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Importar salones · AulaLista</title></head>
+<body><main>
+  <h1>Importar salones y adscripciones</h1>
+  <p>La vista previa no crea cuentas ni modifica datos. Los homónimos se detienen para confirmación de Dirección.</p>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <label>Archivo Excel (.xlsx) <input type="file" name="workbook" accept=".xlsx" required></label>
+    <button type="submit">Analizar archivo</button>
+  </form>
+</main></body></html>

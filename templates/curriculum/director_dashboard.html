@@ -76,7 +76,7 @@
       {% endif %}
 
       <section class="results-summary" aria-labelledby="audit-heading">
-        <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2 id="audit-heading">Auditoría institucional</h2></div><a class="secondary-action" href="{% url 'director-export' %}">Exportar agregados</a></div>
+        <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2 id="audit-heading">Auditoría institucional</h2></div><a class="secondary-action" href="{% url 'director-import-preview' %}">Importar Excel</a></div>
         {% if audit_events %}
           <ul>{% for event in audit_events %}<li>{{ event.actor_display_name }} · {{ event.action }} · {{ event.source }} · {{ event.occurred_at|date:"Y-m-d H:i" }}</li>{% endfor %}</ul>
         {% else %}<p class="empty-note">Sin eventos de auditoría para mostrar.</p>{% endif %}

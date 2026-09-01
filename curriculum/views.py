@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.core import signing
 from django.core.cache import cache
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError, OperationalError
@@ -90,6 +91,8 @@ TURN_CAPABILITY_MAX_AGE = LOCAL_SESSION_TTL
 DEVICE_ASSIGNMENT_MAX_AGE = LOCAL_SESSION_TTL
 SURVEY_SUBMITTED_TTL = LOCAL_SESSION_TTL
 DIRECTOR_TEACHER_TOKEN_SALT = "aulalista.director.teacher-choice.v1"
+DIRECTOR_IMPORT_TOKEN_SALT = "aulalista.director.import-preview.v1"
+DIRECTOR_IMPORT_CACHE_PREFIX = "aulalista.director.import-preview"
 
 
 def _safe_teacher_next(request):
@@ -446,6 +449,62 @@ def platform_director_handoff(request):
         school.handoff_director(new_director, actor=request.user, source="manual")
     except ValidationError as error:
         return HttpResponseBadRequest(str(error))
+    return redirect("director-dashboard")
+
+
+@director_required
+@require_http_methods(["GET", "POST"])
+def director_import_preview(request):
+    """Analyze an .xlsx workbook; this operation never writes institutional data."""
+
+    if request.method == "GET":
+        return render(request, "curriculum/director_import_form.html")
+    upload = request.FILES.get("workbook")
+    if upload is None or not upload.name.lower().endswith(".xlsx"):
+        return render(request, "curriculum/director_import_form.html", {"error": "Selecciona un archivo .xlsx."}, status=400)
+    from curriculum.institutional_import import workbook_preview
+    school = _director_school(request.user)
+    try:
+        preview = workbook_preview(upload, school, _assignable_teachers(school))
+    except ValidationError as error:
+        return render(request, "curriculum/director_import_form.html", {"error": str(error)}, status=400)
+    nonce = uuid.uuid4().hex
+    cache.set(f"{DIRECTOR_IMPORT_CACHE_PREFIX}:{nonce}", {"school_id": school.pk, "preview": preview}, timeout=LOCAL_SESSION_TTL)
+    token = signing.dumps({"nonce": nonce, "school_id": school.pk}, salt=DIRECTOR_IMPORT_TOKEN_SALT, compress=True)
+    return render(request, "curriculum/director_import_preview.html", {"preview": preview, "preview_token": token})
+
+
+@director_required
+@require_POST
+def director_import_apply(request):
+    """Apply a reviewed preview atomically; ambiguous rows require an explicit choice."""
+
+    try:
+        token = signing.loads(request.POST.get("preview_token", ""), salt=DIRECTOR_IMPORT_TOKEN_SALT, max_age=LOCAL_SESSION_TTL)
+    except (BadSignature, SignatureExpired, TypeError, ValueError):
+        return HttpResponseBadRequest("La vista previa expiró; vuelve a analizar el archivo.")
+    school = _director_school(request.user)
+    cached = cache.get(f"{DIRECTOR_IMPORT_CACHE_PREFIX}:{token.get('nonce')}")
+    if not cached or cached.get("school_id") != school.pk or token.get("school_id") != school.pk:
+        return HttpResponseBadRequest("La vista previa no corresponde a tu School o ya expiró.")
+    selections = {}
+    for row in cached["preview"]["rows"]:
+        value = request.POST.get(f"teacher_{row['row_number']}", "")
+        if value.isdigit():
+            selections[str(row["row_number"])] = int(value)
+    from curriculum.institutional_import import apply_preview
+    try:
+        with transaction.atomic():
+            result = apply_preview(cached["preview"], school, request.user, selections)
+            InstitutionalAuditEvent.record(
+                school=school, actor=request.user, action="institutional_import_applied",
+                object_type="InstitutionalImport", source="excel",
+                new_state={"groups_created": result["created_groups"], "groups_changed": result["changed_groups"], "assignments_created": result["created_assignments"]},
+            )
+    except ValidationError as error:
+        return HttpResponseBadRequest(str(error))
+    cache.delete(f"{DIRECTOR_IMPORT_CACHE_PREFIX}:{token['nonce']}")
+    messages.success(request, "Importación confirmada: se aplicaron sólo las altas y cambios revisados.")
     return redirect("director-dashboard")
 
 

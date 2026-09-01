@@ -8,6 +8,8 @@ from curriculum.views import (
     director_dashboard,
     director_export,
     director_group_assign,
+    director_import_apply,
+    director_import_preview,
     platform_director_handoff,
     student_activity,
     student_roadmap,
@@ -63,6 +65,8 @@ urlpatterns = [
         name="director-group-assign",
     ),
     path("director/export/", director_export, name="director-export"),
+    path("director/importar/", director_import_preview, name="director-import-preview"),
+    path("director/importar/aplicar/", director_import_apply, name="director-import-apply"),
     path(
         "platform/director/handoff/",
         platform_director_handoff,
