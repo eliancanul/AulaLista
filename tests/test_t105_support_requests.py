@@ -40,6 +40,7 @@ def test_teacher_creates_non_nominal_support_request_and_director_closes_it():
     request = SupportRequest.objects.get()
     assert request.school == group.school and request.status == SupportRequest.STATUS_PENDING
     client.force_login(director)
+    assert "Solicitar aviso general sobre el horario." in client.get(reverse("director-dashboard")).text
     response = client.post(reverse("director-support-request-update", args=[request.pk]), {"status": "resolved", "responsible_id": director.pk})
     request.refresh_from_db()
     assert response.status_code == 302 and request.closed_at is not None and request.responsible == director
