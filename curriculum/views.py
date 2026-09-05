@@ -2984,16 +2984,60 @@ def _grouped_activities(job):
 
 
 def _import_action_convert(job, post_data):
-    """Human checkpoint 3: convert selected valid proposals into drafts."""
+    """Human checkpoint 3: convert selected valid proposals into drafts.
+
+    Selection resolves by stable activity identity (``_activity_id``), never
+    by submitted list position: a stale/reordered positional index must fail
+    closed instead of converting the wrong activity. A bare numeric index is
+    honoured only as a legacy alias for entries that carry no explicit
+    ``id`` (their stable identity is already the ``idx-<position>``
+    fallback), preserving jobs staged before explicit ids existed.
+    """
 
     from curriculum.models import CurriculumPackage
 
-    created = 0
-    indices = post_data.getlist("select")
-    if not indices:
+    targets = post_data.getlist("select")
+    if not targets:
         raise ValueError("Selecciona al menos una actividad válida para convertir.")
-    for index in indices:
-        entry = job.activities[int(index)]
+    wanted = []
+    seen_targets = set()
+    for raw in targets:
+        key = str(raw if raw is not None else "").strip()
+        if not key or key in seen_targets:
+            continue
+        seen_targets.add(key)
+        wanted.append(key)
+    if not wanted:
+        raise ValueError("Selecciona al menos una actividad válida para convertir.")
+    activities = list(job.activities or [])
+    matched_indices = []
+    for key in wanted:
+        found = None
+        for index, entry in enumerate(activities):
+            if index in matched_indices:
+                continue
+            if str(_activity_id(entry, index)) == key:
+                found = index
+                break
+        if found is None:
+            try:
+                legacy_index = int(key, 10)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= legacy_index < len(activities):
+                legacy_entry = activities[legacy_index]
+                if not legacy_entry.get("id") and legacy_index not in matched_indices:
+                    # Legacy alias only: entries without an explicit id have
+                    # no reorder-proof identity to resolve, so the submitted
+                    # position is the only available reference.
+                    found = legacy_index
+        if found is not None:
+            matched_indices.append(found)
+    if not matched_indices:
+        raise ValueError("Selecciona al menos una actividad válida para convertir.")
+    created = 0
+    for index in matched_indices:
+        entry = activities[index]
         if not entry.get("is_valid"):
             continue  # un reactivo inválido nunca se convierte, ni marcándolo
         package = CurriculumPackage.objects.create(

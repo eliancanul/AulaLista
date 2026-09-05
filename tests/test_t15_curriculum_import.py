@@ -25,6 +25,9 @@ from curriculum.curriculum_import import (  # noqa: E402
     chunk_pages,
     consolidate_topics,
 )
+from curriculum.views import _import_action_convert  # noqa: E402
+from django.contrib.auth import get_user_model  # noqa: E402
+from django.http import QueryDict  # noqa: E402
 
 
 from helpers import tutor_client  # noqa: E402
@@ -466,3 +469,103 @@ def test_synthetic_pdf_detection_keeps_only_central_topics_with_citations():
     assert fracciones["titulo"] == "Fracciones"
     assert fracciones["pagina_inicio"] == 1
     assert fracciones["pagina_fin"] == 4
+
+
+# --- Gate slice: la conversión resuelve por identidad estable (#53/#98) ---
+
+
+def _convert_proposal(title):
+    return {
+        "title": title,
+        "objective": "Practicar el tema.",
+        "micro_lesson": "Explicación breve del tema.",
+        "final_explanation": "Cierre de la actividad.",
+        "questions": [
+            {
+                "block_type": "reactivo",
+                "value": {
+                    "prompt": f"Pregunta sobre {title}?",
+                    "options": [
+                        {
+                            "position": 1,
+                            "text": "Opción A",
+                            "expected": True,
+                            "feedback": "Correcto.",
+                        },
+                        {
+                            "position": 2,
+                            "text": "Opción B",
+                            "expected": False,
+                            "feedback": "Revisa la microlección.",
+                        },
+                    ],
+                    "hints": ["Pista útil."],
+                },
+            }
+        ],
+    }
+
+
+def _convert_entry(stable_id, title, *, is_valid=True):
+    return {
+        "id": stable_id,
+        "topic_title": "Fracciones",
+        "subtopic_title": "Suma",
+        "is_valid": is_valid,
+        "issues": [] if is_valid else ["incompleto"],
+        "proposal": _convert_proposal(title),
+        "selected": is_valid,
+    }
+
+
+def _convert_job(entries):
+    owner = get_user_model().objects.create_user(
+        username=f"maestra-convert-{CurriculumImportJob.objects.count()}",
+        is_staff=True,
+    )
+    return CurriculumImportJob.objects.create(
+        pdf=pdf_upload(),
+        created_by=owner,
+        activities=list(entries),
+        status=CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED,
+    )
+
+
+def _convert_post(*values):
+    post = QueryDict("", mutable=True)
+    post.setlist("select", list(values))
+    return post
+
+
+def test_convert_resolves_stable_identity_not_list_position():
+    first = _convert_entry("aaa11111", "Actividad primera")
+    second = _convert_entry("bbb22222", "Actividad segunda")
+    job = _convert_job([first, second])
+
+    # La identidad estable convierte aunque ya no esté en la posición 0.
+    assert _import_action_convert(job, _convert_post("bbb22222")) == 1
+    draft = CurriculumPackage.objects.get()
+    assert draft.title == "Actividad segunda"
+    assert draft.ai_assisted is True
+    assert PublishedPackageSnapshot.objects.count() == 0
+
+
+def test_convert_rejects_stale_positional_index_for_explicit_ids():
+    first = _convert_entry("aaa11111", "Actividad primera")
+    second = _convert_entry("bbb22222", "Actividad segunda")
+    job = _convert_job([first, second])
+
+    # "0" es una posición rancia, no una identidad: debe fallar cerrado
+    # sin convertir la actividad equivocada.
+    with pytest.raises(ValueError, match="Selecciona al menos una actividad"):
+        _import_action_convert(job, _convert_post("0"))
+    assert CurriculumPackage.objects.count() == 0
+    job.refresh_from_db()
+    assert job.status == CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
+
+    # Reordenar la lista no cambia el resultado: el id sigue resolviendo
+    # a la misma propuesta.
+    job.activities = [second, first]
+    job.save(update_fields=["activities", "updated_at"])
+    assert _import_action_convert(job, _convert_post("bbb22222")) == 1
+    assert CurriculumPackage.objects.get().title == "Actividad segunda"
