@@ -1,7 +1,6 @@
 # Implementation gate — AulaLista updated-tech
 
 STATUS: HOLD
-HUMAN_APPROVAL: PENDING
 
 Reverted to HOLD at supervisor checkpoint iteration 20 (from on-disk `READY_FOR_IMPLEMENTATION` set off-cycle in `498a4df` + `b22b55b`). Re-affirmed HOLD at supervisor checkpoint iteration 30 after live scorecard re-check (2.5/6 — blockers observed non-none, no clean base ref; see `docs/handoffs/supervisor-iteration-0030.md` §Findings). No fix implemented in this loop; this file is a spec gate only.
 
