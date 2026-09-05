@@ -25,7 +25,7 @@ from curriculum.curriculum_import import (  # noqa: E402
     chunk_pages,
     consolidate_topics,
 )
-from curriculum.views import _import_action_convert  # noqa: E402
+from curriculum.views import _grouped_activities, _import_action_convert  # noqa: E402
 from django.contrib.auth import get_user_model  # noqa: E402
 from django.http import QueryDict  # noqa: E402
 
@@ -569,3 +569,49 @@ def test_convert_rejects_stale_positional_index_for_explicit_ids():
     job.save(update_fields=["activities", "updated_at"])
     assert _import_action_convert(job, _convert_post("bbb22222")) == 1
     assert CurriculumPackage.objects.get().title == "Actividad segunda"
+
+
+def test_review_form_submits_stable_activity_identity():
+    first = _convert_entry("aaa11111", "Actividad primera")
+    second = _convert_entry("bbb22222", "Actividad segunda")
+    job = _convert_job([first, second])
+    job.topics = [
+        {
+            "titulo": "Fracciones",
+            "pagina_inicio": 1,
+            "pagina_fin": 2,
+            "subtemas": [{"titulo": "Suma", "actividades_sugeridas": 2}],
+        }
+    ]
+    job.save(update_fields=["topics", "updated_at"])
+
+    # El contrato de agrupación expone la identidad estable, no la posición.
+    grouped = _grouped_activities(job)
+    assert [
+        item["id"]
+        for group in grouped
+        for sub in group["subs"]
+        for item in sub["entries"]
+    ] == ["aaa11111", "bbb22222"]
+
+    # La página renderizada declara esos ids estables en los checkboxes
+    # `select` que consume `_import_action_convert`, nunca el índice.
+    client = Client()
+    client.force_login(job.created_by)
+    response = client.get(reverse("tutor-import-detail", args=[job.pk]))
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'value="aaa11111"' in html
+    assert 'value="bbb22222"' in html
+    assert 'name="select" value="0"' not in html
+    assert 'name="select" value="1"' not in html
+
+    # Reordenar no cambia lo renderizado: el id sigue identificando
+    # a la misma propuesta.
+    job.activities = [second, first]
+    job.save(update_fields=["activities", "updated_at"])
+    reordered = client.get(reverse("tutor-import-detail", args=[job.pk]))
+    assert reordered.status_code == 200
+    reordered_html = reordered.content.decode()
+    assert 'value="aaa11111"' in reordered_html
+    assert 'value="bbb22222"' in reordered_html
