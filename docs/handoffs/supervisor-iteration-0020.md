@@ -97,5 +97,7 @@ Next supervisor pass (iteration 21): resume the rotating phase loop (suggested: 
 
 ## PR record
 
-- Staged set verified (`git diff --cached --name-only`): to be filled after staging check before commit.
-- Push target: existing PR 112 (https://github.com/eliancanul/AulaLista/pull/112), head `supervisor/aulalista-docs` → base `main`, docs-only, not merged — never merge per loop rules.
+- Staged set verified (`git diff --cached --name-only`): `docs/handoffs/supervisor-iteration-0011.md` through `-0019.md` (nine pending handoffs), `supervisor-iteration-0020.md`, `supervisor-cumulative.md`, `IMPLEMENTATION-GATE.md` — Markdown under `docs/handoffs/` only, no code.
+- Committed as `606aa64` on `supervisor/aulalista-docs`, pushed to origin (`b22b55b..606aa64`).
+- PR: https://github.com/eliancanul/AulaLista/pull/112 (head `supervisor/aulalista-docs` → base `main`, pre-existing and still OPEN — no new PR created; docs-only, not merged — never merge per loop rules).
+- Follow-up: this §PR record was filled after the push; recorded in a second append-only docs commit (no history rewrite).
