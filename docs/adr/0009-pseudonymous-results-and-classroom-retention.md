@@ -1,7 +1,10 @@
-# ADR-0007: Resultados seudónimos agrupados y retención por salón
+# ADR-0009: Resultados seudónimos agrupados y retención por salón
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-08-27
+- **Nota:** Renumerado desde `0007-pseudonymous-results-and-classroom-retention.md`
+  el 2026-09-05 (rama `updated-tech`) para resolver el duplicado con
+  `0007-group-roadmap-progress-per-session.md`. Sin cambios de decisión.
 
 ## Contexto
 
