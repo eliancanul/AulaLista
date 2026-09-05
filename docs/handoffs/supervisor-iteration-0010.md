@@ -85,4 +85,7 @@ Next supervisor pass (iteration 11): re-check whether the working tree changed (
 
 ## PR record
 
-_To be filled by this pass after the commit/push step: PR URL/number, staged file list from `git diff --cached --name-only`, or the reason packaging was skipped as unsafe._
+- Staged set verified (`git diff --cached --name-only`): `docs/handoffs/IMPLEMENTATION-GATE.md`, `docs/handoffs/supervisor-cumulative.md`, `docs/handoffs/supervisor-iteration-0009.md`, `docs/handoffs/supervisor-iteration-0010.md` — Markdown under `docs/handoffs/` only, no code.
+- Committed as `2889fa9` on `supervisor/aulalista-docs`, pushed to origin.
+- PR: https://github.com/eliancanul/AulaLista/pull/112 (head `supervisor/aulalista-docs` → base `main`, docs-only, not merged — never merge per loop rules).
+- Follow-up: this §PR record was filled after the push; recorded in a second append-only docs commit (no history rewrite).
