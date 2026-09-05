@@ -1,61 +1,31 @@
 # Implementation gate — AulaLista updated-tech
 
-STATUS: HOLD
+STATUS: READY_FOR_IMPLEMENTATION
 
-## Why HOLD (10th-iteration review, iteration 10)
+## Governing decision
+- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md` and the R2 recommendation in `docs/handoffs/supervisor-iteration-0010.md`.
+- **Scope:** first, independently safe implementation slice: eliminate the positional activity identity hazard in the conversion path. This is deliberately narrower than the full relational-staging migration.
+- **Base ref:** `supervisor/aulalista-docs` at this gate commit.
+- **Blockers:** none for this isolated slice; the broader #53/#98/#54 migration remains separately gated.
 
-The prior `READY_FOR_IMPLEMENTATION` was committed off-cycle with defects: a self-referential base ref (its own docs branch), broader-than-one-change allowed paths, and a conditional convert-to-`activity_id` switch that iterations 3/5/7/8/9 spec as mandatory. Additionally: the uncommitted Phase A–E tree is still awaiting human review, and three agent-ready questions are undecided (`_norm` recursion pick, duplicate-report surface, M4 export shape). Any single gap requires `HOLD`. The parallel coding lane does nothing while the gate is `HOLD` or absent.
+## Exact allowed implementation paths
+- `curriculum/views.py`
+- `tests/test_t15_curriculum_import.py`
+- `docs/handoffs/` for the coding handoff and evidence only
 
-## Governing decision (applies when flipped)
+## Explicitly out of scope
+- `curriculum/models.py`, migrations, schemas, staging-validation redesign, import persistence, templates, settings, requirements, scripts, and all other tests.
+- The full relational staging migration, JSON read cutover, dedup UI, publication/session authorization, #55/#56/#65, prototypes, physical-LAN evidence, and DemoPackage claims.
+- Any unrelated refactor or formatting-only change.
 
-- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md` plus the acceptance matrix in `docs/handoffs/supervisor-iteration-0005.md`, the M0→M4 sequence in `supervisor-iteration-0007.md`, the seam order in `supervisor-iteration-0008.md`, and the ready-for-agent queue in `supervisor-iteration-0009.md`.
-- **Objective:** the first bounded slice of the fused #53/#98/#54 decision: convert-to-`activity_id` (R2) + duplicate report wiring at the three touchpoints (R3-slice, no M4), while preserving the JSON path and editorial state.
+## Required behavior
+1. Replace the targeted conversion lookup that uses a submitted/list position with stable activity identity, using the existing identity convention in the current branch.
+2. Preserve the existing valid/selected/editorial behavior and all inviolable contracts: only EditorialReviewer publishes; only the teacher activates ClassroomSession; AI proposes only; sessions read immutable SHA256 PublishedPackageSnapshot; DemoPackage is synthetic with zero pedagogical claims.
+3. Add a focused regression test in `tests/test_t15_curriculum_import.py` proving that reordering or a stale positional index cannot convert the wrong activity, while the intended stable identity still converts correctly.
+4. Do not alter the import schema or perform the relational migration in this slice.
 
-## Flip conditions (ALL required for READY_FOR_IMPLEMENTATION)
-
-1. The Phase A–E working tree is human-reviewed and committed, so the base ref below can name a clean commit hash.
-2. Allowed paths are narrowed to the slice in §Exact allowed paths (no new tables, no migration, no M4).
-3. The convert-to-`activity_id` switch is mandatory with the named reorder test.
-4. Base ref is a concrete, non-self-referential commit on `updated-tech` (verified tree: `views.py` 2950 / `models.py` 2038 / `staging_validation.py` 238 lines).
-5. Open questions answered: `_norm` recursion pick, duplicate-report surface, M4 artifact shape (M4 stays out of the slice regardless).
-6. Zero blockers observed at flip time.
-
-## Exact allowed implementation paths (when READY)
-
-- `curriculum/views.py` (convert block `views.py:2446-2475` + three `find_duplicate_groups` touchpoints only)
-- `curriculum/staging_validation.py` (only if the canonicalization pick requires it)
-- `tests/test_t54_staging_contracts.py` + one new focused test file
-- `docs/DATABASE.md` (same PR, rule #58)
-
-## Explicitly out of scope (when READY)
-
-- New tables/M1, backfill/M2, flagged new-read/M3, M4 drop, schemas `v2/`, S-seam moves, `curriculum_import.py` model changes, any other Python/tests/templates/settings/requirements/migrations/scripts/configuration.
-- #55/#56/#65, prototypes, physical-LAN evidence, DemoPackage claims, publication/session authorization changes, unrelated refactors.
-- Dropping JSON fields or deleting the transitional path.
-
-## Invariants preserved (always)
-
-Human EditorialReviewer publishes; teacher-only ClassroomSession activation; AI proposes only; sessions read immutable SHA256 snapshots; synthetic DemoPackage with zero pedagogical claims. Envelopes from iteration 5 (evidence matrix A1–A9), 6 (LAN-only HTTP, staff-gated pipeline, sealed device cookies, single-process SQLite, no new egress), 7 (M0→M4 + per-step rollback), 8 (Steps 0–4, S1 fused with M3).
-
-## Acceptance tests and evidence (when READY)
-
-- New test: reorder-between-render-and-POST converts the intended draft (via `_activity_id`, never positional).
-- `tests/test_t54_staging_contracts.py` + t15/t16/t19/t20/t22/t24 green; `python3 scripts/check_migrations.py` + `makemigrations --check` clean.
-- Report + human confirm at the three touchpoints: `exact` collapses only with explicit confirm; `same_title_diff_content` side-by-side, never silently merged; one section per `(topic, sub, title)` key with per-pair badges.
-- No physical-LAN or concurrent-write claims; cite current lines only.
-
-## Migration and rollback (when READY)
-
-- No migration in this slice; JSON untouched as truth; code-only revert.
-- M4 (drop JSON writes) is a separate human-confirmed ticket with a named JSON-export artifact + restore runbook — never bundled.
-
-## Observed blockers
-
-- Human review of the uncommitted Phase A–E tree (pending since iteration 2).
-- Undecided: `_norm` recursion pick; duplicate-report surface; M4 export shape.
-- Base ref uncommitted; self-referential refs not accepted.
-
-## Delivery (when READY)
-
-- Work in an isolated worktree on `agent/aulalista-implementation-<gate-hash>`.
-- Commit only allowlisted paths, push, and open a non-merged PR targeting `main` with tests, risks, and rollback.
+## Acceptance and rollback
+- Run the focused test file and any directly required Django checks; report exact commands/results.
+- `git diff --name-only` before commit must contain only the allowlisted paths.
+- Commit, push branch `agent/aulalista-implementation-<gate-hash>`, and open one non-merged PR targeting `main`; include tests, risks, and rollback. No force-push or merge.
+- Rollback is reverting this focused PR; no database migration or destructive data change is permitted.
