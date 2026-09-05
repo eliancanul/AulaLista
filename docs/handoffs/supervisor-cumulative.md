@@ -1,6 +1,6 @@
-# Supervisor cumulative synthesis — iterations 2–20 (deltas only)
+# Supervisor cumulative synthesis — iterations 2–30 (deltas only)
 
-Checkpoint written at iteration 10, extended at iteration 20. Prior handoffs are the working memory; this file records only the durable synthesis and what changed per pass. No `supervisor-iteration-0001.md` / `-0004.md` exist (numbering arrives externally); no fix has been implemented in this loop — all outputs are specs, ADRs, rankings, and handoffs.
+Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior handoffs are the working memory; this file records only the durable synthesis and what changed per pass. No `supervisor-iteration-0001.md` / `-0004.md` exist (numbering arrives externally); no fix has been implemented in this loop — all outputs are specs, ADRs, rankings, and handoffs.
 
 ## Stable spine (agreed 2→10, re-verified each pass against current code)
 
@@ -32,6 +32,19 @@ Checkpoint written at iteration 10, extended at iteration 20. Prior handoffs are
 - **0018 — god-files, service seams, maintainability.** `views.py` 91 defs / `models.py` 26 defs; services/ is a two-module exemplar (`results.py` 552 + `roadmap_cursor.py` 27, imported `views.py:74-75`); S1-LAST-fused-with-M3 re-confirmed with current cites (`:2420` grouped, `:2446` convert, `:2006` call site, `:2022` reuse).
 - **0019 — ready-for-agent ranking and issue draft quality.** Six `ready-for-agent` (#95/#97/#98/#103/#104/#107), #98 sole on-path but 0/7 executable slots under the new 7-slot draft rubric (ADR, allowed paths, out-of-scope, invariants, named tests, migration/rollback, base ref).
 - **0020 — checkpoint: gate back to HOLD + cumulative.** No new tree evidence; no third flip; PR 112 verified OPEN; cite correction (`CHAT_TIMEOUT_SECONDS` → `curriculum/curriculum_import.py:23`); gate reverted to `STATUS: HOLD` with 2.5/6 scorecard; nine pending handoffs (0011–0019) staged and pushed with this checkpoint into PR 112 (docs-only, unmerged).
+
+## Deltas iterations 21–30 (no new tree evidence in any pass; all counts byte-identical, head 0029, `schemas/` flat, `check_migrations.py` OK, 42 test files)
+
+- **0021 — baseline architecture and domain contracts.** Re-verified CONTEXT/DESIGN vocabulary against code; adopted counter-methodology (name the `def`-counter beside any count cite — `grep -c` 92/66 vs AST 91 top-level); cite discipline re-affirmed.
+- **0022 — curriculum staging join and relational model.** C1 sharpened to TWO questions: (a) `_norm` recursion scope inside the hash, (b) join-vs-hash agreement (exact `==` at `staging_validation.py:76-77` vs normalized hash inputs). Draft pick: `_norm`-join both sides, or document exact-join as intentional with a proving test.
+- **0023 — idempotency, deduplication, ambiguity policy.** Ambiguity-enforcement = report-surface pick (recommended review-screen + pre-convert list, `llm_log` audit copy); C1 draft pick recorded (`_norm`-join + outer-keys-only hash) for iteration-30 R1 packaging.
+- **0024 — ADR/documentation contradiction reconciliation.** Five R1 doc-precision patches with exact targets: C1 three-file (`adr/0010` §Decisión-2, `staging_validation.py:192` docstring, `schemas/README.md`), C2 (`DATABASE.md:103-105`), C3 (`models.py:1875`), C4 (`implementation-current.md:3-6`), C5 (ADR-0006 `:29` + `teacher-flow.md:110-120`).
+- **0025 — tests, evidence, acceptance matrix.** Two pending proving-test rows sketched: P1 join-agreement + P2 same-title-separation, both in `test_t54` (or successor), both green BEFORE any of the three wiring touchpoints (post-generate guard, pre-topup count, pre-convert list).
+- **0026 — security, deployment, operational constraints.** Envelope re-verified (LAN-only, staff-gated, sealed cookies 12h, single-process SQLite, Ollama-only egress 180s, no new egress); pre-institutional hardening gap recorded (dev-default secrets/DEBUG/`*`-hosts, empty password validators, absent cookie/SECURE flags; checklist owner still open as Q12).
+- **0027 — schemas, migration sequence, rollback safety.** C3 closed by direct re-read (confirmed open); 0029 verified additive-nullable (rollback-trivial); `$id` consistency verified; only migration-sequence risks left are documentary (C1 + C3 as R1).
+- **0028 — god-files, service seams, maintainability.** Cursor census names the Q9 pair: direct read `views.py:1068` vs 7 service sites (`:2505…:2866`) — one 50-line read of `:1046-1094` still pending; S5/S4/S2 spans re-pinned to current lines; R2-before-seams ordering re-affirmed (`:2428`/`:2456` index cites).
+- **0029 — ready-for-agent ranking and issue draft quality.** Six-issue set live re-graded (#95/#97/#98/#103/#104/#107, #98 sole on-path); #98 full-body re-read re-graded 0/7; fused labels verified correctly absent; A5b (`tutor_import_detail.html:148/:157`) + timeout (`curriculum_import.py:23`) cites re-pinned.
+- **0030 — checkpoint: synthesis, gap analysis, HOLD re-affirmed.** Ten-pass no-drift verdict; gate scorecard live re-checked (2.5/6, HOLD with cause); Q8 settled (#98 upgrade + R1 precision ride as handoff Markdown in the docs-only PR, never as created issues); root docs re-read with no spine contradictions (C2/C4 staleness already R1 items); ten pending handoffs (0021–0030) staged and pushed with this checkpoint into PR 112 (docs-only, unmerged).
 
 ## Ranked recommendations (standing, in order)
 

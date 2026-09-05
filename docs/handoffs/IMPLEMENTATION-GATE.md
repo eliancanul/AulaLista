@@ -2,11 +2,11 @@
 
 STATUS: HOLD
 
-Reverted to HOLD at supervisor checkpoint iteration 20 (from on-disk `READY_FOR_IMPLEMENTATION` set off-cycle in `498a4df` + `b22b55b`). No fix implemented in this loop; this file is a spec gate only.
+Reverted to HOLD at supervisor checkpoint iteration 20 (from on-disk `READY_FOR_IMPLEMENTATION` set off-cycle in `498a4df` + `b22b55b`). Re-affirmed HOLD at supervisor checkpoint iteration 30 after live scorecard re-check (2.5/6 — blockers observed non-none, no clean base ref; see `docs/handoffs/supervisor-iteration-0030.md` §Findings). No fix implemented in this loop; this file is a spec gate only.
 
 ## Governing decision
 
-- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md`, queue R1–R5 in `docs/handoffs/supervisor-iteration-0009.md`, evidence matrix A1–A9 (with A5a/A5b split) in `docs/handoffs/supervisor-iteration-0015.md`, cumulative synthesis in `docs/handoffs/supervisor-cumulative.md` (spine 2→20).
+- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md`, queue R1–R5 in `docs/handoffs/supervisor-iteration-0009.md`, evidence matrix A1–A9 (with A5a/A5b split) in `docs/handoffs/supervisor-iteration-0015.md`, cumulative synthesis in `docs/handoffs/supervisor-cumulative.md` (spine 2→30).
 - **Candidate slice assessed (not authorized):** review-UI stable-ID contract (`templates/curriculum/tutor_import_detail.html` `item.index→item.id`) + one focused test in `tests/test_t15_curriculum_import.py`, stacked on the claimed first-slice handler work. Narrowest slice yet, but authorization conditions below are unmet.
 - **Base ref:** none clean available — the Phase A–E working tree is uncommitted (`git diff --stat`: 7 files, +209/−716 on `supervisor/aulalista-docs`, unchanged iterations 2–20). No `updated-tech` tip hash can be named until a human reviews/commits it.
 - **Blockers (observed, non-none):** (a) uncommitted Phase A–E tree, no clean base ref; (b) gate evidence `docs/handoffs/coding-41560047f83c.md` unreachable from this branch (traceability gap, carry-over 15→20); (c) open picks C1 (`_norm` scope), report surface, M4 artifact shape; (d) two off-cycle gate flips with no human-signed loop-rule amendment.
