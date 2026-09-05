@@ -145,7 +145,7 @@
                     <article class="activity-card {% if item.entry.is_valid %}is-valid{% else %}is-invalid{% endif %}">
                       <header class="activity-head">
                         {% if item.entry.is_valid %}
-                          <input type="checkbox" name="select" value="{{ item.index }}" checked form="convert-form"
+                          <input type="checkbox" name="select" value="{{ item.id }}" checked form="convert-form"
                                  aria-label="Convertir {{ item.entry.proposal.title }}">
                         {% else %}
                           <input type="checkbox" disabled aria-label="Inválida, no convertible">
