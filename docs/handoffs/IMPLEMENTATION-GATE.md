@@ -3,29 +3,29 @@
 STATUS: READY_FOR_IMPLEMENTATION
 
 ## Governing decision
-- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md` and the R2 recommendation in `docs/handoffs/supervisor-iteration-0010.md`.
-- **Scope:** first, independently safe implementation slice: eliminate the positional activity identity hazard in the conversion path. This is deliberately narrower than the full relational-staging migration.
-- **Base ref:** `supervisor/aulalista-docs` at this gate commit.
-- **Blockers:** none for this isolated slice; the broader #53/#98/#54 migration remains separately gated.
+- **ADR/spec:** `docs/adr/0010-staging-relacional-idempotente.md`, R2 in `docs/handoffs/supervisor-iteration-0010.md`, and coding result `docs/handoffs/coding-41560047f83c.md`.
+- **Scope:** second bounded slice: make the review UI submit the stable `item.id` that the completed conversion handler now consumes.
+- **Base ref:** `agent/aulalista-implementation-41560047f83c` (the reviewed first-slice implementation branch).
+- **PR base:** `agent/aulalista-implementation-41560047f83c` (stacked PR; do not merge automatically).
+- **Blockers:** none for this UI contract slice; full relational staging remains separately gated.
 
 ## Exact allowed implementation paths
-- `curriculum/views.py`
+- `templates/curriculum/tutor_import_detail.html`
 - `tests/test_t15_curriculum_import.py`
 - `docs/handoffs/` for the coding handoff and evidence only
 
 ## Explicitly out of scope
-- `curriculum/models.py`, migrations, schemas, staging-validation redesign, import persistence, templates, settings, requirements, scripts, and all other tests.
-- The full relational staging migration, JSON read cutover, dedup UI, publication/session authorization, #55/#56/#65, prototypes, physical-LAN evidence, and DemoPackage claims.
-- Any unrelated refactor or formatting-only change.
+- All Python except the already-reviewed first-slice code; all models, migrations, schemas, import persistence, settings, requirements, scripts, and other tests.
+- Relational staging, JSON read cutover, dedup UI, publication/session authorization, #55/#56/#65, prototypes, physical-LAN evidence, and DemoPackage claims.
+- Any unrelated markup, CSS, accessibility redesign, refactor, or formatting-only change.
 
 ## Required behavior
-1. Replace the targeted conversion lookup that uses a submitted/list position with stable activity identity, using the existing identity convention in the current branch.
-2. Preserve the existing valid/selected/editorial behavior and all inviolable contracts: only EditorialReviewer publishes; only the teacher activates ClassroomSession; AI proposes only; sessions read immutable SHA256 PublishedPackageSnapshot; DemoPackage is synthetic with zero pedagogical claims.
-3. Add a focused regression test in `tests/test_t15_curriculum_import.py` proving that reordering or a stale positional index cannot convert the wrong activity, while the intended stable identity still converts correctly.
-4. Do not alter the import schema or perform the relational migration in this slice.
+1. In the activity review form, submit `item.id` as the `select` value, not `item.index`, so the browser uses the stable identity expected by `_import_action_convert`.
+2. Preserve the existing form action, CSRF, valid-only behavior, remove form, and all inviolable contracts: only EditorialReviewer publishes; only the teacher activates ClassroomSession; AI proposes only; sessions read immutable SHA256 PublishedPackageSnapshot; DemoPackage is synthetic with zero pedagogical claims.
+3. Add one focused test in the allowlisted test file proving the rendered/declared selection value is the stable ID (or an equivalent contract test) and retain all prior conversion regression tests.
 
 ## Acceptance and rollback
-- Run the focused test file and any directly required Django checks; report exact commands/results.
-- `git diff --name-only` before commit must contain only the allowlisted paths.
-- Commit, push branch `agent/aulalista-implementation-<gate-hash>`, and open one non-merged PR targeting `main`; include tests, risks, and rollback. No force-push or merge.
-- Rollback is reverting this focused PR; no database migration or destructive data change is permitted.
+- Run the focused tests and relevant Django check with `/tmp/aulalista-test-env/bin/python` or `/tmp/al-venv/bin/python` if available; report exact results.
+- Before commit, `git diff --name-only` must contain only the two implementation paths plus the coding handoff.
+- Commit, push a new `agent/aulalista-implementation-<gate-hash>` branch, and open a non-merged stacked PR targeting the declared PR base.
+- Rollback is reverting this template/test PR; no database or editorial data changes are allowed.
