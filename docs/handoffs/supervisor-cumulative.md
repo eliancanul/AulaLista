@@ -141,6 +141,22 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 - DONE — commit `92f9de5` (`docs: supervisor iteration 100 checkpoint — cumulative deltas 91-100, prompt catalog, HOLD gate, final-1`, 5 files, +342/−12, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c3d3d3e..92f9de5` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
+## Deltas iterations 101–110 (no new tree evidence in any observed pass; all counts byte-identical, head 0029, `schemas/` flat, `check_migrations.py` OK, 44 `ls tests/` entries = 42 files + helpers + pycache; PR #115 OPEN throughout)
+
+- **0101–0102 — no handoff files on disk (missing evidence, external numbering).** Observed absent at 0103 and carried through 0110; per the 51–55/0099 disposition this checkpoint does not backfill them and draws no inference beyond recording the gap. Phases 1–2 contribute no delta this cycle.
+- **0103 — idempotency, deduplication, ambiguity policy.** Hash `:189-208` + dedup `:211-238` report-only reconfirmed; overlap rule `test_t54:119-127` re-read; zero pipeline call sites; P1/P2 still pending; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0104 — ADR/documentation contradiction reconciliation.** C1 three-way + iteration-64 nesting precision + C2–C5 reconfirmed at current lines; schemas flat; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0105 — tests, evidence, acceptance matrix.** A-matrix line counts re-pinned + `test_t54:108-127` full re-read; `.venv` confirmed absent (run-unverified carries); P1/P2 pending; Q13 pre-R2 blocker; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0106 — security, deployment, operational constraints.** Envelope re-verified on fresh windows (staff gate, sealed 12h cookies without `Secure`, Ollama-only egress 180s, dev-default triple); Q11-narrowed carries, no owner; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0107 — schemas, migration sequence, rollback safety.** Head 0029 additive-nullable + rollback pin + `$id` v1-consistency + no `v2/` + C1 three-way + C3-in-commit re-verified on fresh windows; `check_migrations.py` OK; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0108 — god-files, service seams, maintainability.** AST 91 top-level funcs (views) / 5 funcs + 21 classes (models); services two-module exemplar intact; Q8 census re-pinned fresh (import `:74`, divergent `:1068`, 7 service sites); R2 pins re-read; `roadmap.py` 242 lines; Q15-CONFIRMED carries; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0109 — ready-for-agent ranking and issue draft quality.** Six-`updatedAt` live re-queried byte-identical (#98 sole on-path 0/7 on live evidence, no re-grade); draft-precision triple re-affirmed (R1 `:56-62` quote + nesting precision, Q13 runner naming, blank-with-owner); PR #115 OPEN live; numstat byte-identical; zero drift.
+- **0110 — checkpoint: synthesis, gap analysis, HOLD re-affirmed + catalog.** Ninety-two consecutive no-drift passes (84 at 0100 + 8 observed 0103–0110); six-`updatedAt` live re-queried byte-identical (#98 sole on-path 0/7 on live evidence); PR #115 OPEN live (no successor PR needed — checkpoint commit pushes to the same branch/PR); gate scorecard live re-checked (2.5/6, HOLD with cause); 51–55 + 0099 + 0101/0102 gaps stand as missing evidence (no backfill); catalog Phase 1–10 rows extended to 0103–0110. Docs-only packaging outcome recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+## PR record (iteration-110 checkpoint)
+
+- (To be filled after push: commit hash, push range, PR #115 URL — docs-only, unmerged. Prior untracked handoffs (0041–0050, 0056–0109) remain unpackaged working-tree files for a future checkpoint; nothing discarded or reverted.)
+
 ## Ranked recommendations (standing, in order)
 
 1. Keep `STATUS: HOLD` until all six flip conditions hold simultaneously (human-reviewed tree, narrowed slice, mandatory convert + test, non-self-referential base ref, open questions 2–4 answered, zero blockers).
