@@ -172,7 +172,7 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-120 checkpoint)
 
-- PENDING — filled in by the follow-up record commit after push (same pattern as iterations 100/110): checkpoint commit (this handoff + cumulative deltas 111–120 + prompt catalog + HOLD gate, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0119) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+- DONE — commit `9bbf7ad` (`docs: supervisor iteration 120 checkpoint — cumulative deltas 111-120, prompt catalog, HOLD gate`, 4 files, +241/−12, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `53722c3..9bbf7ad` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0119) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 ## Ranked recommendations (standing, in order)
 
