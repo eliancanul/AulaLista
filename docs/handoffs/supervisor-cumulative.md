@@ -124,6 +124,23 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 - DONE — commit `695869e` (`docs: supervisor iteration 90 checkpoint — cumulative deltas 81-90, prompt catalog, HOLD gate`, 4 files, +170/−23, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `f7dc993..695869e` to `supervisor/aulalista-docs`; `gh pr list --head supervisor/aulalista-docs` was empty, so created PR #115 targeting `main`: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0089) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
+## Deltas iterations 91–100 (no new tree evidence in any observed pass; all counts byte-identical, head 0029, `schemas/` flat, `check_migrations.py` OK, 44 `ls tests/` entries = 42 files + helpers + pycache; PR #115 OPEN throughout)
+
+- **0091 — baseline architecture and domain contracts.** CONTEXT/DESIGN anchors re-verified live; six-`updatedAt` live re-queried byte-identical (#98 sole on-path 0/7 on live evidence); PR #115 OPEN live; numstat byte-identical to 0081–0090; zero drift.
+- **0092 — curriculum staging join and relational model.** Write sites `:2221/:2383` re-verified; C1 three-way + iteration-64 nesting precision carries; zero Topic/Subtopic/ActivityProposal tables; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0093 — idempotency, deduplication, ambiguity policy.** Hash `:189-208` + dedup `:211-238` report-only reconfirmed; overlap rule `test_t54:119-127` re-read; zero pipeline call sites; P1/P2 still pending; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0094 — ADR/documentation contradiction reconciliation.** C1 three-way + nesting precision + C2–C5 reconfirmed at current lines; schemas flat; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0095 — tests, evidence, acceptance matrix.** A-matrix line counts re-pinned with exact filenames + `test_t54:108-127` full re-read; `.venv` confirmed absent (run-unverified carries); P1/P2 pending; Q13 pre-R2 blocker; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0096 — security, deployment, operational constraints.** Envelope re-verified on fresh windows (staff gate, sealed 12h cookies without `Secure`, Ollama-only egress 180s, dev-default triple); Q11-narrowed carries, no owner; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0097 — schemas, migration sequence, rollback safety.** Head 0029 additive-nullable + rollback pin + `$id` v1-consistency + no `v2/` + C1 three-way + C3-in-commit re-verified on fresh windows; `check_migrations.py` OK; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0098 — god-files, service seams, maintainability.** AST 91 top-level funcs (views) / 5 funcs + 21 classes (models); services two-module exemplar intact; Q8 census re-pinned fresh (import `:74`, divergent `:1068`, 7 service sites); R2 pins re-read; `roadmap.py` 242 lines; Q15-CONFIRMED carries; six-`updatedAt` + PR #115 live re-queried; zero drift.
+- **0099 — no handoff file on disk (missing evidence, external numbering).** Observed absent at 0100; per the 51–55 disposition this checkpoint does not backfill it and draws no inference beyond recording the gap. Phase 9 (ready-for-agent ranking) contributes no delta this cycle.
+- **0100 — checkpoint: synthesis, gap analysis, HOLD re-affirmed + catalog + final-1.** Eighty-four consecutive no-drift passes; CONTEXT/DESIGN/AGENTS re-read, no spine contradictions; six-`updatedAt` live re-queried byte-identical (#98 sole on-path 0/7 on live evidence); PR #115 OPEN live (no successor PR needed — checkpoint commit pushes to the same branch/PR); gate scorecard live re-checked (2.5/6, HOLD with cause); 51–55 + 0099 gaps stand as missing evidence (no backfill); catalog Phase 1–10 rows extended to 0091–0100 (incl. repairing the truncated 0090 tail); `supervisor-final-1.md` written (doc/ADR changes, ten strongest prompts + outcomes, methodology). Docs-only packaging outcome recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+## PR record (iteration-100 checkpoint)
+
+- [To be filled at packaging time: commit hash, push range, PR #115 updated vs new PR, or reason skipped.]
+
 ## Ranked recommendations (standing, in order)
 
 1. Keep `STATUS: HOLD` until all six flip conditions hold simultaneously (human-reviewed tree, narrowed slice, mandatory convert + test, non-self-referential base ref, open questions 2–4 answered, zero blockers).
