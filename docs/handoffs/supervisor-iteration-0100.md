@@ -194,4 +194,4 @@ re-check + docs-only PR when safe). Cycle-2 final synthesis due at iteration 200
 
 ## PR record (iteration-100 checkpoint)
 
-- [To be filled at packaging time: commit hash, push range, PR #115 updated vs new PR URL, or reason skipped.]
+- DONE — commit `92f9de5` (`docs: supervisor iteration 100 checkpoint — cumulative deltas 91-100, prompt catalog, HOLD gate, final-1`, 5 files, +342/−12, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c3d3d3e..92f9de5` to `supervisor/aulalista-docs`; `gh pr list --head supervisor/aulalista-docs` returned PR #115 OPEN, so no new PR was created — the push updates PR #115 targeting `main`: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
