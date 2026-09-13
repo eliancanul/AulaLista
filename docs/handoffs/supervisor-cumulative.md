@@ -225,6 +225,23 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 - DONE — commit `5bd488a` (`docs: supervisor iteration 150 checkpoint — cumulative deltas 141-150, prompt catalog, HOLD gate`, 4 files, +267/−21, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c8295df..5bd488a` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0149) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
+## Deltas iterations 151–160 (no new tree evidence at the 0160 checkpoint; all counts byte-identical, head `d783d0b`, migrations head 0029, `schemas/` flat, 44 `ls tests/` entries; PR #115 OPEN throughout; read depth: 0157/0158/0159 full re-reads at 0160, 0151 header+scope+files+Finding-1, 0152–0156 headers only with grant-rule alternation corroborated by 0157's carry statement)
+
+- **0151 — baseline architecture and domain contracts.** CONTEXT anchors re-pinned fresh via `rg` pins + Topic/hash zero-sweeps; six-`updatedAt` + PR #115 carried once from 0150 live evidence (grant rule); 132nd consecutive no-drift pass — duplicates 0150's 132 (counting seam wrinkle recorded at 0160, no evidence impact); zero drift.
+- **0152 — curriculum staging join and relational model.** Header-observed Phase 2 pass; live turn after 0151's carry per grant-rule alternation; 133rd no-drift pass; zero drift.
+- **0153 — idempotency, deduplication, ambiguity policy.** Header-observed Phase 3 pass; carry turn; 134th no-drift pass; zero drift.
+- **0154 — ADR/documentation contradiction reconciliation.** Header-observed Phase 4 pass; live turn; 135th no-drift pass; zero drift.
+- **0155 — tests, evidence, acceptance matrix.** Header-observed Phase 5 pass; carry turn; 136th no-drift pass; zero drift.
+- **0156 — security, deployment, operational constraints.** Header-observed Phase 6 pass; live turn; 137th no-drift pass; zero drift.
+- **0157 — schemas, migration sequence, rollback safety.** M0→M4 + `$id` v1-consistency + C1 three-way + C3-in-commit on fresh windows; `check_migrations.py` OK; six-`updatedAt` + PR #115 carried once from 0156 live evidence (grant rule); 138th no-drift pass; zero drift.
+- **0158 — god-files, service seams, maintainability.** AST 91 top-level funcs (views) / 5 funcs + 21 classes (models); Q8 census + R2 pins + `roadmap_cursor.py:1-27` + `results.py:100-120` fresh; `check_migrations.py` OK; six-`updatedAt` + PR #115 LIVE re-queried (0157 carried once — 0158 must go live); 139th no-drift pass; zero drift.
+- **0159 — ready-for-agent ranking and issue draft quality.** Six-`updatedAt` + PR #115 carried once from 0158 live evidence (grant rule — no re-query, no re-grade); #98 sole on-path at 0/7 carries; draft-bar precision added (R2 drafts must quote evidence pins as current-line cites with their producing fingerprint, never stale pre-shrink numbers); gate HOLD carries (non-checkpoint pass); 140th no-drift pass; zero drift.
+- **0160 — checkpoint: synthesis, gap analysis, HOLD re-affirmed + catalog.** One-hundred-forty-first consecutive no-drift pass (140 at 0159 + this pass; 0150/0151 duplicate-132 seam noted as a counting wrinkle); CONTEXT/DESIGN/AGENTS heads + DATABASE rule-#58 + implementation-current head + teacher-flow states re-read, no spine contradictions; six-`updatedAt` LIVE re-queried byte-identical (#98 sole on-path 0/7, no re-grade); PR #115 OPEN live; gate scorecard live re-checked (2.5/6, HOLD with cause); no off-cycle flips in `git log --all -8`; 0159's "checkpoint files not on disk" parenthetical corrected (0120/0130/0140/0150 all present); 51–55 + 0099 + 0101/0102 gaps stand as missing evidence (no backfill); catalog Phase 1–10 rows extended to 0151–0160. Docs-only packaging outcome recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+## PR record (iteration-160 checkpoint)
+
+- COMMIT PENDING at cumulative-write time — outcome recorded in the follow-up `record PR 115 update` commit (docs-only, unmerged, never merge/approve/close per loop rules).
+
 ## Ranked recommendations (standing, in order)
 
 1. Keep `STATUS: HOLD` until all six flip conditions hold simultaneously (human-reviewed tree, narrowed slice, mandatory convert + test, non-self-referential base ref, open questions 2–4 answered, zero blockers).
