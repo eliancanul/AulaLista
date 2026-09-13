@@ -206,6 +206,8 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-140 checkpoint)
 
+- DONE — commit `3604e94` (`docs: supervisor iteration 140 checkpoint — cumulative deltas 131-140, prompt catalog, HOLD gate`, 4 files, +266/−21, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `ea3b713..3604e94` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0139) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+
 ## Ranked recommendations (standing, in order)
 
 1. Keep `STATUS: HOLD` until all six flip conditions hold simultaneously (human-reviewed tree, narrowed slice, mandatory convert + test, non-self-referential base ref, open questions 2–4 answered, zero blockers).

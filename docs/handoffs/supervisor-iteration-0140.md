@@ -223,8 +223,6 @@ go live). Checkpoint duties next due at iteration 150 (cumulative deltas
 
 ## PR record (iteration-140 checkpoint)
 
-- (To be filled at packaging time: commit hash / push range / PR #115 updated,
-  or reason skipped — dirty tree with only `docs/handoffs/` Markdown staged is
-  safe per loop rule; never `git add -A`, never stage code, never merge.)
+- DONE — commit `3604e94` (`docs: supervisor iteration 140 checkpoint — cumulative deltas 131-140, prompt catalog, HOLD gate`, 4 files, +266/−21, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `ea3b713..3604e94` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0139) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 (End of file.)
