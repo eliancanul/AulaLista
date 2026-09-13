@@ -122,7 +122,7 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-90 checkpoint)
 
-- PENDING — packaging step runs after this cumulative write: stage only `docs/handoffs/` + `docs/adr/` Markdown (never `git add -A`, never code), verify `git diff --cached --name-only`, commit, push `supervisor/aulalista-docs`, create one PR targeting `main` iff `gh pr list --head supervisor/aulalista-docs` is empty. This section will be updated with the PR URL/number or the skip reason before the pass ends.
+- DONE — commit `695869e` (`docs: supervisor iteration 90 checkpoint — cumulative deltas 81-90, prompt catalog, HOLD gate`, 4 files, +170/−23, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `f7dc993..695869e` to `supervisor/aulalista-docs`; `gh pr list --head supervisor/aulalista-docs` was empty, so created PR #115 targeting `main`: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0089) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 ## Ranked recommendations (standing, in order)
 
