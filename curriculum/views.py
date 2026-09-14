@@ -3877,6 +3877,10 @@ def tutor_import_source_page(request, job_id, page_number):
             return response
 
         parts = range_val.split("-", 1)
+        if len(parts) != 2:
+            response = HttpResponse(status=416)
+            response["Content-Range"] = f"bytes */{total_length}"
+            return response
         start_str, end_str = parts[0].strip(), parts[1].strip()
 
         try:

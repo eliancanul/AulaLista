@@ -28,6 +28,7 @@ from curriculum.source_interpreter import (
     ImportDossier,
     InterpretedField,
     SessionPlan,
+    SessionActivity,
     SourceReference,
     derive_operational_queue,
     resolve,
@@ -124,6 +125,7 @@ def _session(
     fields: dict[str, InterpretedField],
     annex_references: list[AnnexReference] | None = None,
     continues_on: list[int] | None = None,
+    activities: list[SessionActivity] | None = None,
 ) -> SessionPlan:
     return SessionPlan(
         session_id=session_id,
@@ -133,6 +135,7 @@ def _session(
         continues_on=continues_on or [],
         fields=fields,
         annex_references=annex_references or [],
+        activities=activities or [],
     )
 
 
@@ -196,37 +199,64 @@ class TestGreen1FixtureVariety:
         sess_ids_in_queue = {it.session_id for it in queue.items if it.scope == "session"}
         assert {"s1", "s2"} == sess_ids_in_queue
 
-    # --- 5 activities per class ---
+    # --- 5 activities within one class ---
     def test_fixture_5_activities_per_class(self):
-        """Five sessions representing 5 activities — verifies no invented structure."""
-        page_texts = []
-        sessions = []
-        for i in range(1, 6):
-            txt = f"Inicio de sesión en página {i} Desarrollo en página {i} Cierre en página {i}"
-            page_texts.append(txt)
-
-        # Add general field text to page 1
-        page_texts[0] = ("Proyecto Sintético Lenguajes Propósito de prueba Finalidad de prueba "
-                         + page_texts[0])
-
+        """Five activities within a single class/session — verifies no invented structure,
+        preserves order, and associates annexes without inventing weekly/cardinality constraints."""
+        page_texts = [
+            "Proyecto Sintético Lenguajes Propósito de prueba Finalidad de prueba "
+            "Clase 1: Taller intensivo. "
+            "Inicio de sesión en página 1 Desarrollo en página 1 Cierre en página 1 "
+            "Actividad 1: Calentamiento vocal. "
+            "Actividad 2: Lectura compartida. "
+            "Actividad 3: Análisis de texto. "
+            "Actividad 4: Trabajo en equipos. "
+            "Actividad 5: Reflexión final y cierre."
+        ]
         pdf_src = _make_synthetic_pdf(page_texts)
         sha = pdf_src[1]
 
-        for i in range(1, 6):
-            sessions.append(
-                _session(f"s{i}", i, f"Actividad {i}", [i], self._session_fields(sha, i))
+        activities = [
+            SessionActivity(
+                activity_id=f"act_{i}",
+                title=f"Actividad {i}",
+                description=f"Descripción de la actividad {i}",
+                order=i,
+                annex_ids=[f"anexo_{i}"] if i % 2 == 1 else [],
             )
+            for i in range(1, 6)
+        ]
 
-        dossier, src = _make_dossier(page_texts, sessions)
-        report = verify_curriculum_dossier(dossier, src)
+        session = _session(
+            "s1",
+            1,
+            "Clase 1: Taller intensivo",
+            [1],
+            self._session_fields(sha, 1),
+            activities=activities,
+        )
 
+        dossier, src = _make_dossier(page_texts, [session])
+
+        # Verify roundtrip serialization preserves activities within the session
+        dossier_dict = dossier.to_dict()
+        restored_dossier = ImportDossier.from_dict(dossier_dict)
+        assert len(restored_dossier.sessions) == 1
+        restored_session = restored_dossier.sessions[0]
+        assert len(restored_session.activities) == 5
+
+        # Verify activity ordering and annex association preserved
+        for i, act in enumerate(restored_session.activities, start=1):
+            assert act.activity_id == f"act_{i}"
+            assert act.order == i
+            assert act.title == f"Actividad {i}"
+            expected_annexes = [f"anexo_{i}"] if i % 2 == 1 else []
+            assert act.annex_ids == expected_annexes
+
+        report = verify_curriculum_dossier(restored_dossier, src)
         assert report.blocked_count == 0
-        queue = derive_operational_queue(dossier)
-        sess_ids = {it.session_id for it in queue.items if it.scope == "session"}
-        assert len(sess_ids) == 5
-        # Verify ordering preserved
-        session_ids_ordered = [s.session_id for s in dossier.sessions]
-        assert session_ids_ordered == ["s1", "s2", "s3", "s4", "s5"]
+        queue = derive_operational_queue(restored_dossier)
+        assert queue.total_count > 0
 
     # --- Multiple classes on one page ---
     def test_fixture_multiple_classes_on_one_page(self):
@@ -430,12 +460,19 @@ class TestGreen2AdversarialVerification:
 
         dossier, src = _make_dossier(pages, [s1])
         report = verify_curriculum_dossier(dossier, src)
-        # The evidence with excerpt "Inicio" is too short/generic but it IS on the page,
-        # so it technically passes the substring check. The point is the value itself
-        # "Contenido real del inicio" is NOT on the page.
-        # Result: evidence[0] is checked (header exists), but value may require review.
-        # This test validates the system doesn't confuse header presence with content match.
-        assert report.total_items > 0
+
+        # Result: evidence with excerpt "Inicio" where the value "Contenido real del inicio"
+        # is NOT on the page must NOT be marked as STATUS_CHECKED. It must be rejected
+        # from checked status (e.g. needs_teacher_review or blocked).
+        inicio_items = [i for i in report.items if "inicio" in i.get("target", "")]
+        assert len(inicio_items) > 0, "Expected verification items for inicio field"
+        for item in inicio_items:
+            assert item.get("status") != STATUS_CHECKED, (
+                f"Repeated header 'Inicio' with unverified content was incorrectly marked as CHECKED: {item}"
+            )
+        assert any(i.get("status") == STATUS_NEEDS_TEACHER_REVIEW for i in inicio_items), (
+            "Field with generic header evidence but missing actual content value must require teacher review"
+        )
 
     def test_incomplete_ocr_page_forces_review(self):
         """A page with empty text (simulating OCR failure) forces needs_teacher_review."""

@@ -497,6 +497,8 @@ def verify_curriculum_dossier(
         review = getattr(field_data, "review", "") if not isinstance(field_data, dict) else field_data.get("review", "")
         ev_list = getattr(field_data, "evidence", []) if not isinstance(field_data, dict) else field_data.get("evidence", [])
 
+        norm_val = normalize_text_for_evidence_check(str(val or ""))
+
         # 1. Conflicting: hard failure (BLOCKED) - stop immediately, no second checked item!
         if stat == "conflicting":
             items.append(
@@ -858,20 +860,40 @@ def verify_curriculum_dossier(
 
             # E. Physical contiguous match check
             if norm_ex in norm_page:
-                items.append(
-                    VerificationItem(
-                        item_id=ev_item_id,
-                        path=ev_path,
-                        scope=scope,
-                        target=ev_target,
-                        status=STATUS_CHECKED,
-                        page_number=ev_page,
-                        message=f"Evidencia textual de '{field_name}' cotejada con éxito en página física {ev_page}.",
-                        excerpt=str(ev_excerpt or ""),
-                        evidence_sha256=str(ev_sha or ""),
-                        details={"field_name": field_name, "page_number": ev_page},
+                # Check if the actual field VALUE is also present
+                if norm_val and norm_val in norm_page:
+                    items.append(
+                        VerificationItem(
+                            item_id=ev_item_id,
+                            path=ev_path,
+                            scope=scope,
+                            target=ev_target,
+                            status=STATUS_CHECKED,
+                            page_number=ev_page,
+                            message=f"Dato de '{field_name}' comprobado textualmente en página física {ev_page}.",
+                            excerpt=str(ev_excerpt or ""),
+                            evidence_sha256=str(ev_sha or ""),
+                            details={"field_name": field_name, "page_number": ev_page},
+                        )
                     )
-                )
+                else:
+                    items.append(
+                        VerificationItem(
+                            item_id=ev_item_id,
+                            path=ev_path,
+                            scope=scope,
+                            target=ev_target,
+                            status=STATUS_NEEDS_TEACHER_REVIEW,
+                            page_number=ev_page,
+                            message=(
+                                f"Fuente de '{field_name}' localizada en página física {ev_page}, "
+                                f"pero el valor del campo no se encontró textualmente en la página."
+                            ),
+                            excerpt=str(ev_excerpt or ""),
+                            evidence_sha256=str(ev_sha or ""),
+                            details={"field_name": field_name, "page_number": ev_page, "reason": "source_located_value_missing"},
+                        )
+                    )
             else:
                 items.append(
                     VerificationItem(
@@ -1384,7 +1406,13 @@ def verify_curriculum_dossier(
             )
 
     # 3. Calculate derived metrics
-    checked_count = sum(1 for i in items if i.status == STATUS_CHECKED)
+    # Dedup checked items by field/target to avoid inflation from duplicate evidence
+    _checked_fields = set()
+    for i in items:
+        if i.status == STATUS_CHECKED:
+            _field_key = (i.details.get("field_name", ""), i.scope, i.target.rsplit(".", 1)[0] if ".evidence." in i.target else i.target)
+            _checked_fields.add(_field_key)
+    checked_count = len(_checked_fields)
     needs_review_count = sum(1 for i in items if i.status == STATUS_NEEDS_TEACHER_REVIEW)
     blocked_count = sum(1 for i in items if i.status == STATUS_BLOCKED)
     total_items = len(items)

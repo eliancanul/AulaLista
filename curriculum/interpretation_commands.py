@@ -947,4 +947,3 @@ def retry_job_interpretation(
     if fresh_saved:
         fresh.refresh_from_db()
     return fresh.get_interpretation_dossier()
-

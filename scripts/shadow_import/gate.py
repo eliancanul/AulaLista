@@ -67,6 +67,9 @@ def close_raw(raw_dir: Path) -> dict[str, Any]:
         if file_digest(result_path) != receipt.get("result_sha256"):
             errors.append(f"result digest mismatch: {run_dir.name}")
 
+    if result_count == 0:
+        errors.append("no valid runs found: raw evidence is empty")
+
     if result_count != receipt_count:
         errors.append(f"receipt cardinality mismatch: {receipt_count}/{result_count}")
     for path in sorted(raw_dir.rglob("*")):

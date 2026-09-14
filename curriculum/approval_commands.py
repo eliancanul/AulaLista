@@ -741,7 +741,11 @@ def execute_teacher_approval(
                     source_refs.append({
                         "session_id": s.session_id,
                         "session_number": s.session_number,
-                        "pages": list(s.pages or []),
+                        "source_pages": list(s.pages or []),
+                        "source_pdf_sha256": expected_sha_clean,
+                        "source_anchor": s.title or "",
+                        "source_text": "",
+                        "source_urls": [],
                     })
 
                 past_approval = (

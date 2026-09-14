@@ -734,6 +734,41 @@ def _find_single_annex_ref(matching_session: "SessionPlan | None", annex_key: st
 
 
 @dataclass
+class SessionActivity:
+    """An identifiable activity within a session/class.
+
+    Represents activities explicitly indicated by the source document.
+    A class may have 1-2 complex activities or 5+ brief ones —
+    no assumptions about cardinality, duration, or weekly structure.
+    """
+
+    activity_id: str
+    title: str = ""
+    description: str = ""
+    order: int = 0
+    annex_ids: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "activity_id": self.activity_id,
+            "title": self.title,
+            "description": self.description,
+            "order": self.order,
+            "annex_ids": list(self.annex_ids),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SessionActivity":
+        return cls(
+            activity_id=str(data.get("activity_id", "")),
+            title=str(data.get("title", "")),
+            description=str(data.get("description", "")),
+            order=int(data.get("order", 0)),
+            annex_ids=list(data.get("annex_ids", [])),
+        )
+
+
+@dataclass
 class SessionPlan:
     """Interpreted session plan with verified moments and annex relationships."""
 
@@ -751,6 +786,7 @@ class SessionPlan:
     )
     fields: dict[str, InterpretedField] = field(default_factory=dict)
     annex_references: list[AnnexReference] = field(default_factory=list)
+    activities: list[SessionActivity] = field(default_factory=list)
     status: str = STATUS_SUPPORTED
     review: str = REVIEW_PENDING
 
@@ -768,6 +804,7 @@ class SessionPlan:
             "layout_notes": self.layout_notes,
             "fields": {k: v.to_dict() if hasattr(v, "to_dict") else v for k, v in self.fields.items()},
             "annex_references": [ref.to_dict() if hasattr(ref, "to_dict") else ref for ref in self.annex_references],
+            "activities": [a.to_dict() if hasattr(a, "to_dict") else a for a in self.activities],
             "status": self.status,
             "review": self.review,
         }
@@ -790,6 +827,11 @@ class SessionPlan:
         ] if isinstance(raw_annexes, list) else raw_annexes
         if isinstance(annex_references, list):
             _ensure_session_annex_ids(session_id, annex_references)
+        raw_activities = data.get("activities", []) or []
+        activities = [
+            act if isinstance(act, SessionActivity) else (SessionActivity.from_dict(act) if isinstance(act, dict) else act)
+            for act in raw_activities
+        ] if isinstance(raw_activities, list) else []
         return cls(
             session_id=session_id,
             session_number=s_num,
@@ -807,6 +849,7 @@ class SessionPlan:
             ),
             fields=fields,
             annex_references=annex_references,
+            activities=activities,
             status=str(data.get("status", STATUS_SUPPORTED)),
             review=str(data.get("review", REVIEW_PENDING)),
         )
@@ -4026,4 +4069,3 @@ def resolve(
     )
     dossier.history.append(entry.to_dict())
     return dossier
-

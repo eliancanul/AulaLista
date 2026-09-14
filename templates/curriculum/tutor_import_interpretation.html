@@ -689,7 +689,7 @@
             </div>
           </div>
           <p class="verification-banner-summary" style="margin: 0.35rem 0 0.5rem 0; font-size: 0.85rem; color: #15803d;">
-            Comprobación automática completada: {{ verification_report.checked_count }} datos cotejados mecánicamente contra páginas físicas del PDF.{% if verification_report.needs_review_count > 0 %} {{ verification_report.needs_review_count }} requieren revisión o confirmación docente.{% endif %}
+            Comprobación automática completada: {{ verification_report.checked_count }} fuentes cotejadas mecánicamente contra páginas físicas del PDF.{% if verification_report.needs_review_count > 0 %} {{ verification_report.needs_review_count }} requieren revisión o confirmación docente.{% endif %}
           </p>
           {% if checked_items %}
             <details class="verification-details-collapse" style="font-size: 0.82rem; color: #334155; margin-top: 0.35rem;">
