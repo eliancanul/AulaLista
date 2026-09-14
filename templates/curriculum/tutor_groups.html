@@ -6,23 +6,24 @@
     <title>AulaLista · salones</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
     <main id="contenido" class="shell narrow-shell teacher-page">
-      <header class="view-heading"><p class="eyebrow">ORGANIZACIÓN DOCENTE · SALONES</p><h1>Salones de aula.</h1><p class="lede">Crea nombres cortos para agrupar sesiones. El salón no guarda listas ni datos de alumnos.</p></header>
+      <header class="view-heading"><p class="eyebrow">ORGANIZACIÓN DOCENTE · SALONES</p><h1>Tus salones</h1><p class="lede">Organiza tus sesiones y solicita apoyo a Dirección. Sin listas de alumnos.</p></header>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-      <form method="post" class="status-card preparation-form">
+      <details class="disclosure"{% if error %} open{% endif %}><summary>Crear salón</summary><form method="post" class="disclosure-body preparation-form">
         {% csrf_token %}
         <label for="group-name">Nombre corto del salón<input id="group-name" name="name" maxlength="80" placeholder="6° A" required></label>
         <p class="field-help">Sólo se guarda este nombre para organizar sesiones.</p>
         <button class="button button-primary" type="submit">Crear salón</button>
-      </form>
+      </form></details>
       <section class="results-summary" aria-labelledby="groups-heading">
         <div class="section-heading"><div><p class="eyebrow">SALONES DISPONIBLES</p><h2 id="groups-heading">Tus salones</h2></div></div>
         {% if classroom_groups %}
-          <ul>{% for group in classroom_groups %}<li><strong>{{ group.name }}</strong> · <a href="{% url 'tutor-group-results' group.pk %}">ver resultados agregados</a>{% if group.sessions.exists %} · <span>{{ group.sessions.count }} sesiones</span>{% endif %}<form method="post" action="{% url 'tutor-group-support-request' group.pk %}" class="preparation-form">{% csrf_token %}<label>Solicitar apoyo a Dirección<select name="category" required><option value="resources">Recursos</option><option value="session_operation">Operación de sesión</option><option value="family_communication">Comunicación general con familias</option><option value="technical_training">Apoyo técnico o capacitación</option></select></label><label>Descripción breve, sin nombres ni casos individuales<textarea name="description" maxlength="500" required></textarea></label><label>Fecha objetivo<input type="date" name="target_date" required></label><button class="button" type="submit">Enviar solicitud</button></form><form method="post" action="{% url 'tutor-group-close-year' group.pk %}" class="destructive-action">{% csrf_token %}<label><input type="checkbox" name="confirm" value="CERRAR" required> Confirmo borrar los resultados y encuestas de este salón.</label><button class="button button-danger" type="submit">Cerrar año escolar</button></form></li>{% endfor %}</ul>
+          <ul class="group-list">{% for group in classroom_groups %}<li><strong>{{ group.name }}</strong> · <a href="{% url 'tutor-group-results' group.pk %}">ver resultados agregados</a>{% if group.sessions.exists %} · <span>{{ group.sessions.count }} sesiones</span>{% endif %}<details class="disclosure"><summary>Solicitar apoyo</summary><form method="post" action="{% url 'tutor-group-support-request' group.pk %}" class="preparation-form">{% csrf_token %}<label>Solicitar apoyo a Dirección<select name="category" required><option value="resources">Recursos</option><option value="session_operation">Operación de sesión</option><option value="family_communication">Comunicación general con familias</option><option value="technical_training">Apoyo técnico o capacitación</option></select></label><label>Descripción breve, sin nombres ni casos individuales<textarea rows="3" name="description" maxlength="500" required></textarea></label><label>Fecha objetivo<input type="date" name="target_date" required></label><button class="button" type="submit">Enviar solicitud</button></form></details><details class="disclosure disclosure-danger"><summary>Cierre del año escolar</summary><form method="post" action="{% url 'tutor-group-close-year' group.pk %}" class="destructive-action">{% csrf_token %}<label><input type="checkbox" name="confirm" value="CERRAR" required> Confirmo borrar los resultados y encuestas de este salón.</label><button class="button button-danger" type="submit">Cerrar año escolar</button></form></details></li>{% endfor %}</ul>
         {% else %}
           <p class="empty-note">Todavía no hay salones.</p>
         {% endif %}

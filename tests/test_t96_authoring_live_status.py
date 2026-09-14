@@ -67,8 +67,11 @@ def test_status_endpoint_distinguishes_each_teacher_facing_state(
 ):
     _teacher, client, job = owned_job(stage=stage, done=done, total=total)
     job.error_message = error
+    if error:
+        job.interpretation_error_message = error
+        job.interpretation_state = CurriculumImportJob.INTERPRETATION_STATE_FAILED
     job.progress_started_at = timezone.now() - timedelta(seconds=3)
-    job.save(update_fields=["error_message", "progress_started_at"])
+    job.save()
 
     response = client.get(reverse("tutor-import-status", args=[job.pk]))
 
@@ -79,17 +82,50 @@ def test_status_endpoint_distinguishes_each_teacher_facing_state(
 
 
 def test_status_poll_releases_timeout_as_recoverable_error():
+    """T2/B2: GET status is a pure read; stale stage is derived as 'delayed' without DB or session mutation."""
     _teacher, client, job = owned_job(stage="activities", done=1, total=3)
     job.progress_started_at = timezone.now() - timedelta(minutes=120)
     job.save(update_fields=["progress_started_at"])
 
-    response = client.get(reverse("tutor-import-status", args=[job.pk]))
-    job.refresh_from_db()
+    # Snapshot complete row byte/field-by-field and session BEFORE GET
+    before_row = CurriculumImportJob.objects.filter(pk=job.pk).values().first()
+    before_session = dict(client.session.items())
 
-    assert response.json()["state"] == "error"
-    assert "tardó demasiado" in response.json()["error"]
-    assert job.progress_stage == ""
-    assert job.progress_finished_at is not None
+    # 1. First GET: returns delayed state with honest recoverable copy, not terminal error or ready
+    response = client.get(reverse("tutor-import-status", args=[job.pk]))
+    assert response.status_code == 200
+    data = response.json()
+    assert data["state"] == "delayed"
+    assert data["label"] == "Está tardando más de lo esperado; aún puede terminar"
+    assert data["stage"] == "activities"
+    assert data["done"] == 1
+    assert data["total"] == 3
+    assert data["state"] not in ("error", "finished", "ready")
+
+    # 2. Row is field-by-field identical AFTER GET: no claim release, no stage clearing, no timestamps overwritten
+    job.refresh_from_db()
+    after_row = CurriculumImportJob.objects.filter(pk=job.pk).values().first()
+    assert after_row == before_row
+    assert job.progress_stage == "activities"
+    assert job.progress_done == 1
+    assert job.progress_total == 3
+    assert job.progress_finished_at is None
+    assert job.interpretation_state == before_row["interpretation_state"]
+    assert job.interpretation_claim_token == before_row["interpretation_claim_token"]
+    assert job.interpretation_claimed_at == before_row["interpretation_claimed_at"]
+    assert job.interpretation_error_message == before_row["interpretation_error_message"]
+
+    # 3. Session is identical
+    after_session = dict(client.session.items())
+    assert after_session == before_session
+
+    # 4. Repeated GET is strictly idempotent
+    response2 = client.get(reverse("tutor-import-status", args=[job.pk]))
+    assert response2.status_code == 200
+    assert response2.json() == data
+    job.refresh_from_db()
+    assert CurriculumImportJob.objects.filter(pk=job.pk).values().first() == before_row
+    assert dict(client.session.items()) == before_session
 
 
 def test_worker_records_start_and_finish_without_losing_partial_state():

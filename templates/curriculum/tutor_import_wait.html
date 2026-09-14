@@ -3,32 +3,86 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AulaLista · asistente trabajando</title>
+    <title>AulaLista · {% if ready_for_review %}planeación lista{% else %}asistente trabajando{% endif %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
-    <script defer src="{% static 'curriculum/assistant_progress.js' %}"></script>
+    {% if ready_for_review %}
+      <meta http-equiv="refresh" content="1;url={{ review_url }}">
+    {% else %}
+      <script defer src="{% static 'curriculum/assistant_progress.js' %}"></script>
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
+    <style>
+      [hidden] { display: none !important; }
+    </style>
   </head>
   <body>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <form method="post" action="{% url 'tutor-import-cancel' job.pk %}">{% csrf_token %}<button type="submit" aria-label="Cancelar ayuda y volver">← Volver</button></form>
-      <h1>Importación de currícula</h1>
+    <main id="contenido" class="shell narrow-shell teacher-page">
+      {% if not ready_for_review %}
+        <form method="post" action="{% url 'tutor-import-cancel' job.pk %}">{% csrf_token %}<button type="submit" aria-label="Cancelar ayuda y volver">← Volver</button></form>
+      {% endif %}
+      <h1>{{ wait_heading|default:"Estamos organizando tu planeación" }}</h1>
       <div id="assistant-wait-indicator" class="assistant-wait" role="status" data-assistant-state="{{ progress_state }}" data-status-url="{% url 'tutor-import-status' job.pk %}">
-        {# Espacio reservado para una animación futura; hoy un spinner simple. #}
         <span class="assistant-wait-spinner" aria-hidden="true"></span>
-        <p id="assistant-status-label">{{ wait_message }}</p>
+        <p id="assistant-status-label">{{ label|default:wait_message }}</p>
+        {% if description %}<p id="assistant-status-description" class="assistant-description">{{ description }}</p>{% endif %}
       </div>
-      <p id="assistant-progress-counter"{% if not job.progress_total %} hidden{% endif %}>
-        {{ job.progress_done }} de {{ job.progress_total }}
-        {% if job.progress_stage == "activities" or job.progress_stage == "add_missing" %}actividades{% elif job.progress_stage == "subtopics" %}temas{% else %}bloques{% endif %}
-      </p>
-      <p class="notice">
-        Esto puede tardar varios minutos con currículas grandes.
-        Puedes dejar esta página abierta: al terminar continuarás automáticamente.
-      </p>
-      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-      <p id="assistant-live-error" class="error" role="alert" hidden></p>
-      <a id="assistant-retry-link" class="button button-secondary" href="{% url 'tutor-import-detail' job.pk %}" hidden>Volver para revisar o reintentar</a>
+      {% if ready_for_review %}
+        <div class="ready-actions" style="margin: 1.5rem 0;">
+          <a class="button button-primary" id="review-planning-btn" href="{{ review_url }}">Revisar planeación →</a>
+        </div>
+      {% else %}
+        <p id="assistant-progress-counter"{% if not job.progress_total or error or progress_state == "error" %} hidden{% endif %}>
+          {{ job.progress_done }} de {{ job.progress_total }}
+          {% if job.progress_stage == "activities" or job.progress_stage == "add_missing" %}actividades{% elif job.progress_stage == "subtopics" %}temas{% else %}páginas{% endif %}
+        </p>
+        <p class="notice" id="assistant-active-notice"{% if error or progress_state == "error" %} hidden{% endif %}>
+          {% if not error and progress_state != "error" %}
+          Esto puede tardar varios minutos con currículas grandes.
+          Puedes dejar esta página abierta: al terminar continuarás automáticamente.
+          {% endif %}
+        </p>
+      {% endif %}
+      {% if not ready_for_review %}
+        <div class="error-container" id="assistant-error-container"{% if not error and progress_state != "error" %} hidden{% endif %} role="alert" tabindex="-1" style="margin-top: 1.5rem;">
+          <p class="error" id="assistant-live-error">{% if error %}{{ error }}{% endif %}</p>
+          <p class="notice error-guide" id="assistant-failed-guide"{% if not error and progress_state != "error" %} hidden{% endif %}>
+            {% if error or progress_state == "error" %}
+              {% if needs_reextract %}
+              El archivo original cambió o requiere volver a extraerse. Pulsa Reextraer planeación para continuar.
+              {% else %}
+              El proceso se detuvo. Pulsa Volver a intentar para iniciar un nuevo intento.
+              {% endif %}
+            {% endif %}
+          </p>
+          {% if needs_reextract %}
+          <form method="post" action="{% url 'tutor-import-interpretation' job.pk %}" class="reextract-form" id="assistant-reextract-form" style="margin-top: 1rem;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reextract">
+            <input type="hidden" name="expected_version" value="{{ job.get_interpretation_dossier.version|default:'1' }}">
+            <button type="submit" class="button button-primary reextract-button" id="reextract-organization-btn" style="min-height: 44px; min-width: 44px; padding: 0.75rem 1.5rem; font-size: 1rem; cursor: pointer;">
+              Reextraer planeación
+            </button>
+          </form>
+          {% else %}
+          <form method="post" action="{% url 'tutor-import-retry' job.pk %}" class="retry-form" id="assistant-retry-form" style="margin-top: 1rem;">
+            {% csrf_token %}
+            <button type="submit" class="button button-primary retry-button" id="retry-organization-btn" style="min-height: 44px; min-width: 44px; padding: 0.75rem 1.5rem; font-size: 1rem; cursor: pointer;">
+              Volver a intentar
+            </button>
+          </form>
+          <form method="post" action="{% url 'tutor-import-interpretation' job.pk %}" class="reextract-form" id="assistant-reextract-form" hidden style="margin-top: 1rem;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reextract">
+            <input type="hidden" name="expected_version" value="{{ job.get_interpretation_dossier.version|default:'1' }}">
+            <button type="submit" class="button button-primary reextract-button" id="reextract-organization-btn" style="min-height: 44px; min-width: 44px; padding: 0.75rem 1.5rem; font-size: 1rem; cursor: pointer;" disabled>
+              Reextraer planeación
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      {% endif %}
     </main>
   </body>
 </html>

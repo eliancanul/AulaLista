@@ -6,21 +6,520 @@
     <title>AulaLista · importar currícula</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <style>
+      /* Estilos locales acotados a la pantalla de carga para no afectar el resto del sitio */
+      .upload-container {
+        max-width: 680px;
+        margin: 0 auto;
+      }
+
+      .upload-container h1 {
+        font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+        margin-block-end: 1rem;
+      }
+
+      .notice-docente {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 0.85rem 1.1rem;
+        color: #166534;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        margin-bottom: 1.25rem;
+      }
+
+      .upload-card {
+        background: var(--color-surface, #ffffff);
+        border: 1px solid var(--color-line, #e2e8f0);
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .error-card {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 0.85rem 1.1rem;
+        color: #991b1b;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .error-card .error-hint {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.88rem;
+        color: #b91c1c;
+      }
+
+      /* Área mediana y sobria para arrastrar y soltar */
+      .drop-zone {
+        border: 2px dashed #94a3b8;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 2rem 1.25rem;
+        text-align: center;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .drop-zone:hover {
+        border-color: #64748b;
+        background: #f1f5f9;
+      }
+
+      .drop-zone.is-dragover {
+        border-color: #2563eb;
+        background: #eff6ff;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      }
+
+      .drop-zone:focus-visible,
+      .drop-zone:focus-within {
+        outline: 3px solid #2563eb;
+        outline-offset: 2px;
+      }
+
+      .drop-zone__icon {
+        margin: 0 auto 0.75rem auto;
+        color: #64748b;
+        display: flex;
+        justify-content: center;
+      }
+
+      .drop-zone__prompt {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--color-ink, #0f172a);
+        margin: 0 0 0.5rem 0;
+      }
+
+      .drop-zone__separator {
+        font-size: 0.88rem;
+        color: #64748b;
+        margin: 0 0 0.75rem 0;
+        text-transform: lowercase;
+      }
+
+      /* Input nativo en wrapper para foco accesible y clic unificado */
+      .file-control-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .file-input-native {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+      }
+
+      /* Botón claro: Elegir archivo */
+      .file-select-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.6rem 1.35rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1e293b;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        pointer-events: none;
+      }
+
+      .file-input-native:hover + .file-select-button {
+        background: #f8fafc;
+        border-color: #94a3b8;
+      }
+
+      .file-input-native:focus-visible + .file-select-button,
+      .file-input-native:focus + .file-select-button {
+        outline: 3px solid #2563eb;
+        outline-offset: 2px;
+        border-color: #2563eb;
+      }
+
+      /* Información de archivo seleccionado: no sólo color */
+      .selected-file-info {
+        margin-top: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.92rem;
+        color: #334155;
+        flex-wrap: wrap;
+      }
+
+      .file-status-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+        background: #e2e8f0;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+      }
+
+      .file-status-badge.is-valid {
+        background: #dbeafe;
+        color: #1e40af;
+        border-color: #bfdbfe;
+      }
+
+      .file-status-badge.is-invalid {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+      }
+
+      .file-name {
+        font-weight: 500;
+        word-break: break-all;
+      }
+
+      /* Requisitos reales y qué esperar */
+      .upload-requirements-card {
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--color-line, #e2e8f0);
+      }
+
+      .requirements-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--color-ink, #0f172a);
+        margin: 0 0 0.5rem 0;
+      }
+
+      .requirements-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        color: #475569;
+      }
+
+      .requirements-list li + li {
+        margin-top: 0.35rem;
+      }
+
+      .form-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .submit-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.65rem 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .submit-button:focus-visible {
+        outline: 3px solid #2563eb;
+        outline-offset: 2px;
+      }
+
+      /* En pantallas de 375px y móviles: la navegación no se apila dominando el viewport ni causa overflow */
+      @media (max-width: 560px) {
+        .site-header {
+          position: relative;
+        }
+        .site-header-inner {
+          min-height: auto;
+          padding-block: 0.35rem;
+          gap: 0.35rem 0.5rem;
+        }
+        .demo-badge {
+          display: none;
+        }
+        .top-nav {
+          display: flex;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          gap: 0.3rem;
+          padding-block: 0.15rem 0.25rem;
+          inline-size: 100%;
+          scrollbar-width: none;
+        }
+        .top-nav::-webkit-scrollbar {
+          display: none;
+        }
+        .top-nav a {
+          min-block-size: 34px;
+          padding: 0.25rem 0.55rem;
+          font-size: 0.78rem;
+          white-space: nowrap;
+          flex-shrink: 0;
+          border-radius: 4px;
+        }
+        .account-actions {
+          gap: 0.3rem;
+        }
+        .account-actions button {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          min-block-size: 32px;
+        }
+        main {
+          padding-block: 1.25rem 2rem;
+        }
+        h1 {
+          font-size: 1.5rem;
+          margin-block-end: 0.4rem;
+        }
+        .upload-card {
+          padding: 1.15rem;
+        }
+        .drop-zone {
+          padding: 1.5rem 1rem;
+        }
+        .submit-button {
+          width: 100%;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     {% include "curriculum/tutor_nav.html" %}
-    <main>
-      <h1>Importar currícula (PDF)</h1>
-      <p class="notice">El modelo local de IA sólo propone temas y subtemas. Nada se publica: tú revisas y confirmas cada etapa.</p>
-      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-      <form method="post" enctype="multipart/form-data" class="status-card">
+    <main id="contenido" class="upload-container">
+      <p class="eyebrow">CURRÍCULA Y AUTORÍA</p><h1>Importar planeación</h1>
+      <p class="notice-docente">
+        Al cargar un PDF válido con tu planeación, AulaLista empezará a organizar el proyecto, los datos y las clases y luego permitirá revisarlos. Nada se publica automáticamente.
+      </p>
+
+      {% if error %}
+      <div class="error-card" role="alert" id="upload-error-alert">
+        <span aria-hidden="true">⚠️</span>
+        <div>
+          <strong>No se pudo cargar el archivo:</strong> {{ error }}
+          <p class="error-hint">Elige otro documento PDF con tu planeación para continuar.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="upload-card" id="upload-form">
         {% csrf_token %}
-        <label>
-          PDF de la currícula
-          <input type="file" name="pdf" accept="application/pdf" required>
-        </label>
-        <button class="button-primary" type="submit">Cargar PDF</button>
+        <div class="drop-zone" id="drop-zone" role="region" aria-label="Zona para arrastrar archivo de planeación">
+          <div class="drop-zone__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <polyline points="9 15 12 12 15 15"></polyline>
+            </svg>
+          </div>
+          <p class="drop-zone__prompt">Arrastra tu planeación aquí</p>
+          <p class="drop-zone__separator" aria-hidden="true">o</p>
+
+          <div class="file-control-wrapper">
+            <input type="file" id="id_pdf" name="pdf" accept=".pdf,application/pdf" class="file-input-native" required>
+            <label for="id_pdf" class="file-select-button" id="file-select-label">
+              Elegir archivo
+            </label>
+          </div>
+
+          <div class="selected-file-info" id="selected-file-info" aria-live="polite">
+            <span class="file-status-badge is-empty" id="file-status-badge">Sin archivo</span>
+            <span class="file-name" id="file-name">Ningún archivo seleccionado</span>
+          </div>
+        </div>
+
+        <details class="upload-requirements-card disclosure"><summary>Qué debe incluir el PDF</summary>
+          <ul class="requirements-list">
+            <li><strong>Formato admitido:</strong> Archivo PDF (.pdf).</li>
+            <li><strong>Planeación esperada:</strong> Planeación didáctica o de proyecto (por ejemplo: proyecto con datos de identificación, sesiones o clases organizadas con inicio, desarrollo y cierre).</li>
+          </ul>
+        </details>
+
+        <div class="form-actions">
+          <button class="button-primary submit-button" type="submit" id="submit-button">Cargar PDF</button>
+        </div>
       </form>
     </main>
+
+    <script>
+      (function() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('id_pdf');
+        const fileNameSpan = document.getElementById('file-name');
+        const fileStatusBadge = document.getElementById('file-status-badge');
+
+        if (!dropZone || !fileInput) return;
+
+        function isPdfFile(file) {
+          if (!file) return false;
+          const name = (file.name || '').toLowerCase();
+          return name.endsWith('.pdf');
+        }
+
+        function updateFileDisplay(file, customMessage) {
+          if (!file) {
+            if (fileNameSpan) fileNameSpan.textContent = 'Ningún archivo seleccionado';
+            if (fileStatusBadge) {
+              if (customMessage) {
+                fileStatusBadge.textContent = customMessage;
+                fileStatusBadge.className = 'file-status-badge is-invalid';
+              } else {
+                fileStatusBadge.textContent = 'Sin archivo';
+                fileStatusBadge.className = 'file-status-badge is-empty';
+              }
+            }
+            return;
+          }
+          if (fileNameSpan) fileNameSpan.textContent = file.name;
+          if (fileStatusBadge) {
+            if (isPdfFile(file)) {
+              fileStatusBadge.textContent = 'Archivo listo';
+              fileStatusBadge.className = 'file-status-badge is-valid';
+            } else {
+              fileStatusBadge.textContent = 'Formato no admitido (.pdf requerido)';
+              fileStatusBadge.className = 'file-status-badge is-invalid';
+            }
+          }
+        }
+
+        fileInput.addEventListener('change', function() {
+          if (this.files && this.files.length === 1) {
+            const file = this.files[0];
+            if (isPdfFile(file)) {
+              updateFileDisplay(file);
+            } else {
+              this.value = '';
+              updateFileDisplay(null, 'Formato no admitido (.pdf requerido)');
+            }
+          } else if (this.files && this.files.length > 1) {
+            this.value = '';
+            updateFileDisplay(null, 'Elige un solo archivo PDF');
+          } else {
+            updateFileDisplay(null);
+          }
+        });
+
+        fileInput.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+
+        ['dragenter', 'dragover'].forEach(function(eventName) {
+          dropZone.addEventListener(eventName, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('is-dragover');
+          });
+        });
+
+        ['dragleave', 'dragend'].forEach(function(eventName) {
+          dropZone.addEventListener(eventName, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === dropZone || !dropZone.contains(e.relatedTarget)) {
+              dropZone.classList.remove('is-dragover');
+            }
+          });
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('is-dragover');
+
+          const dt = e.dataTransfer;
+          const files = dt && dt.files;
+
+          // B4: Si no hay archivos (drop vacío), rechaza la operación, limpia selección previa y notifica
+          if (!files || files.length === 0) {
+            fileInput.value = '';
+            updateFileDisplay(null, 'No se encontró un archivo. Usa Elegir archivo.');
+            return;
+          }
+
+          // B4: Si se arrastra más de un archivo, rechaza la operación completa
+          if (files.length > 1) {
+            fileInput.value = '';
+            updateFileDisplay(null, 'Elige un solo archivo PDF');
+            return;
+          }
+
+          const file = files[0];
+
+          // Validación de extensión .pdf
+          if (!isPdfFile(file)) {
+            fileInput.value = '';
+            updateFileDisplay(null, 'Formato no admitido (.pdf requerido)');
+            return;
+          }
+
+          // B2: Fallback si DataTransfer no está soportado o la asignación falla
+          let assignmentSucceeded = false;
+          try {
+            if (typeof DataTransfer !== 'undefined') {
+              const transfer = new DataTransfer();
+              transfer.items.add(file);
+              fileInput.files = transfer.files;
+              if (fileInput.files && fileInput.files.length === 1) {
+                assignmentSucceeded = true;
+              }
+            }
+          } catch (err) {
+            assignmentSucceeded = false;
+          }
+
+          if (!assignmentSucceeded) {
+            // Limpia estado e informa sin falsa selección
+            fileInput.value = '';
+            updateFileDisplay(null, 'No pudimos añadir el archivo al soltarlo. Usa Elegir archivo.');
+            return;
+          }
+
+          updateFileDisplay(file);
+        });
+
+        dropZone.addEventListener('click', function(e) {
+          if (e.target !== fileInput && !fileInput.contains(e.target)) {
+            fileInput.click();
+          }
+        });
+
+        dropZone.addEventListener('keydown', function(e) {
+          if (e.target === dropZone && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

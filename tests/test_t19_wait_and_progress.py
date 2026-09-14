@@ -18,7 +18,7 @@ django.setup()
 from curriculum import curriculum_import as pipeline  # noqa: E402
 from curriculum.models import CurriculumImportJob  # noqa: E402
 
-from helpers import tutor_client  # noqa: E402
+from helpers import MINIMAL_VALID_PDF_BYTES, tutor_client  # noqa: E402
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.django_db(transaction=True)
 def pdf_upload():
     return SimpleUploadedFile(
         "curricula.pdf",
-        b"%PDF-1.4 fake bytes",
+        MINIMAL_VALID_PDF_BYTES,
         content_type="application/pdf",
     )
 
@@ -195,7 +195,9 @@ def test_stale_running_stage_is_released_back_to_the_teacher():
     job.save()
 
     response = client.get(reverse("tutor-import-wait", args=[job.pk]))
-    assert response.status_code == 302
+    assert response.status_code == 200
+    assert "Está tardando más de lo esperado" in response.content.decode("utf-8")
     job.refresh_from_db()
-    assert job.progress_stage == ""
-    assert "demasiado" in job.error_message
+    # GET wait is a pure read: does not mutate persistence
+    assert job.progress_stage == "activities"
+    assert job.error_message == ""

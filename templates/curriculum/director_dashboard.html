@@ -6,19 +6,20 @@
     <title>AulaLista · Dirección</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <header class="site-header">
       <div class="site-header-inner">
         <span class="wordmark" aria-label="AulaLista">Aula<span>Lista</span></span>
-        <span class="demo-badge">Ámbito institucional</span>
+        <span class="brand-context">Educación · Dirección</span><nav class="top-nav" aria-label="Dirección"><a href="{% url 'director-import-preview' %}">Importar Excel</a></nav><div class="account-actions"><form method="post" action="{% url 'wagtailadmin_logout' %}">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div>
       </div>
     </header>
     <main id="contenido" class="shell teacher-page">
       <header class="view-heading">
-        <p class="eyebrow">DIRECCIÓN · NIVEL A</p>
-        <h1>Coordinación por salón.</h1>
+        <p class="eyebrow">GESTIÓN ESCOLAR</p>
+        <h1>Coordinación escolar</h1>
         {% if school %}<p class="card-kicker">{{ school.name }}</p>{% endif %}
         <p class="lede">Consulta historia institucional y señales agregadas; no perfiles individuales de alumnado.</p>
       </header>
@@ -33,7 +34,7 @@
 
       {% if classroom_cards %}
         <section class="editorial-section" aria-labelledby="classrooms-heading">
-          <div class="section-heading"><div><p class="eyebrow">SCHOOL</p><h2 id="classrooms-heading">Salones activos y archivados</h2></div></div>
+          <div class="section-heading"><div><p class="eyebrow">ESCUELA</p><h2 id="classrooms-heading">Salones activos y archivados</h2></div></div>
           <div class="editorial-list">
             {% for card in classroom_cards %}
               <article class="editorial-card">
@@ -47,7 +48,7 @@
                     <span><strong>{{ card.worked_activity_count }}</strong> actividad{% if card.worked_activity_count != 1 %}es{% endif %} trabajada{% if card.worked_activity_count != 1 %}s{% endif %}</span>
                     <span><strong>{{ card.participation_count }}</strong> participaciones agregadas</span>
                   </div>
-                  <ul class="result-facts">{% for metric in card.metrics %}<li><strong>{{ metric.label }}:</strong> {{ metric.value }} · fuente: {{ metric.source }} · periodo: {{ metric.period }} · actualización: {% if metric.updated_at %}{{ metric.updated_at|date:"Y-m-d H:i" }}{% else %}No disponible{% endif %}</li>{% endfor %}</ul>
+                  <details class="disclosure"><summary>Fuentes, periodo y actualización</summary><ul class="metric-sources">{% for metric in card.metrics %}<li><strong>{{ metric.label }}:</strong> {{ metric.value }} · fuente: {{ metric.source }} · periodo: {{ metric.period }} · actualización: {% if metric.updated_at %}{{ metric.updated_at|date:"Y-m-d H:i" }}{% else %}No disponible{% endif %}</li>{% endfor %}</ul></details>
                   {% if card.assignments %}
                     <h4>Adscripciones e historial</h4>
                     <ul>
@@ -58,7 +59,7 @@
                   {% else %}<p class="muted">Sin adscripciones registradas.</p>{% endif %}
                 </div>
                 {% if card.group_status == "active" %}
-                  <form method="post" action="{{ card.assignment_url }}" class="preparation-form">
+                  <details class="disclosure assignment-disclosure"><summary>Gestionar adscripción</summary><form method="post" action="{{ card.assignment_url }}" class="preparation-form">
                     {% csrf_token %}
                     <label for="teacher-{{ forloop.counter }}">Confirmar cuenta docente existente</label>
                     <select id="teacher-{{ forloop.counter }}" name="teacher_token" required>
@@ -66,14 +67,14 @@
                       {% for teacher in teachers %}<option value="{{ teacher.token }}">{{ teacher.label }}</option>{% endfor %}
                     </select>
                     <button class="button button-primary" type="submit">Guardar adscripción</button>
-                  </form>
+                  </form></details>
                 {% endif %}
               </article>
             {% endfor %}
           </div>
         </section>
       {% else %}
-        <p class="empty-note">Aún no hay salones en tu School.</p>
+        <p class="empty-note">Aún no hay salones en tu escuela.</p>
       {% endif %}
 
       <section class="results-summary" aria-labelledby="support-heading">

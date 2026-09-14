@@ -6,6 +6,7 @@
     <title>AulaLista · actividad publicada</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -25,6 +26,23 @@
         {% if payload.micro_lesson %}<h3>Microlección</h3><p class="lesson-copy">{{ payload.micro_lesson }}</p>{% endif %}
         {% if questions %}<h3>Actividades de práctica</h3><div class="published-questions">{% for question in questions %}<article class="question-card"><p class="card-kicker">REACTIVO {{ forloop.counter }}</p><h4>{{ question.prompt }}</h4>{% if question.options %}<ul>{% for option in question.options %}<li>{{ option.text|default:"Opción sin etiqueta" }}</li>{% endfor %}</ul>{% endif %}{% if question.hints %}<p class="microcopy"><strong>Pistas autorizadas:</strong> {{ question.hints|join:", " }}</p>{% endif %}</article>{% endfor %}</div>{% else %}<p class="empty-note">Esta actividad todavía no tiene reactivos de práctica publicados.</p>{% endif %}
         {% if payload.final_explanation %}<h3>Explicación final autorizada</h3><p>{{ payload.final_explanation }}</p>{% endif %}
+        {% if payload.source_references %}
+          <section class="annex-source" aria-label="Fuentes conservadas">
+            <h3>Fuentes conservadas</h3>
+            {% for reference in payload.source_references %}
+              <article>
+                <p><strong>{{ reference.source_anchor|default:"Fuente original" }}</strong> · páginas
+                  {% for page in reference.source_pages %}
+                    <a href="{% url 'tutor-package-source-page' snapshot.pk page %}#page={{ page }}">{{ page }}</a>{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                  · <a href="{% url 'tutor-package-source-page' snapshot.pk reference.source_pages.0 %}#page={{ reference.source_pages.0 }}">Ver lámina original</a>
+                </p>
+                {% if reference.source_urls %}<p>Recursos enlazados: {% for source_url in reference.source_urls %}<a href="{{ source_url }}" target="_blank" rel="noopener">{{ source_url }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+                <details><summary>Instrucción original</summary><blockquote>{{ reference.source_text }}</blockquote></details>
+              </article>
+            {% endfor %}
+          </section>
+        {% endif %}
       </section>
       <div class="page-actions"><a class="button button-primary button-large" href="{% url 'tutor-session-prepare' snapshot.pk %}">Preparar sesión con esta actividad <span aria-hidden="true">→</span></a><a class="back-link" href="{% url 'tutor-curriculum' %}">← Volver a currícula y autoría</a></div>
     </main>

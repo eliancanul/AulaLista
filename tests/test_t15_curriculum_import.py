@@ -37,10 +37,13 @@ pytestmark = pytest.mark.django_db
 sync_stage = override_settings(AULALISTA_IMPORT_ASYNC=False)
 
 
+from helpers import MINIMAL_VALID_PDF_BYTES
+
+
 def pdf_upload(name="curricula.pdf"):
     return SimpleUploadedFile(
         name,
-        b"%PDF-1.4 fake bytes for staging tests",
+        MINIMAL_VALID_PDF_BYTES,
         content_type="application/pdf",
     )
 
@@ -80,6 +83,28 @@ def test_qwen14b_is_default_in_settings_and_curriculum_import():
     assert pipeline.DEFAULT_MODEL == expected_model
     with override_settings(AULALISTA_LLM_MODEL=""):
         assert pipeline.llm_model() == expected_model
+
+
+def test_topic_identification_drops_administrative_and_project_containers():
+    chunk = {"first_page": 1, "last_page": 1, "text": "[página 1] Planeación Didáctica Semana 01"}
+
+    def transport(_request):
+        return {
+            "message": {
+                "content": json.dumps(
+                    {"temas": [
+                        {"titulo": "Planeación Didáctica Semana 01", "pagina_inicio": 1, "pagina_fin": 1, "tipo": "tema"},
+                        {"titulo": "Identificación General", "pagina_inicio": 1, "pagina_fin": 1, "tipo": "tema"},
+                        {"titulo": "PROYECTO: MIS EMOCIONES Y YO", "pagina_inicio": 1, "pagina_fin": 1, "tipo": "tema"},
+                        {"titulo": "Representación numérica", "pagina_inicio": 1, "pagina_fin": 1, "tipo": "tema"},
+                    ]}
+                )
+            }
+        }
+
+    assert pipeline.identify_topics(chunk, transport=transport) == [
+        {"titulo": "Representación numérica", "pagina_inicio": 1, "pagina_fin": 1}
+    ]
 
 
 def test_upload_creates_staging_job_without_touching_editorial_models():

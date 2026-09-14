@@ -6,6 +6,7 @@
     <title>AulaLista · revisar importación</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
     {% include "curriculum/tutor_nav.html" %}
@@ -18,6 +19,20 @@
       </p>
       {% if job.page_count %}<p>Páginas extraídas: {{ job.page_count }}</p>{% endif %}
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+      <section class="status-card" aria-label="Asistente de planeación V0" style="margin: 1.5rem 0; border-top: 3px solid var(--color-action);">
+        <h2>Asistente de planeación · Interpretación de guía docente (V0)</h2>
+        <p>
+          Extrae campos formativos, momentos de la sesión (inicio, desarrollo, cierre),
+          materiales, contexto de ejecución (aula vs casa) y referencias a anexos con procedencia física verificable.
+        </p>
+        {% if job.interpretation_dossier %}
+          <p class="microcopy"><strong>Dossier guardado:</strong> v{{ job.interpretation_dossier.version }} · Actualizado: {{ job.interpretation_dossier.updated_at }}</p>
+          <a class="button button-primary" href="{% url 'tutor-import-interpretation' job.pk %}">Abrir interpretación guardada (v{{ job.interpretation_dossier.version }}) →</a>
+        {% else %}
+          <a class="button button-primary" href="{% url 'tutor-import-interpretation' job.pk %}">Interpretar planeación y generar guía de sesión (V0) →</a>
+        {% endif %}
+      </section>
 
       {% if job.status == "uploaded" or job.status == "failed" %}
         <form method="post">
@@ -160,6 +175,30 @@
                         </form>
                       </header>
                       <p class="activity-objective">{{ item.entry.proposal.objective }}</p>
+                      {% if item.entry.annex %}
+                        <aside class="annex-source" aria-label="Fuente del anexo">
+                          <p><strong>Páginas fuente:</strong>
+                            {% for page in item.entry.annex.source_pages %}
+                              <a href="{% url 'tutor-import-source-page' job.pk page %}#page={{ page }}">{{ page }}</a>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                            · <a href="{% url 'tutor-import-source-page' job.pk item.entry.annex.source_pages.0 %}#page={{ item.entry.annex.source_pages.0 }}">Ver lámina original</a>
+                          </p>
+                          {% if item.entry.annex.source_urls %}
+                            <p>Recursos enlazados:
+                              {% for source_url in item.entry.annex.source_urls %}
+                                <a href="{{ source_url }}" target="_blank" rel="noopener">{{ source_url }}</a>{% if not forloop.last %}, {% endif %}
+                              {% endfor %}
+                            </p>
+                          {% endif %}
+                          <details>
+                            <summary>Instrucción original</summary>
+                            <blockquote>{{ item.entry.annex.source_text }}</blockquote>
+                          </details>
+                          {% if 'requires_human_answer_key' in item.entry.issues %}
+                            <p class="notice">Este anexo conserva huecos sin clave de respuesta. Requiere clave y revisión humana antes de evaluar.</p>
+                          {% endif %}
+                        </aside>
+                      {% endif %}
                       <details class="activity-details">
                         <summary>Microlección y explicación</summary>
                         <p>{{ item.entry.proposal.micro_lesson }}</p>
