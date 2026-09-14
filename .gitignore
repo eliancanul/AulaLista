@@ -6,7 +6,7 @@ db.sqlite3
 staticfiles/
 media/
 .DS_Store
-evidence/
+/evidence/
 output/
 outputs/
 artifacts/
