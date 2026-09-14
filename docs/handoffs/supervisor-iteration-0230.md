@@ -230,11 +230,6 @@ when safe). No fix implementation.
 
 ## Docs-only packaging (this checkpoint)
 
-- DONE — see PR record in `supervisor-cumulative.md` (commit hash / push range /
-  PR #115 updated, or reason skipped). Staged via explicit `git add` of
-  `docs/handoffs/` Markdown only — never `git add -A`, never code;
-  `git diff --cached --name-only` verified pre-commit. Prior untracked handoffs
-  remain unpackaged working-tree files for a future checkpoint; nothing was
-  discarded or reverted.
+- DONE — commit `af0b3d6` (`docs: supervisor iteration 230 checkpoint — cumulative deltas 221-230, prompt catalog, HOLD gate`, 4 files, +260/−2, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit: exactly the 4 Markdown files) pushed `56d9998..af0b3d6` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 (End of file.)

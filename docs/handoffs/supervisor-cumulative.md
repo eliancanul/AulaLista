@@ -380,7 +380,7 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-230 checkpoint)
 
-- PLACEHOLDER-230 — replaced at packaging time with the commit hash / push range / PR #115 outcome (or the reason skipped). Staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit. Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+- DONE — commit `af0b3d6` (`docs: supervisor iteration 230 checkpoint — cumulative deltas 221-230, prompt catalog, HOLD gate`, 4 files, +260/−2, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `56d9998..af0b3d6` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0229) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 ## Methodology note (for the iteration-100 final)
 
