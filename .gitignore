@@ -5,4 +5,11 @@ __pycache__/
 db.sqlite3
 staticfiles/
 media/
-.DS_Store\nevidence/
+.DS_Store
+evidence/
+output/
+outputs/
+artifacts/
+.sheet-work/
+tmp/
+nohup.out
