@@ -346,7 +346,7 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-210 checkpoint)
 
-- DONE — commit `HHHHHHH` (`docs: supervisor iteration 210 checkpoint — cumulative deltas 201-210, prompt catalog, HOLD gate`, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `f567971..HHHHHHH` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Provisional hash `HHHHHHH` corrected by the follow-up record commit per the iteration-200 precedent (`f567971`). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0209) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+- DONE — commit `52df680` (`docs: supervisor iteration 210 checkpoint — cumulative deltas 201-210, prompt catalog, HOLD gate`, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `f567971..52df680` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Provisional hash corrected by this follow-up record commit per the iteration-200 precedent (`f567971`). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0209) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 ## Methodology note (for the iteration-100 final)
 
