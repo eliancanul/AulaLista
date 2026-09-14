@@ -43,6 +43,20 @@ Conclusión: las pruebas nuevas **no son tautológicas**; el verificador tiene d
 
 ## 5. Límites y pendientes
 
-- Los GREENs técnicos de este contrato no equivalen a calidad semántica de extracción: eso se evalúa en #119 con gold adjudicado (no_evaluable mientras tanto).
+**Actualización 15:20 del 14-sep — ciclo UX9 tras auditoría Astra:**
+
+La auditoría `/tmp/aulalista-auditoria-14-septiembre-2026.md` halló brechas reales (la suite verde no acreditaba los criterios omitidos). Correcciones UX9 commiteadas en `3e61754`:
+
+| Hallazgo | Estado |
+|---|---|
+| B1 P1 — `source_references` con `pages` rompían el detalle publicado | **FIXED** (render real probado) |
+| B2 P1 — falso checked por substring + contadores de cotejos | **FIXED** — el benchmark C01 pasa de 21/30 a 20/31: un cotejo que se contaba como dato ahora es revisión pendiente. Prueba T5 `test_verify_valid_c01_dossier_passes_with_zero_blocks` (21,30,0,51) queda con discrepancia conocida 20,31,0,51 — pendiente actualizar expectativa con autorización |
+| B3 P1 — cardinalidad actividad→clase no demostrada | **FIXED** — entidades `SessionActivity` explícitas + fixture 5-actividades-en-1-clase + negativo que rechaza falso comprobado |
+| B4 P1 — #116 B: aplazamiento persistente + transición parcial | **PENDIENTE** — prueba fail-first sin commitear (`tests/test_ux9_blocker4_postpone.py`, falla como debe); implementación no alcanzó por cuota/red |
+| B5 P1 — gates de particiones/cierre raw del harness #119 | **FIXED** — dedup cross-split y raw vacío fallan |
+| P2-1 — Range malformado → IndexError | **FIXED** (416 con Content-Range) |
+| P2-2 — whitespace acumulado | **FIXED** (2 blank-line-EOF; saltos duros de Markdown preservados) |
+
+Los GREENs técnicos de este contrato no equivalen a calidad semántica de extracción: eso se evalúa en #119 con gold adjudicado (no_evaluable mientras tanto).
 - La calidad de la suite T7 en concurrencia tiene un flaky conocido de SQLite (threads reales) que pasa en aislamiento; registrado sin ocultar.
-- No se declara GREEN de usuario. Revisión independiente Luna T8: **READY, sin bloqueadores** (`/tmp/aulalista-luna-ux-import-task8-review.md`) — 12 sondas adversariales independientes (26/26 assertions) y 2 pruebas de causalidad verificadas.
+- No se declara GREEN de usuario; dictamen Luna de UX8 aplicó al pre-UX9; UX9 requiere nuevo ciclo de revisión Luna.
