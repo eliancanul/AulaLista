@@ -1,8 +1,10 @@
 import csv
 import hashlib
+import logging
 from collections import Counter
 import io
 import json
+import re
 import threading
 import time
 import unicodedata
@@ -17,12 +19,15 @@ from django.core import signing
 from django.core.cache import cache
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError, OperationalError
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.http import (
+    FileResponse,
+    Http404,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
@@ -79,6 +84,8 @@ from curriculum.survey import (
     validate_survey_answers,
 )
 
+logger = logging.getLogger(__name__)
+
 # Ephemeral anti-replay/progression guard only; never score/evidence. Expires in 3600s.
 HINT_PROGRESS_TTL = 3600
 HINT_PROGRESS_KEY_PREFIX = "aulalista.practice.hint-progress"
@@ -133,6 +140,10 @@ def teacher_required(view_func):
         if _is_director(request.user):
             return HttpResponseForbidden(
                 "La cuenta de Director no tiene autoridad docente ni editorial."
+            )
+        if _is_platform_administrator(request.user):
+            return HttpResponseForbidden(
+                "La cuenta de Administrador de Plataforma no tiene autoridad docente ni editorial."
             )
         return view_func(request, *args, **kwargs)
 
@@ -1145,6 +1156,8 @@ def tutor_curriculum(request):
         workflow_state = package.current_workflow_state
         if package.pk in published_package_ids:
             editorial_state = "Publicado"
+        elif package.import_approvals.filter(is_active=True).exists():
+            editorial_state = "Aprobada para preparar"
         elif workflow_state is not None:
             editorial_state = workflow_state.get_status_display()
         else:
@@ -1162,13 +1175,79 @@ def tutor_curriculum(request):
             }
         )
 
+    raw_jobs = list(
+        CurriculumImportJob.objects.filter(created_by=request.user).order_by(
+            "-updated_at", "-id"
+        )[:20]
+    )
+    import_cards = []
+    for job in raw_jobs:
+        pres = _get_derived_import_presentation(job)
+        interp_state = getattr(job, "interpretation_state", CurriculumImportJob.INTERPRETATION_STATE_NOT_STARTED)
+        has_valid_dossier = pres.get("has_valid_dossier", False)
+
+        active_approval = (
+            job.get_active_approval(has_valid_ready_dossier=True)
+            if (has_valid_dossier and hasattr(job, "get_active_approval"))
+            else None
+        )
+        # 1. APPROVED + valid dossier -> tutor-import-interpretation, CTA Ver planeación aprobada
+        if active_approval and has_valid_dossier:
+            canonical_state = "approved"
+            action_url = reverse("tutor-import-interpretation", args=[job.pk])
+            action_text = "Ver planeación aprobada"
+            status_label = "Aprobada"
+        # 2. READY + valid dossier -> tutor-import-interpretation, CTA Revisar planeación
+        elif interp_state == CurriculumImportJob.INTERPRETATION_STATE_READY and has_valid_dossier:
+            canonical_state = "ready"
+            action_url = reverse("tutor-import-interpretation", args=[job.pk])
+            action_text = "Revisar planeación"
+            status_label = "Requiere revisión"
+        # 2. FAILED or error -> tutor-import-wait, CTA Resolver e intentar de nuevo
+        elif pres["state"] == "error" or interp_state == CurriculumImportJob.INTERPRETATION_STATE_FAILED:
+            canonical_state = "failed"
+            action_url = reverse("tutor-import-wait", args=[job.pk])
+            action_text = "Resolver e intentar de nuevo"
+            status_label = "Requiere atención"
+        # 3. delayed -> tutor-import-wait, CTA Ver progreso
+        elif pres["state"] == "delayed":
+            canonical_state = "delayed"
+            action_url = reverse("tutor-import-wait", args=[job.pk])
+            action_text = "Ver progreso"
+            status_label = "Demora en progreso"
+        # 4. ORGANIZING / active claim / active progress stage -> tutor-import-wait, CTA Ver progreso
+        elif (
+            interp_state == CurriculumImportJob.INTERPRETATION_STATE_ORGANIZING
+            or job.progress_stage
+            or job.interpretation_claim_token
+        ):
+            canonical_state = "organizing"
+            action_url = reverse("tutor-import-wait", args=[job.pk])
+            action_text = "Ver progreso"
+            status_label = "En organización"
+        # 5. NOT_STARTED / legacy sin lifecycle -> tutor-import-upload, CTA Importar planeación
+        else:
+            canonical_state = "not_started"
+            action_url = reverse("tutor-import-upload")
+            action_text = "Importar planeación"
+            status_label = "Sin iniciar"
+
+        import_cards.append(
+            {
+                "job": job,
+                "canonical_state": canonical_state,
+                "action_url": action_url,
+                "action_text": action_text,
+                "status_label": status_label,
+            }
+        )
+
     return render(
         request,
         "curriculum/tutor_curriculum.html",
         {
-            "imports": CurriculumImportJob.objects.filter(
-                created_by=request.user
-            ).order_by("-updated_at", "-id")[:20],
+            "imports": raw_jobs,
+            "import_cards": import_cards,
             "package_cards": package_cards,
             "published_snapshots": PublishedPackageSnapshot.objects.filter(
                 package__created_by=request.user
@@ -2700,7 +2779,11 @@ def _run_import_job_stage_once(job_id, stage, payload=None):
         finally:
             from django.db import connection
 
-            connection.close()
+            if not getattr(connection, "in_atomic_block", False):
+                try:
+                    connection.close()
+                except Exception:
+                    pass
 
 
 def _run_import_job_stage(job_id, stage, payload=None):
@@ -2756,16 +2839,17 @@ def _start_import_stage(request, job, stage, payload=None):
     if not claimed:
         # Compare-and-set closes the stale-request race: only one worker starts.
         return redirect("tutor-import-wait", job_id=job.pk)
+    if hasattr(request, "session"):
+        request.session[f"legacy_stage_{job.pk}"] = stage
     _import_stage_runner()(_run_import_job_stage, job.pk, stage, payload)
     return redirect("tutor-import-wait", job_id=job.pk)
 
 
-def _finish_cancelled_import_stage(job):
-    now = timezone.now()
-    CurriculumImportJob.objects.filter(pk=job.pk, cancel_requested=True).update(
-        progress_stage="", progress_finished_at=now, cancelled_at=now,
-        error_message="La ayuda del asistente fue cancelada. Lo ya guardado sigue en revisión.", updated_at=now,
-    )
+def _finish_cancelled_import_stage(job, expected_claim_token=None):
+    from curriculum.interpretation_commands import finish_cancelled_stage
+
+    token = expected_claim_token or getattr(job, "interpretation_claim_token", None)
+    return finish_cancelled_stage(job, expected_claim_token=token)
 
 
 IMPORT_STAGE_WAIT_MESSAGES = {
@@ -2804,98 +2888,1090 @@ def _release_stale_import_stage(job):
     return True
 
 
-@teacher_required
-@require_http_methods(["GET"])
-def tutor_import_wait(request, job_id):
-    """Waiting shell updated by incremental polling while a stage runs."""
+CLAIM_STAGE_INTERPRETING = "reading_pdf"
+ACTIVE_INTERPRETATION_STAGES = {CLAIM_STAGE_INTERPRETING}
+DEFAULT_WAIT_TIMEOUT = 30.0
+DEFAULT_POLL_INTERVAL = 0.05
 
-    job = get_object_or_404(
-        CurriculumImportJob,
-        pk=job_id,
-        created_by=request.user,
+
+def _sync_job_from_model(target, source):
+    """Synchronize relevant operational fields into caller's in-memory job instance."""
+    target.interpretation_dossier = source.interpretation_dossier
+    target.interpretation_claim_token = source.interpretation_claim_token
+    target.interpretation_claimed_at = source.interpretation_claimed_at
+    target.interpretation_state = source.interpretation_state
+    target.progress_stage = source.progress_stage
+    target.progress_started_at = source.progress_started_at
+    target.progress_finished_at = source.progress_finished_at
+    target.progress_done = source.progress_done
+    target.progress_total = source.progress_total
+    target.page_count = source.page_count
+    target.interpretation_error_message = getattr(source, "interpretation_error_message", "")
+    target.error_message = source.error_message
+
+
+def _execute_with_db_lock_retry(func, max_attempts=40, base_delay=0.01, max_delay=0.1, using=None):
+    """Execute a callable, retrying on transient SQLite OperationalError (table/database locked).
+
+    Safe cleanup policy:
+    - If called outside an active transaction (in_atomic_block is False), closes the connection
+      between retries to reset transient lock states on SQLite.
+    - If called inside an active transaction (in_atomic_block is True), DOES NOT close the
+      connection or alter the caller's transaction ownership, avoiding ProgrammingError
+      ('Cannot operate on a closed database') and preserving caller transaction integrity.
+    - Permanent locks are never hidden: if max_attempts is exhausted, the original exception is raised.
+    """
+    import random
+    from django.db import connection, connections
+    from django.db.utils import OperationalError
+
+    target_conn = connections[using] if using else connection
+    last_exc = None
+    for attempt in range(max_attempts):
+        try:
+            return func()
+        except OperationalError as exc:
+            msg = str(exc).lower()
+            if "locked" in msg or "busy" in msg:
+                last_exc = exc
+                if not getattr(target_conn, "in_atomic_block", False):
+                    try:
+                        target_conn.close()
+                    except Exception:
+                        pass
+                sleep_time = min(max_delay, base_delay * (1.3 ** attempt)) + random.uniform(0.001, 0.01)
+                time.sleep(sleep_time)
+                continue
+            raise
+    if last_exc:
+        raise last_exc
+
+
+DEFAULT_INTERPRETATION_CLAIM_TIMEOUT = timedelta(minutes=10)
+
+
+def trigger_job_interpretation(
+    job,
+    wait_timeout=DEFAULT_WAIT_TIMEOUT,
+    poll_interval=DEFAULT_POLL_INTERVAL,
+    stale_threshold=DEFAULT_INTERPRETATION_CLAIM_TIMEOUT,
+):
+    """Trigger V0 source interpretation once, saving the dossier on the job.
+
+    Concurrency and idempotency contract with durable claim token:
+    - Exactly one caller claims the interpretation via CAS: interpretation_claim_token IS NULL
+      (or stale beyond stale_threshold) and interpretation_dossier is empty, generating an owner UUID.
+    - progress_stage remains purely for UX reporting; prepare() can set or clear it
+      without affecting claim ownership.
+    - Owner runs CurriculumSourceInterpreter.prepare outside any open database transaction.
+    - Success: Atomic conditional UPDATE (pk + owner token + empty dossier) persists dossier,
+      sets progress_stage='', and clears claim_token/claimed_at in a single operation.
+    - Error: Atomic conditional UPDATE (pk + owner token) records error and clears claim.
+      Never overwrites foreign state/error.
+    - If final UPDATE rows=0: Ownership was lost. Re-reads DB: if a valid dossier was persisted
+      by another owner, returns it; if an error was recorded, raises it; otherwise raises
+      CurriculumInterpretationError('Se perdió el reclamo...'). Never returns unpersisted local dossier.
+    - Waiters detect active claim via interpretation_claim_token (not progress_stage) and poll
+      boundedly without DB locks, returning the persisted dossier or propagating owner domain error.
+    """
+    from django.db import connection
+    from django.db.utils import OperationalError
+    from curriculum.source_interpreter import (
+        CurriculumInterpretationError,
+        CurriculumSourceInterpreter,
     )
-    _release_stale_import_stage(job)
-    if not job.progress_stage:
-        return redirect("tutor-import-detail", job_id=job.pk)
-    return render(
-        request,
-        "curriculum/tutor_import_wait.html",
-        {
-            "job": job,
-            "progress_state": _import_progress_state(job),
-            "wait_message": IMPORT_STAGE_WAIT_MESSAGES.get(
-                job.progress_stage,
-                "El asistente virtual está trabajando…",
-            ),
-        },
+
+    if isinstance(stale_threshold, (int, float)):
+        stale_threshold = timedelta(seconds=stale_threshold)
+
+    # 1. Check in database before attempting claim
+    def _read_fresh():
+        return CurriculumImportJob.objects.filter(pk=job.pk).first()
+
+    fresh = _execute_with_db_lock_retry(_read_fresh)
+    if fresh is None:
+        raise CurriculumInterpretationError(f"El trabajo de importación #{job.pk} no existe.")
+    if fresh.has_valid_ready_dossier():
+        # Fast reconciliation of existing valid dossier:
+        # Only reconcile to READY if claim_token is NULL.
+        # If there is an active foreign claim, DO NOT clear or overwrite the claim token!
+        if fresh.interpretation_claim_token is None:
+            if getattr(fresh, "interpretation_state", None) != CurriculumImportJob.INTERPRETATION_STATE_READY:
+                from curriculum.interpretation_commands import reconcile_existing_ready_dossier
+
+                reconcile_existing_ready_dossier(fresh)
+                fresh.interpretation_state = CurriculumImportJob.INTERPRETATION_STATE_READY
+                fresh.interpretation_error_message = ""
+        _sync_job_from_model(job, fresh)
+        return fresh.get_interpretation_dossier()
+
+    # 3. Compare-and-set atomic claim using dedicated interpretation_claim_token:
+    # Claim if interpretation_claim_token IS NULL or if claimed_at <= now - stale_threshold.
+    owner_token = uuid.uuid4()
+    now = timezone.now()
+
+    from curriculum.interpretation_commands import (
+        claim_interpretation_worker,
+        finish_worker_failure,
+        finish_worker_success,
     )
+    from curriculum.source_interpreter import InterpretationCancelledError
 
-
-@teacher_required
-@require_POST
-def tutor_import_cancel(request, job_id):
-    job = get_object_or_404(CurriculumImportJob, pk=job_id, created_by=request.user)
-    if job.progress_stage:
-        CurriculumImportJob.objects.filter(pk=job.pk, progress_stage=job.progress_stage).update(
-            cancel_requested=True, updated_at=timezone.now()
+    def _attempt_claim():
+        return claim_interpretation_worker(
+            job,
+            owner_token=owner_token,
+            stale_threshold=stale_threshold,
+            now=now,
         )
-    return redirect("tutor-import-detail", job_id=job.pk)
+
+    rows_claimed = _execute_with_db_lock_retry(_attempt_claim)
+
+    if rows_claimed == 1:
+        # OWNER PATH: compute outside any open database transaction
+        job.interpretation_claim_token = owner_token
+        job.interpretation_claimed_at = now
+        job.interpretation_state = CurriculumImportJob.INTERPRETATION_STATE_ORGANIZING
+        try:
+            dossier = CurriculumSourceInterpreter.prepare(
+                job,
+                timeout_seconds=wait_timeout,
+                is_cancelled=lambda: _execute_with_db_lock_retry(
+                    lambda: CurriculumImportJob.objects.filter(
+                        pk=job.pk, cancel_requested=True
+                    ).exists()
+                ),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Fallo durante la interpretación del trabajo %s: %s", job.pk, exc
+            )
+            now_dt = timezone.now()
+
+            def _save_failure():
+                return finish_worker_failure(
+                    job,
+                    owner_token=owner_token,
+                    error_message=str(exc),
+                    is_cancelled=isinstance(exc, InterpretationCancelledError),
+                    now=now_dt,
+                )
+
+            try:
+                rows_failed = _execute_with_db_lock_retry(_save_failure)
+                fresh_failed = _execute_with_db_lock_retry(_read_fresh)
+                if fresh_failed:
+                    _sync_job_from_model(job, fresh_failed)
+            except Exception as clear_exc:
+                logger.error("No se pudo limpiar claim tras fallo en job %s: %s", job.pk, clear_exc)
+
+            if isinstance(exc, OperationalError):
+                raise CurriculumInterpretationError(
+                    f"Fallo por bloqueo de base de datos durante la interpretación: {exc}"
+                ) from exc
+            raise
+
+        # Prepare succeeded: atomically persist dossier and release claim
+        now_dt = timezone.now()
+
+        def _save_success():
+            return finish_worker_success(
+                job,
+                owner_token=owner_token,
+                dossier=dossier,
+                now=now_dt,
+            )
+
+        rows_persisted = _execute_with_db_lock_retry(_save_success)
+        if rows_persisted == 1:
+            fresh_saved = _execute_with_db_lock_retry(_read_fresh)
+            if fresh_saved:
+                _sync_job_from_model(job, fresh_saved)
+                return fresh_saved.get_interpretation_dossier()
+            job.refresh_from_db()
+            return job.get_interpretation_dossier()
+
+        # rows_persisted == 0: Ownership was lost!
+        # NUNCA retornar dossier local ni declarar éxito.
+        # Refresca DB y retorna sólo dossier persistido por dueño vigente o error honesto/acotado.
+        fresh_lost = _execute_with_db_lock_retry(_read_fresh)
+        if fresh_lost:
+            _sync_job_from_model(job, fresh_lost)
+            foreign_dossier = fresh_lost.get_interpretation_dossier()
+            if foreign_dossier is not None:
+                return foreign_dossier
+            foreign_err = getattr(fresh_lost, "interpretation_error_message", "").strip()
+            if foreign_err:
+                raise CurriculumInterpretationError(foreign_err)
+
+        raise CurriculumInterpretationError(
+            f"Se perdió el reclamo de interpretación del trabajo #{job.pk} antes de persistir."
+        )
+
+    # WAITER PATH: Caller did not win claim; bounded polling without DB locks
+    # Detects claim via interpretation_claim_token, not progress_stage
+    deadline = time.monotonic() + wait_timeout
+    while time.monotonic() < deadline:
+        time.sleep(poll_interval)
+        try:
+            current = CurriculumImportJob.objects.filter(pk=job.pk).first()
+        except OperationalError as exc:
+            msg = str(exc).lower()
+            if "locked" in msg or "busy" in msg:
+                continue
+            raise CurriculumInterpretationError(
+                f"Error de base de datos para trabajo #{job.pk}: {exc}"
+            ) from exc
+
+        if current is None:
+            raise CurriculumInterpretationError(f"El trabajo de importación #{job.pk} no existe.")
+
+        dossier = current.get_interpretation_dossier()
+        if dossier is not None:
+            _sync_job_from_model(job, current)
+            return dossier
+
+        current_err = getattr(current, "interpretation_error_message", "").strip()
+        if current_err:
+            _sync_job_from_model(job, current)
+            raise CurriculumInterpretationError(current_err)
+
+        # Waiter checks interpretation_claim_token, not progress_stage
+        if current.interpretation_claim_token is None:
+            time.sleep(0.02)
+            try:
+                refreshed = CurriculumImportJob.objects.filter(pk=job.pk).first()
+            except OperationalError:
+                refreshed = None
+            if refreshed:
+                dossier = refreshed.get_interpretation_dossier()
+                if dossier is not None:
+                    _sync_job_from_model(job, refreshed)
+                    return dossier
+                refreshed_err = getattr(refreshed, "interpretation_error_message", "").strip()
+                if refreshed_err:
+                    _sync_job_from_model(job, refreshed)
+                    raise CurriculumInterpretationError(refreshed_err)
+            raise CurriculumInterpretationError(
+                f"El proceso de interpretación del trabajo #{job.pk} finalizó sin generar dossier ni error."
+            )
+
+    raise CurriculumInterpretationError(
+        f"Tiempo de espera agotado ({wait_timeout}s) aguardando la interpretación del trabajo #{job.pk}."
+    )
 
 
-def _import_progress_state(job):
-    if job.progress_stage:
+STALE_STAGE_ERROR_MESSAGE = (
+    "El asistente virtual tardó demasiado y el proceso se detuvo. "
+    "Puedes reintentarlo."
+)
+STALE_STAGE_DELAYED_MESSAGE = "Está tardando más de lo esperado; aún puede terminar"
+
+
+def _normalize_datetime(dt):
+    """Safely convert naive or aware datetimes to the active timezone, handling None robustly."""
+    if dt is None:
+        return None
+    if timezone.is_aware(dt):
+        return dt
+    return timezone.make_aware(dt, timezone.get_current_timezone())
+
+
+def _is_import_stage_stale(job, now=None):
+    """Pure query checking whether the current job progress_stage or active claim has exceeded timeout."""
+    if now is None:
+        now = timezone.now()
+    else:
+        now = _normalize_datetime(now)
+
+    # Check progress_stage staleness
+    if job.progress_stage and job.progress_started_at:
+        started_at = _normalize_datetime(job.progress_started_at)
+        if started_at and (now - started_at) > IMPORT_STAGE_TIMEOUT:
+            return True
+
+    # Check interpretation claim staleness
+    if job.interpretation_claim_token and job.interpretation_claimed_at:
+        claimed_at = _normalize_datetime(job.interpretation_claimed_at)
+        if claimed_at and (now - claimed_at) > IMPORT_STAGE_TIMEOUT:
+            return True
+
+    return False
+
+
+def _is_valid_ready_interpretation_dossier(job, pdf_bytes: bytes | None = None):
+    """Pure query checking if the job possesses a valid, ready, deserializable ImportDossier.
+    Never mutates persistence. Delegates to model method has_valid_ready_dossier().
+    """
+    raw = getattr(job, "interpretation_dossier", None)
+    if not raw or not isinstance(raw, dict):
+        return False
+    # Strict explicit raw key verification prior to deserialization
+    version = raw.get("version")
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        return False
+    if raw.get("status") != "active":
+        return False
+    source_sha = raw.get("source_sha256")
+    if not isinstance(source_sha, str) or not bool(re.fullmatch(r"^[0-9a-fA-F]{64}$", source_sha.strip())):
+        return False
+
+    if hasattr(job, "has_valid_ready_dossier"):
+        return job.has_valid_ready_dossier(pdf_bytes=pdf_bytes)
+    dossier = job.get_interpretation_dossier()
+    if dossier is None or getattr(dossier, "version", 0) < 1:
+        return False
+    if getattr(dossier, "status", "") != "active":
+        return False
+    if pdf_bytes is None:
+        if not getattr(job, "pdf", None):
+            return False
+        try:
+            with job.pdf.open("rb") as stream:
+                pdf_bytes = stream.read()
+        except (FileNotFoundError, OSError, IOError, ValueError):
+            return False
+    current_sha = hashlib.sha256(pdf_bytes).hexdigest()
+    return current_sha.lower() == source_sha.strip().lower()
+
+
+def _import_progress_state(job, has_valid_dossier=None):
+    legacy_active = job.progress_stage in IMPORT_STAGE_WAIT_MESSAGES
+    interp_state = getattr(job, "interpretation_state", None)
+    if interp_state == CurriculumImportJob.INTERPRETATION_STATE_READY and not legacy_active:
+        if has_valid_dossier is None:
+            has_valid_dossier = _is_valid_ready_interpretation_dossier(job)
+        if has_valid_dossier:
+            return "finished"
+    if job.cancel_requested or job.cancelled_at:
+        return "error"
+    interp_error = getattr(job, "interpretation_error_message", "").strip()
+    if (interp_state == CurriculumImportJob.INTERPRETATION_STATE_FAILED or interp_error) and not legacy_active:
+        return "error"
+    if job.progress_stage or (job.interpretation_claim_token and not job.interpretation_dossier):
         if job.progress_done:
             return "partial"
         if job.progress_total:
             return "working"
         return "waiting"
-    if job.error_message:
-        return "error"
-    return "finished"
+    if job.interpretation_dossier:
+        if interp_state == CurriculumImportJob.INTERPRETATION_STATE_READY:
+            if has_valid_dossier is None:
+                has_valid_dossier = _is_valid_ready_interpretation_dossier(job)
+            if not has_valid_dossier:
+                return "error"
+    if job.status in (CurriculumImportJob.STATUS_COMPLETED, CurriculumImportJob.STATUS_CONVERTED):
+        return "finished"
+    if not job.progress_stage and job.progress_done and job.progress_done == job.progress_total:
+        return "finished"
+    return "waiting"
 
 
 IMPORT_PROGRESS_LABELS = {
     "waiting": "Esperando al asistente",
     "working": "El asistente está trabajando",
     "partial": "Hay un resultado parcial guardado",
-    "finished": "Generación terminada",
+    "finished": "Planeación organizada/lista para revisar",
     "error": "La generación se interrumpió",
+    "delayed": STALE_STAGE_DELAYED_MESSAGE,
 }
+
+
+SAFE_ERROR_GENERIC = "Ocurrió un problema al organizar tu planeación. Puedes volver a intentarlo."
+SAFE_ERROR_INTERRUPTED = "La generación se interrumpió."
+SAFE_ERROR_CANCELLED = "Interpretación cancelada a petición."
+SAFE_ERROR_CANCELLED_TEACHER = "Cancelado por el docente."
+SAFE_ERROR_INTERPRETATION = "Error durante la interpretación del PDF."
+SAFE_ERROR_STREAM_READ = "No pudimos leer el archivo PDF de la planeación. Puedes volver a intentarlo."
+SAFE_ERROR_INTEGRITY_MISMATCH = "Alerta de integridad: El archivo PDF de la planeación no coincide con la evidencia registrada. Se requiere reextracción explícita."
+SAFE_ERROR_INTEGRITY_ALTERED_DURING = "Alerta de integridad: El archivo PDF de la planeación fue alterado durante el procesamiento. Se requiere reextracción explícita."
+SAFE_ERROR_INTEGRITY_DISK = "Alerta de integridad: El archivo PDF en disco fue alterado. Dossier invalidado."
+SAFE_ERROR_INTEGRITY_SERVER = "Conflicto de integridad: El archivo PDF en el servidor fue alterado."
+SAFE_ERROR_PDF_UNAVAILABLE = "El archivo PDF de la currícula no está disponible o no se puede leer."
+SAFE_ERROR_TIMEOUT = "Tiempo de espera excedido al organizar la planeación. Puedes volver a intentarlo."
+
+_SQL_KEYWORD_PATTERN = re.compile(
+    r"\b(select\b|insert\s+into|update\s+\w+\s+set|delete\s+from|drop\s+table|where\b)",
+    re.IGNORECASE,
+)
+_FILE_PATH_PATTERN = re.compile(r"(?:/|[a-zA-Z]:\\)[\w.-]+", re.IGNORECASE)
+
+
+def _sanitize_teacher_error_message(err_msg: str) -> str:
+    """Return a brief, safe, teacher-facing explanation. Fail-closed against any secret or trace.
+    Completely removes stack traces, internal exceptions, model/prompt jargon, paths, URLs, SQL,
+    and credentials. Never returns input or concatenates input: returns exclusively fixed teacher constants."""
+    if not err_msg or not isinstance(err_msg, str):
+        return SAFE_ERROR_INTERRUPTED
+
+    clean = err_msg.strip()
+    if not clean:
+        return SAFE_ERROR_INTERRUPTED
+
+    # Any multiline string is immediately rejected to prevent stack trace leaks
+    if "\n" in clean or "\r" in clean:
+        return SAFE_ERROR_GENERIC
+
+    lower = clean.lower()
+
+    # Secret / token / sensitive credentials / emails / tokens
+    if any(s in lower for s in ("sk-", "api_key", "secret", "token=", "password", "bearer ", "@", "eyj")):
+        return SAFE_ERROR_GENERIC
+
+    # URLs or local file paths (Unix / Windows)
+    if "http://" in lower or "https://" in lower or lower.startswith("file ") or _FILE_PATH_PATTERN.search(clean):
+        return SAFE_ERROR_GENERIC
+
+    # SQL patterns
+    if _SQL_KEYWORD_PATTERN.search(clean):
+        return SAFE_ERROR_GENERIC
+
+    # Fixed domain categories -> ONLY return fixed teacher constants
+    if "cancelad" in lower or "petición" in lower:
+        if "docente" in lower:
+            return SAFE_ERROR_CANCELLED_TEACHER
+        return SAFE_ERROR_CANCELLED
+
+    if "interrumpió" in lower:
+        return SAFE_ERROR_INTERRUPTED
+
+    if "error durante la interpretación" in lower or ("interpretación" in lower and "pdf" in lower):
+        return SAFE_ERROR_INTERPRETATION
+
+    if "alterado durante el procesamiento" in lower:
+        return SAFE_ERROR_INTEGRITY_ALTERED_DURING
+
+    if "no coincide con la evidencia registrada" in lower or "reextracción explícita" in lower:
+        return SAFE_ERROR_INTEGRITY_MISMATCH
+
+    if "disco fue alterado" in lower or "dossier invalidado" in lower:
+        return SAFE_ERROR_INTEGRITY_DISK
+
+    if "servidor fue alterado" in lower:
+        return SAFE_ERROR_INTEGRITY_SERVER
+
+    if "stream corrupto" in lower or "reextracción" in lower or "no se pudo leer el archivo pdf" in lower or "no pudimos leer" in lower:
+        return SAFE_ERROR_STREAM_READ
+
+    if "tiempo" in lower and ("excedido" in lower or "timeout" in lower or "espera" in lower):
+        return SAFE_ERROR_TIMEOUT
+
+    if "no está disponible" in lower or "no se puede leer" in lower:
+        return SAFE_ERROR_PDF_UNAVAILABLE
+
+    # Technical markers & pipeline jargon
+    tech_markers = (
+        "traceback",
+        "runtimeerror",
+        "operationalerror",
+        "syntaxerror",
+        "zerodivisionerror",
+        "valueerror",
+        "typeerror",
+        "nameerror",
+        "attributeerror",
+        "pipeline_v1",
+        "pipeline legado",
+        "database locked",
+        "table is locked",
+        "llm_model",
+        "prompt_tokens",
+        "exception",
+        "error:",
+        "line ",
+    )
+    if any(marker in lower for marker in tech_markers):
+        return SAFE_ERROR_GENERIC
+
+    if ("pipeline" in lower or "model" in lower or "prompt" in lower) and not ("planeación" in lower or "plan" in lower):
+        return SAFE_ERROR_GENERIC
+
+    return SAFE_ERROR_GENERIC
+
+
+def _get_derived_import_presentation(job, now=None):
+    """Pure query deriving presentation state from model attributes without modifying DB."""
+    if now is None:
+        now = timezone.now()
+    else:
+        now = _normalize_datetime(now)
+
+    interp_state = getattr(job, "interpretation_state", CurriculumImportJob.INTERPRETATION_STATE_NOT_STARTED)
+
+    # 1. Real cancellation only if persistent cancellation signals exist
+    if job.cancel_requested or job.cancelled_at:
+        raw_msg = (
+            getattr(job, "interpretation_error_message", "").strip()
+            or "Interpretación cancelada a petición."
+        )
+        safe_msg = _sanitize_teacher_error_message(raw_msg)
+        return {
+            "is_stale": False,
+            "state": "error",
+            "label": IMPORT_PROGRESS_LABELS["error"],
+            "description": safe_msg,
+            "stage": job.progress_stage,
+            "error": safe_msg,
+            "finished_at": _normalize_datetime(job.cancelled_at or job.progress_finished_at),
+            "needs_reextract": False,
+            "has_valid_dossier": False,
+        }
+
+    raw_dossier = getattr(job, "interpretation_dossier", None)
+    has_raw_dossier = isinstance(raw_dossier, dict) and bool(raw_dossier)
+    tamper_flagged = has_raw_dossier and raw_dossier.get("status") == "invalidated_source_tampered"
+
+    # B2 Gate: ONLY perform physical file integrity hash check if READY candidate!
+    # "Instrumentación exige máximo 1 FieldFile.open por card READY y 0 para estados no-READY."
+    has_valid_dossier = False
+    is_ready_candidate = bool(interp_state == CurriculumImportJob.INTERPRETATION_STATE_READY)
+    if is_ready_candidate:
+        has_valid_dossier = _is_valid_ready_interpretation_dossier(job)
+
+    # 2. Ready state: requires BOTH ready candidate AND valid dossier/integrity
+    legacy_active = job.progress_stage in IMPORT_STAGE_WAIT_MESSAGES
+    if is_ready_candidate and has_valid_dossier and not legacy_active:
+        return {
+            "is_stale": False,
+            "state": "finished",
+            "label": IMPORT_PROGRESS_LABELS["finished"],
+            "description": "",
+            "stage": job.progress_stage,
+            "error": "",
+            "finished_at": _normalize_datetime(job.progress_finished_at),
+            "needs_reextract": False,
+            "has_valid_dossier": True,
+        }
+
+    # B1/B3: If READY was asserted in DB but dossier/PDF is NOT valid, fail-closed as integrity error requiring reextract
+    if is_ready_candidate and not has_valid_dossier:
+        diag_error = "Conflicto de integridad: El archivo PDF en el servidor fue alterado."
+        if tamper_flagged:
+            diag_error = "Alerta de integridad: El archivo PDF en disco fue alterado. Dossier invalidado."
+        safe_diag = _sanitize_teacher_error_message(diag_error)
+        return {
+            "is_stale": False,
+            "state": "error",
+            "label": IMPORT_PROGRESS_LABELS["error"],
+            "description": safe_diag,
+            "stage": job.progress_stage,
+            "error": safe_diag,
+            "finished_at": _normalize_datetime(job.progress_finished_at),
+            "needs_reextract": True,
+            "has_valid_dossier": False,
+        }
+
+    # If raw dossier is explicitly flagged as invalidated_source_tampered:
+    if tamper_flagged and interp_state != CurriculumImportJob.INTERPRETATION_STATE_NOT_STARTED:
+        diag_error = "Alerta de integridad: El archivo PDF en disco fue alterado. Dossier invalidado."
+        safe_diag = _sanitize_teacher_error_message(diag_error)
+        return {
+            "is_stale": False,
+            "state": "error",
+            "label": IMPORT_PROGRESS_LABELS["error"],
+            "description": safe_diag,
+            "stage": job.progress_stage,
+            "error": safe_diag,
+            "finished_at": _normalize_datetime(job.progress_finished_at),
+            "needs_reextract": True,
+            "has_valid_dossier": False,
+        }
+
+    # B3 PRECEDENCE:
+    # "interpretation_state==FAILED prevalece sobre stale/claim/progress legacy en derived presentation:
+    #  state error + retry/reextract adecuado. Staleness sólo deriva delayed para ORGANIZING/no estado terminal. No mutar claim por GET."
+    interp_error = getattr(job, "interpretation_error_message", "").strip()
+    if not legacy_active and (
+        interp_state == CurriculumImportJob.INTERPRETATION_STATE_FAILED
+        or (interp_error and interp_state != CurriculumImportJob.INTERPRETATION_STATE_NOT_STARTED)
+    ):
+        raw_msg = interp_error or "La generación se interrumpió."
+        safe_msg = _sanitize_teacher_error_message(raw_msg)
+        is_integrity_err = any(w in raw_msg.lower() for w in ("alterado", "integridad", "corrupto", "tamper"))
+        return {
+            "is_stale": False,
+            "state": "error",
+            "label": IMPORT_PROGRESS_LABELS["error"],
+            "description": safe_msg,
+            "stage": job.progress_stage,
+            "error": safe_msg,
+            "finished_at": _normalize_datetime(job.progress_finished_at),
+            "needs_reextract": bool(is_integrity_err),
+            "has_valid_dossier": False,
+        }
+
+    # 3. Staleness check: Staleness applies for non-terminal active states (FAILED and READY handled above)
+    is_stale = _is_import_stage_stale(job, now=now)
+    if is_stale:
+        ref_dt = _normalize_datetime(job.progress_started_at or job.interpretation_claimed_at)
+        derived_finished_at = _normalize_datetime(job.progress_finished_at) or (
+            ref_dt + IMPORT_STAGE_TIMEOUT if ref_dt else None
+        )
+        return {
+            "is_stale": True,
+            "state": "delayed",
+            "label": IMPORT_PROGRESS_LABELS["delayed"],
+            "description": "",
+            "stage": job.progress_stage,
+            "error": "",
+            "finished_at": derived_finished_at,
+            "needs_reextract": False,
+            "has_valid_dossier": False,
+        }
+
+    # 4. Active stage or claim (ORGANIZING):
+    if (
+        interp_state == CurriculumImportJob.INTERPRETATION_STATE_ORGANIZING
+        or job.progress_stage
+        or job.interpretation_claim_token
+    ):
+        state = _import_progress_state(job, has_valid_dossier=has_valid_dossier)
+        stage_desc = IMPORT_STAGE_WAIT_MESSAGES.get(job.progress_stage, "")
+        return {
+            "is_stale": False,
+            "state": state,
+            "label": IMPORT_PROGRESS_LABELS.get(state, "Esperando al asistente"),
+            "description": stage_desc,
+            "stage": job.progress_stage,
+            "error": "",
+            "finished_at": _normalize_datetime(job.progress_finished_at),
+            "needs_reextract": False,
+            "has_valid_dossier": False,
+        }
+
+    # 5. Default idle / Not started:
+    state = _import_progress_state(job, has_valid_dossier=has_valid_dossier)
+    return {
+        "is_stale": False,
+        "state": state,
+        "label": IMPORT_PROGRESS_LABELS.get(state, "Esperando al asistente"),
+        "description": "",
+        "stage": job.progress_stage,
+        "error": "",
+        "finished_at": _normalize_datetime(job.progress_finished_at),
+        "needs_reextract": False,
+        "has_valid_dossier": False,
+    }
 
 
 @teacher_required
 @require_http_methods(["GET"])
-def tutor_import_status(request, job_id):
-    """Small owner-scoped polling payload; never starts or repeats work."""
+def tutor_import_wait(request, job_id):
+    """Waiting shell updated by incremental polling while a stage runs. Pure read view."""
 
     job = get_object_or_404(
         CurriculumImportJob,
         pk=job_id,
         created_by=request.user,
     )
-    _release_stale_import_stage(job)
-    state = _import_progress_state(job)
+    # If the user session explicitly triggered a legacy pipeline stage that has now completed,
+    # hand control back to the legacy review panel (session cleanup deferred to explicit POST handlers):
+    legacy_stage = None
+    if hasattr(request, "session"):
+        legacy_stage = request.session.get(f"legacy_stage_{job.pk}")
+    if legacy_stage and not job.progress_stage:
+        return redirect("tutor-import-detail", job_id=job.pk)
+
+    pres = _get_derived_import_presentation(job)
+    needs_reextract = pres.get("needs_reextract", False)
+
+    # 1. Delayed state:
+    if pres["state"] == "delayed":
+        return render(
+            request,
+            "curriculum/tutor_import_wait.html",
+            {
+                "job": job,
+                "ready_for_review": False,
+                "needs_reextract": False,
+                "wait_heading": "Estamos organizando tu planeación",
+                "progress_state": pres["state"],
+                "label": pres["label"],
+                "wait_message": pres["label"],
+                "description": pres.get("description", ""),
+                "error": pres.get("error") or None,
+            },
+        )
+
+    # 2. Error state:
+    if pres["state"] == "error":
+        return render(
+            request,
+            "curriculum/tutor_import_wait.html",
+            {
+                "job": job,
+                "ready_for_review": False,
+                "needs_reextract": needs_reextract,
+                "wait_heading": "Estamos organizando tu planeación",
+                "progress_state": pres["state"],
+                "label": pres["label"],
+                "wait_message": pres["label"],
+                "description": pres.get("description", ""),
+                "error": pres["error"] or "La generación se interrumpió.",
+            },
+        )
+
+    # 3. Active downstream stage running (legacy background worker):
+    if job.progress_stage in IMPORT_STAGE_WAIT_MESSAGES and not pres.get("is_stale"):
+        return render(
+            request,
+            "curriculum/tutor_import_wait.html",
+            {
+                "job": job,
+                "ready_for_review": False,
+                "needs_reextract": False,
+                "wait_heading": "Estamos organizando tu planeación",
+                "progress_state": pres["state"],
+                "label": pres["label"],
+                "wait_message": pres["label"],
+                "description": pres.get("description", ""),
+            },
+        )
+
+    # 5. Valid ready dossier has PRECEDENCE: render ready review view
+    interp_state = getattr(job, "interpretation_state", None)
+    has_valid_dossier = pres.get("has_valid_dossier", False)
+    if (
+        pres["state"] == "finished"
+        and interp_state == CurriculumImportJob.INTERPRETATION_STATE_READY
+        and has_valid_dossier
+    ):
+        review_url = reverse("tutor-import-interpretation", args=[job.pk])
+        return render(
+            request,
+            "curriculum/tutor_import_wait.html",
+            {
+                "job": job,
+                "ready_for_review": True,
+                "needs_reextract": False,
+                "review_url": review_url,
+                "wait_heading": "Estamos organizando tu planeación",
+                "label": pres["label"],
+                "wait_message": "Tu planeación está lista para ser revisada.",
+                "description": pres.get("description", ""),
+                "progress_state": pres["state"],
+            },
+        )
+
+    # 6. Legacy background stage just finished with topics/subtopics (only when explicit legacy session marker):
+    if job.progress_finished_at and not job.progress_stage and job.topics:
+        if legacy_stage:
+            return redirect("tutor-import-detail", job_id=job.pk)
+        return redirect("tutor-curriculum")
+
+    # 7. Active claim token or active interpretation stage without dossier:
+    if job.progress_stage or (job.interpretation_claim_token and not job.interpretation_dossier):
+        return render(
+            request,
+            "curriculum/tutor_import_wait.html",
+            {
+                "job": job,
+                "ready_for_review": False,
+                "needs_reextract": False,
+                "wait_heading": "Estamos organizando tu planeación",
+                "progress_state": pres["state"],
+                "label": pres["label"],
+                "wait_message": pres["label"],
+                "description": pres.get("description", ""),
+            },
+        )
+
+    if legacy_stage:
+        return redirect("tutor-import-detail", job_id=job.pk)
+    return redirect("tutor-curriculum")
+
+
+@teacher_required
+@require_POST
+def tutor_import_cancel(request, job_id):
+    job = get_object_or_404(CurriculumImportJob, pk=job_id, created_by=request.user)
+    if job.progress_stage or job.interpretation_claim_token:
+        CurriculumImportJob.objects.filter(pk=job.pk).update(
+            cancel_requested=True, updated_at=timezone.now()
+        )
+    return redirect("tutor-curriculum")
+
+
+@teacher_required
+@require_POST
+def tutor_import_retry(request, job_id):
+    """POST endpoint to idempotently retry curriculum interpretation on a failed or stale job.
+    Reuses the existing job and PDF without creating new jobs or published snapshots."""
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+
+    # 1. If already READY with valid dossier: fast redirect to review
+    if job.interpretation_state == CurriculumImportJob.INTERPRETATION_STATE_READY and job.has_valid_ready_dossier():
+        return redirect("tutor-import-interpretation", job_id=job.pk)
+
+    # 2. If actively organizing with non-stale claim: redirect to wait without duplicate worker
+    if job.interpretation_claim_token and not job.is_stage_stale():
+        return redirect("tutor-import-wait", job_id=job.pk)
+
+    # 3. Initiate retry via command seam
+    from curriculum.interpretation_commands import retry_job_interpretation, ReextractRequired
+    try:
+        retry_job_interpretation(job)
+    except ReextractRequired as exc:
+        return HttpResponse(
+            str(exc) or "Se requiere una reextracción explícita.",
+            status=409,
+            content_type="text/plain; charset=utf-8",
+        )
+    except Exception as exc:
+        logger.warning("Fallo al reintentar interpretación para trabajo %s: %s", job.pk, exc)
+
+    job.refresh_from_db()
+    if job.interpretation_state == CurriculumImportJob.INTERPRETATION_STATE_READY and job.has_valid_ready_dossier():
+        return redirect("tutor-import-interpretation", job_id=job.pk)
+    return redirect("tutor-import-wait", job_id=job.pk)
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_status(request, job_id):
+    """Small owner-scoped polling payload; pure read view, never mutates persistence."""
+
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+    pres = _get_derived_import_presentation(job)
+    started_at_aware = _normalize_datetime(job.progress_started_at or job.interpretation_claimed_at)
+    needs_reextract = pres.get("needs_reextract", False)
+    can_retry = (
+        not needs_reextract
+        and (
+            pres["state"] == "error"
+            or getattr(job, "interpretation_state", None) == CurriculumImportJob.INTERPRETATION_STATE_FAILED
+        )
+    )
     return JsonResponse(
         {
-            "state": state,
-            "label": IMPORT_PROGRESS_LABELS[state],
-            "stage": job.progress_stage,
+            "state": pres["state"],
+            "interpretation_state": getattr(job, "interpretation_state", CurriculumImportJob.INTERPRETATION_STATE_NOT_STARTED),
+            "label": pres["label"],
+            "description": pres.get("description", ""),
+            "stage": pres["stage"],
             "done": job.progress_done,
             "total": job.progress_total,
-            "error": job.error_message,
+            "error": pres["error"],
+            "can_retry": can_retry,
+            "retry_url": reverse("tutor-import-retry", args=[job.pk]) if can_retry else None,
+            "needs_reextract": needs_reextract,
+            "reextract_url": reverse("tutor-import-interpretation", args=[job.pk]) if needs_reextract else None,
             "started_at": (
-                job.progress_started_at.isoformat()
-                if job.progress_started_at is not None
+                started_at_aware.isoformat()
+                if started_at_aware is not None
                 else None
             ),
             "finished_at": (
-                job.progress_finished_at.isoformat()
-                if job.progress_finished_at is not None
+                pres["finished_at"].isoformat()
+                if pres["finished_at"] is not None
                 else None
             ),
-            "redirect_url": reverse("tutor-import-detail", args=[job.pk]),
+            "redirect_url": (
+                reverse("tutor-import-interpretation", args=[job.pk])
+                if (
+                    pres["state"] == "finished"
+                    and getattr(job, "interpretation_state", None) == CurriculumImportJob.INTERPRETATION_STATE_READY
+                    and pres.get("has_valid_dossier", False)
+                )
+                else reverse("tutor-import-wait", args=[job.pk])
+            ),
         }
     )
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_import_source_page(request, job_id, page_number):
+    """Serve an import PDF inline only to its owning teacher.
+
+    Authoritative source: uses active/current approval blob if approved;
+    otherwise falls back to job.pdf (with integrity check against dossier).
+    Supports single HTTP Range requests (206 Partial Content, Content-Range, Accept-Ranges,
+    Content-Length), returning 416 for unsatisfiable ranges.
+    """
+
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+    try:
+        page_number = int(page_number)
+    except (TypeError, ValueError):
+        raise Http404("Número de página no válido.")
+    if page_number < 1:
+        raise Http404("El número de página debe ser mayor o igual a 1.")
+
+    pdf_bytes = None
+    pdf_sha = None
+
+    # Check approval blob first (serves immutable blob when approved, even if job.pdf is deleted)
+    dossier = job.get_interpretation_dossier()
+    v = getattr(dossier, "version", None) if dossier else None
+    sha = getattr(dossier, "source_sha256", None) if dossier else None
+    approval = None
+    if v and sha:
+        approval = job.approvals.filter(dossier_version=v, source_sha256=sha).first()
+    if approval and approval.source_blob and approval.source_blob.is_valid_blob():
+        blob = approval.source_blob
+        if (blob.sha256 or "").lower() == (approval.source_sha256 or "").lower():
+            pdf_bytes = bytes(blob.content)
+            pdf_sha = blob.sha256.lower()
+
+    # Fallback to job.pdf if not approved or no valid blob
+    if pdf_bytes is None:
+        if not job.pdf:
+            raise Http404("El documento PDF fuente no está disponible.")
+        try:
+            with job.pdf.open("rb") as stream:
+                pdf_bytes = stream.read()
+        except Exception:
+            raise Http404("No se pudo leer el archivo PDF fuente.")
+
+        pdf_sha = hashlib.sha256(pdf_bytes).hexdigest().lower()
+        dossier = job.get_interpretation_dossier()
+        if dossier and (dossier.source_sha256 or "").lower() != pdf_sha:
+            return HttpResponse(
+                "Conflicto de integridad: El archivo PDF en el servidor fue alterado "
+                "(SHA-256 no coincide con el dossier original). El visor de láminas fuente está bloqueado "
+                "hasta que se realice una reextracción segura.",
+                status=409,
+            )
+
+    # Page count validation
+    effective_page_count = job.page_count
+    if not effective_page_count:
+        try:
+            import io
+            from pypdf import PdfReader
+            reader = PdfReader(io.BytesIO(pdf_bytes))
+            effective_page_count = len(reader.pages)
+        except Exception as exc:
+            logger.warning("No se pudo calcular el total de páginas para el trabajo %s: %s", job.pk, exc)
+    if effective_page_count and page_number > int(effective_page_count):
+        raise Http404("Página fuera de rango.")
+
+    total_length = len(pdf_bytes)
+
+    # Range header handling
+    range_header = request.headers.get("Range") or request.META.get("HTTP_RANGE")
+    if range_header:
+        range_header = range_header.strip()
+        if not range_header.startswith("bytes="):
+            response = HttpResponse(status=416)
+            response["Content-Range"] = f"bytes */{total_length}"
+            return response
+
+        range_val = range_header[6:].strip()
+        if "," in range_val:
+            response = HttpResponse(status=416)
+            response["Content-Range"] = f"bytes */{total_length}"
+            return response
+
+        parts = range_val.split("-", 1)
+        start_str, end_str = parts[0].strip(), parts[1].strip()
+
+        try:
+            if start_str and end_str:
+                start = int(start_str)
+                end = int(end_str)
+                if start > end or start >= total_length or start < 0:
+                    response = HttpResponse(status=416)
+                    response["Content-Range"] = f"bytes */{total_length}"
+                    return response
+                end = min(end, total_length - 1)
+            elif start_str and not end_str:
+                start = int(start_str)
+                if start >= total_length or start < 0:
+                    response = HttpResponse(status=416)
+                    response["Content-Range"] = f"bytes */{total_length}"
+                    return response
+                end = total_length - 1
+            elif not start_str and end_str:
+                suffix = int(end_str)
+                if suffix <= 0:
+                    response = HttpResponse(status=416)
+                    response["Content-Range"] = f"bytes */{total_length}"
+                    return response
+                start = max(0, total_length - suffix)
+                end = total_length - 1
+            else:
+                response = HttpResponse(status=416)
+                response["Content-Range"] = f"bytes */{total_length}"
+                return response
+        except ValueError:
+            response = HttpResponse(status=416)
+            response["Content-Range"] = f"bytes */{total_length}"
+            return response
+
+        slice_bytes = pdf_bytes[start : end + 1]
+        response = HttpResponse(slice_bytes, status=206, content_type="application/pdf")
+        response["Content-Range"] = f"bytes {start}-{end}/{total_length}"
+        response["Accept-Ranges"] = "bytes"
+        response["Content-Length"] = str(len(slice_bytes))
+        response["Content-Disposition"] = "inline; filename=source.pdf"
+        return response
+
+    response = HttpResponse(pdf_bytes, status=200, content_type="application/pdf")
+    response["Accept-Ranges"] = "bytes"
+    response["Content-Length"] = str(total_length)
+    response["Content-Disposition"] = "inline; filename=source.pdf"
+    return response
+
+
+
+@teacher_required
+@require_http_methods(["GET"])
+def tutor_package_source_page(request, snapshot_id, page_number):
+    """Serve only the immutable PDF copy captured by the published snapshot."""
+
+    snapshot = get_object_or_404(
+        PublishedPackageSnapshot,
+        pk=snapshot_id,
+        package__created_by=request.user,
+    )
+    references = snapshot.payload.get("source_references", []) if snapshot.payload else []
+    try:
+        page_number = int(page_number)
+    except (TypeError, ValueError):
+        raise Http404
+    page_references = [
+        reference
+        for reference in references
+        if isinstance(reference, dict)
+        and page_number in {
+            int(page)
+            for page in reference.get("source_pages", [])
+            if str(page).isdigit()
+        }
+    ]
+    expected_hashes = {
+        str(reference.get("source_pdf_sha256", ""))
+        for reference in page_references
+        if reference.get("source_pdf_sha256")
+    }
+    if (
+        not page_references
+        or not snapshot.source_pdf
+        or not snapshot.source_pdf_sha256
+        or expected_hashes != {snapshot.source_pdf_sha256}
+    ):
+        raise Http404
+    with snapshot.source_pdf.open("rb") as source:
+        content = source.read()
+    if hashlib.sha256(content).hexdigest() != snapshot.source_pdf_sha256:
+        raise Http404
+    response = FileResponse(ContentFile(content, name="source.pdf"), content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=source.pdf"
+    return response
 
 
 def _render_technical_log_markdown(job):
@@ -2989,17 +4065,1262 @@ def tutor_import_upload(request):
     """Stage A entry: the teacher uploads the curriculum PDF."""
 
     if request.method == "POST":
-        pdf = request.FILES.get("pdf")
-        if pdf is None:
+        pdf_list = request.FILES.getlist("pdf")
+        def _reject(error_msg):
+            for key in request.FILES:
+                for item in request.FILES.getlist(key):
+                    try:
+                        item.close()
+                    except Exception:
+                        pass
             return render(
                 request,
                 "curriculum/tutor_import_form.html",
-                {"error": "Selecciona el PDF de la currícula."},
+                {"error": error_msg},
                 status=400,
             )
+
+        if len(pdf_list) != 1 or len(request.FILES) > 1:
+            if len(pdf_list) == 0:
+                error_msg = "Selecciona el PDF de la currícula."
+            else:
+                error_msg = "Elige un solo archivo PDF para continuar."
+            return _reject(error_msg)
+
+        pdf = pdf_list[0]
+        filename = (getattr(pdf, "name", "") or "").strip()
+        if not filename.lower().endswith(".pdf"):
+            return _reject("El archivo debe ser un documento en formato PDF (.pdf).")
+
+        if getattr(pdf, "size", 0) == 0:
+            return _reject("El archivo seleccionado está vacío. Por favor elige un PDF válido.")
+
+        max_upload_size = getattr(settings, "CURRICULUM_MAX_UPLOAD_SIZE_BYTES", 25 * 1024 * 1024)
+        if getattr(pdf, "size", 0) > max_upload_size:
+            max_mb = max_upload_size // (1024 * 1024)
+            return _reject(f"El archivo supera el tamaño máximo permitido de {max_mb} MB.")
+
+        try:
+            from pypdf import PdfReader
+            if hasattr(pdf, "seek"):
+                pdf.seek(0)
+            reader = PdfReader(pdf)
+            if len(reader.pages) < 1:
+                return _reject("El documento PDF no contiene páginas válidas.")
+            if hasattr(pdf, "seek"):
+                pdf.seek(0)
+        except Exception:
+            return _reject("El archivo no es un documento PDF válido o está dañado. Por favor elige otro archivo.")
+
         job = CurriculumImportJob.objects.create(pdf=pdf, created_by=request.user)
-        return redirect("tutor-import-detail", job_id=job.pk)
+        try:
+            trigger_job_interpretation(job)
+        except Exception as exc:
+            logger.warning("Fallo al iniciar interpretación para trabajo %s: %s", job.pk, exc)
+            from curriculum.interpretation_commands import record_upload_outer_failure
+
+            record_upload_outer_failure(job, error_message=str(exc))
+            job.refresh_from_db()
+        return redirect("tutor-import-wait", job_id=job.pk)
     return render(request, "curriculum/tutor_import_form.html", {})
+
+
+@teacher_required
+@require_http_methods(["GET", "POST"])
+def tutor_import_interpretation(request, job_id):
+    """V0: Session interpretation, provenance, teacher corrections, save and reopen."""
+    import copy
+    import re
+    from curriculum.source_interpreter import (
+        CANONICAL_CAMPOS,
+        CurriculumInterpretationError,
+        CurriculumSourceInterpreter,
+        ImportDossier,
+        InterpretationCancelledError,
+        InterpretationTimeoutError,
+        SelectionError,
+        SourcePdfReadError,
+        _find_single_annex_ref,
+        _utc_iso_now,
+        compute_reextract_diff,
+        derive_campos_formativos_options,
+        derive_operational_queue,
+        normalize_campos_formativos,
+        parse_canonical_positive_int,
+        resolve,
+        PRIORITY_REQUIRES_RESOLUTION,
+        PRIORITY_PENDING_REVIEW,
+        PRIORITY_NOT_SPECIFIED,
+        PRIORITY_REVIEWED,
+        GENERAL_FIELD_DISPLAY_ORDER,
+        SESSION_FIELD_DISPLAY_ORDER,
+    )
+
+    SCALAR_FORM_FIELDS = {
+        "action",
+        "expected_version",
+        "confirm_approval",
+        "confirm_pending_items",
+        "item_id",
+        "scope",
+        "session_filter",
+        "value",
+        "field",
+        "reference_id",
+        "session_id",
+        "session_number",
+        "confirm_field",
+        "campos_formativos_present",
+        "proyecto",
+        "proposito",
+        "finalidad",
+        "metodologia",
+        "escenario_proyecto",
+        "inicio",
+        "desarrollo",
+        "cierre",
+        "materiales",
+        "evaluacion",
+        "contexto_ejecucion",
+    }
+
+    job = get_object_or_404(
+        CurriculumImportJob,
+        pk=job_id,
+        created_by=request.user,
+    )
+    if not job.pdf:
+        raise Http404("El trabajo no tiene un archivo PDF asociado.")
+
+    with job.pdf.open("rb") as stream:
+        current_bytes = stream.read()
+    current_pdf_sha256 = hashlib.sha256(current_bytes).hexdigest()
+
+    parsed_post_session_number: int | None = None
+    if request.method == "POST":
+        # B1 & F6: Reject duplicate scalar inputs with HTTP 400 before mutation/versioning
+        for k in request.POST.keys():
+            if (
+                k in SCALAR_FORM_FIELDS
+                or k.startswith("annex_confirm_")
+                or k.startswith("annex_manual_page_")
+                or k.startswith("annex_manual_confirm_")
+                or k.startswith("annex_disassociate_")
+            ):
+                if len(request.POST.getlist(k)) > 1:
+                    return HttpResponseBadRequest(
+                        f"Múltiples valores no permitidos para el campo escalar '{k}'."
+                    )
+
+        # B4: Canonical validation for session_number on ANY POST action before branch dispatch
+        if "session_number" in request.POST:
+            try:
+                parsed_post_session_number = parse_canonical_positive_int(request.POST["session_number"])
+            except ValueError:
+                return HttpResponseBadRequest("Número de sesión inválido en 'session_number'.")
+
+        action = request.POST.get("action")
+    else:
+        action = None
+
+    success_message = ""
+    error_message = ""
+    post_status_code = 200
+    invalid_field = None
+    inline_errors = {}
+    request_selected_session = None
+    request_selected_item_key = None
+
+    dossier = job.get_interpretation_dossier()
+    source_tampered = bool(
+        dossier is not None and dossier.source_sha256 != current_pdf_sha256
+    )
+
+    # Check for unrecoverable identity conflicts / duplicate tokens across sessions and annexes
+    if dossier is not None:
+        try:
+            derive_operational_queue(dossier)
+        except SelectionError as exc:
+            if any(w in str(exc).lower() for w in ("ambiguo", "múltiples", "duplicado", "conflicto")):
+                return HttpResponseBadRequest(str(exc))
+            raise
+
+    report = getattr(dossier, "verification_report", None) if dossier else None
+    if not isinstance(report, dict) and isinstance(getattr(job, "interpretation_dossier", None), dict):
+        report = job.interpretation_dossier.get("verification_report")
+
+    # Strict canonical validation of verification report against physical PDF
+    from curriculum.verification import validate_canonical_verification_report
+
+    report_valid = bool(
+        report is not None
+        and dossier is not None
+        and validate_canonical_verification_report(dossier, current_bytes, report)
+    )
+
+    is_valid_ready = bool(
+        job.interpretation_state == CurriculumImportJob.INTERPRETATION_STATE_READY
+        and dossier is not None
+        and getattr(dossier, "version", 0) >= 1
+        and getattr(dossier, "status", "") == "active"
+        and not source_tampered
+        and _is_valid_ready_interpretation_dossier(job, pdf_bytes=current_bytes)
+        and report_valid
+    )
+
+    if request.method == "GET":
+        if not is_valid_ready:
+            return redirect("tutor-import-wait", job_id=job.pk)
+
+    if request.method == "POST" and action != "reextract":
+        if not is_valid_ready:
+            return HttpResponse(
+                "Conflicto de integridad: El archivo PDF fue modificado o la planeación contiene bloqueos "
+                "de comprobación automática. "
+                "Las correcciones y confirmaciones están bloqueadas para evitar desalineación de láminas y datos. "
+                "Debe realizar una reextracción explícita.",
+                status=409,
+            )
+
+    if request.method == "POST":
+        if hasattr(request, "session"):
+            request.session.pop(f"legacy_stage_{job.pk}", None)
+
+        if action == "approve":
+            from curriculum.approval_commands import execute_teacher_approval
+
+            result = execute_teacher_approval(
+                job_id=job.pk,
+                user=request.user,
+                post_data=request.POST,
+                is_dedicated_route=False,
+            )
+            if not result.is_success:
+                if result.http_status == 404:
+                    raise Http404(result.message)
+                return HttpResponse(result.message, status=result.http_status)
+
+            success_message = result.message
+            job.refresh_from_db()
+            dossier = job.get_interpretation_dossier()
+            active_approval = result.approval
+            is_approved = True
+
+        # Sol Advanced Audit: atomic mutation with select_for_update for mutating actions
+        QUEUE_ACTIONS = ("confirm_queue_item", "save_queue_item", "leave_queue_item_pending")
+        MUTATING_ACTIONS = ("save_corrections", "confirm_all", "reextract", *QUEUE_ACTIONS)
+        if action in MUTATING_ACTIONS:
+            with transaction.atomic():
+                job = (
+                    CurriculumImportJob.objects.select_for_update()
+                    .filter(pk=job_id, created_by=request.user)
+                    .first()
+                )
+                if not job:
+                    raise Http404("El trabajo de importación no existe.")
+                dossier = job.get_interpretation_dossier()
+
+                # Requirement 1: expected_version validation
+                if dossier is not None and action in MUTATING_ACTIONS:
+                    req_expected_version = request.POST.get("expected_version")
+                    if req_expected_version is None or str(req_expected_version).strip() == "":
+                        if action not in ("confirm_all",):
+                            return HttpResponse(
+                                "El campo 'expected_version' es requerido para validar la concurrencia del dossier.",
+                                status=400,
+                            )
+                    else:
+                        try:
+                            exp_ver = parse_canonical_positive_int(req_expected_version)
+                        except ValueError:
+                            return HttpResponse(
+                                "El campo 'expected_version' debe ser un número entero válido.",
+                                status=400,
+                            )
+                        if action != "reextract" and exp_ver != dossier.version:
+                            conflict_msg = (
+                                f"Conflicto de concurrencia (409): El formulario fue cargado con la versión {exp_ver}, "
+                                f"pero el documento ya se encuentra en la versión {dossier.version} por modificaciones concurrentes. "
+                                "Recargue la página para ver las correcciones más recientes."
+                            )
+                            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                                return HttpResponse(conflict_msg, status=409)
+                            context = {
+                                "job": job,
+                                "dossier": dossier,
+                                "selected_session": dossier.get_session(dossier.selection.get("session_id")) if dossier and dossier.sessions else None,
+                                "active_session_id": dossier.selection.get("session_id", "") if dossier else "",
+                                "active_session_number": dossier.selection.get("session_number", 1) if dossier else 1,
+                                "current_pdf_sha256": current_pdf_sha256,
+                                "source_tampered": source_tampered,
+                                "success_message": "",
+                                "error_message": conflict_msg,
+                            }
+                            return render(request, "curriculum/tutor_import_interpretation.html", context, status=409)
+
+                # P0-1: Block mutation operations on tampered source with 409 Conflict
+                if source_tampered and action in ("save_corrections", "confirm_all", "approve"):
+                    return HttpResponse(
+                        "Conflicto de integridad: El archivo PDF fue modificado o reemplazado en el servidor "
+                        "(SHA-256 no coincide con el dossier de interpretación). Las correcciones y confirmaciones "
+                        "están bloqueadas para evitar desalineación de páginas. Debe realizar una reextracción explícita.",
+                        status=409,
+                    )
+
+                if action == "reextract":
+                    # Check active foreign claim first: return 409 Conflict without mutating persistence
+                    job.refresh_from_db()
+                    if job.interpretation_claim_token:
+                        return HttpResponse(
+                            "No se puede reextraer: la organización de interpretación está en progreso por otro proceso.",
+                            status=409,
+                        )
+
+                    # Requirement 3: Explicit retry/re-extract clears cancel_requested before starting
+                    had_cancel_request = bool(job.cancel_requested)
+                    if job.cancel_requested:
+                        job.cancel_requested = False
+                        job.save(update_fields=["cancel_requested", "updated_at"])
+
+                    old_history = copy.deepcopy(dossier.history) if dossier else []
+                    old_version = dossier.version if dossier else 0
+                    old_selection = copy.deepcopy(dossier.selection) if dossier else {}
+                    old_dossier_snapshot = copy.deepcopy(dossier) if dossier else None
+
+                    selection_reset = False
+                    try:
+                        dossier = CurriculumSourceInterpreter.prepare(
+                            job, selection=old_selection if old_selection else None, job=job, timeout_seconds=30.0
+                        )
+                    except SelectionError:
+                        # Requirement 2: Only retry without old_selection when the error is strictly a selection error
+                        dossier = CurriculumSourceInterpreter.prepare(
+                            job, selection=None, job=job, timeout_seconds=30.0
+                        )
+                        selection_reset = True
+                    except InterpretationCancelledError as exc:
+                        from curriculum.interpretation_commands import finish_cancelled_stage
+
+                        finish_cancelled_stage(job)
+                        err_msg = f"Reextracción cancelada: {exc}"
+                        return HttpResponse(err_msg, status=409)
+                    except (TimeoutError, InterpretationTimeoutError) as exc:
+                        from curriculum.interpretation_commands import record_reextract_failure
+
+                        err_msg = f"Tiempo de extracción excedido durante reextracción: {exc}"
+                        record_reextract_failure(job, err_msg, current_pdf_sha256, dossier)
+                        return HttpResponse(err_msg, status=504)
+                    except (SourcePdfReadError, Exception) as exc:
+                        # Requirement 2: PDF inválido => 400/422 controlado, último dossier preservado (marcado invalidated si hash cambió), progress_stage limpio y mensaje útil sin traceback al usuario.
+                        from curriculum.interpretation_commands import record_reextract_failure
+
+                        err_msg = f"No se pudo leer el archivo PDF fuente: {exc}."
+                        record_reextract_failure(job, err_msg, current_pdf_sha256, dossier)
+                        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                            return HttpResponse(err_msg, status=422)
+                        context = {
+                            "job": job,
+                            "dossier": dossier,
+                            "selected_session": dossier.get_session(dossier.selection.get("session_id")) if dossier and dossier.sessions else None,
+                            "active_session_id": dossier.selection.get("session_id", "") if dossier else "",
+                            "active_session_number": dossier.selection.get("session_number", 1) if dossier else 1,
+                            "current_pdf_sha256": current_pdf_sha256,
+                            "source_tampered": bool(dossier and current_pdf_sha256 != getattr(dossier, "source_sha256", "")),
+                            "success_message": "",
+                            "error_message": err_msg,
+                        }
+                        return render(request, "curriculum/tutor_import_interpretation.html", context, status=422)
+
+                    dossier.version = old_version + 1
+                    actor_name = request.user.get_full_name().strip() or request.user.username
+                    now_str = _utc_iso_now()
+
+                    reextract_entry = {
+                        "version": dossier.version,
+                        "action": "reextract",
+                        "actor": actor_name,
+                        "timestamp": now_str,
+                        "selection_reset": selection_reset,
+                        "retry_after_cancel": had_cancel_request,
+                        "deltas": compute_reextract_diff(old_dossier_snapshot, dossier),
+                        "summary": (
+                            f"Reextracción segura ejecutada desde el documento actual "
+                            f"(SHA-256: {current_pdf_sha256[:12]}...). "
+                            + ("Reintento exitoso tras cancelación previa. " if had_cancel_request else "")
+                            + f"Versión {dossier.version} registrada."
+                        ),
+                    }
+                    entries_to_add = [reextract_entry]
+                    if selection_reset:
+                        entries_to_add.append({
+                            "version": dossier.version,
+                            "action": "selection_reset",
+                            "actor": actor_name,
+                            "timestamp": now_str,
+                            "summary": (
+                                f"Selección restablecida: la sesión previa {old_selection.get('session_id')} no existe en el nuevo documento. "
+                                f"Se seleccionó por defecto la sesión '{dossier.selection.get('session_id')}'."
+                            ),
+                        })
+                    dossier.history = old_history + entries_to_add
+                    job.save_interpretation_dossier(dossier)
+                    job.invalidate_approvals(reason="Reextracción ejecutada por el docente")
+                    source_tampered = False
+                    success_message = "Interpretación reiniciada de forma segura desde el documento fuente."
+
+                    # Requirement 3: Clear obsolete progress_stage, keep cancel_requested False, keep cancelled_at intact
+                    job.progress_stage = ""
+                    job.cancel_requested = False
+                    job.save(
+                        update_fields=[
+                            "progress_stage",
+                            "cancel_requested",
+                            "updated_at",
+                        ]
+                    )
+
+                elif action in QUEUE_ACTIONS:
+                    req_item_id = request.POST.get("item_id")
+                    if not req_item_id or not isinstance(req_item_id, str) or not req_item_id.strip():
+                        return HttpResponseBadRequest(
+                            "El campo 'item_id' es requerido para acciones de la cola de revisión."
+                        )
+                    req_item_id = req_item_id.strip()
+
+                    post_scope = request.POST.get("scope") or request.POST.get("session_filter")
+                    get_scope = request.GET.get("scope") or request.GET.get("session_filter")
+                    effective_scope = (post_scope or get_scope or "").strip() or None
+
+                    try:
+                        authorized_queue = derive_operational_queue(dossier, session_filter=effective_scope)
+                    except SelectionError as exc:
+                        return HttpResponseBadRequest(f"Alcance de cola no válido o ambiguo: {exc}")
+                    except Exception as exc:
+                        return HttpResponseBadRequest(f"Error al verificar la cola operativa: {exc}")
+
+                    matching_items = [it for it in authorized_queue.items if it.item_id == req_item_id]
+                    if len(matching_items) == 0:
+                        return HttpResponseBadRequest(
+                            f"El elemento '{req_item_id}' no existe o no pertenece al alcance visible autorizado."
+                        )
+                    elif len(matching_items) > 1:
+                        return HttpResponseBadRequest(
+                            f"Conflicto de unicidad: múltiples elementos coinciden con '{req_item_id}'."
+                        )
+                    target_item = matching_items[0]
+
+                    # Scope binding enforcement:
+                    if target_item.scope in ("session", "annex"):
+                        if effective_scope in ("all", "document", "general"):
+                            return HttpResponseBadRequest(
+                                "Un elemento de sesión no puede mutarse bajo el alcance de documento o general."
+                            )
+                        if effective_scope and effective_scope not in (target_item.session_id, str(target_item.session_number)):
+                            return HttpResponseBadRequest(
+                                "El alcance especificado no coincide con la sesión del elemento."
+                            )
+                    elif target_item.scope == "general":
+                        if effective_scope is not None and effective_scope not in ("", "all", "document", "general"):
+                            return HttpResponseBadRequest(
+                                "Un elemento de datos generales no puede mutarse bajo el alcance de una sesión."
+                            )
+
+                    # Per-action allowlist validation:
+                    base_allowed = {"csrfmiddlewaretoken", "action", "expected_version", "item_id", "scope", "session_filter"}
+
+                    if target_item.scope in ("general", "session"):
+                        if target_item.field_name == "campos_formativos":
+                            item_control_keys = {"campos_formativos", "campos_formativos_present"}
+                        else:
+                            item_control_keys = {target_item.field_name}
+                    elif target_item.scope == "annex":
+                        ref_id = target_item.reference_id or f"annex_{target_item.annex_number}"
+                        item_control_keys = {
+                            "annex_page",
+                            "page",
+                            f"annex_confirm_{ref_id}",
+                            f"annex_manual_page_{ref_id}",
+                            "manual_page",
+                            f"annex_manual_confirm_{ref_id}",
+                            "manual_confirm",
+                            f"annex_disassociate_{ref_id}",
+                            "disassociate",
+                        }
+                    else:
+                        item_control_keys = set()
+
+                    if action == "confirm_queue_item":
+                        if "value" in request.POST:
+                            return HttpResponseBadRequest("La acción 'confirm_queue_item' no acepta el parámetro 'value'.")
+                        allowed_keys = base_allowed | item_control_keys
+                        extra_keys = [k for k in request.POST.keys() if k not in allowed_keys]
+                        if extra_keys:
+                            return HttpResponseBadRequest(
+                                f"Claves no autorizadas en 'confirm_queue_item' para '{target_item.human_label}': {extra_keys}."
+                            )
+
+                    elif action == "save_queue_item":
+                        has_value = "value" in request.POST
+                        has_control = any(k in request.POST for k in item_control_keys)
+                        if not has_value and not has_control:
+                            return HttpResponseBadRequest(
+                                "La acción 'save_queue_item' exige exactamente su control o el parámetro 'value'."
+                            )
+                        if has_value and has_control:
+                            return HttpResponseBadRequest(
+                                "La acción 'save_queue_item' no permite enviar 'value' conjuntamente con el control específico."
+                            )
+                        allowed_keys = base_allowed | item_control_keys | ({"value"} if has_value else set())
+                        extra_keys = [k for k in request.POST.keys() if k not in allowed_keys]
+                        if extra_keys:
+                            return HttpResponseBadRequest(
+                                f"Claves no autorizadas en 'save_queue_item' para '{target_item.human_label}': {extra_keys}."
+                            )
+
+                    elif action == "leave_queue_item_pending":
+                        if "value" in request.POST:
+                            return HttpResponseBadRequest("La acción 'leave_queue_item_pending' no acepta valor.")
+                        allowed_keys = base_allowed | item_control_keys
+                        extra_keys = [k for k in request.POST.keys() if k not in allowed_keys]
+                        if extra_keys:
+                            return HttpResponseBadRequest(
+                                f"Claves no autorizadas en 'leave_queue_item_pending' para '{target_item.human_label}': {extra_keys}."
+                            )
+
+                    actor_name = request.user.get_full_name().strip() or request.user.username
+
+                    if action == "leave_queue_item_pending":
+                        success_message = f"Elemento '{target_item.human_label}' omitido por ahora."
+                        curr_idx = authorized_queue.items.index(target_item)
+                        if curr_idx + 1 < len(authorized_queue.items):
+                            request_selected_item_key = authorized_queue.items[curr_idx + 1].stable_key
+                        else:
+                            request_selected_item_key = authorized_queue.items[0].stable_key if authorized_queue.items else None
+                        if target_item.session_id:
+                            request_selected_session = dossier.get_session(target_item.session_id)
+                    else:
+                        corrections_payload = {}
+                        if action == "confirm_queue_item":
+                            if target_item.scope == "general":
+                                corrections_payload = {"reviews": {target_item.field_name: "confirmed"}}
+                            elif target_item.scope == "session":
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "reviews": {target_item.field_name: "confirmed"},
+                                }
+                            elif target_item.scope == "annex":
+                                ref_id = target_item.reference_id
+                                page_val = (
+                                    request.POST.get(f"annex_confirm_{ref_id}")
+                                    or request.POST.get("annex_page")
+                                    or request.POST.get("page")
+                                )
+                                manual_val = (
+                                    request.POST.get(f"annex_manual_page_{ref_id}")
+                                    or request.POST.get("manual_page")
+                                )
+                                manual_conf = (
+                                    request.POST.get(f"annex_manual_confirm_{ref_id}") in ("1", "on", "true", "True")
+                                    or request.POST.get("manual_confirm") in ("1", "on", "true", "True")
+                                )
+                                disassoc = (
+                                    request.POST.get(f"annex_disassociate_{ref_id}") in ("1", "on", "true", "True")
+                                    or request.POST.get("disassociate") in ("1", "on", "true", "True")
+                                )
+
+                                annex_conf = {}
+                                manual_annex_conf = {}
+                                if disassoc:
+                                    annex_conf[ref_id] = None
+                                elif manual_conf and manual_val:
+                                    try:
+                                        p_int = parse_canonical_positive_int(manual_val)
+                                    except ValueError:
+                                        error_message = f"Número de página manual inválido '{manual_val}'."
+                                        invalid_field = f"annex_manual_page_{ref_id}"
+                                        inline_errors[invalid_field] = error_message
+                                        post_status_code = 400
+                                    else:
+                                        if p_int < 1 or p_int > dossier.page_count:
+                                            error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                            invalid_field = f"annex_manual_page_{ref_id}"
+                                            inline_errors[invalid_field] = error_message
+                                            post_status_code = 400
+                                        else:
+                                            annex_conf[ref_id] = p_int
+                                            manual_annex_conf[ref_id] = {"page": p_int, "confirmed": True}
+                                elif page_val is not None and str(page_val).strip() != "":
+                                    try:
+                                        p_int = parse_canonical_positive_int(page_val)
+                                    except ValueError:
+                                        error_message = f"Número de página inválido '{page_val}'."
+                                        invalid_field = f"annex_confirm_{ref_id}"
+                                        inline_errors[invalid_field] = error_message
+                                        post_status_code = 400
+                                    else:
+                                        if p_int < 1 or p_int > dossier.page_count:
+                                            error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                            invalid_field = f"annex_confirm_{ref_id}"
+                                            inline_errors[invalid_field] = error_message
+                                            post_status_code = 400
+                                        else:
+                                            annex_conf[ref_id] = p_int
+                                elif target_item.current_value is not None:
+                                    annex_conf[ref_id] = target_item.current_value
+                                elif target_item.original_value is not None:
+                                    annex_conf[ref_id] = target_item.original_value
+                                else:
+                                    error_message = f"Debe seleccionar o especificar una página para confirmar el anexo '{target_item.human_label}'."
+                                    invalid_field = f"annex_confirm_{ref_id}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "annex_confirmations": annex_conf,
+                                }
+                                if manual_annex_conf:
+                                    corrections_payload["manual_annex_confirmations"] = manual_annex_conf
+
+                        elif action == "save_queue_item":
+                            if target_item.scope == "general":
+                                if target_item.field_name == "campos_formativos":
+                                    raw_vals = request.POST.getlist("campos_formativos")
+                                    val = normalize_campos_formativos(raw_vals)
+                                else:
+                                    val = request.POST.get("value") if "value" in request.POST else request.POST.get(target_item.field_name, "")
+                                corrections_payload = {"general_fields": {target_item.field_name: val}}
+                            elif target_item.scope == "session":
+                                val = request.POST.get("value") if "value" in request.POST else request.POST.get(target_item.field_name, "")
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "session_fields": {target_item.field_name: val},
+                                }
+                            elif target_item.scope == "annex":
+                                ref_id = target_item.reference_id
+                                page_val = (
+                                    request.POST.get(f"annex_confirm_{ref_id}")
+                                    or request.POST.get("annex_page")
+                                    or request.POST.get("page")
+                                )
+                                manual_val = (
+                                    request.POST.get(f"annex_manual_page_{ref_id}")
+                                    or request.POST.get("manual_page")
+                                )
+                                manual_conf = (
+                                    request.POST.get(f"annex_manual_confirm_{ref_id}") in ("1", "on", "true", "True")
+                                    or request.POST.get("manual_confirm") in ("1", "on", "true", "True")
+                                )
+                                disassoc = (
+                                    request.POST.get(f"annex_disassociate_{ref_id}") in ("1", "on", "true", "True")
+                                    or request.POST.get("disassociate") in ("1", "on", "true", "True")
+                                )
+                                annex_conf = {}
+                                manual_annex_conf = {}
+                                if disassoc:
+                                    annex_conf[ref_id] = None
+                                elif manual_conf and manual_val:
+                                    try:
+                                        p_int = parse_canonical_positive_int(manual_val)
+                                    except ValueError:
+                                        error_message = f"Número de página manual inválido '{manual_val}'."
+                                        invalid_field = f"annex_manual_page_{ref_id}"
+                                        inline_errors[invalid_field] = error_message
+                                        post_status_code = 400
+                                    else:
+                                        if p_int < 1 or p_int > dossier.page_count:
+                                            error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                            invalid_field = f"annex_manual_page_{ref_id}"
+                                            inline_errors[invalid_field] = error_message
+                                            post_status_code = 400
+                                        else:
+                                            annex_conf[ref_id] = p_int
+                                            manual_annex_conf[ref_id] = {"page": p_int, "confirmed": True}
+                                elif page_val is not None and str(page_val).strip() != "":
+                                    try:
+                                        p_int = parse_canonical_positive_int(page_val)
+                                    except ValueError:
+                                        error_message = f"Número de página inválido '{page_val}'."
+                                        invalid_field = f"annex_confirm_{ref_id}"
+                                        inline_errors[invalid_field] = error_message
+                                        post_status_code = 400
+                                    else:
+                                        if p_int < 1 or p_int > dossier.page_count:
+                                            error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                            invalid_field = f"annex_confirm_{ref_id}"
+                                            inline_errors[invalid_field] = error_message
+                                            post_status_code = 400
+                                        else:
+                                            annex_conf[ref_id] = p_int
+                                else:
+                                    annex_conf[ref_id] = None
+
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "annex_confirmations": annex_conf,
+                                }
+                                if manual_annex_conf:
+                                    corrections_payload["manual_annex_confirmations"] = manual_annex_conf
+
+                        if post_status_code != 400:
+                            prev_ver = dossier.version
+                            try:
+                                dossier = resolve(dossier, corrections_payload, actor=actor_name, pdf_source=getattr(job, "pdf", None))
+                            except ValueError as exc:
+                                error_message = str(exc)
+                                post_status_code = 400
+
+                        if post_status_code != 400 and dossier.version != prev_ver:
+                            job.save_interpretation_dossier(dossier)
+                            job.invalidate_approvals(reason=f"Elemento de cola modificado por el docente (v{dossier.version})")
+                            if action == "confirm_queue_item":
+                                success_message = f"Elemento '{target_item.human_label}' confirmado por {actor_name}. Versión {dossier.version} registrada."
+                            else:
+                                success_message = f"Elemento '{target_item.human_label}' guardado por {actor_name}. Versión {dossier.version} registrada."
+                        elif post_status_code != 400:
+                            success_message = f"Sin cambios para '{target_item.human_label}'. Versión sin modificaciones."
+
+                        if post_status_code == 400:
+                            request_selected_item_key = target_item.stable_key
+
+                        if target_item.session_id:
+                            request_selected_session = dossier.get_session(target_item.session_id)
+                elif action in ("save_corrections", "confirm_all"):
+                    if dossier is None:
+                        try:
+                            dossier = CurriculumSourceInterpreter.prepare(
+                                job, job=job, timeout_seconds=30.0
+                            )
+                        except TimeoutError as exc:
+                            from curriculum.interpretation_commands import record_direct_timeout
+
+                            record_direct_timeout(job, error_message=str(exc))
+                            return HttpResponse(f"Tiempo de extracción excedido: {exc}", status=504)
+                        except ValueError as exc:
+                            raise Http404(str(exc))
+
+                    # P1-6: Partial POST support - only update fields present in request.POST
+                    general_corrections = {}
+                    for k in ("proyecto", "proposito", "finalidad", "metodologia", "escenario_proyecto"):
+                        if k in request.POST:
+                            general_corrections[k] = request.POST.get(k, "")
+                    if "campos_formativos" in request.POST or "campos_formativos_present" in request.POST:
+                        raw_list = request.POST.getlist("campos_formativos")
+                        general_corrections["campos_formativos"] = normalize_campos_formativos(raw_list)
+
+                    target_s_id = request.POST.get("session_id")
+                    if target_s_id is not None:
+                        target_s_id = target_s_id.strip() or None
+
+                    target_s_num = parsed_post_session_number
+
+                    if target_s_id is None and target_s_num is None:
+                        target_s_id = dossier.selection.get("session_id")
+                        target_s_num = dossier.selection.get("session_number")
+
+                    target_session = None
+                    if target_s_id:
+                        target_session = dossier.get_session(target_s_id)
+                    elif target_s_num is not None:
+                        target_session = dossier.get_session_by_number(target_s_num)
+                    elif dossier.selection.get("session_id"):
+                        target_session = dossier.get_session(dossier.selection["session_id"])
+                    elif len(dossier.sessions) == 1:
+                        target_session = dossier.sessions[0]
+
+                    session_corrections = {}
+                    for k in ("inicio", "desarrollo", "cierre", "materiales", "evaluacion", "contexto_ejecucion"):
+                        if k in request.POST:
+                            session_corrections[k] = request.POST.get(k, "")
+
+                    annex_confirmations = {}
+                    manual_annex_confirmations = {}
+
+                    # 1. Candidate radios
+                    for key, val in request.POST.items():
+                        if key.startswith("annex_confirm_"):
+                            ref_key = key.removeprefix("annex_confirm_")
+                            try:
+                                ref = _find_single_annex_ref(target_session, ref_key)
+                            except ValueError as exc:
+                                error_message = str(exc)
+                                invalid_field = f"annex_confirm_{ref_key}"
+                                inline_errors[invalid_field] = error_message
+                                post_status_code = 400
+                                break
+                            effective_key = ref.reference_id
+
+                            if val is None or val == "":
+                                annex_confirmations[effective_key] = None
+                            else:
+                                try:
+                                    p_int = parse_canonical_positive_int(val)
+                                except ValueError:
+                                    error_message = f"Número de página inválido '{val}' para Anexo {ref_key}."
+                                    invalid_field = f"annex_confirm_{ref_key}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+                                    break
+                                if p_int < 1 or p_int > dossier.page_count:
+                                    error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                    invalid_field = f"annex_confirm_{ref_key}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+                                    break
+                                annex_confirmations[effective_key] = p_int
+
+                    # 2. Manual annex confirmations and disassociations
+                    for key in request.POST.keys():
+                        if key.startswith("annex_manual_page_"):
+                            ref_key = key.removeprefix("annex_manual_page_")
+                            try:
+                                ref = _find_single_annex_ref(target_session, ref_key)
+                            except ValueError as exc:
+                                error_message = str(exc)
+                                invalid_field = f"annex_manual_page_{ref_key}"
+                                inline_errors[invalid_field] = error_message
+                                post_status_code = 400
+                                break
+                            effective_key = ref.reference_id
+
+                            page_raw = request.POST.get(key, "")
+                            is_confirmed = (
+                                request.POST.get(f"annex_manual_confirm_{ref_key}") in ("1", "on", "true", "True")
+                                or request.POST.get(f"annex_manual_confirm_{ref.reference_id}") in ("1", "on", "true", "True")
+                                or request.POST.get(f"annex_manual_confirm_{ref.annex_number}") in ("1", "on", "true", "True")
+                            )
+                            is_disassoc = (
+                                request.POST.get(f"annex_disassociate_{ref_key}") in ("1", "on", "true", "True")
+                                or request.POST.get(f"annex_disassociate_{ref.reference_id}") in ("1", "on", "true", "True")
+                                or request.POST.get(f"annex_disassociate_{ref.annex_number}") in ("1", "on", "true", "True")
+                            )
+
+                            if is_disassoc:
+                                annex_confirmations[effective_key] = None
+                            elif is_confirmed:
+                                if page_raw is None or str(page_raw) == "":
+                                    error_message = f"Debe ingresar un número de página válido para confirmar el anexo {ref_key}."
+                                    invalid_field = f"annex_manual_page_{ref_key}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+                                    break
+                                try:
+                                    p_int = parse_canonical_positive_int(page_raw)
+                                except ValueError:
+                                    error_message = f"Número de página inválido '{page_raw}' para anexo {ref_key}."
+                                    invalid_field = f"annex_manual_page_{ref_key}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+                                    break
+                                if p_int < 1 or p_int > dossier.page_count:
+                                    error_message = f"Página {p_int} fuera de rango. El documento tiene {dossier.page_count} páginas."
+                                    invalid_field = f"annex_manual_page_{ref_key}"
+                                    inline_errors[invalid_field] = error_message
+                                    post_status_code = 400
+                                    break
+                                annex_confirmations[effective_key] = p_int
+                                manual_annex_confirmations[effective_key] = {"page": p_int, "confirmed": True}
+                        elif key.startswith("annex_disassociate_"):
+                            ref_key = key.removeprefix("annex_disassociate_")
+                            try:
+                                ref = _find_single_annex_ref(target_session, ref_key)
+                            except ValueError as exc:
+                                error_message = str(exc)
+                                invalid_field = f"annex_disassociate_{ref_key}"
+                                inline_errors[invalid_field] = error_message
+                                post_status_code = 400
+                                break
+                            effective_key = ref.reference_id
+                            if request.POST.get(key) in ("1", "on", "true", "True"):
+                                annex_confirmations[effective_key] = None
+
+                    corrections_payload = {
+                        "general_fields": general_corrections,
+                        "session_id": target_s_id,
+                        "session_fields": session_corrections,
+                        "annex_confirmations": annex_confirmations,
+                        "manual_annex_confirmations": manual_annex_confirmations,
+                        "reviews": {"__all__": "confirmed"} if action == "confirm_all" else {},
+                    }
+                    if "confirm_field" in request.POST:
+                        cf_val = request.POST.get("confirm_field", "").strip()
+                        if not cf_val:
+                            return HttpResponseBadRequest("El campo 'confirm_field' no puede ser vacío.")
+                        if cf_val.startswith("general:"):
+                            parts = cf_val.split(":")
+                            if len(parts) != 2 or not parts[1] or parts[1] not in GENERAL_FIELD_DISPLAY_ORDER:
+                                return HttpResponseBadRequest(f"Clave malformada o inválida en confirm_field: '{cf_val}'.")
+                            f_key = parts[1]
+                            if any(k != f_key for k in general_corrections.keys()) or session_corrections or annex_confirmations or manual_annex_confirmations:
+                                return HttpResponseBadRequest("confirm_field sólo permite confirmar el elemento especificado sin modificar otros campos.")
+                            corrections_payload["reviews"] = {f_key: "confirmed"}
+                        elif cf_val.startswith("session:"):
+                            parts = cf_val.split(":")
+                            if len(parts) < 3:
+                                return HttpResponseBadRequest(f"Clave malformada en confirm_field: '{cf_val}'.")
+                            f_key = parts[-1]
+                            cf_sess_id = ":".join(parts[1:-1])
+                            cf_sess = dossier.get_session(cf_sess_id)
+                            if not cf_sess or f_key not in SESSION_FIELD_DISPLAY_ORDER:
+                                return HttpResponseBadRequest(f"Sesión o campo no válido en confirm_field: '{cf_val}'.")
+                            if target_s_id and target_s_id != cf_sess_id:
+                                return HttpResponseBadRequest("Discrepancia entre session_id y confirm_field.")
+                            target_s_id = cf_sess_id
+                            corrections_payload["session_id"] = cf_sess_id
+                            if general_corrections or any(k != f_key for k in session_corrections.keys()) or annex_confirmations or manual_annex_confirmations:
+                                return HttpResponseBadRequest("confirm_field sólo permite confirmar el elemento especificado sin modificar otros campos.")
+                            corrections_payload["reviews"] = {f_key: "confirmed"}
+                        elif cf_val.startswith("annex:"):
+                            parts = cf_val.split(":")
+                            if len(parts) < 3:
+                                return HttpResponseBadRequest(f"Clave malformada en confirm_field: '{cf_val}'.")
+                            ref_id = parts[-1]
+                            cf_sess_id = ":".join(parts[1:-1])
+                            cf_sess = dossier.get_session(cf_sess_id)
+                            if not cf_sess:
+                                return HttpResponseBadRequest(f"Sesión no válida en confirm_field: '{cf_val}'.")
+                            if target_s_id and target_s_id != cf_sess_id:
+                                return HttpResponseBadRequest("Discrepancia entre session_id y confirm_field.")
+                            target_s_id = cf_sess_id
+                            corrections_payload["session_id"] = cf_sess_id
+                            try:
+                                ref_obj = _find_single_annex_ref(cf_sess, ref_id)
+                            except ValueError as exc:
+                                return HttpResponseBadRequest(str(exc))
+                            if ref_obj is None:
+                                return HttpResponseBadRequest(f"Anexo '{ref_id}' no encontrado en la sesión.")
+                            if general_corrections or session_corrections:
+                                return HttpResponseBadRequest("confirm_field sólo permite confirmar el elemento especificado sin modificar otros campos.")
+                            if ref_obj.reference_id not in corrections_payload.get("annex_confirmations", {}):
+                                if ref_obj.candidate_pages:
+                                    corrections_payload.setdefault("annex_confirmations", {})[ref_obj.reference_id] = ref_obj.candidate_pages[0]
+                                elif ref_obj.confirmed_page:
+                                    corrections_payload.setdefault("annex_confirmations", {})[ref_obj.reference_id] = ref_obj.confirmed_page
+                                else:
+                                    return HttpResponseBadRequest(f"No hay lámina candidata para confirmar el anexo '{ref_id}'.")
+                        else:
+                            return HttpResponseBadRequest(f"Formato desconocido en confirm_field: '{cf_val}'.")
+                    if "session_number" in request.POST:
+                        corrections_payload["session_number"] = target_s_num
+
+                    actor_name = request.user.get_full_name().strip() or request.user.username
+                    if post_status_code != 400:
+                        prev_version = dossier.version
+                        try:
+                            # Sol Item 2: Invalid annex page or invalid payload rejects before partial mutation / version bump
+                            dossier = resolve(dossier, corrections_payload, actor=actor_name, pdf_source=getattr(job, "pdf", None))
+                        except ValueError as exc:
+                            error_message = str(exc)
+                            post_status_code = 400
+
+                    if post_status_code != 400:
+                        if dossier.version == prev_version:
+                            success_message = "Sin cambios: los valores recibidos coinciden con el dossier actual. Versión sin modificaciones."
+                        else:
+                            job.save_interpretation_dossier(dossier)
+                            job.invalidate_approvals(reason=f"Modificación editorial a versión {dossier.version} guardada por el docente")
+                            if action == "confirm_all":
+                                success_message = f"Campos fundamentados de la sesión confirmados por {actor_name}. Versión {dossier.version} guardada."
+                            elif "confirm_field" in request.POST and request.POST.get("confirm_field"):
+                                cf_name = request.POST.get("confirm_field").strip()
+                                success_message = f"Campo '{cf_name}' confirmado por {actor_name}. Versión {dossier.version} registrada."
+                            else:
+                                success_message = f"Correcciones guardadas correctamente por {actor_name}. Versión {dossier.version} registrada."
+
+                    if target_s_id:
+                        request_selected_session = dossier.get_session(target_s_id)
+                    elif target_s_num:
+                        try:
+                            request_selected_session = dossier.get_session(int(target_s_num))
+                        except (ValueError, TypeError):
+                            pass
+
+        elif action == "switch_session":
+            if source_tampered:
+                return HttpResponse(
+                    "Conflicto de integridad: El archivo PDF fue modificado o reemplazado en el servidor "
+                    "(SHA-256 no coincide con el dossier de interpretación). Las correcciones y confirmaciones "
+                    "están bloqueadas para evitar desalineación de páginas. Debe realizar una reextracción explícita.",
+                    status=409,
+                )
+            req_s_id = request.POST.get("session_id")
+            req_s_num = parsed_post_session_number
+            target_s = None
+            if req_s_id and dossier:
+                target_s = dossier.get_session(req_s_id)
+            elif req_s_num is not None and dossier:
+                matching = [s for s in dossier.sessions if s.session_number == req_s_num]
+                if len(matching) == 1:
+                    target_s = matching[0]
+                elif len(matching) > 1:
+                    raise Http404(
+                        f"Selección ambigua: existen {len(matching)} sesiones con número {req_s_num}. "
+                        "Especifique session_id para desambiguar."
+                    )
+            if target_s is None:
+                raise Http404("Sesión solicitada no existe en el documento.")
+            request_selected_session = target_s
+            success_message = f"Sesión '{target_s.title}' seleccionada."
+
+    elif request.method == "GET":
+        req_session_id = request.GET.get("session_id")
+        req_session_num = request.GET.get("session")
+
+        if dossier is None:
+            init_selection = {}
+            if req_session_id:
+                init_selection["session_id"] = req_session_id
+            elif req_session_num:
+                try:
+                    init_selection["session_number"] = parse_canonical_positive_int(req_session_num)
+                except ValueError:
+                    raise Http404(f"Número de sesión inválido: '{req_session_num}'.")
+            # Sol Item 1: Strict validation on first visit / initial prepare
+            try:
+                dossier = CurriculumSourceInterpreter.prepare(
+                    job, selection=init_selection, job=job, timeout_seconds=30.0
+                )
+                job.save_interpretation_dossier(dossier)
+            except TimeoutError as exc:
+                from curriculum.interpretation_commands import record_direct_timeout
+
+                record_direct_timeout(job, error_message=str(exc))
+                return HttpResponse(f"Tiempo de extracción excedido: {exc}", status=504)
+            except ValueError as exc:
+                raise Http404(str(exc))
+        else:
+            # P0-2: Explicit validation - 404 on nonexistent session or ambiguous session
+            if req_session_id:
+                target_s = dossier.get_session(req_session_id)
+                if target_s is None:
+                    raise Http404(f"Sesión con ID '{req_session_id}' no encontrada en el documento.")
+                request_selected_session = target_s
+            elif req_session_num:
+                try:
+                    s_num = parse_canonical_positive_int(req_session_num)
+                except ValueError:
+                    raise Http404(f"Número de sesión inválido: '{req_session_num}'.")
+                matching = [s for s in dossier.sessions if s.session_number == s_num]
+                if len(matching) == 0:
+                    raise Http404(f"Sesión número {s_num} no encontrada en el documento.")
+                elif len(matching) > 1:
+                    raise Http404(
+                        f"Selección ambigua: existen {len(matching)} sesiones con número {s_num}. "
+                        "Especifique session_id para desambiguar."
+                    )
+                request_selected_session = matching[0]
+
+    if job.progress_stage:
+        job.progress_stage = ""
+
+    if dossier and (not job.page_count or job.page_count != dossier.page_count):
+        job.page_count = dossier.page_count
+
+    # Resolve active session for rendering
+    selected_session = None
+    if request_selected_session is not None:
+        selected_session = request_selected_session
+    elif dossier and dossier.sessions:
+        active_s_id = dossier.selection.get("session_id") if dossier.selection else None
+        if active_s_id:
+            selected_session = dossier.get_session(active_s_id)
+        if selected_session is None:
+            active_session_num = dossier.selection.get("session_number", 1) if dossier.selection else 1
+            selected_session = dossier.get_session(active_session_num)
+        if selected_session is None:
+            selected_session = dossier.sessions[0]
+
+    campos_field = dossier.general_fields.get("campos_formativos") if dossier else None
+    raw_campos_val = campos_field.value if campos_field else None
+    campos_formativos_options = derive_campos_formativos_options(raw_campos_val)
+    available_campos = [opt["value"] for opt in campos_formativos_options]
+    current_campos = normalize_campos_formativos(raw_campos_val)
+
+    # F7: Derive operational review queue
+    req_scope = (
+        request.GET.get("scope")
+        or request.GET.get("session_filter")
+        or (request.POST.get("scope") if request.method == "POST" else None)
+        or (request.POST.get("session_filter") if request.method == "POST" else None)
+    )
+    try:
+        operational_queue = derive_operational_queue(dossier, session_filter=req_scope) if dossier else None
+    except SelectionError as exc:
+        if request.method == "POST" or any(w in str(exc).lower() for w in ("ambiguo", "múltiples", "duplicado", "conflicto")):
+            return HttpResponseBadRequest(str(exc))
+        raise Http404(str(exc))
+    except CurriculumInterpretationError as exc:
+        return HttpResponseBadRequest(str(exc))
+
+    req_item_key = request_selected_item_key or request.GET.get("item")
+    active_item = None
+    if operational_queue and operational_queue.items:
+        if req_item_key:
+            active_item = next((it for it in operational_queue.items if it.stable_key == req_item_key or it.item_id == req_item_key), None)
+        if active_item is None and operational_queue.first_pending_key:
+            active_item = next(
+                (it for it in operational_queue.items if it.stable_key == operational_queue.first_pending_key),
+                None,
+            )
+        if active_item is None:
+            active_item = operational_queue.items[0]
+
+    if invalid_field and operational_queue and operational_queue.items:
+        matched_item = None
+        for it in operational_queue.items:
+            if it.field_name == invalid_field:
+                matched_item = it
+                break
+            if it.scope == "annex" and it.reference_id and (
+                it.reference_id in invalid_field
+                or f"annex_{it.annex_number}" in invalid_field
+                or f"annex_{it.reference_id}" in invalid_field
+            ):
+                matched_item = it
+                break
+        if matched_item:
+            active_item = matched_item
+
+    active_item_index = operational_queue.items.index(active_item) if (operational_queue and active_item) else -1
+    prev_item = operational_queue.items[active_item_index - 1] if (operational_queue and active_item_index > 0) else None
+    next_item = (
+        operational_queue.items[active_item_index + 1]
+        if (operational_queue and 0 <= active_item_index < len(operational_queue.items) - 1)
+        else None
+    )
+
+    pending_items = (
+        [it for it in operational_queue.items if it.priority_state in (PRIORITY_REQUIRES_RESOLUTION, PRIORITY_PENDING_REVIEW)]
+        if operational_queue
+        else []
+    )
+    pending_progress_current = (
+        pending_items.index(active_item) + 1 if (active_item and active_item in pending_items) else None
+    )
+    pending_progress_total = len(pending_items)
+
+    active_item_current_value = active_item.current_value if active_item else ""
+    if request.method == "POST" and active_item:
+        if active_item.field_name in request.POST:
+            active_item_current_value = request.POST.get(active_item.field_name, "")
+        elif "value" in request.POST:
+            active_item_current_value = request.POST.get("value", "")
+
+    active_annex_manual_page = ""
+    active_annex_manual_confirmed = False
+    if active_item and active_item.scope == "annex":
+        ref_id = active_item.reference_id
+        if request.method == "POST":
+            active_annex_manual_page = (
+                request.POST.get(f"annex_manual_page_{ref_id}")
+                or request.POST.get("annex_manual_page")
+                or request.POST.get("manual_page", "")
+            )
+            active_annex_manual_confirmed = (
+                request.POST.get(f"annex_manual_confirm_{ref_id}") in ("1", "on", "true", "True")
+                or request.POST.get("manual_confirm") in ("1", "on", "true", "True")
+            )
+        if not active_annex_manual_page and active_item.confirmed_page and active_item.confirmed_page not in active_item.candidate_pages:
+            active_annex_manual_page = str(active_item.confirmed_page)
+            active_annex_manual_confirmed = True
+
+    active_item_inline_error = inline_errors.get(invalid_field, "") if invalid_field else ""
+    active_inline_errors = {}
+    if invalid_field and active_item_inline_error:
+        if "manual" in invalid_field:
+            active_inline_errors["annex_manual_page"] = active_item_inline_error
+        else:
+            active_inline_errors[invalid_field] = active_item_inline_error
+
+    submitted_post = {}
+    if request.method == "POST":
+        for k, v in request.POST.items():
+            submitted_post[k] = v
+
+    validated_report_context = None
+    checked_items = []
+    if report_valid and isinstance(report, dict):
+        from curriculum.verification import compute_canonical_verification_report
+        canonical_report = compute_canonical_verification_report(dossier, current_bytes)
+        checked_cnt = sum(1 for i in canonical_report.get("items", []) if i.get("status") == "checked")
+        review_cnt = sum(1 for i in canonical_report.get("items", []) if i.get("status") == "needs_teacher_review")
+        checked_items = [i for i in canonical_report.get("items", []) if i.get("status") == "checked"]
+        validated_report_context = dict(canonical_report)
+        validated_report_context["checked_count"] = checked_cnt
+        validated_report_context["needs_review_count"] = review_cnt
+        validated_report_context["blocked_count"] = 0
+
+    active_approval = job.get_active_approval(pdf_bytes=current_bytes)
+    is_approved = active_approval is not None
+    can_approve = bool(
+        is_valid_ready
+        and not source_tampered
+        and report_valid
+        and validated_report_context
+        and validated_report_context.get("blocked_count", 0) == 0
+        and operational_queue
+        and operational_queue.requires_resolution_count == 0
+    )
+
+    context = {
+        "job": job,
+        "dossier": dossier,
+        "selected_session": selected_session,
+        "active_session_id": selected_session.session_id if selected_session else "",
+        "active_session_number": selected_session.session_number if selected_session else 1,
+        "current_pdf_sha256": current_pdf_sha256,
+        "source_tampered": source_tampered,
+        "success_message": success_message,
+        "error_message": error_message,
+        "invalid_field": invalid_field,
+        "inline_errors": inline_errors,
+        "active_inline_errors": active_inline_errors,
+        "active_item_inline_error": active_item_inline_error,
+        "active_item_current_value": active_item_current_value,
+        "active_annex_manual_page": active_annex_manual_page,
+        "active_annex_manual_confirmed": active_annex_manual_confirmed,
+        "submitted_post": submitted_post,
+        "post_status_code": post_status_code,
+        "available_campos": available_campos,
+        "current_campos": current_campos,
+        "campos_formativos_options": campos_formativos_options,
+        "queue": operational_queue,
+        "active_item": active_item,
+        "active_item_index": active_item_index,
+        "prev_item": prev_item,
+        "next_item": next_item,
+        "pending_progress_current": pending_progress_current,
+        "pending_progress_total": pending_progress_total,
+        "verification_report": validated_report_context,
+        "checked_items": checked_items,
+        "active_approval": active_approval,
+        "is_approved": is_approved,
+        "can_approve": can_approve,
+    }
+    return render(request, "curriculum/tutor_import_interpretation.html", context, status=post_status_code)
+
+
+@teacher_required
+@require_http_methods(["POST"])
+def tutor_import_approve(request, job_id):
+    """Dedicated POST endpoint for explicit teacher approval of CurriculumImportJob."""
+    from curriculum.approval_commands import execute_teacher_approval
+
+    result = execute_teacher_approval(
+        job_id=job_id,
+        user=request.user,
+        post_data=request.POST,
+        is_dedicated_route=True,
+    )
+    if not result.is_success:
+        if result.http_status == 404:
+            raise Http404(result.message)
+        return HttpResponse(result.message, status=result.http_status)
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({"status": "ok", "message": result.message})
+    return redirect("tutor-import-interpretation", job_id=job_id)
+
 
 
 @teacher_required
@@ -3019,7 +5340,7 @@ def tutor_import_detail(request, job_id):
         pk=job_id,
         created_by=request.user,
     )
-    if job.progress_stage:
+    if job.progress_stage and not _is_import_stage_stale(job):
         # A stage is running in the background; watch it on the waiting page.
         return redirect("tutor-import-wait", job_id=job.pk)
     context = {"job": job}
@@ -3034,6 +5355,8 @@ def tutor_import_detail(request, job_id):
         )
 
     action = request.POST.get("action") if request.method == "POST" else None
+    if request.method == "POST" and hasattr(request, "session"):
+        request.session.pop(f"legacy_stage_{job.pk}", None)
     try:
         if action == "extract":
             return _start_import_stage(request, job, "extract")
@@ -3097,9 +5420,16 @@ def tutor_import_detail(request, job_id):
 
 
 def _import_action_extract(job, pipeline):
-    """Extraction + Stage B topic identification over all chunks."""
+    """Extract source, using deterministic annex staging when safe.
+
+    Unrecognised documents continue through Stage B topic identification and
+    the existing human checkpoints unchanged.
+    """
 
     chunks = job.extract_text()
+    fast_path = pipeline.build_annex_fast_path(job.source_text)
+    if fast_path is not None:
+        return _import_action_annex_fast_path(job, fast_path)
     job.progress_total = len(chunks)
     job.progress_done = 0
     job.save(update_fields=["progress_total", "progress_done", "updated_at"])
@@ -3139,6 +5469,81 @@ def _import_action_extract(job, pipeline):
     job.progress_stage = ""
     job.progress_finished_at = timezone.now()
     job.save()
+    return job
+
+
+def _import_action_annex_fast_path(job, fast_path):
+    """Persist deterministic annex companions as reviewable staging data.
+
+    This deliberately ends in ``ACTIVITIES_PROPOSED``: a teacher still reviews
+    and selects the proposals before conversion, and no curriculum progress,
+    publication, or approval state is touched.  Each item is saved separately
+    so the existing waiting page can report partial work if the worker stops.
+    """
+
+    activities = list(fast_path.get("activities") or [])
+    if not activities:
+        raise ValueError("La vía rápida no produjo anexos revisables.")
+    # Replays are expected after worker retries. Replace this stage's entries
+    # while retaining diagnostics from earlier/fallback stages.
+    now_log = [entry for entry in job.llm_log if entry.get("stage") != "annex_fast_path"]
+    job.topics = list(fast_path.get("topics") or [])
+    job.activities = []
+    job.progress_total = len(activities)
+    job.progress_done = 0
+    job.error_message = ""
+    job.save(
+        update_fields=[
+            "source_text",
+            "page_count",
+            "topics",
+            "activities",
+            "progress_total",
+            "progress_done",
+            "error_message",
+            "updated_at",
+        ]
+    )
+    for index, activity in enumerate(activities, start=1):
+        job.activities = list(job.activities) + [activity]
+        annex = activity.get("annex") or {}
+        now_log.append(
+            {
+                "stage": "annex_fast_path",
+                "subtema": activity.get("subtopic_title", ""),
+                "pages": annex.get("source_pages", []),
+                "kind": annex.get("kind", ""),
+                "reactivos": len(activity.get("proposal", {}).get("questions", [])),
+                "is_valid": bool(activity.get("is_valid")),
+                "llm_calls": 0,
+            }
+        )
+        job.progress_done = index
+        job.llm_log = now_log
+        job.save(
+            update_fields=[
+                "activities",
+                "llm_log",
+                "progress_done",
+                "updated_at",
+            ]
+        )
+        job.refresh_from_db(fields=["cancel_requested"])
+        if job.cancel_requested:
+            _finish_cancelled_import_stage(job)
+            return job
+    job.status = CurriculumImportJob.STATUS_ACTIVITIES_PROPOSED
+    job.progress_stage = ""
+    job.progress_finished_at = timezone.now()
+    job.save(
+        update_fields=[
+            "status",
+            "progress_stage",
+            "progress_finished_at",
+            "error_message",
+            "updated_at",
+        ]
+    )
     return job
 
 
@@ -3538,29 +5943,153 @@ def _import_action_convert(job, post_data):
 
     from curriculum.models import CurriculumPackage
 
-    created = 0
     indices = post_data.getlist("select")
     if not indices:
         raise ValueError("Selecciona al menos una actividad válida para convertir.")
-    for index in indices:
-        entry = job.activities[int(index)]
+
+    activities = job.activities or []
+    seen_indices = set()
+    parsed_indices: list[int] = []
+    for raw_index in indices:
+        try:
+            idx = int(raw_index)
+        except (TypeError, ValueError):
+            raise ValueError(f"Índice de actividad inválido: '{raw_index}'.")
+        if idx < 0 or idx >= len(activities):
+            raise ValueError(f"Índice de actividad fuera de rango: {idx}.")
+        if idx not in seen_indices:
+            seen_indices.add(idx)
+            parsed_indices.append(idx)
+
+    stream_block = CurriculumPackage._meta.get_field("questions").stream_block
+    valid_block_types = stream_block.child_blocks
+
+    to_convert: list[tuple[int, dict[str, Any]]] = []
+    for idx in parsed_indices:
+        entry = activities[idx]
+        if not isinstance(entry, dict):
+            raise ValueError(f"Formato inválido en la actividad {idx}.")
         if not entry.get("is_valid"):
             continue  # un reactivo inválido nunca se convierte, ni marcándolo
-        package = CurriculumPackage.objects.create(
-            title=entry["proposal"]["title"][:160],
-            objective=entry["proposal"]["objective"],
-            micro_lesson=entry["proposal"]["micro_lesson"],
-            final_explanation=entry["proposal"]["final_explanation"],
-            questions=[
-                (question["block_type"], question["value"])
-                for question in entry["proposal"]["questions"]
-            ],
-            ai_assisted=True,
-            created_by=job.created_by,
-        )
-        created += 1
-    job.status = CurriculumImportJob.STATUS_CONVERTED
-    job.save(update_fields=["status", "updated_at"])
+
+        proposal = entry.get("proposal")
+        if not isinstance(proposal, dict):
+            raise ValueError(f"Propuesta ausente o inválida en la actividad {idx}.")
+
+        # Cuatro campos escalares requeridos y tipos estrictos (str no vacío)
+        for field in ("title", "objective", "micro_lesson", "final_explanation"):
+            if field not in proposal:
+                raise ValueError(f"Campo requerido '{field}' ausente en la actividad {idx}.")
+            val = proposal[field]
+            if not isinstance(val, str) or isinstance(val, bool) or not val.strip():
+                raise ValueError(f"Campo requerido '{field}' debe ser una cadena de texto no vacía en la actividad {idx}.")
+
+        # Questions lista y cada pregunta dict con block_type y value válidos
+        questions = proposal.get("questions")
+        if not isinstance(questions, (list, tuple)) or isinstance(questions, (str, bytes)):
+            raise ValueError(f"Lista de preguntas ausente o inválida en la actividad {idx}.")
+        for q_idx, question in enumerate(questions):
+            if not isinstance(question, dict):
+                raise ValueError(f"Pregunta {q_idx} en actividad {idx} no es un diccionario válido.")
+            if "block_type" not in question or "value" not in question:
+                raise ValueError(f"Pregunta {q_idx} en actividad {idx} carece de block_type o value.")
+            block_type = question["block_type"]
+            if not isinstance(block_type, str) or block_type not in valid_block_types:
+                raise ValueError(
+                    f"Tipo de reactivo desconocido o inválido '{block_type}' en la actividad {idx}. "
+                    f"Tipos permitidos: {list(valid_block_types.keys())}."
+                )
+            q_val = question["value"]
+            if not isinstance(q_val, dict):
+                raise ValueError(
+                    f"El valor de la pregunta {q_idx} en la actividad {idx} debe ser un diccionario compatible con el bloque."
+                )
+            child_block = valid_block_types[block_type]
+            try:
+                child_block.clean(child_block.to_python(q_val))
+            except Exception as err:
+                raise ValueError(f"Estructura inválida en reactivo {q_idx} de la actividad {idx}: {err}")
+
+        # Annex si se usa con tipos seguros
+        annex = entry.get("annex")
+        if annex is not None:
+            if not isinstance(annex, dict):
+                raise ValueError(f"Estructura de anexo inválida en la actividad {idx}.")
+            for text_field in ("kind", "source_anchor", "source_url", "source_text"):
+                if text_field in annex and annex[text_field] is not None:
+                    if not isinstance(annex[text_field], str):
+                        raise ValueError(f"Campo '{text_field}' del anexo en la actividad {idx} debe ser texto.")
+            if "number" in annex and annex["number"] is not None:
+                if not isinstance(annex["number"], (int, str)) or isinstance(annex["number"], bool):
+                    raise ValueError(f"Número de anexo inválido en la actividad {idx}.")
+            if "source_pages" in annex and annex["source_pages"] is not None:
+                sp = annex["source_pages"]
+                if not isinstance(sp, (list, tuple)) or isinstance(sp, (str, bytes)):
+                    raise ValueError(f"Páginas de fuente de anexo inválidas en la actividad {idx}.")
+                for p in sp:
+                    if not isinstance(p, int) or isinstance(p, bool) or p < 1:
+                        raise ValueError(f"Página de anexo inválida ({p}) en la actividad {idx}: debe ser entero >= 1.")
+            if "source_urls" in annex and annex["source_urls"] is not None:
+                su = annex["source_urls"]
+                if not isinstance(su, (list, tuple)) or isinstance(su, (str, bytes)):
+                    raise ValueError(f"URLs de fuente de anexo inválidas en la actividad {idx}.")
+                for u in su:
+                    if not isinstance(u, str):
+                        raise ValueError(f"URL de anexo inválida en la actividad {idx}: debe ser cadena de texto.")
+
+        to_convert.append((idx, entry))
+
+    source_pdf_content = None
+    source_pdf_sha256 = ""
+    if job.pdf:
+        with job.pdf.open("rb") as source_pdf:
+            source_pdf_content = source_pdf.read()
+        source_pdf_sha256 = hashlib.sha256(source_pdf_content).hexdigest()
+
+    created = 0
+    with transaction.atomic():
+        for idx, entry in to_convert:
+            annex = entry.get("annex") or {}
+            source_references = []
+            if annex:
+                source_text = str(annex.get("source_text") or "")
+                source_references = [
+                    {
+                        "import_job_id": job.pk,
+                        "number": annex.get("number"),
+                        "kind": annex.get("kind", ""),
+                        "source_pages": list(annex.get("source_pages") or []),
+                        "source_anchor": annex.get("source_anchor", ""),
+                        "source_url": annex.get("source_url", ""),
+                        "source_urls": list(annex.get("source_urls") or []),
+                        "source_text": source_text,
+                        "source_sha256": hashlib.sha256(source_text.encode("utf-8")).hexdigest(),
+                        "source_pdf_sha256": source_pdf_sha256,
+                    }
+                ]
+            package = CurriculumPackage.objects.create(
+                title=entry["proposal"]["title"][:160],
+                objective=entry["proposal"]["objective"],
+                micro_lesson=entry["proposal"]["micro_lesson"],
+                final_explanation=entry["proposal"]["final_explanation"],
+                questions=[
+                    (question["block_type"], question["value"])
+                    for question in entry["proposal"]["questions"]
+                ],
+                ai_assisted=True,
+                source_references=source_references,
+                source_pdf=(
+                    ContentFile(source_pdf_content, name="source.pdf")
+                    if source_pdf_content is not None and source_references
+                    else None
+                ),
+                source_pdf_sha256=source_pdf_sha256 if source_references else "",
+                created_by=job.created_by,
+            )
+            created += 1
+        job.status = CurriculumImportJob.STATUS_CONVERTED
+        job.save(update_fields=["status", "updated_at"])
+
     return created
 
 
