@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · Organizador curricular funcional</title>
+    <style>
+      :root { color-scheme:light; --ink:#172033; --muted:#69748a; --line:#dbe3ee; --paper:#f5f7fb; --panel:#fff; --blue:#3566f0; --soft:#edf2ff; --green:#14755b; --amber:#9b6417; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--paper); color:var(--ink); }
+      button { font:inherit; }
+      .note { margin:0; padding:8px 16px; background:#172033; color:#fff; text-align:center; font-size:.74rem; }
+      .shell { width:min(1180px,calc(100% - 30px)); margin:0 auto; }
+      header { padding:32px 0 22px; }
+      .eyebrow { margin:0 0 8px; color:var(--blue); font-size:.72rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+      h1,h2,h3,p { margin-top:0; }
+      h1 { max-width:880px; margin-bottom:10px; font-size:clamp(2rem,5vw,3.6rem); line-height:1; letter-spacing:-.055em; }
+      .question { max-width:850px; margin:0; color:var(--muted); line-height:1.55; }
+      .tabs { display:flex; gap:6px; margin-bottom:14px; overflow:auto; }
+      .tab { border:0; border-radius:10px; padding:9px 12px; background:#e9edf4; color:var(--muted); font-weight:850; cursor:pointer; white-space:nowrap; }
+      .tab.active { background:#172033; color:#fff; }
+      .workspace { display:grid; grid-template-columns:220px minmax(0,1fr) 290px; min-height:580px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--panel); }
+      .column { padding:18px; }
+      .column + .column { border-left:1px solid var(--line); }
+      .column-head { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:13px; }
+      .column-head h2 { margin-bottom:3px; font-size:1rem; }
+      .column-head p { margin:0; color:var(--muted); font-size:.76rem; line-height:1.35; }
+      .pill { display:inline-flex; width:fit-content; border-radius:999px; padding:5px 8px; background:var(--soft); color:#3153b7; font-size:.69rem; font-weight:850; }
+      .folder-list,.file-list,.roadmap-list,.link-list { display:grid; gap:7px; }
+      .folder { display:flex; justify-content:space-between; gap:8px; width:100%; border:0; border-radius:9px; padding:9px 10px; background:transparent; color:var(--ink); text-align:left; cursor:pointer; }
+      .folder.active,.folder:hover { background:var(--soft); }
+      .folder small { color:var(--muted); }
+      .file,.roadmap-item { border:1px solid var(--line); border-radius:11px; padding:11px; background:#fff; }
+      .file.selected,.roadmap-item.selected { border-color:var(--blue); background:#f7f9ff; }
+      .file-top,.roadmap-top { display:flex; justify-content:space-between; gap:12px; align-items:start; }
+      .file h3,.roadmap-item h3 { margin-bottom:3px; font-size:.87rem; }
+      .file p,.roadmap-item p { margin:0; color:var(--muted); font-size:.74rem; line-height:1.4; }
+      .status { border-radius:999px; padding:4px 7px; background:#eef1f6; color:var(--muted); font-size:.65rem; font-weight:850; white-space:nowrap; }
+      .status.ready { background:#e6f5ef; color:var(--green); }
+      .status.pending { background:#fff2dc; color:var(--amber); }
+      .file-actions,.actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+      .small-button { border:1px solid var(--line); border-radius:8px; padding:6px 8px; background:#fff; color:var(--ink); font-size:.7rem; font-weight:800; cursor:pointer; }
+      .small-button.primary { border-color:var(--blue); background:var(--blue); color:#fff; }
+      .small-button:hover { border-color:var(--blue); }
+      .dropzone { margin-top:10px; border:1px dashed #abb9ce; border-radius:11px; padding:14px; text-align:center; color:var(--muted); font-size:.77rem; }
+      .dropzone button { display:block; margin:8px auto 0; }
+      .assistant-scope { border-radius:12px; padding:13px; background:#172033; color:#fff; }
+      .assistant-scope small { display:block; margin-bottom:5px; color:#bfc9dc; }
+      .assistant-scope p { margin-bottom:10px; font-size:.8rem; line-height:1.45; }
+      .scope-count { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid #344057; font-size:.75rem; }
+      .link { padding:9px 0; border-bottom:1px solid var(--line); }
+      .link:last-child { border-bottom:0; }
+      .link strong { display:block; font-size:.78rem; }
+      .link small { color:var(--muted); font-size:.69rem; }
+      .change { margin-top:12px; border-radius:10px; padding:10px; background:#eef7f4; color:#1f6253; font-size:.76rem; line-height:1.4; }
+      .guided { margin:16px 0 90px; border:1px solid var(--line); border-radius:18px; padding:18px; background:#fff; }
+      .guided-head { display:flex; justify-content:space-between; gap:16px; align-items:start; margin-bottom:12px; }
+      .guided-head h2 { margin-bottom:4px; font-size:1rem; }
+      .guided-head p { margin:0; color:var(--muted); font-size:.8rem; }
+      .scenario { display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; border-top:1px solid var(--line); padding-top:13px; }
+      .scenario p { margin:0; color:var(--muted); font-size:.8rem; line-height:1.45; }
+      .steps { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+      .steps button { border:1px solid var(--line); border-radius:999px; padding:7px 9px; background:#fff; font-size:.72rem; font-weight:800; cursor:pointer; }
+      .steps button.done { background:#e6f5ef; color:var(--green); }
+      @media (max-width:900px) { .workspace { grid-template-columns:190px 1fr; } .workspace .column:last-child { grid-column:1 / -1; border-left:0; border-top:1px solid var(--line); } }
+      @media (max-width:650px) { .workspace { grid-template-columns:1fr; } .column + .column { border-left:0; border-top:1px solid var(--line); } .scenario { grid-template-columns:1fr; } .steps { justify-content:flex-start; } }
+    </style>
+  </head>
+  <body>
+    <p class="note">PROTOTIPO FUNCIONAL DESECHABLE · datos sintéticos · sin backend ni persistencia</p>
+    <header class="shell">
+      <p class="eyebrow">Currícula y planeación</p>
+      <h1>Organiza lo que enseñas y lo que el asistente puede consultar.</h1>
+      <p class="question">Pregunta del prototipo: ¿puede una maestra recorrer su currícula, ordenar el roadmap del ciclo y conectar archivos propios a temas concretos sin perder la diferencia entre referencia oficial, material local y contenido todavía no revisado?</p>
+    </header>
+
+    <main class="shell">
+      <nav class="tabs" aria-label="Modo de trabajo">
+        <button class="tab active" data-mode="library">Biblioteca y vínculos</button>
+        <button class="tab" data-mode="roadmap">Roadmap completo</button>
+        <button class="tab" data-mode="coverage">Cobertura de referencias</button>
+      </nav>
+      <section id="workspace" class="workspace"></section>
+
+      <section class="guided">
+        <div class="guided-head"><div><h2>Recorridos para probar la idea</h2><p>Cada escenario reinicia el estado y permite comprobar un caso importante.</p></div><button class="small-button" data-action="RESET">Reiniciar</button></div>
+        <nav class="tabs" aria-label="Escenarios guiados">
+          <button class="tab active" data-scenario="attach">Agregar referencia directa</button>
+          <button class="tab" data-scenario="review">Revisión antes de usar</button>
+          <button class="tab" data-scenario="missing">Tema sin respaldo</button>
+        </nav>
+        <div id="scenario" class="scenario"></div>
+      </section>
+    </main>
+
+    <script>
+      const initialState = Object.freeze({
+        folders: [
+          { id:"official", name:"Referencias publicadas", authority:"official" },
+          { id:"school", name:"Material de la escuela", authority:"local" },
+          { id:"teacher", name:"Mis archivos", authority:"teacher" },
+          { id:"archive", name:"Archivo", authority:"archive" }
+        ],
+        files: [
+          { id:"f1", folder:"official", name:"Referencia curricular publicada.pdf", type:"PDF", status:"ready", assistant:true, locked:true, links:["r1","r2"] },
+          { id:"f2", folder:"school", name:"Proyecto comunitario de la escuela.docx", type:"DOCX", status:"ready", assistant:true, locked:false, links:["r2"] },
+          { id:"f3", folder:"teacher", name:"Notas sobre el patio.pdf", type:"PDF", status:"pending", assistant:false, locked:false, links:[] }
+        ],
+        roadmap: [
+          { id:"r1", title:"La comunidad que queremos", status:"worked" },
+          { id:"r2", title:"Exploramos nuestro entorno", status:"current" },
+          { id:"r3", title:"Compartimos lo aprendido", status:"next" },
+          { id:"r4", title:"Acuerdos para convivir", status:"later" }
+        ],
+        selectedFolder:"official", selectedFile:"f1", selectedRoadmap:"r2", mode:"library", lastChange:"Estado inicial cargado."
+      });
+
+      function clone(value) { return JSON.parse(JSON.stringify(value)); }
+      function selectedFile(state) { return state.files.find((file) => file.id === state.selectedFile); }
+      function linksFor(state, roadmapId) { return state.files.filter((file) => file.links.includes(roadmapId)); }
+      function availableToAssistant(state, roadmapId) { return linksFor(state, roadmapId).filter((file) => file.assistant && file.status === "ready"); }
+
+      function reduce(state, action) {
+        const next = clone(state);
+        const file = selectedFile(next);
+        if (action.type === "RESET") return clone(initialState);
+        if (action.type === "SELECT_FOLDER") { next.selectedFolder = action.id; const first = next.files.find((item) => item.folder === action.id); next.selectedFile = first ? first.id : null; next.lastChange = `Carpeta abierta: ${next.folders.find((folder) => folder.id === action.id).name}.`; }
+        if (action.type === "SELECT_FILE") { next.selectedFile = action.id; next.lastChange = `Archivo seleccionado: ${selectedFile(next).name}.`; }
+        if (action.type === "SELECT_ROADMAP") { next.selectedRoadmap = action.id; next.lastChange = `Tema seleccionado: ${next.roadmap.find((item) => item.id === action.id).title}.`; }
+        if (action.type === "SET_MODE") { next.mode = action.mode; next.lastChange = `Vista cambiada a ${action.mode}.`; }
+        if (action.type === "ADD_FILE") {
+          const id = `f${next.files.length + 1}`;
+          next.files.push({ id, folder:"teacher", name:"Guía de observación del entorno.pdf", type:"PDF", status:"pending", assistant:false, locked:false, links:[] });
+          next.selectedFolder = "teacher"; next.selectedFile = id; next.lastChange = "Archivo agregado a Mis archivos. Requiere revisión antes de usarse.";
+        }
+        if (action.type === "REVIEW_FILE" && file && !file.locked) { file.status = "ready"; next.lastChange = "La maestra revisó el archivo. Ya puede vincularse y autorizarse."; }
+        if (action.type === "LINK_FILE" && file && !file.links.includes(next.selectedRoadmap)) { file.links.push(next.selectedRoadmap); next.lastChange = "El archivo quedó vinculado al tema seleccionado del roadmap."; }
+        if (action.type === "ALLOW_ASSISTANT" && file && file.status === "ready") { file.assistant = true; next.lastChange = "El asistente puede consultar este archivo únicamente en sus temas vinculados."; }
+        if (action.type === "DENY_ASSISTANT" && file && !file.locked) { file.assistant = false; next.lastChange = "El asistente dejó de consultar este archivo; los vínculos se conservan."; }
+        if (action.type === "ARCHIVE_FILE" && file && !file.locked) { file.folder = "archive"; file.assistant = false; next.selectedFolder = "archive"; next.lastChange = "Archivo archivado y retirado del alcance del asistente."; }
+        if (action.type === "SELECT_PENDING") { next.selectedFolder="teacher"; next.selectedFile="f3"; next.lastChange="Se seleccionó un material pendiente de revisión."; }
+        if (action.type === "SELECT_EMPTY_TOPIC") { next.selectedRoadmap="r4"; next.mode="coverage"; next.lastChange="Se seleccionó un tema sin fuentes vinculadas."; }
+        return next;
+      }
+
+      let state = clone(initialState);
+      let scenario = "attach";
+      let completed = [];
+
+      const scenarios = {
+        attach: { text:"Agregar una referencia propia, revisarla y conectarla al tema actual para que el asistente pueda consultarla.", steps:[["ADD_FILE","Agregar archivo"],["REVIEW_FILE","Revisarlo"],["LINK_FILE","Vincular al tema"],["ALLOW_ASSISTANT","Permitir al asistente"]] },
+        review: { text:"Comprobar que un archivo pendiente no se habilita para el asistente hasta que la maestra lo revise.", steps:[["SELECT_PENDING","Seleccionar pendiente"],["ALLOW_ASSISTANT","Intentar habilitarlo"],["REVIEW_FILE","Revisarlo"],["ALLOW_ASSISTANT","Habilitarlo"]] },
+        missing: { text:"Encontrar rápidamente un tema del roadmap que todavía no tiene referencias suficientes.", steps:[["SELECT_EMPTY_TOPIC","Abrir tema sin respaldo"],["ADD_FILE","Agregar referencia"],["REVIEW_FILE","Revisarla"],["LINK_FILE","Vincularla"]] }
+      };
+
+      function folderCounts() { return Object.fromEntries(state.folders.map((folder) => [folder.id,state.files.filter((file) => file.folder === folder.id).length])); }
+      function statusLabel(status) { return status === "ready" ? "Revisado" : "Pendiente"; }
+
+      function renderFolders() {
+        const counts = folderCounts();
+        return `<div class="column"><div class="column-head"><div><h2>Biblioteca</h2><p>Archivos organizados por autoridad.</p></div></div><div class="folder-list">${state.folders.map((folder) => `<button class="folder ${state.selectedFolder === folder.id ? "active" : ""}" data-folder="${folder.id}"><span>${folder.name}</span><small>${counts[folder.id]}</small></button>`).join("")}</div><div class="dropzone">PDF, DOCX o imagen<button class="small-button primary" data-action="ADD_FILE">Agregar archivo</button></div></div>`;
+      }
+
+      function renderFiles() {
+        const files = state.files.filter((file) => file.folder === state.selectedFolder);
+        const current = state.roadmap.find((item) => item.id === state.selectedRoadmap);
+        return `<div class="column"><div class="column-head"><div><h2>${state.mode === "roadmap" ? "Roadmap del ciclo" : state.mode === "coverage" ? "Cobertura de referencias" : "Contenido de la carpeta"}</h2><p>${state.mode === "library" ? "Selecciona un archivo para revisar sus vínculos." : state.mode === "roadmap" ? "Orden y estado confirmado por la maestra." : "Qué puede consultar el asistente en cada tema."}</p></div></div>${state.mode === "library" ? `<div class="file-list">${files.length ? files.map((file) => `<article class="file ${state.selectedFile === file.id ? "selected" : ""}"><div class="file-top"><div><h3>${file.name}</h3><p>${file.type} · ${file.links.length} vínculo${file.links.length === 1 ? "" : "s"}</p></div><span class="status ${file.status}">${statusLabel(file.status)}</span></div><div class="file-actions"><button class="small-button" data-file="${file.id}">Seleccionar</button></div></article>`).join("") : `<div class="dropzone">Esta carpeta está vacía.</div>`}</div>` : `<div class="roadmap-list">${state.roadmap.map((item,index) => { const linked=linksFor(state,item.id); const ready=availableToAssistant(state,item.id); return `<article class="roadmap-item ${state.selectedRoadmap === item.id ? "selected" : ""}"><div class="roadmap-top"><div><h3>${index + 1} · ${item.title}</h3><p>${linked.length} referencias vinculadas · ${ready.length} disponibles para el asistente</p></div><span class="status ${ready.length ? "ready" : "pending"}">${ready.length ? "Con respaldo" : "Sin respaldo"}</span></div><div class="file-actions"><button class="small-button" data-roadmap="${item.id}">Abrir</button></div></article>`; }).join("")}</div>`}${state.mode === "library" && current ? `<div class="change">Tema seleccionado para vincular: <strong>${current.title}</strong></div>` : ""}</div>`;
+      }
+
+      function renderInspector() {
+        const file = selectedFile(state);
+        const topic = state.roadmap.find((item) => item.id === state.selectedRoadmap);
+        const available = availableToAssistant(state,state.selectedRoadmap);
+        const details = file ? `<div class="link-list"><div class="link"><strong>${file.name}</strong><small>${file.locked ? "Referencia publicada · solo lectura" : statusLabel(file.status)}</small></div><div class="link"><strong>Vínculos</strong><small>${file.links.map((id) => state.roadmap.find((item) => item.id === id)?.title).filter(Boolean).join(" · ") || "Sin vínculos"}</small></div><div class="link"><strong>Acceso del asistente</strong><small>${file.assistant && file.status === "ready" ? "Permitido" : "No permitido"}</small></div></div><div class="actions">${file.locked ? "" : `<button class="small-button" data-action="REVIEW_FILE">Marcar revisado</button><button class="small-button" data-action="LINK_FILE">Vincular a tema</button><button class="small-button primary" data-action="ALLOW_ASSISTANT">Permitir uso</button><button class="small-button" data-action="DENY_ASSISTANT">Quitar acceso</button><button class="small-button" data-action="ARCHIVE_FILE">Archivar</button>`}</div>` : `<p>No hay un archivo seleccionado.</p>`;
+        return `<aside class="column"><div class="column-head"><div><h2>Detalle y alcance</h2><p>Qué es, dónde se usa y si el asistente puede leerlo.</p></div></div>${details}<div class="assistant-scope"><small>Para “${topic.title}”</small><p>${available.length ? `El asistente puede consultar ${available.length} referencia${available.length === 1 ? "" : "s"} revisada${available.length === 1 ? "" : "s"}.` : "No hay suficiente fuente vinculada y revisada. El asistente debe pedir una referencia antes de generar contenido nuevo."}</p><div class="scope-count"><span>Vinculadas</span><strong>${linksFor(state,state.selectedRoadmap).length}</strong></div><div class="scope-count"><span>Utilizables</span><strong>${available.length}</strong></div></div><div class="change">${state.lastChange}</div></aside>`;
+      }
+
+      function render() {
+        document.querySelector("#workspace").innerHTML = renderFolders() + renderFiles() + renderInspector();
+        document.querySelectorAll("[data-mode]").forEach((node) => node.classList.toggle("active",node.dataset.mode === state.mode));
+      }
+
+      function renderScenario() {
+        const item = scenarios[scenario];
+        document.querySelector("#scenario").innerHTML = `<p>${item.text}</p><div class="steps">${item.steps.map((step,index) => `<button class="${completed.includes(index) ? "done" : ""}" data-guide="${step[0]}" data-index="${index}">${index + 1} · ${step[1]}</button>`).join("")}</div>`;
+      }
+
+      function dispatch(action) { state = reduce(state,action); render(); }
+
+      document.addEventListener("click", (event) => {
+        const mode = event.target.closest("[data-mode]"); if (mode) { dispatch({type:"SET_MODE",mode:mode.dataset.mode}); return; }
+        const folder = event.target.closest("[data-folder]"); if (folder) { dispatch({type:"SELECT_FOLDER",id:folder.dataset.folder}); return; }
+        const file = event.target.closest("[data-file]"); if (file) { dispatch({type:"SELECT_FILE",id:file.dataset.file}); return; }
+        const roadmap = event.target.closest("[data-roadmap]"); if (roadmap) { dispatch({type:"SELECT_ROADMAP",id:roadmap.dataset.roadmap}); return; }
+        const scenarioButton = event.target.closest("[data-scenario]"); if (scenarioButton) { scenario=scenarioButton.dataset.scenario; completed=[]; state=clone(initialState); document.querySelectorAll("[data-scenario]").forEach((node) => node.classList.toggle("active",node === scenarioButton)); render(); renderScenario(); return; }
+        const guide = event.target.closest("[data-guide]"); if (guide) { completed=[...new Set([...completed,Number(guide.dataset.index)])]; dispatch({type:guide.dataset.guide}); renderScenario(); return; }
+        const action = event.target.closest("[data-action]"); if (action) { dispatch({type:action.dataset.action}); if (action.dataset.action === "RESET") { completed=[]; renderScenario(); } }
+      });
+
+      render(); renderScenario();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AulaLista · Esqueleto docente (prototipo)</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172033;
+        --muted: #68748a;
+        --paper: #f4f7fb;
+        --panel: #fff;
+        --line: #dbe3ee;
+        --blue: #3566f0;
+        --blue-dark: #2148bd;
+        --teal: #0a8c7d;
+        --orange: #e67d34;
+        --shadow: 0 18px 50px rgb(35 51 80 / 10%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); }
+      button, select { font: inherit; }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      a { color: inherit; }
+      .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .prototype-note { margin: 0; padding: 9px 16px; text-align: center; color: #fff; background: #172033; font-size: .78rem; letter-spacing: .02em; }
+      .topbar { border-bottom: 1px solid var(--line); background: var(--panel); }
+      .topbar-inner { display: flex; align-items: center; gap: 20px; min-height: 72px; }
+      .brand { font-weight: 900; letter-spacing: -.055em; font-size: 1.2rem; text-decoration: none; }
+      .brand span { color: var(--blue); }
+      .topbar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-left: auto; }
+      .topbar nav a { padding: 9px 11px; border-radius: 10px; text-decoration: none; color: var(--muted); font-size: .85rem; font-weight: 750; }
+      .topbar nav a.active, .topbar nav a:hover { color: var(--ink); background: #edf2ff; }
+      .profile { display: flex; align-items: center; gap: 9px; padding-left: 16px; border-left: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+      .avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: #d9e2ff; color: #2448b8; font-weight: 850; }
+      .eyebrow { margin: 0 0 10px; color: var(--blue); font-size: .73rem; letter-spacing: .14em; font-weight: 900; text-transform: uppercase; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { max-width: 760px; margin-bottom: 14px; font-size: clamp(2rem, 5vw, 4.1rem); line-height: .98; letter-spacing: -.065em; }
+      h2 { margin-bottom: 8px; letter-spacing: -.035em; }
+      h3 { margin-bottom: 7px; font-size: 1rem; }
+      .lede { max-width: 650px; margin-bottom: 0; color: var(--muted); font-size: 1.03rem; line-height: 1.6; }
+      .muted { color: var(--muted); }
+      .button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 15px; background: var(--panel); color: var(--ink); font-weight: 800; cursor: pointer; text-decoration: none; }
+      #top-prepare[hidden] { display: none; }
+      .button:hover, .button:focus-visible { border-color: var(--blue); outline: 3px solid #dce5ff; }
+      .button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+      .button.primary:hover { background: var(--blue-dark); }
+      .button.subtle { background: #f3f6fb; }
+      .pill { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; padding: 6px 10px; background: #edf2ff; color: #3153b7; font-size: .76rem; font-weight: 850; }
+      .page { padding: 42px 0 130px; }
+      .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 28px; }
+      #page-head[hidden] { display: none; }
+      .page-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+      .section-label { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 30px 0 13px; }
+      .section-label p { margin-bottom: 0; color: var(--muted); font-size: .86rem; }
+      .panel { border: 1px solid var(--line); border-radius: 20px; background: var(--panel); box-shadow: var(--shadow); }
+      .panel-pad { padding: 22px; }
+      .grid { display: grid; gap: 16px; }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stat { display: flex; justify-content: space-between; align-items: flex-start; min-height: 140px; }
+      .stat strong { display: block; margin: 6px 0; font-size: 2.35rem; letter-spacing: -.06em; }
+      .stat small { color: var(--muted); line-height: 1.4; }
+      .stat-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #edf2ff; color: var(--blue); font-weight: 900; }
+      .session-card { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+      .session-card + .session-card { margin-top: 10px; }
+      .session-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .meta { border-radius: 8px; padding: 5px 8px; background: #f1f4f8; color: var(--muted); font-size: .76rem; font-weight: 750; }
+      .empty { border: 1px dashed #bfcbdc; border-radius: 16px; padding: 24px; background: #fbfcfe; }
+      .empty p { max-width: 580px; margin-bottom: 16px; color: var(--muted); line-height: 1.5; }
+      .callout { border-left: 4px solid var(--teal); background: #eaf8f5; }
+      .callout p { margin-bottom: 0; color: #215d57; line-height: 1.5; }
+      .cycle { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: .84rem; }
+      .cycle select { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; background: var(--panel); color: var(--ink); font-weight: 750; }
+      .progress-track { height: 10px; margin-top: 13px; overflow: hidden; border-radius: 999px; background: #e8edf5; }
+      .progress-track i { display: block; width: 46%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), #7b9aff); }
+      .progress-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--muted); font-size: .8rem; }
+
+      /* A: close to the current page — top navigation and equal sections. */
+      .variant-a .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 28px; align-items: end; padding: 28px; border-radius: 24px; background: linear-gradient(135deg, #edf2ff, #fff); }
+      .variant-a .hero-actions { display: flex; justify-content: flex-end; }
+      .variant-a .hero-actions .panel { width: min(100%, 300px); }
+      .variant-a .hero-actions strong { display: block; margin: 8px 0 6px; font-size: 1.15rem; }
+      .variant-a .hero-actions p { margin-bottom: 16px; color: var(--muted); font-size: .86rem; line-height: 1.45; }
+
+      /* B: aula-first — the next classroom action owns the page. */
+      .variant-b .next { display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: end; padding: 28px; border-radius: 24px; background: #172033; color: #fff; }
+      .variant-b .next .eyebrow { color: #aebeff; }
+      .variant-b .next p { max-width: 550px; margin-bottom: 0; color: #c6cde0; line-height: 1.55; }
+      .variant-b .next .button { border-color: #8fa5ff; background: #6d87ff; color: #fff; }
+      .variant-b .secondary { margin-top: 20px; }
+      .variant-b .secondary .panel { box-shadow: none; }
+      .prepare-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: 18px; align-items: start; }
+      .prepare-layout .panel { box-shadow: none; }
+      .step-list { display: grid; gap: 12px; }
+      .step-card { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+      .step-card > b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #e8efff; color: var(--blue); }
+      .step-card h3 { margin-bottom: 5px; }
+      .step-card p { margin-bottom: 0; color: var(--muted); font-size: .88rem; line-height: 1.45; }
+      .fake-select, .fake-input { display: flex; justify-content: space-between; gap: 12px; margin-top: 11px; border: 1px solid var(--line); border-radius: 9px; padding: 10px 11px; background: #f8faff; font-size: .86rem; font-weight: 750; }
+      .fake-select span, .fake-input span { color: var(--muted); }
+      .prepare-summary { position: sticky; top: 18px; }
+      .prepare-summary h2 { margin-bottom: 17px; }
+      .summary-row { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
+      .summary-row:last-of-type { border-bottom: 0; }
+      .summary-row span { color: var(--muted); }
+      .prepare-summary .button { width: 100%; margin-top: 18px; }
+      .back-link { display: inline-flex; margin-bottom: 17px; color: var(--muted); font-size: .86rem; font-weight: 750; text-decoration: none; }
+      .back-link:hover { color: var(--ink); text-decoration: underline; }
+      .prepare-stepbar { display: flex; gap: 8px; margin: 0 0 18px; }
+      .prepare-stepbar span { flex: 1; border-radius: 999px; padding: 8px 10px; background: #e9edf4; color: var(--muted); font-size: .76rem; font-weight: 800; text-align: center; }
+      .prepare-stepbar span.active { background: #dce5ff; color: #3153b7; }
+      .roadmap-full { display: grid; gap: 13px; }
+      .roadmap-phase { border: 1px solid var(--line); border-radius: 14px; padding: 15px; background: #fbfcfe; }
+      .roadmap-phase > strong { display: block; margin-bottom: 10px; }
+      .activity-option { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; }
+      .activity-option:hover, .activity-option.selected { border-color: var(--blue); background: #f1f5ff; }
+      .activity-option small { color: var(--muted); }
+      .compact-roadmap { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; border: 1px solid #cbd8ff; border-radius: 13px; padding: 12px 14px; background: #f2f5ff; font-size: .85rem; }
+      .compact-roadmap span { color: var(--muted); }
+      .compact-roadmap a { color: var(--blue-dark); font-weight: 800; cursor: pointer; }
+      .capacity-form { display: grid; gap: 14px; max-width: 620px; }
+      .field { display: grid; gap: 7px; color: var(--ink); font-size: .9rem; font-weight: 800; }
+      .field small { color: var(--muted); font-size: .8rem; font-weight: 500; }
+      .field input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fff; color: var(--ink); font-weight: 750; }
+      .field textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fff; color: var(--ink); font: inherit; font-weight: 600; line-height: 1.45; }
+      .field input:focus { border-color: var(--blue); outline: 3px solid #dce5ff; }
+      .field textarea:focus { border-color: var(--blue); outline: 3px solid #dce5ff; }
+      .prepare-status { margin-top: 15px; border-radius: 12px; padding: 12px; background: #eaf8f5; color: #215d57; font-weight: 750; }
+      .curriculum-hero { display: flex; justify-content: space-between; align-items: end; gap: 22px; margin-bottom: 18px; border-radius: 24px; padding: 27px; background: linear-gradient(135deg, #edf2ff, #fff); }
+      .curriculum-hero h2 { max-width: 620px; margin-bottom: 8px; font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -.06em; }
+      .curriculum-hero p { max-width: 620px; margin-bottom: 0; color: var(--muted); line-height: 1.5; }
+      .curriculum-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 16px; align-items: start; }
+      .curriculum-list { display: grid; gap: 10px; margin-top: 15px; }
+      .curriculum-card { display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 13px; }
+      .curriculum-card h3 { margin-bottom: 4px; }
+      .curriculum-card p { margin-bottom: 0; color: var(--muted); font-size: .85rem; line-height: 1.4; }
+      .curriculum-card .button { white-space: nowrap; }
+      .curriculum-side { box-shadow: none; }
+      .curriculum-side p { color: var(--muted); line-height: 1.5; }
+      .mini-activity { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .86rem; }
+      .mini-activity:last-child { border-bottom: 0; }
+      .curriculum-footer-action { display: flex; justify-content: flex-end; margin-top: 18px; }
+      .activity-list { display: grid; gap: 10px; margin-top: 15px; }
+      .activity-row { display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center; padding: 15px; border: 1px solid var(--line); border-radius: 13px; }
+      .activity-row h3 { margin-bottom: 4px; }
+      .activity-row p { margin-bottom: 0; color: var(--muted); font-size: .85rem; }
+      .activity-row small { color: var(--muted); }
+      .planning-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; align-items: start; }
+      .planning-panel { box-shadow: none; }
+      .planning-messages { display: grid; gap: 10px; min-height: 250px; max-height: 430px; overflow: auto; margin-bottom: 12px; }
+      .planning-message { display: flex; gap: 8px; align-items: flex-start; }
+      .planning-message.teacher { justify-content: flex-end; }
+      .planning-bubble { max-width: 82%; border-radius: 14px; padding: 11px 13px; background: #edf2ff; line-height: 1.45; font-size: .9rem; }
+      .planning-message.teacher .planning-bubble { background: #172033; color: #fff; }
+      .planning-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+      .planning-chip { border: 1px solid var(--line); border-radius: 999px; padding: 8px 11px; background: #fff; color: var(--ink); font-size: .78rem; font-weight: 750; cursor: pointer; }
+      .planning-chip:hover { border-color: var(--blue); background: #f1f5ff; }
+      .planning-composer { display: flex; gap: 8px; }
+      .planning-composer input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 11px; }
+      .planning-roadmap { display: grid; gap: 8px; margin-top: 12px; }
+      .planning-roadmap-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 11px; padding: 11px; background: #fbfcfe; }
+      .planning-roadmap-item.selected { border-color: var(--blue); background: #f1f5ff; }
+      .planning-roadmap-item button { border: 0; background: transparent; color: var(--blue-dark); font-weight: 800; cursor: pointer; }
+      .planning-proposal { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+      .planning-proposal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .planning-proposal-grid > div { border: 1px solid var(--line); border-radius: 11px; padding: 11px; }
+      .planning-proposal-grid strong { display: block; margin-bottom: 4px; font-size: .8rem; }
+      .planning-proposal-grid p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+      .planning-note { margin-top: 12px; border-radius: 10px; padding: 10px; background: #f6f8fb; color: var(--muted); font-size: .78rem; line-height: 1.4; }
+      .aula-assistant { max-width: 900px; margin: 0 auto; }
+      .aula-assistant .planning-layout { grid-template-columns: 1fr; }
+      .aula-assistant .section-label > div > .muted { display: none; }
+      .aula-assistant .planning-panel { box-shadow: none; }
+      .aula-assistant:not(.activities-open) aside.planning-panel { display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+      .aula-assistant:not(.activities-open) aside.planning-panel .section-label, .aula-assistant:not(.activities-open) aside.planning-panel > p, .aula-assistant:not(.activities-open) aside.planning-panel .planning-note, .aula-assistant:not(.activities-open) aside.planning-panel > p:last-child { display: none; }
+      .aula-assistant:not(.activities-open) aside.planning-panel > button { margin: 0 auto; }
+      .aula-assistant.activities-open aside.planning-panel { box-shadow: none; }
+      @media (max-width: 760px) { .planning-layout { grid-template-columns: 1fr; } .planning-proposal-grid { grid-template-columns: 1fr; } }
+      .many-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 16px; }
+      .many-head h2 { margin-bottom: 5px; }
+      .many-head p { margin-bottom: 0; color: var(--muted); }
+      .topic-list { display: grid; gap: 10px; }
+      .topic { border: 1px solid var(--line); border-radius: 13px; background: #fff; overflow: hidden; }
+      .topic summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 15px 16px; cursor: pointer; list-style: none; font-weight: 850; }
+      .topic summary::-webkit-details-marker { display: none; }
+      .topic summary::after { content: "+"; color: var(--blue); font-size: 1.2rem; }
+      .topic[open] summary::after { content: "−"; }
+      .topic summary:hover { background: #f6f8fc; }
+      .topic-meta { display: block; margin-top: 4px; color: var(--muted); font-size: .78rem; font-weight: 500; }
+      .topic-activities { display: grid; gap: 7px; padding: 0 12px 12px; }
+      .topic-activity { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid #edf0f5; padding: 10px 4px; font-size: .86rem; }
+      .topic-activity span { display: block; margin-top: 3px; color: var(--muted); font-size: .78rem; }
+      .topic-activity a { color: var(--blue-dark); font-weight: 800; text-decoration: none; white-space: nowrap; }
+      .topic-activity a:hover { text-decoration: underline; }
+      .sep-intro { margin-bottom: 17px; }
+      .sep-intro h2 { margin-bottom: 6px; }
+      .sep-intro p { max-width: 760px; margin-bottom: 0; color: var(--muted); line-height: 1.5; }
+      .sep-phases { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+      .sep-phase { min-width: 185px; border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; background: #fff; color: var(--muted); text-decoration: none; }
+      .sep-phase strong, .sep-phase small { display: block; }
+      .sep-phase small { margin-top: 3px; font-size: .76rem; }
+      .sep-phase.active { border-color: var(--blue); background: #edf2ff; color: var(--ink); }
+      .sep-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 16px; align-items: start; }
+      .sep-fields { display: grid; gap: 10px; margin-top: 15px; }
+      .sep-field { border: 1px solid var(--line); border-radius: 13px; padding: 15px; background: #fff; }
+      .sep-field-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+      .sep-field h3 { margin-bottom: 4px; }
+      .sep-field p { margin-bottom: 11px; color: var(--muted); font-size: .83rem; line-height: 1.4; }
+      .sep-field .topic-activity { border-top: 1px solid #edf0f5; }
+      .sep-note { border-left: 4px solid var(--teal); background: #eaf8f5; }
+      .sep-note p { margin-bottom: 0; color: #215d57; line-height: 1.5; }
+      .sep-side { display: grid; gap: 12px; }
+      .sep-side .panel { box-shadow: none; }
+      .sep-side h3 { margin-bottom: 6px; }
+      .sep-side p { margin-bottom: 0; color: var(--muted); line-height: 1.45; font-size: .86rem; }
+      .axis-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+      .axis-list .pill { background: #fff4df; color: #915e16; }
+      .mini-activity small { color: var(--muted); }
+
+      /* Unified curriculum experiment: official reference, local planning, classroom use. */
+      .unified-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 16px; }
+      .unified-head h2 { margin-bottom: 5px; font-size: clamp(1.6rem, 3vw, 2.35rem); }
+      .unified-head p { max-width: 700px; margin-bottom: 0; color: var(--muted); line-height: 1.5; }
+      .map-modes { display: inline-flex; gap: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 4px; background: #fff; }
+      .map-modes a { border-radius: 8px; padding: 8px 10px; color: var(--muted); font-size: .76rem; font-weight: 850; text-decoration: none; white-space: nowrap; }
+      .map-modes a.active { background: #172033; color: #fff; }
+      .layer-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+      .layer-key { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 6px 10px; background: #fff; color: var(--muted); font-size: .76rem; font-weight: 750; }
+      .layer-key::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+      .layer-key.local::before { background: var(--orange); }
+      .layer-key.classroom::before { background: var(--teal); }
+      .map-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+      .map-tabs, .field-tabs { display: flex; gap: 7px; overflow-x: auto; }
+      .map-tab { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: #fff; color: var(--muted); cursor: pointer; font-size: .78rem; font-weight: 850; white-space: nowrap; }
+      .map-tab.active { border-color: var(--blue); background: #edf2ff; color: var(--blue-dark); }
+      .unified-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 16px; align-items: start; }
+      .map-index { display: grid; gap: 10px; }
+      .map-item { width: 100%; border: 1px solid var(--line); border-radius: 14px; padding: 15px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; }
+      .map-item:hover, .map-item.active { border-color: var(--blue); box-shadow: 0 0 0 3px #edf2ff; }
+      .map-item-top { display: flex; justify-content: space-between; gap: 14px; align-items: start; }
+      .map-item h3 { margin: 7px 0 5px; }
+      .map-item p { margin-bottom: 0; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+      .status { border-radius: 999px; padding: 5px 8px; background: #edf2ff; color: #3153b7; font-size: .7rem; font-weight: 850; white-space: nowrap; }
+      .status.worked { background: #dff4ea; color: #17664b; }
+      .status.pending { background: #f1f3f6; color: #657085; }
+      .map-detail { position: sticky; top: 18px; box-shadow: none; }
+      .detail-layer { margin-top: 11px; border-left: 4px solid var(--blue); border-radius: 0 11px 11px 0; padding: 12px 13px; background: #f5f7ff; }
+      .detail-layer.local { border-color: var(--orange); background: #fff8ef; }
+      .detail-layer.classroom { border-color: var(--teal); background: #eef9f7; }
+      .detail-layer small { display: block; margin-bottom: 5px; color: var(--muted); font-weight: 850; text-transform: uppercase; letter-spacing: .06em; }
+      .detail-layer p { margin-bottom: 7px; color: var(--ink); font-size: .85rem; line-height: 1.45; }
+      .detail-layer p:last-child { margin-bottom: 0; }
+      .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+      .official-tree { display: grid; gap: 10px; }
+      .tree-level { border-left: 3px solid #dce5ff; padding-left: 14px; }
+      .tree-level .tree-level { margin-top: 10px; border-left-color: #f1c999; }
+      .tree-level .tree-level .tree-level { border-left-color: #9fd6ce; }
+      .tree-node { display: block; width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #fff; text-align: left; cursor: pointer; }
+      .tree-node strong, .tree-node small { display: block; }
+      .tree-node small { margin-top: 4px; color: var(--muted); }
+      .timeline-map { display: grid; gap: 0; }
+      .timeline-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; position: relative; align-items: start; padding-bottom: 18px; }
+      .timeline-item:not(:last-child)::before { content: ""; position: absolute; top: 30px; bottom: 0; left: 16px; width: 2px; background: #dbe3ee; }
+      .timeline-dot { z-index: 1; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: #e8efff; color: var(--blue); font-size: .76rem; font-weight: 900; }
+      .timeline-dot.done { background: #dff4ea; color: #17664b; }
+      .timeline-content { border: 1px solid var(--line); border-radius: 13px; padding: 13px; background: #fff; cursor: pointer; }
+      .timeline-content h3 { margin: 5px 0; }
+      .timeline-content p { margin-bottom: 0; color: var(--muted); font-size: .8rem; }
+      .prototype-callout { margin-bottom: 16px; border: 1px solid #f0d8bd; border-radius: 13px; padding: 12px 14px; background: #fff8ef; color: #754719; font-size: .8rem; line-height: 1.45; }
+
+      /* C: cycle-first — progress is context, sessions are the next step. */
+      .variant-c .cycle-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 18px; }
+      .variant-c .cycle-panel { padding: 24px; border-radius: 24px; background: #fff8ef; border-color: #f0d8bd; }
+      .variant-c .cycle-panel .progress-track i { width: 62%; background: linear-gradient(90deg, var(--orange), #f5bb77); }
+      .variant-c .focus { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+      .variant-c .focus .panel { box-shadow: none; }
+      .roadmap-list { display: grid; gap: 10px; margin-top: 14px; }
+      .roadmap-step { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+      .roadmap-step b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #e8efff; color: var(--blue); font-size: .8rem; }
+      .roadmap-step small { display: block; margin-top: 3px; color: var(--muted); }
+      .roadmap-step .done { background: #d8f3e7; color: #19714f; }
+
+      .footer { margin-top: 44px; color: var(--muted); font-size: .8rem; text-align: center; }
+
+      .switcher { position: fixed; z-index: 20; right: 50%; bottom: 18px; display: flex; align-items: center; gap: 13px; transform: translateX(50%); border: 1px solid #36435e; border-radius: 999px; padding: 7px 10px; background: #172033; color: #fff; box-shadow: 0 14px 40px rgb(23 32 51 / 28%); }
+      .switcher button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #2d3a57; color: #fff; cursor: pointer; }
+      .switcher button:hover, .switcher button:focus-visible { background: var(--blue); outline: 2px solid #b8c7ff; }
+      .switcher-label { min-width: 170px; text-align: center; font-size: .78rem; }
+      .switcher-label strong { display: block; font-size: .82rem; }
+      .switcher-label small { color: #aeb8cd; }
+
+      dialog { width: min(520px, calc(100% - 28px)); border: 1px solid var(--line); border-radius: 20px; padding: 0; box-shadow: 0 25px 80px rgb(23 32 51 / 30%); }
+      dialog::backdrop { background: rgb(23 32 51 / 45%); }
+      .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+      .dialog-head h2 { margin: 0; font-size: 1.15rem; }
+      .dialog-body { padding: 22px; }
+      .lobby { border: 1px solid #cbd8ff; border-radius: 16px; padding: 24px; background: #f2f5ff; text-align: center; }
+      .lobby .lobby-mark { display: grid; width: 54px; height: 54px; margin: 0 auto 16px; place-items: center; border-radius: 50%; background: #dce5ff; color: var(--blue); font-size: 1.45rem; }
+      .lobby p { margin-bottom: 0; color: var(--muted); line-height: 1.5; }
+
+      @media (max-width: 820px) {
+        .topbar-inner { flex-wrap: wrap; padding: 14px 0; }
+        .topbar nav { order: 3; width: 100%; margin-left: 0; overflow-x: auto; }
+        .profile { margin-left: auto; }
+        .page-head, .variant-c .cycle-head { align-items: flex-start; flex-direction: column; }
+        .variant-a .hero, .grid-3 { grid-template-columns: 1fr; }
+        .variant-a .hero-actions { justify-content: flex-start; }
+        .focus, .variant-c .focus, .grid-2 { grid-template-columns: 1fr; }
+        .prepare-layout { grid-template-columns: 1fr; }
+        .prepare-summary { position: static; }
+        .unified-head { align-items: flex-start; flex-direction: column; }
+        .unified-layout { grid-template-columns: 1fr; }
+        .map-detail { position: static; }
+        .map-modes { width: 100%; overflow-x: auto; }
+        .prepare-stepbar { flex-direction: column; }
+        .curriculum-hero { align-items: flex-start; flex-direction: column; }
+        .curriculum-grid { grid-template-columns: 1fr; }
+        .sep-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 540px) {
+        .shell { width: min(100% - 22px, 1180px); }
+        .page { padding-top: 28px; }
+        h1 { font-size: 2.55rem; }
+        .session-card { align-items: flex-start; flex-direction: column; }
+        .switcher { bottom: 10px; }
+        .switcher-label { min-width: 135px; }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="prototype-note">PROTOTIPO DESECHABLE · vista docente · datos sintéticos · no modifica AulaLista</p>
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <a class="brand" href="#top" aria-label="AulaLista, inicio docente">Aula<span>Lista</span></a>
+        <span class="pill">Docente · María López</span>
+        <nav aria-label="Navegación docente">
+          <a id="nav-aula" class="active" href="?variant=B">Aula</a>
+          <a id="nav-curricula" href="?variant=B&area=curricula&view=planning-assistant">Currícula y planeación</a>
+          <a href="#resultados">Resultados</a>
+        </nav>
+        <div class="profile"><span class="avatar" title="Perfil docente">ML</span></div>
+      </div>
+    </header>
+
+    <main id="top" class="page shell">
+      <div class="page-head" id="page-head">
+        <div>
+          <p class="eyebrow">Espacio docente</p>
+          <h1 id="page-title"></h1>
+          <p class="lede" id="page-lede"></p>
+        </div>
+        <div class="page-actions">
+          <button class="button subtle" type="button" id="student-preview">Previsualizar entrada estudiante</button>
+          <a class="button primary" id="top-prepare" href="?variant=B&step=prepare" data-prepare-session>Preparar sesión</a>
+        </div>
+      </div>
+
+      <div id="app"></div>
+      <p class="footer">La entrada pública del estudiante es <strong>/estudiante/</strong>. Docentes, Dirección y personal IT comparten una entrada de <strong>Iniciar sesión</strong>.</p>
+    </main>
+
+    <div class="switcher" aria-label="Selector de variantes del prototipo">
+      <button type="button" id="previous" aria-label="Variante anterior">←</button>
+      <div class="switcher-label"><strong id="variant-name"></strong><small>prototipo visual</small></div>
+      <button type="button" id="next" aria-label="Siguiente variante">→</button>
+    </div>
+
+    <dialog id="student-dialog">
+      <div class="dialog-head"><h2>Entrada del estudiante</h2><button class="button" type="button" id="close-dialog">Cerrar</button></div>
+      <div class="dialog-body">
+        <div class="lobby">
+          <div class="lobby-mark" aria-hidden="true">⌛</div>
+          <h3>Esperando a que la maestra inicie la sesión</h3>
+          <p>Cuando la sesión esté abierta, aquí aparecerá la actividad. El primer prototipo no muestra un mapa curricular en esta pantalla.</p>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      /*
+       * Pregunta: ¿qué esqueleto hace más clara la vista docente?
+       * Decisiones recibidas: login único para adultos; estudiante en /estudiante/;
+       * lobby antes de abrir la sesión; configuración de nivel fuera de esta vista.
+       */
+      const variants = [
+        { key: "A", name: "Vista actual", title: "Prepara, activa, acompaña.", lede: "Una vista cercana a la aplicación actual: cada función aparece como una sección visible y la sesión es la acción principal." },
+        { key: "B", name: "Aula primero", title: "¿Qué necesita tu grupo ahora?", lede: "La sesión ocupa el centro. Currícula, avance y resultados quedan disponibles como apoyo, no como obstáculos para iniciar la clase." },
+        { key: "C", name: "Mapa como contexto", title: "El mapa orienta; el aula decide.", lede: "El porcentaje de avance da contexto al siguiente paso, mientras preparar una sesión sigue siendo la acción principal." }
+      ];
+
+      const params = new URLSearchParams(location.search);
+      const requestedVariant = variants.findIndex((item) => item.key === params.get("variant"));
+      let variantIndex = requestedVariant < 0 ? 1 : Math.min(variants.length - 1, requestedVariant);
+      let step = params.get("step") === "prepare" ? "prepare" : "home";
+      let area = params.get("area") === "curricula" ? "curricula" : "aula";
+      let curriculumView = ["activities", "many", "sep", "unified", "planning-assistant"].includes(params.get("view")) ? params.get("view") : (area === "curricula" ? "planning-assistant" : "overview");
+      let curriculumKey = params.get("curriculum") === "integracion" ? "integracion" : "exploracion";
+      let sepPhase = [3, 4, 5].includes(Number(params.get("phase"))) ? Number(params.get("phase")) : 3;
+      let mapMode = ["A", "B", "C"].includes(params.get("map")) ? params.get("map") : "B";
+      let mapField = params.get("field") || "Todos";
+      let mapItemId = params.get("item") || "lenguajes-1";
+      let editingContext = false;
+      let localContextDraft = "";
+      let prepStep = Math.max(1, Math.min(3, Number(params.get("prep")) || 1));
+      let selectedActivity = "La comunidad que queremos";
+      let studentCount = 25;
+      let deviceCount = 10;
+      let sessionStatus = false;
+      let planningStage = "empty";
+      let planningMode = "idle";
+      let activitiesExpanded = false;
+      let planningAnswers = { situation: "", duration: "", resources: "", observation: "" };
+      let planningMessages = [{ role: "assistant", text: "¿Qué quieres trabajar hoy?" }];
+      const app = document.querySelector("#app");
+      const pageTitle = document.querySelector("#page-title");
+      const pageLede = document.querySelector("#page-lede");
+      const variantName = document.querySelector("#variant-name");
+      const topPrepare = document.querySelector("#top-prepare");
+      const pageHead = document.querySelector("#page-head");
+      const navAula = document.querySelector("#nav-aula");
+      const navCurricula = document.querySelector("#nav-curricula");
+
+      function link(label, href, extra = "") {
+        return `<a href="${href}" class="${extra}">${label}</a>`;
+      }
+
+      function sessionPanel() {
+        return `<section id="aula">
+          <div class="section-label"><h2>Tu aula</h2><p>Sesiones que preparas y acompañas</p></div>
+          <div class="panel panel-pad">
+            <div class="empty"><span class="pill">Sin sesión activa</span><h3>Prepara una actividad para tu grupo</h3><p>Elige una actividad revisada, define el tamaño del grupo y abre el acceso cuando estés lista.</p><a class="button primary" href="?variant=A&step=prepare" data-prepare-session>Preparar sesión</a></div>
+          </div>
+        </section>`;
+      }
+
+      function curriculumPanel() {
+        return `<section id="curricula">
+          <div class="section-label"><h2>Currícula y planeación</h2><p>Contenido revisado antes de llevarlo al aula</p></div>
+          <div class="grid grid-2">
+            <article class="panel panel-pad"><span class="pill">12 actividades</span><h3>Currícula publicada</h3><p class="muted">Material disponible para preparar una sesión.</p><a class="button" href="#curricula">Revisar currícula</a></article>
+            <article class="panel panel-pad"><span class="pill">Asistente</span><h3>Planear conversando</h3><p class="muted">Convierte una situación del grupo en una propuesta lista para preparar.</p><a class="button" href="?variant=B&area=curricula&view=planning-assistant">Abrir asistente</a></article>
+          </div>
+        </section>`;
+      }
+
+      function renderManyCurriculum() {
+        const topics = [
+          ["Comunidad y convivencia", ["La comunidad que queremos", "Acuerdos para convivir", "Escuchamos otras voces", "Cuidamos nuestros espacios"]],
+          ["Exploración del entorno", ["Exploramos nuestro entorno", "Preguntas que nos mueven", "Observamos y registramos", "Conectamos nuestras ideas"]],
+          ["Comunicación", ["Contamos lo que descubrimos", "Leemos para investigar", "Escribimos una explicación", "Compartimos hallazgos"]],
+          ["Pensamiento matemático", ["Medimos lo que nos rodea", "Organizamos información", "Buscamos patrones", "Resolvemos en equipo"]],
+          ["Cuidado y bienestar", ["Decidimos hábitos saludables", "Reconocemos nuestras emociones", "Diseñamos un acuerdo de cuidado"]],
+          ["Integración", ["Construimos una explicación", "Presentamos lo aprendido", "Reflexionamos sobre el recorrido"]]
+        ];
+        return `<div class="curriculum-view"><a class="back-link" href="?variant=B&area=curricula">← Volver a currícula</a><div class="many-head"><div><p class="eyebrow">Vista ampliada</p><h2>Una currícula con muchos temas</h2><p>Los temas se agrupan para que la lista sea navegable; cada actividad se puede llevar directamente a una sesión.</p></div><span class="pill">6 temas · 22 actividades</span></div><section class="panel panel-pad"><div class="topic-list">${topics.map((topic, topicIndex) => `<details class="topic" ${topicIndex < 2 ? "open" : ""}><summary><span>${topic[0]}<span class="topic-meta">${topic[1].length} actividades publicadas</span></span></summary><div class="topic-activities">${topic[1].map((activity, activityIndex) => `<div class="topic-activity"><div><strong>${activity}</strong><span>Actividad ${activityIndex + 1} · publicada</span></div><a href="?variant=B&step=prepare&prep=1" data-prepare-session>Usar</a></div>`).join("")}</div></details>`).join("")}</div></section><div class="curriculum-footer-action"><a class="button primary" href="?variant=B&step=prepare&prep=1" data-prepare-session>Preparar sesión</a></div></div>`;
+      }
+
+      function renderSepCurriculum() {
+        const phases = { 3: "1.º y 2.º de primaria", 4: "3.º y 4.º de primaria", 5: "5.º y 6.º de primaria" };
+        const fields = [
+          ["Lenguajes", "Comunicación, expresión, lectura y escritura", ["Narramos experiencias de la comunidad", "Leemos para investigar", "Producimos un texto para compartir"]],
+          ["Saberes y Pensamiento Científico", "Indagación, explicación y pensamiento matemático", ["Observamos y registramos nuestro entorno", "Medimos y organizamos información", "Explicamos un fenómeno cercano"]],
+          ["Ética, Naturaleza y Sociedades", "Relación crítica con la sociedad, la naturaleza y la comunidad", ["Construimos acuerdos para el cuidado", "Reconocemos cambios en nuestro entorno", "Participamos en una decisión común"]],
+          ["De lo Humano y lo Comunitario", "Identidad, bienestar, convivencia y participación", ["Reconocemos nuestras fortalezas", "Colaboramos en una tarea común", "Cuidamos nuestro bienestar"]]
+        ];
+        return `<div class="curriculum-view"><a class="back-link" href="?variant=B&area=curricula">← Volver a currícula</a><div class="sep-intro"><p class="eyebrow">Estructura oficial SEP · Plan de Estudio 2022</p><h2>Primaria organizada por fases y campos formativos</h2><p>Esta vista usa la jerarquía oficial como marco de navegación. Los contenidos y actividades mostrados abajo son ejemplos sintéticos para probar la interfaz.</p></div><div class="sep-phases">${[3,4,5].map((phase) => `<a class="sep-phase ${sepPhase === phase ? "active" : ""}" href="?variant=B&area=curricula&view=sep&phase=${phase}"><strong>Fase ${phase}</strong><small>${phases[phase]}</small></a>`).join("")}</div><div class="sep-grid"><section class="panel panel-pad"><div class="section-label"><h2>Campos formativos</h2><p>Fase ${sepPhase} · ${phases[sepPhase]}</p></div><div class="sep-fields">${fields.map((field) => `<article class="sep-field"><div class="sep-field-head"><div><h3>${field[0]}</h3><p>${field[1]}</p></div><span class="pill">3 ejemplos</span></div>${field[2].map((activity, index) => `<div class="topic-activity"><div><strong>${activity}</strong><span>Contenido/PDA de ejemplo · ${index + 1}</span></div><a href="?variant=B&step=prepare&prep=1" data-prepare-session>Usar</a></div>`).join("")}</article>`).join("")}</div></section><aside class="sep-side"><article class="panel panel-pad"><span class="pill">Programa sintético</span><h3>Referencia nacional</h3><p>Organiza contenidos y procesos de desarrollo de aprendizaje para esta fase y sus campos.</p></article><article class="panel panel-pad"><span class="pill">Programa analítico</span><h3>Contextualización docente</h3><p>Permite articular los contenidos nacionales con la realidad de la escuela y la comunidad.</p></article><article class="panel panel-pad"><span class="pill">Ejes articuladores</span><h3>Conexiones transversales</h3><div class="axis-list"><span class="pill">Inclusión</span><span class="pill">Pensamiento crítico</span><span class="pill">Vida saludable</span><span class="pill">Igualdad de género</span><span class="pill">Artes</span></div></article></aside></div><div class="curriculum-footer-action"><a class="button primary" href="?variant=B&step=prepare&prep=1" data-prepare-session>Preparar sesión</a></div></div>`;
+      }
+
+      const unifiedItems = [
+        { id: "lenguajes-1", field: "Lenguajes", title: "Narración de sucesos de la comunidad", pda: "Narra experiencias con secuencia comprensible y recupera voces de su comunidad.", local: "Recuperar historias del barrio contadas por familiares y personas mayores.", axes: ["Apropiación de las culturas", "Inclusión"], activities: ["Entrevistamos y contamos", "Mural de historias"], status: "worked" },
+        { id: "lenguajes-2", field: "Lenguajes", title: "Lectura y producción de textos", pda: "Lee textos breves, identifica información y produce un texto para compartir.", local: "Crear una guía breve sobre lugares importantes cercanos a la escuela.", axes: ["Pensamiento crítico"], activities: ["Leemos para investigar"], status: "current" },
+        { id: "saberes-1", field: "Saberes y Pensamiento Científico", title: "Características del entorno natural", pda: "Observa, registra y compara elementos del entorno mediante preguntas propias.", local: "Comparar sombra, temperatura y vegetación en dos zonas de la escuela.", axes: ["Vida saludable", "Pensamiento crítico"], activities: ["Exploradores del patio", "Registro de sombras"], status: "current" },
+        { id: "saberes-2", field: "Saberes y Pensamiento Científico", title: "Medición y organización de información", pda: "Usa unidades y representaciones sencillas para comunicar observaciones.", local: "Organizar en una tabla el uso diario de agua observado en la escuela.", axes: ["Vida saludable"], activities: ["Medimos y comparamos"], status: "pending" },
+        { id: "etica-1", field: "Ética, Naturaleza y Sociedades", title: "Responsabilidad en el cuidado del entorno", pda: "Reconoce problemas comunes y participa en acuerdos para atenderlos.", local: "Acordar acciones para reducir residuos durante el recreo.", axes: ["Pensamiento crítico", "Inclusión"], activities: ["Asamblea para cuidar el patio"], status: "pending" },
+        { id: "humano-1", field: "De lo Humano y lo Comunitario", title: "Participación y colaboración", pda: "Reconoce capacidades propias y participa en tareas colectivas con acuerdos.", local: "Distribuir responsabilidades para una muestra comunitaria del grupo.", axes: ["Inclusión", "Igualdad de género"], activities: ["Un equipo, muchas fortalezas"], status: "pending" }
+      ];
+
+      function mapModeLinks() {
+        return `<nav class="map-modes" aria-label="Formas de ver el prototipo"><a class="${mapMode === "A" ? "active" : ""}" href="?variant=B&area=curricula&view=unified&map=A">A · Jerarquía</a><a class="${mapMode === "B" ? "active" : ""}" href="?variant=B&area=curricula&view=unified&map=B">B · Docente</a><a class="${mapMode === "C" ? "active" : ""}" href="?variant=B&area=curricula&view=unified&map=C">C · Recorrido</a></nav>`;
+      }
+
+      function selectedMapItem() {
+        return unifiedItems.find((item) => item.id === mapItemId) || unifiedItems[0];
+      }
+
+      function mapStatus(item) {
+        const labels = { worked: "Trabajado", current: "Actual", pending: "Pendiente" };
+        return `<span class="status ${item.status}">${labels[item.status]}</span>`;
+      }
+
+      function renderMapDetail(item) {
+        const localEditor = editingContext ? `<label class="field">Contextualización local<textarea id="local-context-draft">${localContextDraft || item.local}</textarea></label><div class="detail-actions"><button class="button primary" type="button" data-save-context>Guardar borrador</button><button class="button" type="button" data-cancel-context>Cancelar</button></div>` : `<p>${localContextDraft || item.local}</p><div class="axis-list">${item.axes.map((axis) => `<span class="pill">${axis}</span>`).join("")}</div>`;
+        return `<aside class="panel panel-pad map-detail"><span class="pill">Detalle conectado</span><h2>${item.title}</h2><div class="detail-layer"><small>1 · Referencia SEP</small><p><strong>Campo:</strong> ${item.field}</p><p><strong>Contenido/PDA:</strong> ${item.pda}</p></div><div class="detail-layer local"><small>2 · Programa analítico local</small>${localEditor}</div><div class="detail-layer classroom"><small>3 · Trabajo en aula</small>${item.activities.map((activity) => `<p><strong>${activity}</strong> · actividad publicada</p>`).join("")}<p>Avance: ${mapStatus(item)}</p></div>${editingContext ? "" : `<div class="detail-actions"><button class="button" type="button" data-edit-context>Editar contexto</button><button class="button primary" type="button" data-use-map-activity="${item.activities[0]}">Preparar sesión</button></div>`}</aside>`;
+      }
+
+      function mapToolbar() {
+        const fields = ["Todos", "Lenguajes", "Saberes y Pensamiento Científico", "Ética, Naturaleza y Sociedades", "De lo Humano y lo Comunitario"];
+        return `<div class="map-toolbar"><div class="map-tabs" aria-label="Fase"><button class="map-tab ${sepPhase === 3 ? "active" : ""}" data-map-phase="3">Fase 3 · 1.º–2.º</button><button class="map-tab ${sepPhase === 4 ? "active" : ""}" data-map-phase="4">Fase 4 · 3.º–4.º</button><button class="map-tab ${sepPhase === 5 ? "active" : ""}" data-map-phase="5">Fase 5 · 5.º–6.º</button></div><div class="field-tabs" aria-label="Campo formativo">${fields.map((field) => `<button class="map-tab ${mapField === field ? "active" : ""}" data-map-field="${field}">${field === "Todos" ? "Todos los campos" : field}</button>`).join("")}</div></div>`;
+      }
+
+      function renderUnifiedHierarchy() {
+        const item = selectedMapItem();
+        return `<div class="unified-layout"><section class="panel panel-pad"><p class="eyebrow">De lo oficial a lo concreto</p><div class="official-tree"><div class="tree-level"><button class="tree-node"><strong>Fase ${sepPhase}</strong><small>${sepPhase === 3 ? "1.º y 2.º" : sepPhase === 4 ? "3.º y 4.º" : "5.º y 6.º"} de primaria · referencia SEP</small></button><div class="tree-level"><button class="tree-node"><strong>${item.field}</strong><small>Campo formativo</small></button><div class="tree-level"><button class="tree-node" data-map-item="${item.id}"><strong>${item.title}</strong><small>Contenido y PDA nacional</small></button><div class="tree-level"><button class="tree-node"><strong>${item.local}</strong><small>Contextualización del programa analítico</small></button><div class="tree-level"><button class="tree-node" data-use-map-activity="${item.activities[0]}"><strong>${item.activities[0]}</strong><small>Actividad publicada · llevar al aula</small></button></div></div></div></div></div></div></section>${renderMapDetail(item)}</div>`;
+      }
+
+      function renderUnifiedTeacher() {
+        if (sepPhase !== 3) {
+          return `${mapToolbar()}<section class="panel panel-pad"><div class="empty"><span class="pill">Fase ${sepPhase}</span><h3>Esta fase conservaría la misma estructura</h3><p>El prototipo sólo cargó ejemplos sintéticos para la Fase 3. En producción aquí aparecerían los contenidos y PDA propios de ${sepPhase === 4 ? "3.º y 4.º" : "5.º y 6.º"}, sin reutilizar los textos de otra fase.</p><button class="button primary" type="button" data-map-phase="3">Volver al ejemplo de Fase 3</button></div></section>`;
+        }
+        const visible = unifiedItems.filter((item) => mapField === "Todos" || item.field === mapField);
+        const item = visible.find((candidate) => candidate.id === mapItemId) || visible[0] || unifiedItems[0];
+        mapItemId = item.id;
+        return `${mapToolbar()}<div class="unified-layout"><section class="map-index">${visible.map((candidate) => `<button class="map-item ${candidate.id === item.id ? "active" : ""}" type="button" data-map-item="${candidate.id}"><div class="map-item-top"><span class="pill">${candidate.field}</span>${mapStatus(candidate)}</div><h3>${candidate.title}</h3><p>${candidate.local}</p></button>`).join("")}</section>${renderMapDetail(item)}</div>`;
+      }
+
+      function renderUnifiedRoadmap() {
+        const item = selectedMapItem();
+        return `<div class="unified-layout"><section class="panel panel-pad"><div class="section-label"><h2>Recorrido del ciclo</h2><p>2 de 6 contenidos confirmados</p></div><div class="progress-track"><i style="width:33%"></i></div><div class="timeline-map" style="margin-top:22px">${unifiedItems.map((candidate, index) => `<div class="timeline-item"><span class="timeline-dot ${candidate.status === "worked" ? "done" : ""}">${candidate.status === "worked" ? "✓" : index + 1}</span><button class="timeline-content" type="button" data-map-item="${candidate.id}"><span class="pill">${candidate.field}</span><h3>${candidate.title}</h3><p>${candidate.activities.length} actividad${candidate.activities.length === 1 ? "" : "es"} · ${candidate.status === "current" ? "tema actual" : candidate.status === "worked" ? "confirmado por docente" : "pendiente"}</p></button>${mapStatus(candidate)}</div>`).join("")}</div></section>${renderMapDetail(item)}</div>`;
+      }
+
+      function renderUnifiedCurriculum() {
+        const bodies = { A: renderUnifiedHierarchy, B: renderUnifiedTeacher, C: renderUnifiedRoadmap };
+        return `<div class="curriculum-view"><a class="back-link" href="?variant=B&area=curricula&view=sep">← Volver a estructura SEP</a><div class="unified-head"><div><p class="eyebrow">Prototipo · mapa curricular unificado</p><h2>Una referencia, tres capas.</h2><p>La SEP define el marco; la escuela y la docente lo contextualizan; las actividades publicadas lo llevan al aula sin mezclar autoridades.</p></div>${mapModeLinks()}</div><div class="layer-legend"><span class="layer-key">Referencia SEP · no editable</span><span class="layer-key local">Planeación local · editable</span><span class="layer-key classroom">Actividad y avance · docente</span></div><div class="prototype-callout"><strong>Datos sintéticos.</strong> La estructura prueba la interacción; los textos de contenidos, PDA y actividades todavía no constituyen una carga curricular oficial.</div>${bodies[mapMode]()}</div>`;
+      }
+
+      function handlePlanningAnswer(answer) {
+        const clean = answer.trim();
+        if (!clean || planningStage === "proposing" || planningStage === "confirmed") return;
+        planningMessages.push({ role: "teacher", text: clean });
+        const stages = ["empty", "duration", "resources", "observation"];
+        const index = stages.indexOf(planningStage);
+        if (planningStage === "empty") planningAnswers.situation = clean;
+        if (planningStage === "duration") planningAnswers.duration = clean;
+        if (planningStage === "resources") planningAnswers.resources = clean;
+        if (planningStage === "observation") planningAnswers.observation = clean;
+        if (index >= 0 && index < stages.length - 1) {
+          planningStage = stages[index + 1];
+          const questions = { duration: "¿Cuánto tiempo tienes para esta clase?", resources: "¿Con qué recursos cuentas hoy?", observation: "¿Hay alguna observación general del grupo? No necesito datos de alumnos." };
+          planningMessages.push({ role: "assistant", text: questions[planningStage] });
+        } else {
+          planningStage = "proposing";
+          planningMessages.push({ role: "assistant", text: "Con esto preparé una propuesta. Puedes confirmarla o empezar de nuevo." });
+        }
+        render();
+      }
+
+      function renderPlanningAssistant(inAula = false) {
+        const questions = {
+          empty: { text: "¿Qué quieres trabajar hoy?", chips: ["Después del recreo queda mucha basura en el patio", "Nos cuesta llegar a acuerdos como grupo", "Quiero observar y registrar nuestro entorno"] },
+          duration: { text: "¿Cuánto tiempo tienes para esta clase?", chips: ["30 minutos", "45 minutos", "60 minutos"] },
+          resources: { text: "¿Con qué recursos cuentas hoy?", chips: ["8 dispositivos y hojas", "Sin dispositivos", "1 proyector y cuadernos"] },
+          observation: { text: "¿Hay alguna observación general del grupo? No necesito datos de alumnos.", chips: ["Participan mejor en equipos pequeños", "Necesitamos una actividad con movimiento", "Cerrar con un acuerdo del grupo"] }
+        };
+        const next = questions[planningStage] || questions.empty;
+        const messages = planningMessages.map((message) => `<div class="planning-message ${message.role}"><div class="planning-bubble">${message.text}</div></div>`).join("");
+        const proposal = planningStage === "proposing" || planningStage === "confirmed" ? `<div class="planning-proposal"><div class="section-label"><h3>${planningStage === "confirmed" ? "Planeación confirmada" : "Propuesta de planeación"}</h3><span class="pill">Datos sintéticos</span></div><div class="planning-proposal-grid"><div><strong>Propósito</strong><p>Que el grupo reconozca la situación y acuerde una acción colectiva viable.</p></div><div><strong>Actividad principal</strong><p>${selectedActivity}</p></div><div><strong>Secuencia y tiempos</strong><p>7 min conversación · 12 min equipos · 16 min puesta en común · 10 min acuerdo.</p></div><div><strong>Materiales y organización</strong><p>${planningAnswers.resources || "Materiales disponibles"} · trabajo colaborativo.</p></div><div><strong>Alternativa corta / sin dispositivos</strong><p>Observación oral, tarjetas reutilizables y un registro colectivo.</p></div><div><strong>Trazabilidad</strong><p>Referencia publicada · contexto docente · actividad sugerida.</p></div></div><div class="page-actions" style="margin-top:12px">${planningStage === "confirmed" ? `<a class="button primary" href="?variant=B&step=prepare&prep=2" data-prepare-session>Preparar sesión</a><button class="button" type="button" data-plan-reset>Planear otra</button>` : `<button class="button primary" type="button" data-plan-confirm>Confirmar planeación</button><button class="button" type="button" data-plan-reset>Editar / empezar de nuevo</button>`}</div></div>` : "";
+        const stageText = planningStage === "empty" ? "Aporta una situación" : planningStage === "proposing" ? "Revisar propuesta" : planningStage === "confirmed" ? "Preparar sesión" : "Responder una pregunta";
+        const activityPanel = activitiesExpanded ? `<div class="planning-roadmap">${["La comunidad que queremos", "Exploramos nuestro entorno", "Compartimos lo aprendido"].map((activity) => `<div class="planning-roadmap-item ${selectedActivity === activity ? "selected" : ""}"><strong>${activity}</strong><button type="button" data-plan-activity="${activity}">Elegir</button></div>`).join("")}</div>` : "";
+        const entryActions = planningMode === "idle" && planningStage === "empty" ? `<div class="planning-chips"><button class="planning-chip" type="button" data-plan-create>Crear una actividad</button><button class="planning-chip" type="button" data-plan-open>Continuar una sesión preparada</button><button class="planning-chip" type="button" data-plan-browse>Mostrar información relevante</button></div>` : "";
+        const activityChoice = planningMode === "choose" ? `<div class="planning-chips"><button class="planning-chip" type="button" data-plan-next>Seguir con la siguiente del roadmap</button><button class="planning-chip" type="button" data-plan-browse>Ver algo específico</button></div>` : "";
+        const roadmapAside = !inAula || activitiesExpanded ? `<aside class="panel panel-pad planning-panel"><div class="section-label"><h2>Actividad y roadmap</h2><span class="pill">Información relevante</span></div><p class="muted">Actividades disponibles para orientar la conversación.</p>${activityPanel}<div class="planning-note"><strong>Referencia:</strong> actividades publicadas y contexto local. Los textos pedagógicos mostrados son sintéticos.</div><p class="muted" style="margin-top:14px">Siguiente decisión: <strong>${stageText}</strong></p></aside>` : "";
+        return `<div class="curriculum-view ${inAula ? `aula-assistant ${activitiesExpanded ? "activities-open" : ""}` : ""}">${inAula ? "" : `<a class="back-link" href="?variant=B&area=curricula&view=overview">← Ver currícula publicada</a>`}<div class="section-label"><div><p class="eyebrow">${inAula ? "Aula · asistente docente" : "Currícula y planeación"}</p>${inAula ? "" : "<h2>Planea y lanza la clase conversando.</h2>"}<p class="muted">${inAula ? "" : "El asistente mantiene el chat visible, toma el contexto indispensable y puede llevarte desde la elección de actividad hasta preparar la sesión."}</p></div>${inAula ? "" : "<span class=\"pill\">La docente decide</span>"}</div><div class="planning-layout"><section class="panel panel-pad planning-panel"><div class="section-label"><h2>Asistente de planeación</h2><span class="pill">Apoyo local</span></div><div class="planning-messages">${messages}</div>${entryActions}${activityChoice}${planningStage !== "proposing" && planningStage !== "confirmed" && planningMode !== "choose" ? `<div class="planning-chips">${next.chips.map((chip) => `<button class="planning-chip" type="button" data-plan-answer="${chip}">${chip}</button>`).join("")}</div><form class="planning-composer" id="planning-composer"><input id="planning-input" aria-label="Respuesta para el asistente" placeholder="Escribe tu respuesta…"><button class="button primary" type="submit">Enviar</button></form>` : ""}${proposal}<div class="planning-note">La propuesta no publica contenido ni cambia el avance. Al confirmarla, el asistente continúa con la preparación y apertura de la sesión.</div></section>${roadmapAside}</div></div>`;
+      }
+
+      function renderCurriculum() {
+        if (curriculumView === "planning-assistant") return renderPlanningAssistant();
+        if (curriculumView === "activities") return renderActivityList();
+        if (curriculumView === "many") return renderManyCurriculum();
+        if (curriculumView === "sep") return renderSepCurriculum();
+        if (curriculumView === "unified") return renderUnifiedCurriculum();
+        return `<div class="curriculum-view">
+          <div class="curriculum-grid">
+            <section class="panel panel-pad"><div class="section-label"><h2>Currícula publicada</h2><p>3 recorridos · <a href="?variant=B&area=curricula&view=many">Ver más</a> · <a href="?variant=B&area=curricula&view=unified&map=B">Probar mapa unificado</a></p></div><div class="curriculum-list"><article class="curriculum-card"><div><span class="pill">Fase 1 · Comunidad</span><h3>La comunidad que queremos</h3><p>5 actividades · última revisión: lista para usar</p></div><a class="button primary" href="?variant=B&step=prepare&prep=1" data-prepare-session>Usar en sesión</a></article><article class="curriculum-card"><div><span class="pill">Fase 2 · Exploración</span><h3>Exploramos nuestro entorno</h3><p>4 actividades · recorrido publicado</p></div><a class="button" href="?variant=B&area=curricula&view=activities&curriculum=exploracion">Ver actividades</a></article><article class="curriculum-card"><div><span class="pill">Fase 3 · Integración</span><h3>Compartimos lo aprendido</h3><p>3 actividades · recorrido publicado</p></div><a class="button" href="?variant=B&area=curricula&view=activities&curriculum=integracion">Ver actividades</a></article></div></section>
+            <aside class="panel panel-pad curriculum-side"><span class="pill">Planeación</span><h2>Importar o revisar</h2><p>Las importaciones y los contenidos pendientes se consultan aquí, sin mezclar formularios con la preparación de la sesión.</p><div class="mini-activity"><strong>3 pendientes</strong><small>requieren revisión</small></div><div class="mini-activity"><strong>12 actividades</strong><small>publicadas</small></div><a class="button" href="#importar">Abrir pendientes</a></aside>
+          </div>
+          <section class="panel panel-pad" style="margin-top:16px"><div class="section-label"><h2>Actividad seleccionada</h2><p>Vista rápida antes de llevarla al aula</p></div><div class="grid grid-2"><div><h3>La comunidad que queremos</h3><p class="muted">Propone una actividad de conversación y acuerdos para iniciar el recorrido.</p></div><div><div class="mini-activity"><span>Duración estimada</span><strong>25 min</strong></div><div class="mini-activity"><span>Modalidad</span><strong>Grupo completo</strong></div></div></div></section>
+          <div class="curriculum-footer-action"><a class="button primary" href="?variant=B&step=prepare&prep=1" data-prepare-session>Preparar sesión</a></div>
+        </div>`;
+      }
+
+      function renderActivityList() {
+        const title = curriculumKey === "integracion" ? "Compartimos lo aprendido" : "Exploramos nuestro entorno";
+        const activities = curriculumKey === "integracion" ? ["Compartimos hallazgos", "Construimos una explicación", "Presentamos lo aprendido"] : ["Exploramos nuestro entorno", "Preguntas que nos mueven", "Observamos y registramos", "Conectamos nuestras ideas"];
+        return `<div class="curriculum-view"><a class="back-link" href="?variant=B&area=curricula">← Volver a currícula</a><section class="panel panel-pad"><p class="eyebrow">Actividades del recorrido</p><h2>${title}</h2><p class="muted">Estas son las actividades publicadas dentro de este recorrido. Elige una para llevarla al aula.</p><div class="activity-list">${activities.map((activity, index) => `<article class="activity-row"><div><h3>${activity}</h3><p>${index === 0 ? "Actividad sugerida" : "Actividad publicada"} · ${index + 1} de ${activities.length}</p></div><a class="button ${index === 0 ? "primary" : ""}" href="?variant=B&step=prepare&prep=1" data-prepare-session>Usar en sesión</a></article>`).join("")}</div></section></div>`;
+      }
+
+      function stepBar() {
+        return `<div class="prepare-stepbar" aria-label="Progreso de preparación"><span class="${prepStep === 1 ? "active" : ""}">1 · Actividad</span><span class="${prepStep >= 2 ? "active" : ""}">2 · Capacidad</span></div>`;
+      }
+
+      function compactRoadmap() {
+        return `<div class="compact-roadmap"><span>Actividad elegida</span><strong>${selectedActivity}</strong><a href="#actividad" data-prep-step="1">Cambiar</a></div>`;
+      }
+
+      function renderPrepare() {
+        if (prepStep === 1) {
+          return renderPlanningAssistant(true);
+        }
+
+        if (prepStep === 2) {
+          return `<div class="prepare-view"><a class="back-link" href="#actividad" data-prep-step="1">← Volver al roadmap</a>${stepBar()}${compactRoadmap()}<section class="panel panel-pad"><h2>Confirma la capacidad de tu sesión</h2><p class="muted">Elige cuántos alumnos participarán y cuántos dispositivos tienes disponibles.</p><div class="capacity-form"><label class="field">Número de alumnos<small>Personas que entrarán a la actividad.</small><input id="student-count" type="number" min="1" value="${studentCount}" inputmode="numeric"></label><label class="field">Número de dispositivos disponibles<small>Incluye tabletas, computadoras o teléfonos compartidos.</small><input id="device-count" type="number" min="1" value="${deviceCount}" inputmode="numeric"></label><div class="page-actions" style="margin-top:4px"><button class="button primary" type="button" data-prep-step="3">Continuar al resumen</button></div></div></section></div>`;
+        }
+
+        return `<div class="prepare-view"><a class="back-link" href="#capacidad" data-prep-step="2">← Volver a capacidad</a>${stepBar()}${compactRoadmap()}<div class="prepare-layout"><section class="panel panel-pad"><h2>Sesión lista para abrir</h2><p class="muted">La sesión todavía no es visible para el grupo. Tú decides cuándo iniciar el acceso.</p><div class="summary-row"><span>Alumnos</span><strong>${studentCount}</strong></div><div class="summary-row"><span>Dispositivos disponibles</span><strong>${deviceCount}</strong></div><div class="summary-row"><span>Estado</span><strong>Sin abrir</strong></div><span class="pill">La maestra conserva el control</span><div id="open-status" class="prepare-status" ${sessionStatus ? "" : "hidden"}>Sesión abierta (simulado). El grupo ya podría entrar.</div></section><aside class="panel panel-pad prepare-summary"><h2>Resumen listo</h2><div class="summary-row"><span>Actividad</span><strong>${selectedActivity}</strong></div><div class="summary-row"><span>Alumnos</span><strong>${studentCount}</strong></div><div class="summary-row"><span>Dispositivos</span><strong>${deviceCount}</strong></div><button class="button primary" type="button" data-open-session>${sessionStatus ? "Sesión abierta" : "Abrir sesión"}</button></aside></div></div>`;
+      }
+
+      function resultsPanel() {
+        return `<section id="resultados">
+          <div class="section-label"><h2>Resultados</h2><p>Lectura agregada para decidir el siguiente paso</p></div>
+          <article class="panel panel-pad callout"><h3>Sin resultados nuevos</h3><p>Cuando cierres una sesión, aquí podrás observar participación, contenidos confirmados y avance del grupo sin diagnósticos individuales.</p></article>
+        </section>`;
+      }
+
+      function renderA() {
+        return `<div class="variant-a">
+          <section class="hero"><div><p class="eyebrow">Inicio docente</p><h2>La clase empieza con una decisión clara.</h2><p class="muted">Prepara la sesión, revisa el contenido y abre el acceso cuando el grupo esté listo.</p></div><div class="hero-actions"><article class="panel panel-pad"><span class="pill">Siguiente acción</span><strong>Preparar sesión</strong><p>Usa una actividad publicada para iniciar una experiencia.</p><a class="button primary" href="?variant=A&step=prepare" data-prepare-session>Comenzar</a></article></div></section>
+          <div class="section-label"><h2>Resumen</h2><p>Lo que importa hoy</p></div>${sessionPanel()}${curriculumPanel()}${resultsPanel()}
+        </div>`;
+      }
+
+      function renderB() {
+        return renderPlanningAssistant(true);
+      }
+
+      function renderC() {
+        return `<div class="variant-c"><div class="cycle-head"><div><p class="eyebrow">Resultados del ciclo</p><h2>El mapa orienta; el aula decide.</h2></div></div><article class="cycle-panel"><div class="cycle-head"><div><h3>Resumen de resultados</h3><p class="muted">Lectura agregada de sesiones y contenidos confirmados.</p></div><strong style="font-size:1.8rem;color:var(--orange)">46%</strong></div><div class="progress-track"><i></i></div><div class="page-actions" style="margin-top:16px"><a class="button" href="#curricula">Explorar currícula</a></div></article><div class="focus"><article class="panel panel-pad" id="aula"><span class="pill">Hoy</span><h3>Sesión siguiente</h3><p class="muted">No hay sesión activa. La actividad queda preparada antes de abrir el acceso.</p><a class="button primary" href="?variant=C&step=prepare" data-prepare-session>Preparar sesión</a></article><article class="panel panel-pad" id="curricula"><span class="pill">Para elegir</span><h3>Contenido recomendado</h3><p class="muted">Explora una actividad publicada que corresponde al siguiente tramo del mapa.</p><a class="button" href="#curricula">Explorar currícula</a></article></div><section id="resultados"><div class="section-label"><h2>Lectura rápida</h2><p>Estadísticas agregadas de tus sesiones</p></div><div class="grid grid-2"><article class="panel panel-pad"><small class="muted">Participación media</small><strong style="display:block;margin-top:9px;font-size:2rem">—</strong><small class="muted">Se mostrará al cerrar una sesión</small></article><article class="panel panel-pad"><small class="muted">Contenidos confirmados</small><strong style="display:block;margin-top:9px;font-size:2rem">7</strong><small class="muted">De 15 en este ciclo</small></article></div></section></div>`;
+      }
+
+      function updateUrl() {
+        const next = new URL(location.href);
+        next.searchParams.set("variant", variants[variantIndex].key);
+        if (area === "curricula" && step !== "prepare") next.searchParams.set("area", "curricula");
+        else next.searchParams.delete("area");
+        if (area === "curricula" && curriculumView === "activities" && step !== "prepare") {
+          next.searchParams.set("view", "activities");
+          next.searchParams.set("curriculum", curriculumKey);
+        } else if (area === "curricula" && curriculumView === "many" && step !== "prepare") {
+          next.searchParams.set("view", "many");
+          next.searchParams.delete("curriculum");
+        } else if (area === "curricula" && curriculumView === "sep" && step !== "prepare") {
+          next.searchParams.set("view", "sep");
+          next.searchParams.set("phase", String(sepPhase));
+          next.searchParams.delete("curriculum");
+          next.searchParams.delete("map");
+          next.searchParams.delete("field");
+          next.searchParams.delete("item");
+        } else if (area === "curricula" && curriculumView === "unified" && step !== "prepare") {
+          next.searchParams.set("view", "unified");
+          next.searchParams.set("map", mapMode);
+          next.searchParams.set("phase", String(sepPhase));
+          next.searchParams.set("field", mapField);
+          next.searchParams.set("item", mapItemId);
+          next.searchParams.delete("curriculum");
+        } else if (area === "curricula" && curriculumView === "planning-assistant" && step !== "prepare") {
+          next.searchParams.set("view", "planning-assistant");
+          next.searchParams.delete("curriculum");
+          next.searchParams.delete("map");
+          next.searchParams.delete("field");
+          next.searchParams.delete("item");
+        } else {
+          next.searchParams.delete("view");
+          next.searchParams.delete("curriculum");
+          next.searchParams.delete("map");
+          next.searchParams.delete("field");
+          next.searchParams.delete("item");
+        }
+        if (step === "prepare") {
+          next.searchParams.set("step", "prepare");
+          next.searchParams.set("prep", String(prepStep));
+        } else {
+          next.searchParams.delete("step");
+          next.searchParams.delete("prep");
+        }
+        history.replaceState({}, "", next);
+      }
+
+      function render() {
+        const variant = variants[variantIndex];
+        const prepareTitles = ["", "Planea la clase conversando.", "Configura el acceso.", "Resumen listo."];
+        const prepareLedes = ["", "Habla con el asistente y elige la actividad que quieres llevar al aula.", "Después define cuántos alumnos y dispositivos tienes disponibles.", "Confirma los datos y abre la sesión cuando estés lista."];
+        pageTitle.textContent = step === "prepare" ? prepareTitles[prepStep] : area === "curricula" ? (curriculumView === "planning-assistant" ? "Planea la clase conversando." : curriculumView === "unified" ? "Mapa curricular conectado." : curriculumView === "sep" ? "Estructura SEP para tu planeación." : "Elige qué llevar al aula.") : variant.title;
+        pageLede.textContent = step === "prepare" ? prepareLedes[prepStep] : area === "curricula" ? (curriculumView === "planning-assistant" ? "Una conversación breve para preparar una actividad, sin formularios innecesarios." : curriculumView === "unified" ? "Consulta la referencia oficial, ajusta el contexto local y llega a una actividad sin perder trazabilidad." : curriculumView === "sep" ? "Usa fases, campos formativos y programas como marco; la docente decide la actividad concreta." : "Consulta el contenido publicado y prepara una actividad sin llenar formularios innecesarios.") : variant.lede;
+        variantName.innerHTML = `<strong>${variant.key} · ${variant.name}</strong>`;
+        topPrepare.hidden = step === "prepare";
+        pageHead.hidden = (area === "curricula" && step !== "prepare") || (area === "aula" && variant.key === "B" && step !== "prepare");
+        navAula.classList.toggle("active", area === "aula" && step !== "prepare");
+        navCurricula.classList.toggle("active", area === "curricula" && step !== "prepare");
+        app.innerHTML = step === "prepare" ? renderPrepare() : area === "curricula" ? renderCurriculum() : variant.key === "A" ? renderA() : variant.key === "B" ? renderB() : renderC();
+        updateUrl();
+      }
+
+      function cycle(delta) {
+        variantIndex = (variantIndex + delta + variants.length) % variants.length;
+        render();
+      }
+
+      document.querySelector("#previous").addEventListener("click", () => cycle(-1));
+      document.querySelector("#next").addEventListener("click", () => cycle(1));
+      document.addEventListener("click", (event) => {
+        const prepare = event.target.closest("[data-prepare-session]");
+        if (prepare) {
+          event.preventDefault();
+          step = "prepare";
+          prepStep = prepare.getAttribute("href")?.includes("prep=2") ? 2 : 1;
+          sessionStatus = false;
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        const prepStepButton = event.target.closest("[data-prep-step]");
+        if (prepStepButton) {
+          event.preventDefault();
+          prepStep = Number(prepStepButton.dataset.prepStep);
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        const activity = event.target.closest("[data-select-activity]");
+        if (activity) {
+          event.preventDefault();
+          selectedActivity = activity.dataset.selectActivity;
+          prepStep = 2;
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        const planActivity = event.target.closest("[data-plan-activity]");
+        if (planActivity) {
+          event.preventDefault();
+          selectedActivity = planActivity.dataset.planActivity;
+          render();
+          return;
+        }
+        const planCreate = event.target.closest("[data-plan-create]");
+        if (planCreate) {
+          event.preventDefault();
+          planningMode = "choose";
+          planningMessages.push({ role: "teacher", text: "Quiero crear una actividad." }, { role: "assistant", text: "Claro, ¿seguimos con la actividad que sigue en el roadmap o quieres ver algo específico?" });
+          render();
+          return;
+        }
+        const planOpen = event.target.closest("[data-plan-open]");
+        if (planOpen) {
+          event.preventDefault();
+          step = "prepare";
+          prepStep = 2;
+          render();
+          return;
+        }
+        const planNext = event.target.closest("[data-plan-next]");
+        if (planNext) {
+          event.preventDefault();
+          planningMode = "planning";
+          planningMessages.push({ role: "teacher", text: "Seguir con la siguiente del roadmap." }, { role: "assistant", text: "Perfecto. Continuemos con la actividad siguiente. ¿Qué quieres trabajar hoy?" });
+          render();
+          return;
+        }
+        const planBrowse = event.target.closest("[data-plan-browse]");
+        if (planBrowse) {
+          event.preventDefault();
+          activitiesExpanded = !activitiesExpanded;
+          planningMode = planningMode === "choose" ? "planning" : planningMode;
+          if (planningMode === "planning" && planningStage === "empty" && activitiesExpanded) planningMessages.push({ role: "assistant", text: "Aquí tienes las actividades del roadmap. Elige una para continuar." });
+          render();
+          return;
+        }
+        const planAnswer = event.target.closest("[data-plan-answer]");
+        if (planAnswer) {
+          event.preventDefault();
+          handlePlanningAnswer(planAnswer.dataset.planAnswer);
+          return;
+        }
+        const planConfirm = event.target.closest("[data-plan-confirm]");
+        if (planConfirm) {
+          event.preventDefault();
+          planningStage = "confirmed";
+          planningMessages.push({ role: "assistant", text: "Planeación confirmada. El siguiente paso es preparar la sesión." });
+          render();
+          return;
+        }
+        const planReset = event.target.closest("[data-plan-reset]");
+        if (planReset) {
+          event.preventDefault();
+          planningStage = "empty";
+          planningAnswers = { situation: "", duration: "", resources: "", observation: "" };
+          planningMessages = [{ role: "assistant", text: "¿Qué quieres trabajar hoy?" }];
+          render();
+          return;
+        }
+        const mapPhaseButton = event.target.closest("[data-map-phase]");
+        if (mapPhaseButton) {
+          event.preventDefault();
+          sepPhase = Number(mapPhaseButton.dataset.mapPhase);
+          editingContext = false;
+          render();
+          return;
+        }
+        const mapFieldButton = event.target.closest("[data-map-field]");
+        if (mapFieldButton) {
+          event.preventDefault();
+          mapField = mapFieldButton.dataset.mapField;
+          editingContext = false;
+          render();
+          return;
+        }
+        const mapItemButton = event.target.closest("[data-map-item]");
+        if (mapItemButton) {
+          event.preventDefault();
+          mapItemId = mapItemButton.dataset.mapItem;
+          localContextDraft = "";
+          editingContext = false;
+          render();
+          return;
+        }
+        const useMapActivity = event.target.closest("[data-use-map-activity]");
+        if (useMapActivity) {
+          event.preventDefault();
+          selectedActivity = useMapActivity.dataset.useMapActivity;
+          step = "prepare";
+          prepStep = 2;
+          sessionStatus = false;
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        const editContext = event.target.closest("[data-edit-context]");
+        if (editContext) {
+          event.preventDefault();
+          editingContext = true;
+          localContextDraft = localContextDraft || selectedMapItem().local;
+          render();
+          return;
+        }
+        const saveContext = event.target.closest("[data-save-context]");
+        if (saveContext) {
+          event.preventDefault();
+          editingContext = false;
+          render();
+          return;
+        }
+        const cancelContext = event.target.closest("[data-cancel-context]");
+        if (cancelContext) {
+          event.preventDefault();
+          editingContext = false;
+          localContextDraft = "";
+          render();
+          return;
+        }
+        const openSession = event.target.closest("[data-open-session]");
+        if (openSession) {
+          event.preventDefault();
+          sessionStatus = true;
+          render();
+          return;
+        }
+        const back = event.target.closest("[data-back-home]");
+        if (back) {
+          event.preventDefault();
+          step = "home";
+          prepStep = 1;
+          sessionStatus = false;
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+      document.addEventListener("submit", (event) => {
+        if (event.target.id !== "planning-composer") return;
+        event.preventDefault();
+        const input = event.target.querySelector("#planning-input");
+        if (input && input.value.trim()) handlePlanningAnswer(input.value.trim());
+      });
+      document.addEventListener("input", (event) => {
+        if (event.target.id === "student-count") studentCount = Math.max(1, Number(event.target.value) || 1);
+        if (event.target.id === "device-count") deviceCount = Math.max(1, Number(event.target.value) || 1);
+        if (event.target.id === "local-context-draft") localContextDraft = event.target.value;
+      });
+      document.addEventListener("keydown", (event) => {
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+        if (event.key === "ArrowLeft") cycle(-1);
+        if (event.key === "ArrowRight") cycle(1);
+      });
+
+      const dialog = document.querySelector("#student-dialog");
+      document.querySelector("#student-preview").addEventListener("click", () => dialog.showModal());
+      document.querySelector("#close-dialog").addEventListener("click", () => dialog.close());
+      dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+      render();
+    </script>
+  </body>
+</html>
