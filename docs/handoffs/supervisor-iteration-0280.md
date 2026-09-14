@@ -227,8 +227,6 @@ domain contracts under the new scope** (decade 281–290 opens; next checkpoint
 
 ## Docs-only packaging (this pass)
 
-- Checkpoint commit + push to `supervisor/aulalista-docs`, updating PR #115
-  (docs-only, unmerged — never merge/approve/close). Record: commit hash /
-  push range / PR URL below after packaging. Nothing was discarded or reverted.
+- DONE — commit `bc4848f` (`docs: supervisor iteration 280 checkpoint — cumulative deltas 271-280, prompt catalog, HOLD gate`, 4 files, +256/−3, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `bd2d970..bc4848f` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Nothing was discarded or reverted.
 
 (End of file.)
