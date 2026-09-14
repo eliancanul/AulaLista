@@ -452,4 +452,4 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 
 ## PR record (iteration-270 checkpoint)
 
-- PENDING — docs-only packaging runs after the cumulative/catalog/gate writes in the same pass; record reads: `TBD (fill: commit hash, push range, PR #115 URL, or skip reason — dirty tree, cached state, `git diff --cached --name-only` verdict)`.
+- DONE — commit `791de3e` (`docs: supervisor iteration 270 checkpoint — cumulative deltas 261-270, prompt catalog, HOLD gate`, 4 files, +258/−3, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c8cbdea..791de3e` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0269) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.

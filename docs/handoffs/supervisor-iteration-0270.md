@@ -226,11 +226,6 @@ re-query + numstat + cached + log). No fix implementation.
 
 ## Docs-only packaging (this pass)
 
-- Checkpoint packaging: stage `docs/handoffs/` Markdown only (never
-  `git add -A`, never code), verify `git diff --cached --name-only` pre-commit,
-  commit, push `supervisor/aulalista-docs`, PR #115 updates (docs-only,
-  unmerged — never merge/approve/close). Record commit hash / push range below
-  after execution; if unsafe, record why and skip. Nothing was discarded or
-  reverted.
+- DONE — commit `791de3e` (`docs: supervisor iteration 270 checkpoint — cumulative deltas 261-270, prompt catalog, HOLD gate`, 4 files, +258/−3, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit: IMPLEMENTATION-GATE.md, supervisor-cumulative.md, supervisor-iteration-0270.md, supervisor-prompt-catalog.md) pushed `c8cbdea..791de3e` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close). PR-record line in cumulative filled in a follow-up commit. Nothing was discarded or reverted.
 
 (End of file.)
