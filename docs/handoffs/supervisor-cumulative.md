@@ -312,6 +312,8 @@ Checkpoint written at iteration 10, extended at iterations 20 and 30. Prior hand
 
 ## PR record (iteration-190 checkpoint)
 
+- DONE — commit `0a4875e` (`docs: supervisor iteration 190 checkpoint — cumulative deltas 181-190, prompt catalog, HOLD gate`, 4 files, +253/−11, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `3a4a834..0a4875e` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs (0041–0050, 0056–0098, 0103–0189) remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+
 ## Methodology note (for the iteration-100 final)
 
 Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery exclusion), phased rotating loops (join → idempotency → matrix → envelope → migration → seams → queue → checkpoint), per-pass evidence matrix with file:line cites distinguishing observed facts from hypotheses, and agentic supervision with a HOLD-default implementation gate. Each 10th iteration writes deltas-only cumulative + gate review + docs-only PR; the 100th writes `supervisor-final-{CYCLE}.md` with documentation/ADR changes, ten strongest prompts and outcomes, and methodology.
