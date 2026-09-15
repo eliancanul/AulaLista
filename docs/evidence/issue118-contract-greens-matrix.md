@@ -50,9 +50,10 @@ La auditoría `/tmp/aulalista-auditoria-14-septiembre-2026.md` halló brechas re
 | Hallazgo | Estado |
 |---|---|
 | B1 P1 — `source_references` con `pages` rompían el detalle publicado | **FIXED** (render real probado) |
-| B2 P1 — falso checked por substring + contadores de cotejos | **FIXED** — el benchmark C01 pasa de 21/30 a 20/31: un cotejo que se contaba como dato ahora es revisión pendiente. Prueba T5 `test_verify_valid_c01_dossier_passes_with_zero_blocks` (21,30,0,51) queda con discrepancia conocida 20,31,0,51 — pendiente actualizar expectativa con autorización |
-| B3 P1 — cardinalidad actividad→clase no demostrada | **FIXED** — entidades `SessionActivity` explícitas + fixture 5-actividades-en-1-clase + negativo que rechaza falso comprobado |
-| B4 P1 — #116 B: aplazamiento persistente + transición parcial | **PENDIENTE** — prueba fail-first sin commitear (`tests/test_ux9_blocker4_postpone.py`, falla como debe); implementación no alcanzó por cuota/red |
+| B2 P1 — falso checked por substring + contadores de cotejos | **FIXED** — asociación estructural en páginas compartidas; C01 retorna a (21,30,0,51) tras normalizar campos tipo lista (Hallazgo 5) |
+| B3 P1 — cardinalidad actividad→clase no demostrada | **FIXED** — entidades `SessionActivity` completas (evidencia directa, relación a anexos), validación estricta en `curriculum/verification.py` (anexos inexistentes bloqueados, evidencia faltante en revisión docente) y render en plantilla de interpretación |
+| B4 P1 — #116 B: aplazamiento persistente + transición parcial | **FIXED** — acción `postpone_queue_item` con estado `postponed` persistido en dossier e historial, probada con flujo causal HTTP y JSON |
+
 | B5 P1 — gates de particiones/cierre raw del harness #119 | **FIXED** — dedup cross-split y raw vacío fallan |
 | P2-1 — Range malformado → IndexError | **FIXED** (416 con Content-Range) |
 | P2-2 — whitespace acumulado | **FIXED** (2 blank-line-EOF; saltos duros de Markdown preservados) |

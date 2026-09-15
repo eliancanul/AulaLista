@@ -57,16 +57,20 @@ def _source_from_manifest(manifest_path: Path, source_id: str) -> tuple[dict[str
                 f"partition isolation violation: sha256 {sha[:16]}... appears in splits {sorted(splits)}"
             )
 
-    # Family/template isolation: train and test must not share families
-    if "family" in item:
-        family = item["family"]
-        for doc in manifest["documents"]:
-            if doc.get("family") == family and doc.get("split") != declared_split:
-                other_split = doc["split"]
-                if {declared_split, other_split} & {"train", "test"} == {"train", "test"}:
-                    raise ValueError(
-                        f"partition isolation violation: family '{family}' shared between train and test"
-                    )
+    # Family/template isolation: test families must not be shared with any other split
+    all_families_by_split: dict[str, set[str]] = {}
+    for doc in manifest.get("documents", []):
+        doc_family = doc.get("family")
+        doc_split = doc.get("split", "")
+        if doc_family and doc_split:
+            all_families_by_split.setdefault(doc_family, set()).add(doc_split)
+
+    for fam, splits in all_families_by_split.items():
+        if "test" in splits and len(splits) > 1:
+            other_splits = sorted(splits - {"test"})
+            raise ValueError(
+                f"partition isolation violation: family '{fam}' shared between test and other splits {other_splits}"
+            )
     split = "pre-observed_holdout" if declared_split == "test" else declared_split
     safe_source = {
         "id": source_id,

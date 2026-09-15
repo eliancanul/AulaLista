@@ -2,7 +2,7 @@ import pytest
 import hashlib
 from curriculum.source_interpreter import (
     ORIGIN_EXTRACTED, REVIEW_PENDING, STATUS_SUPPORTED,
-    ImportDossier, InterpretedField, SessionPlan, SourceReference,
+    ImportDossier, InterpretedField, SessionPlan, SourceReference, SessionActivity,
 )
 from curriculum.verification import (
     STATUS_BLOCKED, STATUS_CHECKED, STATUS_NEEDS_TEACHER_REVIEW,
@@ -125,4 +125,181 @@ class TestDuplicateEvidenceNoInflation:
         assert report_dup.checked_count == report_single.checked_count, (
             f"Duplicate evidence inflated counter: single={report_single.checked_count}, "
             f"dup={report_dup.checked_count}"
+        )
+
+
+class TestCrossSessionBelongingVerification:
+    def test_cross_session_content_assignment_not_checked_on_shared_page(self):
+        """Review probe: Two sessions on page 1. 'Leer un cuento' belongs structurally
+        only to session 1. Assigning it to s2.inicio must NOT produce checked, but
+        needs_review/blocked with reason 'asociación estructural no demostrada'."""
+        pages = [
+            "Sesión 1: Lectura. Inicio: Leer un cuento. Desarrollo: Preguntas. Cierre: Dibujo.\n"
+            "Sesión 2: Escritura. Inicio: Redactar texto. Desarrollo: Revisar. Cierre: Compartir."
+        ]
+        pdf_src = _make_synthetic_pdf(pages)
+        sha = pdf_src[1]
+
+        s1 = _session("s1", 1, "Sesión 1: Lectura", [1], {
+            "inicio": _field("inicio", "Leer un cuento", source_sha=sha, page=1),
+            "desarrollo": _field("desarrollo", "Preguntas", source_sha=sha, page=1),
+            "cierre": _field("cierre", "Dibujo", source_sha=sha, page=1),
+        })
+        # s2 incorrectly assigns s1 content 'Leer un cuento' to its inicio
+        s2 = _session("s2", 2, "Sesión 2: Escritura", [1], {
+            "inicio": _field("inicio", "Leer un cuento", source_sha=sha, page=1),
+            "desarrollo": _field("desarrollo", "Revisar", source_sha=sha, page=1),
+            "cierre": _field("cierre", "Compartir", source_sha=sha, page=1),
+        })
+
+        dossier, src = _make_dossier(pages, [s1, s2])
+        report = verify_curriculum_dossier(dossier, src)
+
+        # Session 1 inicio evidence should be checked
+        s1_inicio_items = [
+            it for it in report.items
+            if it.get("target") == "session.s1.inicio.evidence.0"
+        ]
+        assert len(s1_inicio_items) == 1
+        assert s1_inicio_items[0].get("status") == STATUS_CHECKED
+
+        # Session 2 inicio evidence MUST NOT be checked
+        s2_inicio_items = [
+            it for it in report.items
+            if it.get("target") == "session.s2.inicio.evidence.0"
+        ]
+        assert len(s2_inicio_items) == 1
+        s2_item = s2_inicio_items[0]
+        assert s2_item.get("status") in (STATUS_NEEDS_TEACHER_REVIEW, STATUS_BLOCKED), (
+            f"Expected s2.inicio to be needs_review/blocked, got '{s2_item.get('status')}'"
+        )
+        msg_and_reason = (
+            str(s2_item.get("message", "")) + " " +
+            str(s2_item.get("details", {}).get("reason", ""))
+        ).lower()
+        assert "asociacion estructural no demostrada" in normalize_text_for_evidence_check(msg_and_reason), (
+            f"Expected reason 'asociación estructural no demostrada' in {s2_item}"
+        )
+
+    def test_session_evidence_page_outside_declared_session_pages_not_checked(self):
+        """Condition (a): evidence page must be within declared pages of that session."""
+        pages = [
+            "Sesión 1: Lectura. Inicio: Leer cuento. Desarrollo: Preguntas. Cierre: Dibujo.",
+            "Sesión 2: Escritura. Inicio: Redactar. Desarrollo: Revisar. Cierre: Compartir.",
+        ]
+        pdf_src = _make_synthetic_pdf(pages)
+        sha = pdf_src[1]
+
+        # s1 declared on page 1, but cites evidence on page 2
+        s1 = _session("s1", 1, "Sesión 1", [1], {
+            "inicio": _field("inicio", "Redactar", source_sha=sha, page=2),
+            "desarrollo": _field("desarrollo", "Preguntas", source_sha=sha, page=1),
+            "cierre": _field("cierre", "Dibujo", source_sha=sha, page=1),
+        })
+
+        dossier, src = _make_dossier(pages, [s1])
+        report = verify_curriculum_dossier(dossier, src)
+
+        s1_inicio_items = [
+            it for it in report.items
+            if it.get("target") == "session.s1.inicio.evidence.0"
+        ]
+        assert len(s1_inicio_items) == 1
+        s1_item = s1_inicio_items[0]
+        assert s1_item.get("status") in (STATUS_NEEDS_TEACHER_REVIEW, STATUS_BLOCKED)
+        msg_and_reason = (
+            str(s1_item.get("message", "")) + " " +
+            str(s1_item.get("details", {}).get("reason", ""))
+        ).lower()
+        assert "asociacion estructural no demostrada" in normalize_text_for_evidence_check(msg_and_reason)
+
+
+class TestSessionActivityContract:
+    def test_activity_with_nonexistent_annex_id_is_blocked(self):
+        """Review probe: invented activity with annex_ids=['anexo_inexistente']
+        must produce BLOCKED (not zero blocks / silence)."""
+        pages = ["Sesión 1: Prueba. Inicio: Algo. Desarrollo: Mas. Cierre: Fin."]
+        pdf_src = _make_synthetic_pdf(pages)
+        sha = pdf_src[1]
+
+        act = SessionActivity(
+            activity_id="act_1",
+            title="Actividad con anexo falso",
+            description="Hacer tarea con anexo inexistente",
+            order=1,
+            annex_ids=["anexo_inexistente"],
+            evidence=[SourceReference(document_sha256=sha, page_number=1, excerpt="Inicio: Algo")],
+        )
+        s1 = _session("s1", 1, "Sesión 1", [1], {
+            "inicio": _field("inicio", "Algo", source_sha=sha, page=1),
+            "desarrollo": _field("desarrollo", "Mas", source_sha=sha, page=1),
+            "cierre": _field("cierre", "Fin", source_sha=sha, page=1),
+        })
+        s1.activities = [act]
+
+        dossier, src = _make_dossier(pages, [s1])
+        report = verify_curriculum_dossier(dossier, src)
+
+        assert report.blocked_count > 0, "Activity with nonexistent annex_id must be BLOCKED, not 0 blocks"
+        blocked_items = [
+            it for it in report.items
+            if it.get("status") == STATUS_BLOCKED and "anexo_inexistente" in str(it)
+        ]
+        assert len(blocked_items) >= 1
+
+    def test_activity_without_evidence_is_needs_review(self):
+        """Activity without evidence -> needs_review."""
+        pages = ["Sesión 1: Prueba. Inicio: Algo. Desarrollo: Mas. Cierre: Fin."]
+        pdf_src = _make_synthetic_pdf(pages)
+        sha = pdf_src[1]
+
+        act = SessionActivity(
+            activity_id="act_1",
+            title="Actividad sin evidencia",
+            description="No hay citas en el PDF",
+            order=1,
+            annex_ids=[],
+            evidence=[],  # No evidence
+        )
+        s1 = _session("s1", 1, "Sesión 1", [1], {
+            "inicio": _field("inicio", "Algo", source_sha=sha, page=1),
+            "desarrollo": _field("desarrollo", "Mas", source_sha=sha, page=1),
+            "cierre": _field("cierre", "Fin", source_sha=sha, page=1),
+        })
+        s1.activities = [act]
+
+        dossier, src = _make_dossier(pages, [s1])
+        report = verify_curriculum_dossier(dossier, src)
+
+        review_items = [
+            it for it in report.items
+            if it.get("status") == STATUS_NEEDS_TEACHER_REVIEW
+            and "activity" in it.get("target", "")
+        ]
+        assert len(review_items) >= 1
+
+
+class TestListTypeValueVerification:
+    def test_list_type_field_value_checked_when_elements_present_in_page(self):
+        """Hallazgo 5: Fields with list values (e.g. ['Lenguajes']) must NOT lose
+        checked status due to str(val) producing bracketed repr string."""
+        pages = ["Proyecto Sintético. Campos formativos: Lenguajes. Propósito: Aprender. Finalidad: Educar."]
+        pdf_src = _make_synthetic_pdf(pages)
+        sha = pdf_src[1]
+
+        dossier, src = _make_dossier(pages, [])
+        dossier.general_fields["campos_formativos"] = InterpretedField(
+            name="campos_formativos",
+            value=["Lenguajes"],
+            origin=ORIGIN_EXTRACTED,
+            status=STATUS_SUPPORTED,
+            review=REVIEW_PENDING,
+            evidence=[SourceReference(document_sha256=sha, page_number=1, excerpt="Lenguajes")],
+        )
+
+        report = verify_curriculum_dossier(dossier, src)
+        cf_items = [it for it in report.items if it.get("target") == "general.campos_formativos.evidence.0"]
+        assert len(cf_items) == 1
+        assert cf_items[0].get("status") == STATUS_CHECKED, (
+            f"Expected checked status for list-valued field, got {cf_items[0].get('status')}: {cf_items[0]}"
         )

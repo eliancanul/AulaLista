@@ -1302,8 +1302,69 @@
                       {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.evaluacion field_id="evaluacion" label="Evaluación Formativa" input_type="textarea" rows="3" readonly=source_tampered job=job %}
                     {% endif %}
                   {% endif %}
+                  <!-- Actividades identificadas en la sesión activa -->
+                  {% if sess.activities %}
+                    <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
+                      <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                        Actividades identificadas en la Sesión {{ sess.session_number }} ({{ sess.activities|length }})
+                      </h4>
+                      <div class="table-responsive">
+                        <table class="annex-table">
+                          <thead>
+                            <tr>
+                              <th scope="col" style="width: 25%;">Actividad</th>
+                              <th scope="col" style="width: 35%;">Descripción</th>
+                              <th scope="col" style="width: 20%;">Evidencia de origen</th>
+                              <th scope="col" style="width: 20%;">Anexos vinculados</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for act in sess.activities %}
+                              <tr id="activity-row-{{ act.activity_id }}">
+                                <td data-label="Actividad">
+                                  <strong>{{ act.title|default:act.activity_id }}</strong>
+                                  {% if act.order %}<span class="muted" style="display: block; font-size: 0.75rem;">Orden: {{ act.order }}</span>{% endif %}
+                                </td>
+                                <td data-label="Descripción">
+                                  <span>{{ act.description }}</span>
+                                </td>
+                                <td data-label="Evidencia de origen">
+                                  {% if act.evidence %}
+                                    {% for ev in act.evidence %}
+                                      <div style="font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                        {% if ev.page_number %}
+                                          <a href="{% url 'tutor_package_source_page' package.pk ev.page_number %}" class="evidence-link" target="_blank" rel="noopener">
+                                            📄 Pág. {{ ev.page_number }}
+                                          </a>
+                                        {% endif %}
+                                        {% if ev.excerpt %}
+                                          <span class="muted" style="font-size: 0.75rem; display: block;"><em>"{{ ev.excerpt }}"</em></span>
+                                        {% endif %}
+                                      </div>
+                                    {% endfor %}
+                                  {% else %}
+                                    <span class="muted" style="font-size: 0.8rem;">Sin citas directas</span>
+                                  {% endif %}
+                                </td>
+                                <td data-label="Anexos vinculados">
+                                  {% if act.annex_ids %}
+                                    {% for aid in act.annex_ids %}
+                                      <span class="badge-tag tag-supported" style="margin-right: 0.25rem;">{{ aid }}</span>
+                                    {% endfor %}
+                                  {% else %}
+                                    <span class="muted" style="font-size: 0.8rem;">Ninguno</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  {% endif %}
 
                   <!-- Anexos de la sesión activa -->
+
                   <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
                     <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
                       Anexos y láminas asociadas a la Sesión {{ sess.session_number }}
@@ -1483,14 +1544,16 @@
                         <span class="muted">{{ sess.fields.cierre.value }}</span>
                       </div>
                     {% endif %}
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0; flex-wrap: wrap; gap: 0.35rem;">
                       <span class="muted" style="font-size: 0.82rem;">
                         {{ sess.annex_references|length }} anexo{{ sess.annex_references|length|pluralize }} asociado{{ sess.annex_references|length|pluralize }}
+                        {% if sess.activities %} · {{ sess.activities|length }} actividad{{ sess.activities|length|pluralize:"es" }}{% endif %}
                       </span>
                       <a href="?session_id={{ sess.session_id }}&scope={{ sess.session_id }}" class="button button-small button-secondary">
                         Abrir y editar Sesión {{ sess.session_number }} ↗
                       </a>
                     </div>
+
                   </div>
                 </details>
               {% endif %}

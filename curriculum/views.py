@@ -1256,6 +1256,22 @@ def tutor_curriculum(request):
     )
 
 
+def _normalize_legacy_source_references(references, fallback_sha=""):
+    if not references:
+        return []
+    normalized = []
+    for ref in references:
+        if not isinstance(ref, dict):
+            continue
+        item = dict(ref)
+        if "source_pages" not in item and "pages" in item:
+            item["source_pages"] = item["pages"]
+        if not item.get("source_pdf_sha256") and fallback_sha:
+            item["source_pdf_sha256"] = fallback_sha
+        normalized.append(item)
+    return normalized
+
+
 @teacher_required
 def tutor_package_detail(request, snapshot_id):
     """Show one immutable published activity in teacher language."""
@@ -1265,7 +1281,12 @@ def tutor_package_detail(request, snapshot_id):
         pk=snapshot_id,
         package__created_by=request.user,
     )
-    payload = snapshot.payload or {}
+    payload = dict(snapshot.payload or {})
+    if "source_references" in payload:
+        fallback_sha = getattr(snapshot, "source_pdf_sha256", "") or getattr(snapshot, "sha256", "")
+        payload["source_references"] = _normalize_legacy_source_references(
+            payload["source_references"], fallback_sha
+        )
     questions = []
     for question in payload.get("questions", []) or []:
         value = question.get("value", question) if isinstance(question, dict) else {}
@@ -3942,7 +3963,9 @@ def tutor_package_source_page(request, snapshot_id, page_number):
         pk=snapshot_id,
         package__created_by=request.user,
     )
-    references = snapshot.payload.get("source_references", []) if snapshot.payload else []
+    raw_references = snapshot.payload.get("source_references", []) if snapshot.payload else []
+    fallback_sha = getattr(snapshot, "source_pdf_sha256", "") or getattr(snapshot, "sha256", "")
+    references = _normalize_legacy_source_references(raw_references, fallback_sha)
     try:
         page_number = int(page_number)
     except (TypeError, ValueError):
@@ -4154,11 +4177,13 @@ def tutor_import_interpretation(request, job_id):
         resolve,
         PRIORITY_REQUIRES_RESOLUTION,
         PRIORITY_PENDING_REVIEW,
+        PRIORITY_POSTPONED,
         PRIORITY_NOT_SPECIFIED,
         PRIORITY_REVIEWED,
         GENERAL_FIELD_DISPLAY_ORDER,
         SESSION_FIELD_DISPLAY_ORDER,
     )
+
 
     SCALAR_FORM_FIELDS = {
         "action",
@@ -4311,8 +4336,9 @@ def tutor_import_interpretation(request, job_id):
             is_approved = True
 
         # Sol Advanced Audit: atomic mutation with select_for_update for mutating actions
-        QUEUE_ACTIONS = ("confirm_queue_item", "save_queue_item", "leave_queue_item_pending")
+        QUEUE_ACTIONS = ("confirm_queue_item", "save_queue_item", "leave_queue_item_pending", "postpone_queue_item")
         MUTATING_ACTIONS = ("save_corrections", "confirm_all", "reextract", *QUEUE_ACTIONS)
+
         if action in MUTATING_ACTIONS:
             with transaction.atomic():
                 job = (
@@ -4591,6 +4617,16 @@ def tutor_import_interpretation(request, job_id):
                                 f"Claves no autorizadas en 'leave_queue_item_pending' para '{target_item.human_label}': {extra_keys}."
                             )
 
+                    elif action == "postpone_queue_item":
+                        if "value" in request.POST:
+                            return HttpResponseBadRequest("La acción 'postpone_queue_item' no acepta valor.")
+                        allowed_keys = base_allowed | item_control_keys
+                        extra_keys = [k for k in request.POST.keys() if k not in allowed_keys]
+                        if extra_keys:
+                            return HttpResponseBadRequest(
+                                f"Claves no autorizadas en 'postpone_queue_item' para '{target_item.human_label}': {extra_keys}."
+                            )
+
                     actor_name = request.user.get_full_name().strip() or request.user.username
 
                     if action == "leave_queue_item_pending":
@@ -4602,9 +4638,29 @@ def tutor_import_interpretation(request, job_id):
                             request_selected_item_key = authorized_queue.items[0].stable_key if authorized_queue.items else None
                         if target_item.session_id:
                             request_selected_session = dossier.get_session(target_item.session_id)
+                        if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("accept", ""):
+                            return JsonResponse({
+                                "status": "ok",
+                                "message": success_message,
+                                "next_item_key": request_selected_item_key,
+                            })
                     else:
                         corrections_payload = {}
-                        if action == "confirm_queue_item":
+                        if action == "postpone_queue_item":
+                            if target_item.scope == "general":
+                                corrections_payload = {"reviews": {target_item.field_name: "postponed"}}
+                            elif target_item.scope == "session":
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "reviews": {target_item.field_name: "postponed"},
+                                }
+                            elif target_item.scope == "annex":
+                                ref_id = target_item.reference_id or f"annex_{target_item.annex_number}"
+                                corrections_payload = {
+                                    "session_id": target_item.session_id,
+                                    "reviews": {ref_id: "postponed"},
+                                }
+                        elif action == "confirm_queue_item":
                             if target_item.scope == "general":
                                 corrections_payload = {"reviews": {target_item.field_name: "confirmed"}}
                             elif target_item.scope == "session":
@@ -4612,6 +4668,7 @@ def tutor_import_interpretation(request, job_id):
                                     "session_id": target_item.session_id,
                                     "reviews": {target_item.field_name: "confirmed"},
                                 }
+
                             elif target_item.scope == "annex":
                                 ref_id = target_item.reference_id
                                 page_val = (
@@ -4779,6 +4836,8 @@ def tutor_import_interpretation(request, job_id):
                             job.invalidate_approvals(reason=f"Elemento de cola modificado por el docente (v{dossier.version})")
                             if action == "confirm_queue_item":
                                 success_message = f"Elemento '{target_item.human_label}' confirmado por {actor_name}. Versión {dossier.version} registrada."
+                            elif action == "postpone_queue_item":
+                                success_message = f"Elemento '{target_item.human_label}' aplazado por {actor_name}. Versión {dossier.version} registrada."
                             else:
                                 success_message = f"Elemento '{target_item.human_label}' guardado por {actor_name}. Versión {dossier.version} registrada."
                         elif post_status_code != 400:
@@ -4789,6 +4848,15 @@ def tutor_import_interpretation(request, job_id):
 
                         if target_item.session_id:
                             request_selected_session = dossier.get_session(target_item.session_id)
+
+                        if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("accept", ""):
+                            return JsonResponse({
+                                "status": "ok" if post_status_code == 200 else "error",
+                                "message": success_message or error_message,
+                                "version": dossier.version if dossier else None,
+                                "priority_state": "postponed" if action == "postpone_queue_item" else getattr(target_item, "priority_state", ""),
+                            }, status=post_status_code)
+
                 elif action in ("save_corrections", "confirm_all"):
                     if dossier is None:
                         try:

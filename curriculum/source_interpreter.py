@@ -747,6 +747,8 @@ class SessionActivity:
     description: str = ""
     order: int = 0
     annex_ids: list[str] = field(default_factory=list)
+    evidence: list[SourceReference] = field(default_factory=list)
+    annex_evidence: dict[str, list[SourceReference]] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -755,16 +757,36 @@ class SessionActivity:
             "description": self.description,
             "order": self.order,
             "annex_ids": list(self.annex_ids),
+            "evidence": [e.to_dict() if hasattr(e, "to_dict") else e for e in self.evidence],
+            "annex_evidence": {
+                k: [e.to_dict() if hasattr(e, "to_dict") else e for e in v]
+                for k, v in self.annex_evidence.items()
+            },
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "SessionActivity":
+        raw_ev = data.get("evidence", []) or []
+        ev_list = [
+            e if isinstance(e, SourceReference) else SourceReference.from_dict(e)
+            for e in raw_ev if isinstance(e, (dict, SourceReference))
+        ]
+        raw_aev = data.get("annex_evidence", {}) or {}
+        aev_dict = {}
+        if isinstance(raw_aev, dict):
+            for k, v in raw_aev.items():
+                aev_dict[k] = [
+                    e if isinstance(e, SourceReference) else SourceReference.from_dict(e)
+                    for e in (v or []) if isinstance(e, (dict, SourceReference))
+                ]
         return cls(
             activity_id=str(data.get("activity_id", "")),
             title=str(data.get("title", "")),
             description=str(data.get("description", "")),
             order=int(data.get("order", 0)),
             annex_ids=list(data.get("annex_ids", [])),
+            evidence=ev_list,
+            annex_evidence=aev_dict,
         )
 
 
@@ -968,22 +990,26 @@ class ImportDossier:
 
 PRIORITY_REQUIRES_RESOLUTION = "requires_resolution"  # Rojo / Red
 PRIORITY_PENDING_REVIEW = "pending_review"            # Amarillo / Yellow
+PRIORITY_POSTPONED = "postponed"                      # Aplazado / Azul o Neutral
 PRIORITY_NOT_SPECIFIED = "not_specified"              # Neutral / Gris
 PRIORITY_REVIEWED = "reviewed"                        # Verde
 
 PRIORITY_ORDER: dict[str, int] = {
     PRIORITY_REQUIRES_RESOLUTION: 0,
     PRIORITY_PENDING_REVIEW: 1,
-    PRIORITY_NOT_SPECIFIED: 2,
-    PRIORITY_REVIEWED: 3,
+    PRIORITY_POSTPONED: 2,
+    PRIORITY_NOT_SPECIFIED: 3,
+    PRIORITY_REVIEWED: 4,
 }
 
 PRIORITY_HUMAN_LABELS: dict[str, str] = {
     PRIORITY_REQUIRES_RESOLUTION: "Requiere resolver",
     PRIORITY_PENDING_REVIEW: "Por revisar",
+    PRIORITY_POSTPONED: "Aplazado",
     PRIORITY_NOT_SPECIFIED: "No especificado",
     PRIORITY_REVIEWED: "Revisado",
 }
+
 
 REQUIRED_GENERAL_FIELDS = {"proyecto", "campos_formativos", "proposito", "finalidad"}
 OPTIONAL_GENERAL_FIELDS = {"metodologia", "escenario_proyecto", "grado"}
@@ -1111,6 +1137,8 @@ class OperationalItem:
             return "🔴"
         elif self.priority_state == PRIORITY_PENDING_REVIEW:
             return "🟡"
+        elif self.priority_state == PRIORITY_POSTPONED:
+            return "⏸️"
         elif self.priority_state == PRIORITY_REVIEWED:
             return "✅"
         return "⚪"
@@ -1133,6 +1161,7 @@ class OperationalQueue:
     all_items_count: int
     is_completed: bool
     first_pending_key: str | None
+    postponed_count: int = 0
 
     @property
     def items_requires_resolution(self) -> list[OperationalItem]:
@@ -1143,12 +1172,17 @@ class OperationalQueue:
         return [it for it in self.items if it.priority_state == PRIORITY_PENDING_REVIEW]
 
     @property
+    def items_postponed(self) -> list[OperationalItem]:
+        return [it for it in self.items if it.priority_state == PRIORITY_POSTPONED]
+
+    @property
     def items_not_specified(self) -> list[OperationalItem]:
         return [it for it in self.items if it.priority_state == PRIORITY_NOT_SPECIFIED]
 
     @property
     def items_reviewed(self) -> list[OperationalItem]:
         return [it for it in self.items if it.priority_state == PRIORITY_REVIEWED]
+
 
     @property
     def progress_percent(self) -> int:
@@ -1268,9 +1302,15 @@ def _build_field_operational_item(
             else "Dato corregido y confirmado por el docente."
         )
         blocks_action = ""
+    # 3.5. Postponed review
+    elif field.review == "postponed":
+        priority_state = PRIORITY_POSTPONED
+        problem_summary = "Revisión aplazada por el docente."
+        blocks_action = ""
     # 4. Pending review
     else:
         priority_state = PRIORITY_PENDING_REVIEW
+
         if field.status == STATUS_AMBIGUOUS:
             problem_summary = "Interpretación ambigua en la fuente: requiere verificación o corrección del texto."
         elif field.origin == ORIGIN_PROPOSED:
@@ -1345,7 +1385,11 @@ def _build_annex_operational_item(
     op_state, curr_act = derive_annex_operational_state(ref, source_sha=source_sha, page_count=page_count)
 
     # B5: Annex is ONLY reviewed if derive_annex_operational_state returns resolved
-    if op_state == "resolved":
+    if ref.review == "postponed":
+        priority_state = PRIORITY_POSTPONED
+        problem_summary = "Revisión de anexo aplazada por el docente."
+        blocks_action = ""
+    elif op_state == "resolved":
         priority_state = PRIORITY_REVIEWED
         p_num = ref.confirmed_page
         problem_summary = f"Lámina confirmada en la página física {p_num} del PDF."
@@ -1358,6 +1402,7 @@ def _build_annex_operational_item(
         priority_state = PRIORITY_PENDING_REVIEW
         problem_summary = curr_act
         blocks_action = "Requiere confirmación docente de la página física del anexo."
+
 
     required_for = ["conversión", "asociación_materiales"]
     blocking_codes = []
@@ -1611,6 +1656,7 @@ def derive_operational_queue(
 
     req_res_count = sum(1 for it in sorted_items if it.priority_state == PRIORITY_REQUIRES_RESOLUTION)
     pend_rev_count = sum(1 for it in sorted_items if it.priority_state == PRIORITY_PENDING_REVIEW)
+    post_count = sum(1 for it in sorted_items if it.priority_state == PRIORITY_POSTPONED)
     rev_count = sum(1 for it in sorted_items if it.priority_state == PRIORITY_REVIEWED)
     not_spec_count = sum(1 for it in sorted_items if it.priority_state == PRIORITY_NOT_SPECIFIED)
     tot_count = len(sorted_items)
@@ -1638,7 +1684,9 @@ def derive_operational_queue(
         all_items_count=len(all_items),
         is_completed=is_completed,
         first_pending_key=first_pending_key,
+        postponed_count=post_count,
     )
+
 
 
 # Contracts for future V1 capabilities (as outlined in HANDOFF.md)
@@ -2918,6 +2966,16 @@ class CurriculumSourceInterpreter:
         )
         _ensure_session_annex_ids(session_id, annex_refs)
 
+        # 8. Activities
+        activities = cls._detect_activities_in_session(
+            session_id=session_id,
+            session_text=block_text,
+            session_pages=pages,
+            sha256=sha256,
+            annex_refs=annex_refs,
+            page_segments=page_segments,
+        )
+
         return SessionPlan(
             session_id=session_id,
             session_number=session_number,
@@ -2930,6 +2988,7 @@ class CurriculumSourceInterpreter:
             layout_notes=layout_notes,
             fields=fields,
             annex_references=annex_refs,
+            activities=activities,
             status=STATUS_SUPPORTED,
             review=REVIEW_PENDING,
         )
@@ -3065,6 +3124,86 @@ class CurriculumSourceInterpreter:
             )
 
         return annex_references
+
+    @classmethod
+    def _detect_activities_in_session(
+        cls,
+        session_id: str,
+        session_text: str,
+        session_pages: list[int],
+        sha256: str,
+        annex_refs: list[AnnexReference],
+        page_segments: list[tuple[int, str]] | None = None,
+    ) -> list[SessionActivity]:
+        """Detect activities within a session indicated by the source, with evidence and annex relations."""
+        activities: list[SessionActivity] = []
+        segments = page_segments or [(session_pages[0] if session_pages else 1, session_text)]
+
+        act_pattern = re.compile(
+            r"(?:^|\n)\s*Actividad\s*(\d+|[A-Za-z])?\s*[:.-]?\s*([^\n\r]+)",
+            re.IGNORECASE,
+        )
+
+        order = 0
+        for seg_page, seg_text in segments:
+            for match in act_pattern.finditer(seg_text):
+                num_group = match.group(1)
+                text_group = (match.group(2) or "").strip()
+                if not text_group or len(text_group) < 3:
+                    continue
+                order += 1
+                matched_text = match.group(0).strip()
+                title = f"Actividad {num_group}: {text_group[:40]}" if num_group else f"Actividad {order}: {text_group[:40]}"
+                description = text_group
+                excerpt = matched_text[:80].strip()
+
+                linked_annex_ids: list[str] = []
+                annex_ev_map: dict[str, list[SourceReference]] = {}
+
+                for ar in (annex_refs or []):
+                    ref_id = getattr(ar, "reference_id", "")
+                    annex_num = str(getattr(ar, "annex_number", ""))
+                    raw_mention = getattr(ar, "raw_mention", "")
+                    is_linked = False
+                    if annex_num and re.search(rf"\banexos?\s*.*?\b{re.escape(annex_num)}\b", matched_text, re.IGNORECASE):
+                        is_linked = True
+                    elif raw_mention and raw_mention.lower() in matched_text.lower():
+                        is_linked = True
+                    elif ref_id and ref_id in matched_text:
+                        is_linked = True
+
+                    if is_linked and ref_id:
+                        if ref_id not in linked_annex_ids:
+                            linked_annex_ids.append(ref_id)
+                        annex_ev_map[ref_id] = [
+                            SourceReference(
+                                document_sha256=sha256,
+                                page_number=seg_page,
+                                excerpt=excerpt,
+                            )
+                        ]
+
+                ev = [
+                    SourceReference(
+                        document_sha256=sha256,
+                        page_number=seg_page,
+                        excerpt=excerpt,
+                    )
+                ]
+
+                activities.append(
+                    SessionActivity(
+                        activity_id=f"{session_id}_act_{order}",
+                        title=title,
+                        description=description,
+                        order=order,
+                        annex_ids=linked_annex_ids,
+                        evidence=ev,
+                        annex_evidence=annex_ev_map,
+                    )
+                )
+
+        return activities
 
 
 
@@ -4044,6 +4183,69 @@ def resolve(
                             stable_id=f_name,
                         ))
                         session_changed = True
+            elif r_val == "postponed":
+                if f_name in dossier.general_fields:
+                    g_f = dossier.general_fields[f_name]
+                    if g_f.review != "postponed":
+                        before_snap = _snapshot_field_for_delta(g_f)
+                        g_f.review = "postponed"
+                        state, act = derive_field_operational_state(g_f)
+                        g_f.current_action = act
+                        g_f.action_required = act
+                        after_snap = _snapshot_field_for_delta(g_f)
+                        changes.append(f"Campo general '{f_name}' aplazado.")
+                        deltas.append(_make_history_delta(
+                            scope="general",
+                            field=f_name,
+                            change_type="postponed",
+                            before=before_snap,
+                            after=after_snap,
+                        ))
+                elif matching_session is not None and f_name in matching_session.fields:
+                    sf = matching_session.fields[f_name]
+                    if sf.review != "postponed":
+                        before_snap = _snapshot_field_for_delta(sf)
+                        sf.review = "postponed"
+                        state, act = derive_field_operational_state(sf)
+                        sf.current_action = act
+                        sf.action_required = act
+                        after_snap = _snapshot_field_for_delta(sf)
+                        changes.append(f"Sesión {matching_session.session_number} '{f_name}' aplazado.")
+                        deltas.append(_make_history_delta(
+                            scope="session",
+                            session_id=matching_session.session_id,
+                            field=f_name,
+                            change_type="postponed",
+                            before=before_snap,
+                            after=after_snap,
+                            stable_id=f_name,
+                        ))
+                        session_changed = True
+                elif matching_session is not None:
+                    try:
+                        ref = _find_single_annex_ref(matching_session, f_name)
+                        annex_stable_id = ref.reference_id or f"annex_{ref.annex_number}"
+                        if ref.review != "postponed":
+                            before_snap = _snapshot_annex_for_delta(ref)
+                            ref.review = "postponed"
+                            state, act = derive_annex_operational_state(ref, source_sha=dossier.source_sha256, page_count=dossier.page_count)
+                            ref.current_action = act
+                            ref.action_required = act
+                            after_snap = _snapshot_annex_for_delta(ref)
+                            changes.append(f"Anexo {ref.annex_number} aplazado.")
+                            deltas.append(_make_history_delta(
+                                scope="annex",
+                                session_id=matching_session.session_id,
+                                field=annex_stable_id,
+                                change_type="postponed",
+                                before=before_snap,
+                                after=after_snap,
+                                stable_id=annex_stable_id,
+                            ))
+                            session_changed = True
+                    except ValueError:
+                        pass
+
 
     # B2: Pure no-op if effective payload contains no decisions/changes.
     # Must return unchanged dossier WITHOUT mutating anything (including SessionPlan.review).

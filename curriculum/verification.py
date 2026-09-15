@@ -111,7 +111,25 @@ def normalize_text_for_evidence_check(text: str | None) -> str:
     return text.strip()
 
 
+def _is_value_present(val: Any, target_text: str) -> bool:
+    """Check if a field value (string, list, or scalar) is physically present in target_text."""
+    if val is None or not target_text:
+        return False
+    if isinstance(val, list):
+        clean_elems = [normalize_text_for_evidence_check(str(v)) for v in val if v is not None]
+        clean_elems = [e for e in clean_elems if e]
+        if not clean_elems:
+            return False
+        if all(elem in target_text for elem in clean_elems):
+            return True
+        joined = " ".join(clean_elems)
+        return joined in target_text
+    norm_v = normalize_text_for_evidence_check(str(val or ""))
+    return bool(norm_v and norm_v in target_text)
+
+
 @dataclass
+
 class VerificationItem:
     """A discrete verified assertion anchored to a specific scope and physical page."""
 
@@ -279,6 +297,41 @@ def _is_empty_value(val: Any) -> bool:
     return False
 
 
+def _is_moment_consistent(field_name: str, norm_ex: str, s_segment: str) -> bool:
+    """Check whether norm_ex falls in the structural section of field_name (inicio, desarrollo, cierre)."""
+    m_inicio = re.search(r"\b(?:inicio|apertura)\b", s_segment)
+    m_desarrollo = re.search(r"\b(?:desarrollo)\b", s_segment)
+    m_cierre = re.search(r"\b(?:cierre)\b", s_segment)
+
+    ex_pos = s_segment.find(norm_ex)
+    if ex_pos == -1:
+        return False
+
+    pos_ini = m_inicio.start() if m_inicio else -1
+    pos_des = m_desarrollo.start() if m_desarrollo else -1
+    pos_cie = m_cierre.start() if m_cierre else -1
+
+    if field_name == "inicio":
+        if pos_des != -1 and ex_pos >= pos_des:
+            return False
+        if pos_cie != -1 and ex_pos >= pos_cie:
+            return False
+        return True
+    elif field_name == "desarrollo":
+        if pos_ini != -1 and ex_pos < pos_ini:
+            return False
+        if pos_cie != -1 and ex_pos >= pos_cie:
+            return False
+        return True
+    elif field_name == "cierre":
+        if pos_des != -1 and ex_pos < pos_des:
+            return False
+        if pos_ini != -1 and ex_pos < pos_ini:
+            return False
+        return True
+    return True
+
+
 def verify_curriculum_dossier(
     dossier: Any,
     pdf_source: Any,
@@ -443,6 +496,92 @@ def verify_curriculum_dossier(
                 },
             )
         )
+
+    # Precompute session declared pages, page-to-session segments, and shared citations
+    session_declared_pages: dict[str, set[int]] = {}
+    sessions_by_page: dict[int, list[Any]] = {}
+    shared_citations: dict[tuple[int, str], list[tuple[str, str, str, int]]] = {}
+
+    for s in (raw_sessions or []):
+        s_id = getattr(s, "session_id", None) if not isinstance(s, dict) else s.get("session_id")
+        if not s_id:
+            continue
+        s_pages = getattr(s, "pages", []) if not isinstance(s, dict) else s.get("pages", [])
+        s_cont = getattr(s, "continues_on", []) if not isinstance(s, dict) else s.get("continues_on", [])
+        pages = {int(p) for p in (list(s_pages or []) + list(s_cont or [])) if isinstance(p, int) and not isinstance(p, bool)}
+        session_declared_pages[str(s_id)] = pages
+        for p in pages:
+            sessions_by_page.setdefault(p, []).append(s)
+
+        s_fields = getattr(s, "fields", {}) if not isinstance(s, dict) else s.get("fields", {})
+        if isinstance(s_fields, dict):
+            for fname, fdata in s_fields.items():
+                ev_list = getattr(fdata, "evidence", []) if not isinstance(fdata, dict) else fdata.get("evidence", [])
+                if isinstance(ev_list, list):
+                    for eidx, ev in enumerate(ev_list):
+                        ep = getattr(ev, "page_number", None) if not isinstance(ev, dict) else ev.get("page_number")
+                        ex = getattr(ev, "excerpt", "") if not isinstance(ev, dict) else ev.get("excerpt", "")
+                        norm_ex = normalize_text_for_evidence_check(ex)
+                        if isinstance(ep, int) and not isinstance(ep, bool) and norm_ex:
+                            shared_citations.setdefault((ep, norm_ex), []).append((SCOPE_SESSION, str(s_id), fname, eidx))
+
+    if isinstance(raw_general, dict):
+        for fname, fdata in raw_general.items():
+            ev_list = getattr(fdata, "evidence", []) if not isinstance(fdata, dict) else fdata.get("evidence", [])
+            if isinstance(ev_list, list):
+                for eidx, ev in enumerate(ev_list):
+                    ep = getattr(ev, "page_number", None) if not isinstance(ev, dict) else ev.get("page_number")
+                    ex = getattr(ev, "excerpt", "") if not isinstance(ev, dict) else ev.get("excerpt", "")
+                    norm_ex = normalize_text_for_evidence_check(ex)
+                    if isinstance(ep, int) and not isinstance(ep, bool) and norm_ex:
+                        shared_citations.setdefault((ep, norm_ex), []).append((SCOPE_GENERAL, "general", fname, eidx))
+
+    page_session_segments: dict[int, dict[str, str]] = {}
+    for p, p_sessions in sessions_by_page.items():
+        page_idx = p - 1
+        if page_idx < 0 or page_idx >= len(norm_pages_text):
+            continue
+        norm_page = norm_pages_text[page_idx]
+        if not norm_page:
+            continue
+        if len(p_sessions) == 1:
+            s_id = getattr(p_sessions[0], "session_id", None) if not isinstance(p_sessions[0], dict) else p_sessions[0].get("session_id")
+            if s_id:
+                page_session_segments.setdefault(p, {})[str(s_id)] = norm_page
+            continue
+
+        starts: list[tuple[int, str]] = []
+        for s in p_sessions:
+            s_id = getattr(s, "session_id", None) if not isinstance(s, dict) else s.get("session_id")
+            s_num = getattr(s, "session_number", None) if not isinstance(s, dict) else s.get("session_number")
+            s_title = getattr(s, "title", "") if not isinstance(s, dict) else s.get("title", "")
+            if not s_id:
+                continue
+            pos = -1
+            if s_num is not None:
+                m = re.search(rf"\bsesion\s*{s_num}\b", norm_page)
+                if m:
+                    pos = m.start()
+            norm_title = normalize_text_for_evidence_check(s_title)
+            if norm_title and len(norm_title) >= 4:
+                title_pos = norm_page.find(norm_title)
+                if title_pos != -1:
+                    pos = title_pos if pos == -1 else min(pos, title_pos)
+            if pos != -1:
+                starts.append((pos, str(s_id)))
+
+        starts.sort(key=lambda x: x[0])
+        if len(starts) >= 2:
+            segments: dict[str, str] = {}
+            for i, (pos, s_id) in enumerate(starts):
+                next_pos = starts[i + 1][0] if i + 1 < len(starts) else len(norm_page)
+                segments[s_id] = norm_page[pos:next_pos]
+            page_session_segments[p] = segments
+        else:
+            for s in p_sessions:
+                s_id = getattr(s, "session_id", None) if not isinstance(s, dict) else s.get("session_id")
+                if s_id:
+                    page_session_segments.setdefault(p, {})[str(s_id)] = norm_page
 
     # Helper to check evidence list for a single field
     def _verify_field_evidence(
@@ -840,6 +979,34 @@ def verify_curriculum_dossier(
 
             # D. Physical page text extraction check
             page_idx = ev_page - 1
+
+            # Scope session structural consistency check: declared pages
+            if scope == SCOPE_SESSION:
+                decl_pages = session_declared_pages.get(str(parent_id), set())
+                if decl_pages and ev_page not in decl_pages:
+                    items.append(
+                        VerificationItem(
+                            item_id=ev_item_id,
+                            path=ev_path,
+                            scope=scope,
+                            target=ev_target,
+                            status=STATUS_NEEDS_TEACHER_REVIEW,
+                            page_number=ev_page,
+                            message=(
+                                f"Asociación estructural no demostrada: la página física {ev_page} "
+                                f"no pertenece a las páginas declaradas de la sesión '{parent_id}' ({sorted(decl_pages)})."
+                            ),
+                            excerpt=str(ev_excerpt or ""),
+                            evidence_sha256=str(ev_sha or ""),
+                            details={
+                                "field_name": field_name,
+                                "page_number": ev_page,
+                                "reason": "asociación estructural no demostrada",
+                            },
+                        )
+                    )
+                    continue
+
             norm_page = norm_pages_text[page_idx] if 0 <= page_idx < len(norm_pages_text) else ""
             if not norm_page:
                 items.append(
@@ -861,21 +1028,72 @@ def verify_curriculum_dossier(
             # E. Physical contiguous match check
             if norm_ex in norm_page:
                 # Check if the actual field VALUE is also present
-                if norm_val and norm_val in norm_page:
-                    items.append(
-                        VerificationItem(
-                            item_id=ev_item_id,
-                            path=ev_path,
-                            scope=scope,
-                            target=ev_target,
-                            status=STATUS_CHECKED,
-                            page_number=ev_page,
-                            message=f"Dato de '{field_name}' comprobado textualmente en página física {ev_page}.",
-                            excerpt=str(ev_excerpt or ""),
-                            evidence_sha256=str(ev_sha or ""),
-                            details={"field_name": field_name, "page_number": ev_page},
+                if _is_value_present(val, norm_page):
+                    is_structurally_consistent = True
+                    inconsistent_reason = ""
+
+                    if scope == SCOPE_SESSION:
+                        if ev_page in page_session_segments and str(parent_id) in page_session_segments[ev_page]:
+                            s_segment = page_session_segments[ev_page][str(parent_id)]
+                            if norm_ex not in s_segment:
+                                is_structurally_consistent = False
+                                inconsistent_reason = (
+                                    f"Asociación estructural no demostrada: la evidencia de '{field_name}' "
+                                    f"no pertenece al segmento de la sesión '{parent_id}' en la página física {ev_page}."
+                                )
+                            elif not _is_value_present(val, s_segment):
+                                is_structurally_consistent = False
+                                inconsistent_reason = (
+                                    f"Asociación estructural no demostrada: el valor de '{field_name}' "
+                                    f"no pertenece al segmento de la sesión '{parent_id}' en la página física {ev_page}."
+                                )
+
+                    if is_structurally_consistent and (ev_page, norm_ex) in shared_citations:
+                        claims = shared_citations[(ev_page, norm_ex)]
+                        if len(claims) > 1:
+                            if scope == SCOPE_SESSION and field_name in ("inicio", "desarrollo", "cierre"):
+                                s_segment = page_session_segments.get(ev_page, {}).get(str(parent_id), norm_page)
+                                if not _is_moment_consistent(field_name, norm_ex, s_segment):
+                                    is_structurally_consistent = False
+                                    inconsistent_reason = (
+                                        f"Asociación estructural no demostrada: fragmento compartido citado en "
+                                        f"múltiples campos no corresponde estructuralmente al momento '{field_name}'."
+                                    )
+
+                    if is_structurally_consistent:
+                        items.append(
+                            VerificationItem(
+                                item_id=ev_item_id,
+                                path=ev_path,
+                                scope=scope,
+                                target=ev_target,
+                                status=STATUS_CHECKED,
+                                page_number=ev_page,
+                                message=f"Dato de '{field_name}' comprobado textualmente en página física {ev_page}.",
+                                excerpt=str(ev_excerpt or ""),
+                                evidence_sha256=str(ev_sha or ""),
+                                details={"field_name": field_name, "page_number": ev_page},
+                            )
                         )
-                    )
+                    else:
+                        items.append(
+                            VerificationItem(
+                                item_id=ev_item_id,
+                                path=ev_path,
+                                scope=scope,
+                                target=ev_target,
+                                status=STATUS_NEEDS_TEACHER_REVIEW,
+                                page_number=ev_page,
+                                message=inconsistent_reason,
+                                excerpt=str(ev_excerpt or ""),
+                                evidence_sha256=str(ev_sha or ""),
+                                details={
+                                    "field_name": field_name,
+                                    "page_number": ev_page,
+                                    "reason": "asociación estructural no demostrada",
+                                },
+                            )
+                        )
                 else:
                     items.append(
                         VerificationItem(
@@ -1270,6 +1488,370 @@ def verify_curriculum_dossier(
                         details={"session_id": s_id},
                     )
                 )
+
+            # Session activities validation
+            s_activities = getattr(s_item, "activities", []) if not isinstance(s_item, dict) else s_item.get("activities", [])
+            if isinstance(s_activities, list):
+                for act_idx, act in enumerate(s_activities):
+                    if not isinstance(act, dict) and not hasattr(act, "activity_id"):
+                        items.append(
+                            VerificationItem(
+                                item_id=f"sess_{s_id}_act_{act_idx}_malformed",
+                                path=f"sessions/{s_id}/activities/{act_idx}",
+                                scope=SCOPE_SESSION,
+                                target=f"session.{s_id}.activity.{act_idx}",
+                                status=STATUS_BLOCKED,
+                                message=f"Estructura malformada en actividad índice {act_idx} de sesión '{s_id}'.",
+                                details={"session_id": s_id, "activity_index": act_idx},
+                            )
+                        )
+                        continue
+
+                    raw_act_id = getattr(act, "activity_id", None) if not isinstance(act, dict) else act.get("activity_id")
+                    act_id = str(raw_act_id or f"act_{act_idx}")
+                    act_annex_ids = getattr(act, "annex_ids", []) if not isinstance(act, dict) else act.get("annex_ids", [])
+                    act_evidence = getattr(act, "evidence", []) if not isinstance(act, dict) else act.get("evidence", [])
+                    act_annex_ev = getattr(act, "annex_evidence", {}) if not isinstance(act, dict) else act.get("annex_evidence", {})
+
+                    act_target_prefix = f"session.{s_id}.activity.{act_id}"
+                    act_path_prefix = f"sessions/{s_id}/activities/{act_id}"
+                    act_id_prefix = f"sess_{s_id}_act_{act_id}"
+
+                    # 1. Validate annex_ids: each must exist in session annexes or dossier annexes
+                    if isinstance(act_annex_ids, list):
+                        for aid in act_annex_ids:
+                            aid_str = str(aid).strip()
+                            if not aid_str:
+                                continue
+                            matches = []
+                            for r in (s_annexes if isinstance(s_annexes, list) else []):
+                                r_id = str(getattr(r, "reference_id", None) if not isinstance(r, dict) else r.get("reference_id", "") or "").strip()
+                                r_num = str(getattr(r, "annex_number", None) if not isinstance(r, dict) else r.get("annex_number", "") or "").strip()
+                                r_leg = [str(x) for x in (getattr(r, "legacy_reference_ids", []) if not isinstance(r, dict) else r.get("legacy_reference_ids", []) or [])]
+                                keys = {r_id.lower(), r_num.lower(), f"anexo_{r_num.lower()}", f"anexo{r_num.lower()}"} | {x.lower() for x in r_leg}
+                                keys.discard("")
+                                if aid_str.lower() in keys:
+                                    matches.append(r)
+
+                            if not matches:
+                                for oth_s in (raw_sessions or []):
+                                    if oth_s is s_item:
+                                        continue
+                                    oth_annexes = getattr(oth_s, "annex_references", []) if not isinstance(oth_s, dict) else oth_s.get("annex_references", [])
+                                    for r in (oth_annexes if isinstance(oth_annexes, list) else []):
+                                        r_id = str(getattr(r, "reference_id", None) if not isinstance(r, dict) else r.get("reference_id", "") or "").strip()
+                                        r_num = str(getattr(r, "annex_number", None) if not isinstance(r, dict) else r.get("annex_number", "") or "").strip()
+                                        r_leg = [str(x) for x in (getattr(r, "legacy_reference_ids", []) if not isinstance(r, dict) else r.get("legacy_reference_ids", []) or [])]
+                                        keys = {r_id.lower(), r_num.lower(), f"anexo_{r_num.lower()}", f"anexo{r_num.lower()}"} | {x.lower() for x in r_leg}
+                                        keys.discard("")
+                                        if aid_str.lower() in keys:
+                                            matches.append(r)
+
+                            if not matches and isinstance(raw_cands, list):
+                                for cand in raw_cands:
+                                    c_name = str(getattr(cand, "name", "") if not isinstance(cand, dict) else cand.get("name", "")).strip().lower()
+                                    if aid_str.lower() in c_name or c_name in aid_str.lower():
+                                        matches.append(cand)
+
+                            if len(matches) == 0:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=f"{act_id_prefix}_annex_{aid_str}_missing",
+                                        path=f"{act_path_prefix}/annex_ids/{aid_str}",
+                                        scope=SCOPE_SESSION,
+                                        target=f"{act_target_prefix}.annex.{aid_str}",
+                                        status=STATUS_BLOCKED,
+                                        message=f"Actividad '{act_id}' en sesión '{s_id}' referencia anexo inexistente '{aid_str}'.",
+                                        details={"session_id": s_id, "activity_id": act_id, "annex_id": aid_str, "anexo_inexistente": aid_str},
+                                    )
+                                )
+                            elif len(matches) > 1:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=f"{act_id_prefix}_annex_{aid_str}_ambiguous",
+                                        path=f"{act_path_prefix}/annex_ids/{aid_str}",
+                                        scope=SCOPE_SESSION,
+                                        target=f"{act_target_prefix}.annex.{aid_str}",
+                                        status=STATUS_BLOCKED,
+                                        message=f"Actividad '{act_id}' en sesión '{s_id}' referencia ambigua al anexo '{aid_str}' ({len(matches)} coincidencias).",
+                                        details={"session_id": s_id, "activity_id": act_id, "annex_id": aid_str, "matches": len(matches)},
+                                    )
+                                )
+
+                    # 2. Validate evidence: if empty -> needs_teacher_review, else verify citations
+                    if not isinstance(act_evidence, list) or not act_evidence:
+                        items.append(
+                            VerificationItem(
+                                item_id=f"{act_id_prefix}_evidence_missing",
+                                path=f"{act_path_prefix}/evidence",
+                                scope=SCOPE_SESSION,
+                                target=f"{act_target_prefix}.evidence",
+                                status=STATUS_NEEDS_TEACHER_REVIEW,
+                                message=f"Actividad '{act_id}' en sesión '{s_id}' carece de citas de evidencia en el documento fuente.",
+                                details={"session_id": s_id, "activity_id": act_id},
+                            )
+                        )
+                    else:
+                        decl_pages = session_declared_pages.get(str(s_id), set())
+                        for ev_idx, ev in enumerate(act_evidence):
+                            ev_item_id = f"{act_id_prefix}_ev_{ev_idx}"
+                            ev_path = f"{act_path_prefix}/evidence/{ev_idx}"
+                            ev_target = f"{act_target_prefix}.evidence.{ev_idx}"
+
+                            ev_page = getattr(ev, "page_number", None) if not isinstance(ev, dict) else ev.get("page_number")
+                            ev_sha = getattr(ev, "document_sha256", "") if not isinstance(ev, dict) else ev.get("document_sha256", "")
+                            ev_excerpt = getattr(ev, "excerpt", "") if not isinstance(ev, dict) else ev.get("excerpt", "")
+
+                            if ev_page is None or not isinstance(ev_page, int) or isinstance(ev_page, bool) or ev_page < 1 or ev_page > pdf_page_count:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_BLOCKED,
+                                        page_number=ev_page if isinstance(ev_page, int) and not isinstance(ev_page, bool) else None,
+                                        message=f"Evidencia de actividad '{act_id}' apunta a página {ev_page}, fuera de rango válido.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page},
+                                    )
+                                )
+                                continue
+
+                            if str(ev_sha or "").strip().lower() != actual_sha256.lower():
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_BLOCKED,
+                                        page_number=ev_page,
+                                        message=f"Evidencia de actividad '{act_id}' tiene hash SHA-256 no coincidente.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "expected_sha": actual_sha256},
+                                    )
+                                )
+                                continue
+
+                            norm_ex = normalize_text_for_evidence_check(ev_excerpt)
+                            if not norm_ex:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_BLOCKED,
+                                        page_number=ev_page,
+                                        message=f"Evidencia declarada para actividad '{act_id}' contiene fragmento vacío.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page},
+                                    )
+                                )
+                                continue
+
+                            if decl_pages and ev_page not in decl_pages:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_NEEDS_TEACHER_REVIEW,
+                                        page_number=ev_page,
+                                        message=f"Asociación estructural no demostrada: la página física {ev_page} no pertenece a las páginas declaradas de la sesión '{s_id}'.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page, "reason": "asociación estructural no demostrada"},
+                                    )
+                                )
+                                continue
+
+                            page_idx = ev_page - 1
+                            norm_page = norm_pages_text[page_idx] if 0 <= page_idx < len(norm_pages_text) else ""
+                            if not norm_page:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_NEEDS_TEACHER_REVIEW,
+                                        page_number=ev_page,
+                                        message=f"Página física {ev_page} no contiene texto digital legible.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page},
+                                    )
+                                )
+                                continue
+
+                            if norm_ex not in norm_page:
+                                items.append(
+                                    VerificationItem(
+                                        item_id=ev_item_id,
+                                        path=ev_path,
+                                        scope=SCOPE_SESSION,
+                                        target=ev_target,
+                                        status=STATUS_BLOCKED,
+                                        page_number=ev_page,
+                                        message=f"Contradicción física: evidencia de actividad '{act_id}' no se encuentra en la página física {ev_page}.",
+                                        excerpt=str(ev_excerpt or ""),
+                                        evidence_sha256=str(ev_sha or ""),
+                                        details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page},
+                                    )
+                                )
+                                continue
+
+                            if ev_page in page_session_segments and str(s_id) in page_session_segments[ev_page]:
+                                s_seg = page_session_segments[ev_page][str(s_id)]
+                                if norm_ex not in s_seg:
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=ev_item_id,
+                                            path=ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=ev_target,
+                                            status=STATUS_NEEDS_TEACHER_REVIEW,
+                                            page_number=ev_page,
+                                            message=f"Asociación estructural no demostrada: la evidencia de actividad '{act_id}' no pertenece al segmento de la sesión '{s_id}'.",
+                                            excerpt=str(ev_excerpt or ""),
+                                            evidence_sha256=str(ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page, "reason": "asociación estructural no demostrada"},
+                                        )
+                                    )
+                                    continue
+
+                            items.append(
+                                VerificationItem(
+                                    item_id=ev_item_id,
+                                    path=ev_path,
+                                    scope=SCOPE_SESSION,
+                                    target=ev_target,
+                                    status=STATUS_CHECKED,
+                                    page_number=ev_page,
+                                    message=f"Evidencia de actividad '{act_id}' comprobada textualmente en página física {ev_page}.",
+                                    excerpt=str(ev_excerpt or ""),
+                                    evidence_sha256=str(ev_sha or ""),
+                                    details={"session_id": s_id, "activity_id": act_id, "page_number": ev_page},
+                                )
+                            )
+
+                    # 3. Validate annex_evidence if present
+                    if isinstance(act_annex_ev, dict):
+                        for a_key, a_ev_list in act_annex_ev.items():
+                            if not isinstance(a_ev_list, list):
+                                continue
+                            for a_ev_idx, a_ev in enumerate(a_ev_list):
+                                a_ev_item_id = f"{act_id_prefix}_aev_{a_key}_{a_ev_idx}"
+                                a_ev_path = f"{act_path_prefix}/annex_evidence/{a_key}/{a_ev_idx}"
+                                a_ev_target = f"{act_target_prefix}.annex_evidence.{a_key}.{a_ev_idx}"
+
+                                a_ev_page = getattr(a_ev, "page_number", None) if not isinstance(a_ev, dict) else a_ev.get("page_number")
+                                a_ev_sha = getattr(a_ev, "document_sha256", "") if not isinstance(a_ev, dict) else a_ev.get("document_sha256", "")
+                                a_ev_excerpt = getattr(a_ev, "excerpt", "") if not isinstance(a_ev, dict) else a_ev.get("excerpt", "")
+
+                                if a_ev_page is None or not isinstance(a_ev_page, int) or isinstance(a_ev_page, bool) or a_ev_page < 1 or a_ev_page > pdf_page_count:
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=a_ev_item_id,
+                                            path=a_ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=a_ev_target,
+                                            status=STATUS_BLOCKED,
+                                            page_number=a_ev_page if isinstance(a_ev_page, int) and not isinstance(a_ev_page, bool) else None,
+                                            message=f"Evidencia de anexo '{a_key}' para actividad '{act_id}' apunta a página {a_ev_page}, fuera de rango válido.",
+                                            excerpt=str(a_ev_excerpt or ""),
+                                            evidence_sha256=str(a_ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "annex_key": a_key},
+                                        )
+                                    )
+                                    continue
+
+                                if str(a_ev_sha or "").strip().lower() != actual_sha256.lower():
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=a_ev_item_id,
+                                            path=a_ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=a_ev_target,
+                                            status=STATUS_BLOCKED,
+                                            page_number=a_ev_page,
+                                            message=f"Evidencia de anexo '{a_key}' para actividad '{act_id}' tiene hash SHA-256 no coincidente.",
+                                            excerpt=str(a_ev_excerpt or ""),
+                                            evidence_sha256=str(a_ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "annex_key": a_key},
+                                        )
+                                    )
+                                    continue
+
+                                a_norm_ex = normalize_text_for_evidence_check(a_ev_excerpt)
+                                if not a_norm_ex:
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=a_ev_item_id,
+                                            path=a_ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=a_ev_target,
+                                            status=STATUS_BLOCKED,
+                                            page_number=a_ev_page,
+                                            message=f"Evidencia de anexo '{a_key}' para actividad '{act_id}' contiene fragmento vacío.",
+                                            excerpt=str(a_ev_excerpt or ""),
+                                            evidence_sha256=str(a_ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "annex_key": a_key},
+                                        )
+                                    )
+                                    continue
+
+                                a_page_idx = a_ev_page - 1
+                                a_norm_page = norm_pages_text[a_page_idx] if 0 <= a_page_idx < len(norm_pages_text) else ""
+                                if a_norm_page and a_norm_ex in a_norm_page:
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=a_ev_item_id,
+                                            path=a_ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=a_ev_target,
+                                            status=STATUS_CHECKED,
+                                            page_number=a_ev_page,
+                                            message=f"Evidencia de anexo '{a_key}' para actividad '{act_id}' comprobada en página física {a_ev_page}.",
+                                            excerpt=str(a_ev_excerpt or ""),
+                                            evidence_sha256=str(a_ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "annex_key": a_key},
+                                        )
+                                    )
+                                else:
+                                    items.append(
+                                        VerificationItem(
+                                            item_id=a_ev_item_id,
+                                            path=a_ev_path,
+                                            scope=SCOPE_SESSION,
+                                            target=a_ev_target,
+                                            status=STATUS_BLOCKED,
+                                            page_number=a_ev_page,
+                                            message=f"Evidencia de anexo '{a_key}' para actividad '{act_id}' no coincide con el texto físico en página {a_ev_page}.",
+                                            excerpt=str(a_ev_excerpt or ""),
+                                            evidence_sha256=str(a_ev_sha or ""),
+                                            details={"session_id": s_id, "activity_id": act_id, "annex_key": a_key},
+                                        )
+                                    )
+            elif s_activities is not None:
+                items.append(
+                    VerificationItem(
+                        item_id=f"sess_{s_id}_activities_malformed",
+                        path=f"sessions/{s_id}/activities",
+                        scope=SCOPE_SESSION,
+                        target=f"session.{s_id}.activities",
+                        status=STATUS_BLOCKED,
+                        message=f"Estructura malformada: activities en sesión '{s_id}' debe ser una lista.",
+                        details={"session_id": s_id},
+                    )
+                )
+
     elif raw_sessions is not None:
         items.append(
             VerificationItem(

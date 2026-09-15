@@ -80,3 +80,54 @@ class TestPartitionIsolation:
             f"Same sha256 in train+test should be rejected but returned 0. "
             f"stderr={result.stderr[:300]}"
         )
+
+    def test_different_sha256_same_family_calibration_and_test_rejected(self, tmp_path):
+        """Two PDFs with different SHA, same family, splits calibration and test -> resolution must fail explicitly for test."""
+        from scripts.shadow_import.runtime import _source_from_manifest
+        source_cal = tmp_path / "cal.pdf"
+        source_test = tmp_path / "test.pdf"
+        digest_cal = write_pdf(source_cal, pages=1, width=612)
+        digest_test = write_pdf(source_test, pages=1, width=614)
+        assert digest_cal != digest_test
+
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(json.dumps({
+            "schema_version": "1.0.0",
+            "documents": [
+                {
+                    "id": "CAL-01",
+                    "path": str(source_cal),
+                    "sha256": digest_cal,
+                    "page_count": 1,
+                    "split": "calibration",
+                    "family": "shared_family_x",
+                    "runner_eligible": True,
+                },
+                {
+                    "id": "TEST-01",
+                    "path": str(source_test),
+                    "sha256": digest_test,
+                    "page_count": 1,
+                    "split": "test",
+                    "family": "shared_family_x",
+                    "runner_eligible": True,
+                },
+            ],
+        }), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="partition isolation violation.*family"):
+            _source_from_manifest(manifest_path, "TEST-01")
+
+        # Also via CLI invoke
+        raw = tmp_path / "raw"
+        result = invoke(
+            "run-one", "--manifest", str(manifest_path),
+            "--source-id", "TEST-01", "--adapter", "pypdf",
+            "--raw-dir", str(raw), "--timeout-seconds", "2",
+            "--replica", "1",
+        )
+        assert result.returncode != 0, (
+            f"Shared family between calibration and test should be rejected for TEST-01. "
+            f"stdout={result.stdout[:200]} stderr={result.stderr[:200]}"
+        )
+        assert "partition isolation violation" in (result.stderr + result.stdout).lower()

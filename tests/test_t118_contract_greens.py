@@ -216,6 +216,17 @@ class TestGreen1FixtureVariety:
         pdf_src = _make_synthetic_pdf(page_texts)
         sha = pdf_src[1]
 
+        annex_refs = [
+            AnnexReference(
+                annex_number=str(i),
+                raw_mention=f"anexo_{i}",
+                reference_id=f"anexo_{i}",
+                source_pages=[1],
+                candidate_pages=[1],
+            )
+            for i in (1, 3, 5)
+        ]
+
         activities = [
             SessionActivity(
                 activity_id=f"act_{i}",
@@ -223,6 +234,7 @@ class TestGreen1FixtureVariety:
                 description=f"Descripción de la actividad {i}",
                 order=i,
                 annex_ids=[f"anexo_{i}"] if i % 2 == 1 else [],
+                evidence=[SourceReference(document_sha256=sha, page_number=1, excerpt=f"Actividad {i}")],
             )
             for i in range(1, 6)
         ]
@@ -233,6 +245,7 @@ class TestGreen1FixtureVariety:
             "Clase 1: Taller intensivo",
             [1],
             self._session_fields(sha, 1),
+            annex_references=annex_refs,
             activities=activities,
         )
 

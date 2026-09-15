@@ -32,10 +32,17 @@
             {% for reference in payload.source_references %}
               <article>
                 <p><strong>{{ reference.source_anchor|default:"Fuente original" }}</strong> · páginas
-                  {% for page in reference.source_pages %}
-                    <a href="{% url 'tutor-package-source-page' snapshot.pk page %}#page={{ page }}">{{ page }}</a>{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
-                  · <a href="{% url 'tutor-package-source-page' snapshot.pk reference.source_pages.0 %}#page={{ reference.source_pages.0 }}">Ver lámina original</a>
+                  {% if reference.source_pages %}
+                    {% for page in reference.source_pages %}
+                      <a href="{% url 'tutor-package-source-page' snapshot.pk page %}#page={{ page }}">{{ page }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    · <a href="{% url 'tutor-package-source-page' snapshot.pk reference.source_pages.0 %}#page={{ reference.source_pages.0 }}">Ver lámina original</a>
+                  {% elif reference.pages %}
+                    {% for page in reference.pages %}
+                      <a href="{% url 'tutor-package-source-page' snapshot.pk page %}#page={{ page }}">{{ page }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    · <a href="{% url 'tutor-package-source-page' snapshot.pk reference.pages.0 %}#page={{ reference.pages.0 }}">Ver lámina original</a>
+                  {% endif %}
                 </p>
                 {% if reference.source_urls %}<p>Recursos enlazados: {% for source_url in reference.source_urls %}<a href="{{ source_url }}" target="_blank" rel="noopener">{{ source_url }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
                 <details><summary>Instrucción original</summary><blockquote>{{ reference.source_text }}</blockquote></details>
