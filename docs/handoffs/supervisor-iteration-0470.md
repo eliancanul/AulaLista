@@ -75,6 +75,6 @@ Next supervisor pass (iteration 471): **Phase 1 baseline — open decade 471–4
 
 ## Docs-only packaging (this pass)
 
-- Checkpoint pass: stage/commit/push ONLY `docs/handoffs/` Markdown via explicit `git add` (never `git add -A`, never code); verify `git diff --cached --name-only` pre-commit; push `supervisor/aulalista-docs`; PR #115 already OPEN — push updates it, never merge/approve/close. Outcome recorded in the cumulative PR record below. Nothing was discarded or reverted. `supervisor-final-5.md` due at 0500, NOT at 0470.
+- Checkpoint pass: stage/commit/push ONLY `docs/handoffs/` Markdown via explicit `git add` (never `git add -A`, never code); verify `git diff --cached --name-only` pre-commit; push `supervisor/aulalista-docs`; PR #115 already OPEN — push updates it, never merge/approve/close. DONE — commit `4974f45` pushed `ac173d2..4974f45`: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged). Nothing was discarded or reverted. `supervisor-final-5.md` due at 0500, NOT at 0470.
 
 (End of file.)
