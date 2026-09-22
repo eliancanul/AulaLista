@@ -104,7 +104,7 @@ def create_ready_job(user, pdf_bytes=None, dossier=None):
     sha = hashlib.sha256(pdf_bytes).hexdigest()
     if dossier is None:
         dossier = CurriculumSourceInterpreter.prepare(pdf_bytes)
-    
+
     # Compute canonical verification report and attach
     report = verify_curriculum_dossier(dossier, pdf_bytes)
     dossier.verification_report = report.to_dict()
@@ -932,5 +932,3 @@ class TestTask6TeacherReviewUI:
         # 4. Touch targets >= 44px
         assert "min-height: 44px" in html or "min-block-size: 44px" in html
         assert "min-width: 44px" in html or "min-inline-size: 44px" in html
-
-

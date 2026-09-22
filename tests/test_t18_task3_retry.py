@@ -1171,4 +1171,3 @@ vm.runInNewContext(code, {
     assert data["afterActive"]["activeHidden"] is False
     assert data["afterActive"]["failedGuideHidden"] is True
     assert data["afterActive"]["errorContainerHidden"] is True
-

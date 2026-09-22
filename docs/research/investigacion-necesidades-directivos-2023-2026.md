@@ -94,4 +94,3 @@ Dejar fuera del primer corte: expediente individual, perfil de riesgo, diagnóst
 - [UNICEF México, Análisis de la situación de la niñez y adolescencia 2018–2025](https://www.unicef.org/mexico/informes/situacion-derechos-ninez-adolescencia-mexico). Informe nacional publicado en 2026; combina fuentes oficiales y análisis secundario de UNICEF, por lo que las asociaciones no prueban causalidad.
 - [UNICEF México, Informe anual 2024](https://www.unicef.org/mexico/informes/informeanual2024). Reporte de intervenciones de UNICEF; sus cifras de personas alcanzadas no estiman prevalencia nacional.
 - [INEE, México en TALIS-PISA](https://www.inee.edu.mx/wp-content/uploads/2018/12/P1C154.pdf) y [Personal y organización escolar de la escuela primaria mexicana](https://www.inee.edu.mx/wp-content/uploads/2019/01/P1D252.pdf). Líneas base anteriores a 2023; útiles para contexto, insuficientes para afirmar condiciones actuales.
-

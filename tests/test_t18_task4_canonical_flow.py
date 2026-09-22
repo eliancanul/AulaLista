@@ -1031,6 +1031,3 @@ def test_retry_tamper_after_claim_fails_closed_under_owner_token():
     assert job.interpretation_state == CurriculumImportJob.INTERPRETATION_STATE_FAILED
     assert job.interpretation_claim_token is None
     assert "alterado durante el procesamiento" in job.interpretation_error_message
-
-
-

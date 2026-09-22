@@ -1,7 +1,7 @@
 # Auditoría curricular y pedagógica del asistente virtual de AulaLista
 
-**Fecha de corte:** 2026-08-28  
-**Ámbito:** educación básica mexicana; prioridad inicial: primaria (Fases 3, 4 y 5).  
+**Fecha de corte:** 2026-08-28
+**Ámbito:** educación básica mexicana; prioridad inicial: primaria (Fases 3, 4 y 5).
 **Propósito:** definir qué fuentes debe consultar el asistente, qué puede sugerir, qué debe bloquearse y qué siempre requiere revisión docente.
 
 > Este documento distingue tres cosas: **norma nacional** (acuerdos y documentos oficiales), **orientación pedagógica de la SEP** (materiales de acompañamiento, CTE y formación continua) y **decisiones de producto** (inferencias para AulaLista). Las orientaciones no deben presentarse como una plantilla administrativa obligatoria.
@@ -238,4 +238,3 @@ Esto coincide con la autonomía profesional que la SEP reconoce al magisterio y 
 - [SEP, Convocatoria CTE 2026–2027](https://educacionbasica.sep.gob.mx/wp-content/uploads/2026/Convocatoria_CTE.pdf).
 - [DOF, Acuerdo 10/09/23 de evaluación](https://dof.gob.mx/nota_detalle.php?codigo=5703099&fecha=27/09/2023).
 - [DOF/SEP, Lineamientos CTE, Acuerdo 05/04/24](https://educacionbasica.sep.gob.mx/wp-content/uploads/2024/04/DOF-Diario-Oficial-de-la-Federacion.pdf).
-

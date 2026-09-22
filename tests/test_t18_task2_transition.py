@@ -3693,16 +3693,3 @@ class TestTask2B3eSeamClosureAndErrorSeparation:
         assert job.error_message == "LEGACY_PRESERVED_SENTINEL_ERROR"
         assert job.cancel_requested is False
         assert job.cancelled_at == now_dt
-
-
-
-
-
-
-
-
-
-
-
-
-

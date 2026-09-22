@@ -1560,5 +1560,3 @@ class TestTask7ExplicitTeacherApproval:
         assert resp.status_code == 400
         assert "supera el tamaño máximo permitido" in resp.content.decode("utf-8")
         assert CurriculumImportJob.objects.count() == initial_count
-
-

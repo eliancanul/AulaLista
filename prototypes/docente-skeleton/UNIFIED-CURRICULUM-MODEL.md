@@ -124,4 +124,3 @@ Un corte de producción razonable completo es **3–5 semanas** para una persona
 ## Corte recomendado
 
 Primero probar una sola fase y los cuatro campos con 12–20 contenidos sintéticos, contextualización breve, ejes y actividades ya publicadas. Si las docentes entienden las tres capas y llegan a “Preparar sesión” sin explicación externa, entonces se implementa el catálogo SEP real y la persistencia.
-

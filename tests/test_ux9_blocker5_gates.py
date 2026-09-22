@@ -30,7 +30,7 @@ class TestCloseRawEmptyFails:
         raw = tmp_path / "raw"
         raw.mkdir()
         (raw / "runs").mkdir()
-        
+
         result = invoke("close-raw", "--raw-dir", str(raw))
         assert result.returncode != 0, (
             f"close-raw on empty dir should fail but returned 0. "
@@ -44,7 +44,7 @@ class TestPartitionIsolation:
         """Same PDF hash appearing in both train and test splits must be rejected."""
         source = tmp_path / "fixture.pdf"
         digest = write_pdf(source, pages=1)
-        
+
         manifest_path = tmp_path / "manifest.json"
         manifest_path.write_text(json.dumps({
             "schema_version": "1.0.0",
@@ -67,7 +67,7 @@ class TestPartitionIsolation:
                 },
             ],
         }), encoding="utf-8")
-        
+
         raw = tmp_path / "raw"
         result = invoke(
             "run-one", "--manifest", str(manifest_path),

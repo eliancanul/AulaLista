@@ -54,7 +54,7 @@ class TestInventedValueNotChecked:
         ]
         pdf_src = _make_synthetic_pdf(pages)
         sha = pdf_src[1]
-        
+
         s1 = _session("s1", 1, "Sesión 1", [1], {
             "inicio": InterpretedField(
                 name="inicio", value="CONTENIDO INVENTADO",
@@ -69,7 +69,7 @@ class TestInventedValueNotChecked:
         })
         dossier, src = _make_dossier(pages, [s1])
         report = verify_curriculum_dossier(dossier, src)
-        
+
         # The 'inicio' field with value 'CONTENIDO INVENTADO' must NOT be checked
         inicio_checked = [
             i for i in report.items
@@ -92,7 +92,7 @@ class TestDuplicateEvidenceNoInflation:
         ]
         pdf_src = _make_synthetic_pdf(pages)
         sha = pdf_src[1]
-        
+
         # Single evidence
         s1_single = _session("s1", 1, "Sesión 1", [1], {
             "inicio": InterpretedField(
@@ -105,7 +105,7 @@ class TestDuplicateEvidenceNoInflation:
         })
         dossier_single, src_single = _make_dossier(pages, [s1_single])
         report_single = verify_curriculum_dossier(dossier_single, src_single)
-        
+
         # Duplicate evidence (same excerpt repeated)
         s1_dup = _session("s1", 1, "Sesión 1", [1], {
             "inicio": InterpretedField(
@@ -121,7 +121,7 @@ class TestDuplicateEvidenceNoInflation:
         })
         dossier_dup, src_dup = _make_dossier(pages, [s1_dup])
         report_dup = verify_curriculum_dossier(dossier_dup, src_dup)
-        
+
         assert report_dup.checked_count == report_single.checked_count, (
             f"Duplicate evidence inflated counter: single={report_single.checked_count}, "
             f"dup={report_dup.checked_count}"

@@ -1,6 +1,6 @@
 # Evaluación de valor: tablero directivo y desempeño agregado de salones/roadmap en México
 
-**Fecha:** 27 de agosto de 2026  
+**Fecha:** 27 de agosto de 2026
 **Propósito:** decidir si AulaLista debe extenderse desde coordinación de salones hacia un tablero directivo y, eventualmente, un CRM nominal alumno–director.
 
 ## Dictamen ejecutivo
@@ -81,4 +81,3 @@ Agregar valor educativo sólo cuando exista una cadena observable: `vista → de
 - [UNESCO, GEM 2024/5](https://www.unesco.org/reports/gem-report/en/2024): revisión global de liderazgo; no es una encuesta local de directores de Quintana Roo.
 - [UNICEF México, situación 2018–2025](https://www.unicef.org/mexico/informes/situacion-derechos-ninez-adolescencia-mexico): análisis nacional publicado en 2026; presenta asociaciones y fuentes secundarias, no causalidad de un tablero.
 - [UNESCO, Guidance for generative AI](https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research): orientación normativa/ética, no evaluación de un producto específico.
-

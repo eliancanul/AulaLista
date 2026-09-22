@@ -1,6 +1,6 @@
 # Qué debería capturar el docente en AulaLista
 
-**Fecha:** 2026-08-28  
+**Fecha:** 2026-08-28
 **Pregunta:** ¿AulaLista debe pedir una planeación semanal, el plan de estudios o alguna otra cosa?
 
 ## Decisión recomendada

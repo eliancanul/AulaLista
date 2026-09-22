@@ -2953,4 +2953,3 @@ def test_f7_annex_combined_namespace_fail_closed_and_intra_ref_dedup():
     )
     with pytest.raises(SelectionError):
         derive_operational_queue(d_dup_num)
-

@@ -1295,5 +1295,3 @@ class TestTask5ClosureFix4Seams:
         ev_blocked = [i for i in report.items if i["item_id"] == "gen_proyecto_ev_0"]
         assert len(ev_blocked) == 1
         assert ev_blocked[0]["status"] == STATUS_BLOCKED
-
-

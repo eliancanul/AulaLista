@@ -74,4 +74,3 @@ Entrevistar por separado a 6–8 directores, 6 docentes y 4 familias, pidiendo q
 ## Bibliografía y trazabilidad
 
 Las fuentes académicas están enlazadas de forma directa en la tabla. Las fechas son de publicación/indexación indicada por cada editorial; los datos de muestras y métodos se limitan a lo que informa el estudio. No se infiere disponibilidad de un producto desde la ausencia de una fuente.
-

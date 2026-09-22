@@ -1,6 +1,6 @@
 # Fuentes primarias para evaluar adapters PDF locales
 
-**Fecha de consulta:** 2026-09-02.  
+**Fecha de consulta:** 2026-09-02.
 **Ámbito:** gold set y runner aislado para comparar pypdf, Docling local y PDF
 nativo con OCR selectivo. No autoriza integración con `CurriculumImportJob`,
 modelos, vistas, prompts ni flujo editorial.
