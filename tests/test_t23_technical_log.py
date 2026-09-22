@@ -21,10 +21,13 @@ from helpers import tutor_client  # noqa: E402
 pytestmark = pytest.mark.django_db
 
 
+from helpers import MINIMAL_VALID_PDF_BYTES
+
+
 def pdf_upload():
     return SimpleUploadedFile(
         "curricula.pdf",
-        b"%PDF-1.4 fake bytes",
+        MINIMAL_VALID_PDF_BYTES,
         content_type="application/pdf",
     )
 

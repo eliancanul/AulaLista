@@ -1,0 +1,107 @@
+{% comment %}
+Reusable partial for an InterpretedField.
+Parameters:
+  - f: InterpretedField instance
+  - field_id: HTML element id and form input name
+  - label: Human-readable field title
+  - input_type: "text" | "textarea" (default: "text")
+  - rows: number of rows if input_type is textarea (optional)
+  - readonly: boolean (default: false)
+  - source_tampered: boolean (default: false)
+  - job: CurriculumImportJob instance (for source page links)
+{% endcomment %}
+<div class="field-card" id="card-{{ field_id }}">
+  <div class="field-card-header">
+    <label class="field-title" for="control-{{ field_id }}">{{ label }}</label>
+    <div class="badge-group">
+      <span class="badge-tag tag-origin" title="Origen del dato">
+        {% if f.origin == 'extracted_from_source' %}Extraído del documento{% elif f.origin == 'teacher_selected_source_page' or f.origin == 'teacher_override' %}Ajuste docente{% elif f.origin == 'default_canonical' %}Predeterminado{% elif f.origin == 'assistant_proposal' or f.origin == 'inferred' %}Propuesta asistida{% else %}Origen verificado{% endif %}
+      </span>
+      <span class="badge-tag tag-{{ f.status }}" title="Estado de fundamentación">
+        {% if f.status == 'supported' %}Fundamentado{% elif f.status == 'missing' %}Falta información{% elif f.status == 'ambiguous' %}Interpretación ambigua{% elif f.status == 'unsupported' %}Sin fuente{% elif f.status == 'conflict' or f.status == 'conflicting' %}En conflicto{% elif f.status == 'checked' %}Cotejado{% else %}Por verificar{% endif %}
+      </span>
+      <span class="badge-tag tag-{{ f.review }}" title="Estado de revisión docente">
+        {% if f.review == 'confirmed' %}Confirmado{% elif f.review == 'corrected' %}Ajustado{% elif f.review == 'pending_review' or f.review == 'pending' %}Por revisar{% elif f.review == 'not_specified' %}No especificado{% else %}Pendiente docente{% endif %}
+      </span>
+    </div>
+  </div>
+
+  {% if is_proxy %}
+    <div style="padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #64748b; margin-top: 0.35rem;">
+      <em>(Este campo se está editando en el panel de decisión prioritaria activo arriba ↑)</em>
+    </div>
+  {% elif input_type == "textarea" %}
+    <textarea id="control-{{ field_id }}"
+              name="{{ field_id }}"
+              class="form-input-full"
+              form="interpretation-form"
+              {% if rows %}rows="{{ rows }}"{% endif %}
+              {% if readonly or source_tampered %}readonly{% endif %}>{{ f.value|default:'' }}</textarea>
+  {% elif f.name == 'campos_formativos' or input_type == 'checkboxes' %}
+    <div class="checkbox-group" id="control-{{ field_id }}" tabindex="-1">
+      <input type="hidden" name="campos_formativos_present" value="1" form="interpretation-form">
+      {% for opt in campos_formativos_options %}
+        <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; font-weight: normal; cursor: pointer;">
+          <input type="checkbox"
+                 name="campos_formativos"
+                 value="{{ opt.value }}"
+                 {% if opt.selected %}checked{% endif %}
+                 form="interpretation-form"
+                 {% if readonly or source_tampered %}disabled{% endif %}>
+          <span>{{ opt.value }}</span>
+        </label>
+      {% empty %}
+        {% for opt in available_campos %}
+          <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; font-weight: normal; cursor: pointer;">
+            <input type="checkbox"
+                   name="campos_formativos"
+                   value="{{ opt }}"
+                   {% if opt == f.value %}checked{% endif %}
+                   form="interpretation-form"
+                   {% if readonly or source_tampered %}disabled{% endif %}>
+            <span>{{ opt }}</span>
+          </label>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <input type="text"
+           id="control-{{ field_id }}"
+           name="{{ field_id }}"
+           value="{{ f.value|default:'' }}"
+           class="form-input-full"
+           form="interpretation-form"
+           {% if readonly or source_tampered %}readonly{% endif %}>
+  {% endif %}
+
+  {% if f.current_action %}
+    <div class="reason-box">
+      <strong>Acción sugerida:</strong>
+      {% if f.current_action == 'review' or f.current_action == 'needs_review' %}Revisión docente sugerida{% elif f.current_action == 'resolve_conflict' %}Resolver conflicto{% elif f.current_action == 'complete_missing' %}Completar dato faltante{% elif f.current_action == 'confirm' %}Confirmar propuesta{% else %}{{ f.current_action }}{% endif %}
+      {% if f.original_reason or f.reason %}
+        <div style="font-size: 0.8rem; color: #78350f; margin-top: 0.25rem;">
+          <strong>Justificación:</strong> {{ f.original_reason|default:f.reason }}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% for ev in f.evidence %}
+    <div class="evidence-box">
+      <strong>Fuente original:</strong> Pág. {{ ev.page_number }}
+      {% if job %}
+        {% if source_tampered %}
+          <span class="evidence-link muted" style="color: #b91c1c; text-decoration: line-through;" title="Bloqueado por alteración de fuente">(Lámina bloqueada: PDF alterado ⚠️)</span>:
+        {% else %}
+          (<a href="{% url 'tutor-import-source-page' job.pk ev.page_number %}#page={{ ev.page_number }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="evidence-link">Abrir lámina original ↗</a>):
+        {% endif %}
+      {% else %}
+        :
+      {% endif %}
+      <em>"{{ ev.excerpt }}"</em>
+    </div>
+  {% endfor %}
+</div>

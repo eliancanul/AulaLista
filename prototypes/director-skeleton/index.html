@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AulaLista · Dirección (prototipo desechable)</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172033;
+        --muted: #68748a;
+        --paper: #f4f7fb;
+        --panel: #ffffff;
+        --line: #dbe3ee;
+        --blue: #3566f0;
+        --blue-dark: #2148bd;
+        --teal: #0a8c7d;
+        --amber: #b86520;
+        --red: #b74646;
+        --navy: #172033;
+        --shadow: 0 18px 50px rgb(35 51 80 / 10%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); }
+      button, input, select { font: inherit; }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      a { color: inherit; }
+      [hidden] { display: none !important; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .prototype-note { margin: 0; padding: 9px 16px; text-align: center; color: #fff; background: var(--navy); font-size: .78rem; letter-spacing: .02em; }
+      .shell { width: min(1200px, calc(100% - 32px)); margin: 0 auto; }
+      .brand { font-weight: 900; letter-spacing: -.055em; font-size: 1.2rem; text-decoration: none; white-space: nowrap; }
+      .brand span { color: var(--blue); }
+      .topbar { border-bottom: 1px solid var(--line); background: var(--panel); }
+      .topbar-inner { display: flex; align-items: center; gap: 18px; min-height: 72px; }
+      .topbar nav { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+      .nav-link { border: 0; border-radius: 10px; padding: 9px 11px; background: transparent; color: var(--muted); cursor: pointer; font-size: .83rem; font-weight: 780; text-decoration: none; }
+      .nav-link:hover, .nav-link.active { color: var(--ink); background: #edf2ff; }
+      .compare-link { border: 1px solid var(--line); }
+      .profile-wrap { position: relative; }
+      .profile-button { display: flex; align-items: center; gap: 9px; border: 0; border-left: 1px solid var(--line); padding: 4px 0 4px 16px; background: transparent; color: var(--muted); cursor: pointer; font-size: .78rem; text-align: left; }
+      .avatar { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: #d9e2ff; color: #2448b8; font-weight: 900; }
+      .profile-menu { position: absolute; z-index: 30; top: 47px; right: 0; width: 245px; border: 1px solid var(--line); border-radius: 15px; padding: 8px; background: #fff; box-shadow: var(--shadow); }
+      .profile-menu button { width: 100%; border: 0; border-radius: 9px; padding: 10px; background: transparent; color: var(--ink); cursor: pointer; text-align: left; font-weight: 750; }
+      .profile-menu button:hover { background: #f2f5fa; }
+      .profile-menu small { display: block; padding: 8px 10px; color: var(--muted); line-height: 1.4; }
+      .page { padding: 34px 0 120px; }
+      .eyebrow { margin: 0 0 9px; color: var(--blue); font-size: .72rem; letter-spacing: .13em; font-weight: 900; text-transform: uppercase; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 12px; font-size: clamp(2rem, 4.8vw, 3.8rem); line-height: 1; letter-spacing: -.06em; }
+      h2 { margin-bottom: 8px; letter-spacing: -.035em; }
+      h3 { margin-bottom: 5px; font-size: 1rem; }
+      .lede { max-width: 720px; margin-bottom: 0; color: var(--muted); line-height: 1.55; }
+      .muted { color: var(--muted); }
+      .scopebar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 22px; color: var(--muted); font-size: .8rem; }
+      .scopebar b { color: var(--ink); }
+      .dot { width: 4px; height: 4px; border-radius: 50%; background: #aeb8c8; }
+      .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 11px; padding: 9px 14px; background: #fff; color: var(--ink); cursor: pointer; font-weight: 820; text-decoration: none; }
+      .button:hover, .button:focus-visible { border-color: var(--blue); outline: 3px solid #dce5ff; }
+      .button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+      .button.primary:hover { background: var(--blue-dark); }
+      .button.quiet { background: #f3f6fb; }
+      .button.danger { color: var(--red); }
+      .button.small { min-height: 34px; padding: 7px 10px; font-size: .78rem; }
+      .panel { border: 1px solid var(--line); border-radius: 19px; background: var(--panel); box-shadow: var(--shadow); }
+      .panel.flat { box-shadow: none; }
+      .panel-pad { padding: 21px; }
+      .grid { display: grid; gap: 15px; }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pill { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; padding: 5px 9px; background: #edf2ff; color: #3153b7; font-size: .71rem; font-weight: 880; }
+      .pill.ok { background: #e6f6f1; color: #176653; }
+      .pill.warn { background: #fff1df; color: #8e571b; }
+      .pill.neutral { background: #f0f2f5; color: #667085; }
+      .pill.danger { background: #fceaea; color: #9a3838; }
+      .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin: 28px 0 12px; }
+      .section-head p { margin-bottom: 0; color: var(--muted); font-size: .85rem; }
+      .action-list { display: grid; }
+      .action-row { display: grid; grid-template-columns: 30px minmax(0, 1.3fr) minmax(130px, .55fr) minmax(105px, .45fr) auto; gap: 14px; align-items: center; padding: 15px 17px; border-bottom: 1px solid var(--line); }
+      .action-row:last-child { border-bottom: 0; }
+      .action-row.closed { opacity: .55; }
+      .action-row.closed h3 { text-decoration: line-through; }
+      .signal { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 9px; background: #fff1df; color: var(--amber); font-weight: 900; }
+      .signal.red { background: #fceaea; color: var(--red); }
+      .action-row p { margin-bottom: 0; color: var(--muted); font-size: .79rem; line-height: 1.4; }
+      .meta-label { color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; }
+      .meta-value { display: block; margin-top: 4px; font-size: .82rem; font-weight: 800; }
+      .notice { border-left: 4px solid var(--teal); border-radius: 0 14px 14px 0; padding: 14px 16px; background: #eaf8f5; color: #215d57; line-height: 1.5; font-size: .86rem; }
+      .notice.warn { border-color: var(--amber); background: #fff7eb; color: #75491c; }
+      .status-line { min-height: 22px; margin-top: 12px; color: #176653; font-size: .83rem; font-weight: 800; }
+
+      /* Variante A: bandeja de decisiones, navegación superior y una cola priorizada. */
+      .hero-a { display: grid; grid-template-columns: 1.35fr .65fr; gap: 22px; align-items: end; padding: 27px; background: linear-gradient(135deg, #edf2ff, #fff); }
+      .hero-a .next-card { border-left: 4px solid var(--blue); padding-left: 16px; }
+      .hero-a .next-card strong { display: block; margin-bottom: 7px; font-size: 1.05rem; }
+      .hero-a .next-card p { margin-bottom: 13px; color: var(--muted); font-size: .83rem; line-height: 1.45; }
+      .change-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .change { min-height: 106px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: #fff; }
+      .change strong { display: block; margin: 8px 0 4px; }
+      .change small { color: var(--muted); line-height: 1.4; }
+
+      /* Variante B: mesa operativa con navegación lateral y foco en el trabajo de hoy. */
+      .variant-b-shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 22px; align-items: start; }
+      .side-nav { position: sticky; top: 16px; border-radius: 20px; padding: 17px; background: var(--navy); color: #fff; }
+      .side-nav .brand { display: inline-block; margin-bottom: 25px; }
+      .side-nav .brand span { color: #8fa5ff; }
+      .side-nav button, .side-nav a { display: flex; width: 100%; border: 0; border-radius: 10px; padding: 10px; background: transparent; color: #cbd3e3; cursor: pointer; text-align: left; text-decoration: none; font-size: .82rem; font-weight: 780; }
+      .side-nav button:hover, .side-nav button.active, .side-nav a:hover { background: #29354d; color: #fff; }
+      .side-nav hr { border: 0; border-top: 1px solid #344057; margin: 15px 0; }
+      .side-nav small { display: block; margin-top: 22px; color: #9ea9bd; line-height: 1.45; }
+      .desk-head { display: flex; justify-content: space-between; gap: 20px; align-items: start; margin-bottom: 18px; }
+      .desk-head h1 { max-width: 700px; }
+      .desk-date { min-width: 145px; border-left: 1px solid var(--line); padding-left: 16px; color: var(--muted); font-size: .8rem; }
+      .desk-date strong { display: block; margin-top: 4px; color: var(--ink); font-size: 1rem; }
+      .workbench { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr); gap: 15px; align-items: start; }
+      .focus-task { border-radius: 20px; padding: 24px; background: var(--navy); color: #fff; }
+      .focus-task .eyebrow { color: #9eb0ff; }
+      .focus-task p { color: #c6cde0; line-height: 1.5; }
+      .focus-task .button { border-color: #8fa5ff; background: #6d87ff; color: #fff; }
+      .agenda { display: grid; gap: 9px; }
+      .agenda-item { display: grid; grid-template-columns: 42px 1fr; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 13px; }
+      .agenda-item time { color: var(--blue); font-size: .77rem; font-weight: 900; }
+      .agenda-item p { margin-bottom: 0; color: var(--muted); font-size: .79rem; line-height: 1.4; }
+
+      /* Variante C: mapa institucional compacto para explorar contexto antes de decidir. */
+      .map-hero { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 18px; }
+      .map-hero h1 { max-width: 760px; }
+      .map-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr) 290px; gap: 14px; align-items: start; }
+      .map-rail, .map-detail { position: sticky; top: 16px; }
+      .map-rail { padding: 14px; }
+      .map-rail button { display: block; width: 100%; border: 0; border-radius: 9px; padding: 9px; background: transparent; color: var(--muted); cursor: pointer; text-align: left; font-size: .8rem; font-weight: 800; }
+      .map-rail button.active, .map-rail button:hover { background: #edf2ff; color: var(--ink); }
+      .school-map { display: grid; gap: 12px; }
+      .group-node { display: grid; grid-template-columns: 62px 1fr auto; gap: 13px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 15px; background: #fff; cursor: pointer; text-align: left; }
+      .group-node:hover, .group-node.active { border-color: var(--blue); box-shadow: 0 0 0 3px #edf2ff; }
+      .group-code { display: grid; min-height: 50px; place-items: center; border-radius: 12px; background: #edf2ff; color: var(--blue-dark); font-size: 1.05rem; font-weight: 900; }
+      .group-node p { margin-bottom: 0; color: var(--muted); font-size: .79rem; }
+      .map-detail { padding: 18px; }
+      .detail-list { display: grid; gap: 10px; margin: 15px 0; }
+      .detail-item { border-left: 3px solid var(--line); padding-left: 11px; }
+      .detail-item b { display: block; font-size: .78rem; }
+      .detail-item span { color: var(--muted); font-size: .76rem; line-height: 1.4; }
+
+      /* Vistas compartidas. */
+      .page-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 20px; }
+      .page-head h1 { max-width: 790px; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; font-size: .81rem; vertical-align: middle; }
+      th { color: var(--muted); font-size: .69rem; letter-spacing: .06em; text-transform: uppercase; }
+      tbody tr:last-child td { border-bottom: 0; }
+      .import-steps { display: flex; gap: 7px; margin-bottom: 17px; }
+      .import-step { flex: 1; border-radius: 999px; padding: 8px; background: #e8edf5; color: var(--muted); font-size: .73rem; font-weight: 850; text-align: center; }
+      .import-step.active { background: #dce5ff; color: #3153b7; }
+      .upload-zone { border: 2px dashed #bdc9da; border-radius: 17px; padding: 34px 20px; background: #fbfcfe; text-align: center; }
+      .upload-zone p { max-width: 540px; margin: 8px auto 17px; color: var(--muted); line-height: 1.5; }
+      .file-chip { display: inline-flex; gap: 8px; align-items: center; border-radius: 10px; padding: 9px 12px; background: #eef2f8; font-size: .8rem; font-weight: 820; }
+      .conflict { background: #fff8ef; }
+      .conflict select { width: 100%; min-width: 185px; border: 1px solid #e1c294; border-radius: 8px; padding: 8px; background: #fff; }
+      .view-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 17px; }
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+      .field { display: grid; gap: 6px; color: var(--ink); font-size: .82rem; font-weight: 800; }
+      .field input, .field select { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: #fff; }
+      .roadmap-list { display: grid; gap: 11px; }
+      .roadmap-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 100px 140px; gap: 14px; align-items: center; padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+      .roadmap-row p { margin-bottom: 0; color: var(--muted); font-size: .78rem; }
+      .progress { height: 9px; overflow: hidden; border-radius: 999px; background: #e8edf5; }
+      .progress i { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+      .audit-row { display: grid; grid-template-columns: 135px 1fr 160px; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: .81rem; }
+      .audit-row:last-child { border-bottom: 0; }
+      .audit-row time, .audit-row span { color: var(--muted); }
+      .privacy-note { margin-top: 17px; border: 1px solid #cae4dc; border-radius: 14px; padding: 14px; background: #f0faf7; color: #285e54; font-size: .8rem; line-height: 1.45; }
+      /* Variante D: programa completo derivado de los papers, con gates y evidencia visible. */
+      .paper-shell { display: grid; grid-template-columns: 246px minmax(0, 1fr); gap: 0; min-height: calc(100vh - 35px); background: #fff; }
+      .paper-sidebar { position: sticky; top: 0; height: calc(100vh - 35px); padding: 25px 19px; background: #101827; color: #fff; }
+      .paper-sidebar .brand { display: inline-block; margin-bottom: 30px; }
+      .paper-sidebar .brand span { color: #8fa5ff; }
+      .paper-sidebar .school-id { margin-bottom: 22px; border: 1px solid #2d3a50; border-radius: 13px; padding: 12px; color: #aeb9cc; font-size: .76rem; line-height: 1.5; }
+      .paper-sidebar .school-id b { display: block; color: #fff; font-size: .84rem; }
+      .paper-nav { display: grid; gap: 4px; }
+      .paper-nav button { display: flex; align-items: center; gap: 9px; width: 100%; border: 0; border-radius: 10px; padding: 11px; background: transparent; color: #b9c3d4; cursor: pointer; text-align: left; font-size: .82rem; font-weight: 800; }
+      .paper-nav button:hover, .paper-nav button.active { background: #253149; color: #fff; }
+      .paper-nav i { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 7px; background: #2b3850; color: #aebeff; font-style: normal; font-size: .72rem; }
+      .paper-gates { position: absolute; right: 18px; bottom: 20px; left: 18px; border-top: 1px solid #303c51; padding-top: 15px; color: #9da9bd; font-size: .71rem; line-height: 1.5; }
+      .paper-gates span { display: flex; align-items: center; gap: 7px; margin-top: 7px; }
+      .paper-gates span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #46b892; }
+      .paper-gates span.conditional::before { background: #e4a84f; }
+      .paper-gates span.blocked::before { background: #df6b6b; }
+      .paper-main { min-width: 0; padding: 28px 32px 130px; background: #f5f7fb; }
+      .paper-top { display: flex; justify-content: space-between; gap: 20px; align-items: start; margin-bottom: 22px; }
+      .paper-top h1 { max-width: 780px; font-size: clamp(2rem, 4vw, 3.35rem); }
+      .paper-profile { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: .77rem; white-space: nowrap; }
+      .paper-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); gap: 15px; }
+      .paper-focus { min-height: 230px; border-radius: 21px; padding: 25px; background: linear-gradient(140deg, #1a2741, #263d69); color: #fff; }
+      .paper-focus .eyebrow { color: #a9b9ff; }
+      .paper-focus p { max-width: 650px; color: #cad3e5; line-height: 1.55; }
+      .paper-focus .button { border-color: #91a8ff; background: #6d87ff; color: #fff; }
+      .paper-score { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .score-card { border: 1px solid var(--line); border-radius: 15px; padding: 15px; background: #fff; }
+      .score-card strong { display: block; margin: 8px 0 4px; font-size: 1.7rem; letter-spacing: -.04em; }
+      .score-card small { color: var(--muted); line-height: 1.4; }
+      .paper-band { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 15px; }
+      .paper-module { border: 1px solid var(--line); border-radius: 14px; padding: 15px; background: #fff; }
+      .paper-module b { display: block; margin: 9px 0 5px; }
+      .paper-module p { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+      .evidence-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 15px; align-items: start; }
+      .evidence-list { display: grid; gap: 10px; }
+      .evidence-row { display: grid; grid-template-columns: 42px 1fr auto; gap: 11px; align-items: center; border: 1px solid var(--line); border-radius: 13px; padding: 13px; background: #fff; }
+      .evidence-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 10px; background: #edf2ff; color: var(--blue-dark); font-weight: 900; }
+      .evidence-row p { margin: 3px 0 0; color: var(--muted); font-size: .76rem; }
+      .gate-card { border: 1px solid #e5c99f; border-radius: 16px; padding: 18px; background: #fff9ee; }
+      .gate-card p { color: #765025; font-size: .82rem; line-height: 1.5; }
+      .paper-table { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+      .source-health { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 800; }
+      .source-health::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #38a97f; }
+      .source-health.warn::before { background: #dd9d3f; }
+      .metric-definition { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 14px; }
+      .metric-definition article { border: 1px solid var(--line); border-radius: 13px; padding: 14px; background: #fff; }
+      .metric-definition p { margin-bottom: 0; color: var(--muted); font-size: .76rem; line-height: 1.45; }
+      .governance-map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+      .role-card { border: 1px solid var(--line); border-radius: 16px; padding: 17px; background: #fff; }
+      .role-card ul { margin: 11px 0 0; padding-left: 18px; color: var(--muted); font-size: .78rem; line-height: 1.65; }
+      .lifecycle { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 15px; }
+      .life-step { position: relative; border: 1px solid var(--line); border-radius: 13px; padding: 13px; background: #fff; }
+      .life-step b { display: block; margin-bottom: 5px; font-size: .79rem; }
+      .life-step p { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.4; }
+      .blocked-feature { border: 1px solid #ecc7c7; border-radius: 14px; padding: 15px; background: #fff4f4; }
+      .blocked-feature p { margin-bottom: 0; color: #7f4444; font-size: .8rem; line-height: 1.5; }
+      .validation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+      .validation-card { border: 1px solid var(--line); border-radius: 16px; padding: 17px; background: #fff; }
+      .validation-card header { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+      .validation-card strong { display: block; margin: 15px 0 5px; font-size: 1.75rem; letter-spacing: -.05em; }
+      .validation-card p { margin-bottom: 12px; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+      .target-track { height: 8px; overflow: hidden; border-radius: 999px; background: #e8edf5; }
+      .target-track i { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+      .paper-footnote { margin-top: 16px; border: 1px dashed #b9c5d5; border-radius: 13px; padding: 14px; color: var(--muted); font-size: .76rem; line-height: 1.5; }
+      .state-drawer { position: fixed; z-index: 35; right: 18px; bottom: 78px; width: min(340px, calc(100% - 36px)); border: 1px solid var(--line); border-radius: 15px; padding: 14px; background: #fff; box-shadow: var(--shadow); }
+      .state-drawer pre { max-height: 220px; overflow: auto; margin: 9px 0 0; color: var(--muted); font-size: .7rem; white-space: pre-wrap; }
+      .prototype-switcher { position: fixed; z-index: 50; left: 50%; bottom: 17px; display: flex; align-items: center; gap: 7px; transform: translateX(-50%); border: 1px solid #3c4962; border-radius: 999px; padding: 6px; background: var(--navy); color: #fff; box-shadow: 0 12px 35px rgb(23 32 51 / 28%); }
+      .prototype-switcher button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #2a374f; color: #fff; cursor: pointer; font-weight: 900; }
+      .prototype-switcher button:hover { background: var(--blue); }
+      .variant-label { min-width: 205px; text-align: center; font-size: .77rem; font-weight: 850; }
+      .toast { position: fixed; z-index: 60; top: 18px; left: 50%; transform: translate(-50%, -20px); opacity: 0; pointer-events: none; border-radius: 12px; padding: 11px 15px; background: var(--navy); color: #fff; box-shadow: var(--shadow); font-size: .82rem; font-weight: 800; transition: .2s ease; }
+      .toast.show { transform: translate(-50%, 0); opacity: 1; }
+      @media (max-width: 980px) {
+        .topbar nav .nav-link:nth-child(n+5) { display: none; }
+        .hero-a, .workbench { grid-template-columns: 1fr; }
+        .map-layout { grid-template-columns: 170px 1fr; }
+        .map-detail { position: static; grid-column: 1 / -1; }
+        .action-row { grid-template-columns: 30px 1fr auto; }
+        .action-row .row-owner, .action-row .row-date { display: none; }
+        .paper-band, .lifecycle { grid-template-columns: repeat(2, 1fr); }
+        .paper-hero, .evidence-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 760px) {
+        .shell { width: min(100% - 20px, 1200px); }
+        .topbar-inner { flex-wrap: wrap; padding: 11px 0; }
+        .topbar nav { order: 3; width: 100%; overflow-x: auto; }
+        .profile-button span:last-child { display: none; }
+        .variant-b-shell, .map-layout { grid-template-columns: 1fr; }
+        .side-nav, .map-rail { position: static; }
+        .side-nav { display: flex; flex-wrap: wrap; gap: 3px; }
+        .side-nav .brand, .side-nav hr, .side-nav small { display: none; }
+        .side-nav button, .side-nav a { width: auto; }
+        .map-rail { display: flex; overflow-x: auto; }
+        .map-rail button { min-width: max-content; }
+        .change-strip, .grid-2, .form-grid { grid-template-columns: 1fr; }
+        .page-head, .map-hero, .desk-head { align-items: start; flex-direction: column; }
+        .roadmap-row { grid-template-columns: 1fr; }
+        .audit-row { grid-template-columns: 1fr; gap: 4px; }
+        .paper-shell { grid-template-columns: 1fr; }
+        .paper-sidebar { position: static; height: auto; padding: 15px; }
+        .paper-sidebar .brand, .paper-sidebar .school-id, .paper-gates { display: none; }
+        .paper-nav { display: flex; overflow-x: auto; }
+        .paper-nav button { min-width: max-content; }
+        .paper-main { padding: 22px 12px 120px; }
+        .paper-top { flex-direction: column; }
+        .paper-band, .metric-definition, .governance-map, .lifecycle, .validation-grid { grid-template-columns: 1fr; }
+        .prototype-switcher { width: calc(100% - 24px); justify-content: center; }
+        .variant-label { min-width: 0; flex: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="prototype-note">PROTOTIPO DESECHABLE · datos sintéticos · sin backend ni persistencia</p>
+    <div id="app"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script>
+      // Tres variantes de la superficie de Dirección, con ?variant=, en una ruta aislada.
+      const variants = {
+        A: "Bandeja de decisiones",
+        B: "Mesa operativa",
+        C: "Mapa institucional",
+        D: "Implementación de los papers"
+      };
+      const areas = ["resumen", "grupos", "importar", "acciones", "roadmap", "auditoria"];
+      const state = {
+        variant: new URLSearchParams(location.search).get("variant") || "A",
+        area: new URLSearchParams(location.search).get("area") || "resumen",
+        importStep: 1,
+        importResolved: false,
+        importApplied: false,
+        selectedGroup: "3A",
+        paperTab: new URLSearchParams(location.search).get("paper") || "operacion",
+        privacyTested: false,
+        pilotDirectors: 0,
+        profileOpen: false,
+        stateOpen: false,
+        closedActions: [],
+        addedActions: []
+      };
+
+      const groups = [
+        { code: "1A", name: "1.º A · Matutino", teacher: "María Elena López", assignment: "Confirmada", sessions: 7, progress: 42, note: "Sin pendientes" },
+        { code: "2B", name: "2.º B · Matutino", teacher: "Rafael Chan", assignment: "Confirmada", sessions: 5, progress: 31, note: "Falta actualización de 1 sesión" },
+        { code: "3A", name: "3.º A · Matutino", teacher: "Sin docente titular", assignment: "Pendiente", sessions: 0, progress: null, note: "Dirección debe confirmar adscripción" },
+        { code: "4A", name: "4.º A · Matutino", teacher: "Ana Sofía Martín", assignment: "Confirmada", sessions: 9, progress: 54, note: "Roadmap actualizado ayer" },
+        { code: "5B", name: "5.º B · Vespertino", teacher: "José Luis Pech", assignment: "Confirmada", sessions: 6, progress: 38, note: "2 actividades sin dato agregado" }
+      ];
+      const baseActions = [
+        { id: "a1", level: "red", title: "Confirmar docente titular de 3.º A", detail: "La importación detectó dos cuentas candidatas; ninguna se aplicará sola.", owner: "Dirección", date: "Hoy" },
+        { id: "a2", level: "amber", title: "Revisar datos faltantes de 5.º B", detail: "Dos actividades no tienen fuente agregada suficiente para mostrar avance.", owner: "Ana Sofía", date: "2 sep" },
+        { id: "a3", level: "amber", title: "Cerrar acuerdo de acompañamiento", detail: "La revisión quedó realizada; falta registrar el cierre institucional.", owner: "Rafael Chan", date: "4 sep" }
+      ];
+
+      function setQuery(changes) {
+        const params = new URLSearchParams(location.search);
+        Object.entries(changes).forEach(([key, value]) => params.set(key, value));
+        history.replaceState({}, "", `${location.pathname}?${params}`);
+      }
+      function go(area) { state.area = area; state.profileOpen = false; setQuery({ area }); render(); scrollTo({ top: 0, behavior: "smooth" }); }
+      function toast(message) {
+        const el = document.getElementById("toast");
+        el.textContent = message; el.classList.add("show");
+        clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+      }
+      function switchVariant(direction) {
+        const keys = Object.keys(variants); const index = keys.indexOf(state.variant);
+        state.variant = keys[(index + direction + keys.length) % keys.length];
+        setQuery({ variant: state.variant }); render();
+      }
+      function scopeBar() {
+        return `<div class="scopebar"><b>Primaria Horizonte</b><span class="dot"></span><span>Ciclo 2026–2027</span><span class="dot"></span><span>Actualizado hoy, 08:40</span><span class="pill neutral">Esta escuela</span></div>`;
+      }
+      function navLinks(className = "nav-link") {
+        const labels = { resumen: "Resumen", grupos: "Grupos y docentes", importar: "Importar", acciones: "Acciones", roadmap: "Roadmap", auditoria: "Auditoría" };
+        return areas.map(area => `<button class="${className} ${state.area === area ? "active" : ""}" data-go="${area}">${labels[area]}</button>`).join("");
+      }
+      function profile() {
+        return `<div class="profile-wrap">
+          <button class="profile-button" id="profile-toggle" aria-expanded="${state.profileOpen}"><span class="avatar">LC</span><span>Lucía Cruz<br><small>Dirección</small></span></button>
+          <div class="profile-menu" ${state.profileOpen ? "" : "hidden"}>
+            <small>Autoridad institucional de Primaria Horizonte. Las cuentas y credenciales las administra IT.</small>
+            <button data-go="auditoria">Configuración de la escuela</button>
+            <button id="state-toggle">Ver estado simulado</button>
+            <button id="logout">Cerrar sesión (simulado)</button>
+          </div>
+        </div>`;
+      }
+      function topbar() {
+        return `<header class="topbar"><div class="shell topbar-inner"><a class="brand" href="?variant=${state.variant}&area=resumen">Aula<span>Lista</span></a><nav aria-label="Navegación principal">${navLinks()}<a class="nav-link compare-link" href="../docente-skeleton/index.html?variant=B">Comparar docente ↗</a></nav>${profile()}</div></header>`;
+      }
+      function switcher() {
+        return `<div class="prototype-switcher" aria-label="Variantes del prototipo"><button id="prev-variant" aria-label="Variante anterior">←</button><span class="variant-label">${state.variant} — ${variants[state.variant]}</span><button id="next-variant" aria-label="Variante siguiente">→</button></div>`;
+      }
+      function stateDrawer() {
+        if (!state.stateOpen) return "";
+        return `<aside class="state-drawer"><b>Estado completo del prototipo</b><button class="button small" id="close-state" style="float:right">Cerrar</button><pre>${escapeHtml(JSON.stringify({ importStep: state.importStep, importResolved: state.importResolved, importApplied: state.importApplied, selectedGroup: state.selectedGroup, paperTab: state.paperTab, privacyTested: state.privacyTested, pilotDirectors: state.pilotDirectors, closedActions: state.closedActions, addedActions: state.addedActions }, null, 2))}</pre></aside>`;
+      }
+      function escapeHtml(value) { return value.replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]); }
+
+      function actionRows(limit) {
+        const actions = [...baseActions, ...state.addedActions];
+        return actions.slice(0, limit || actions.length).map(item => {
+          const closed = state.closedActions.includes(item.id);
+          return `<div class="action-row ${closed ? "closed" : ""}"><span class="signal ${item.level === "red" ? "red" : ""}">${closed ? "✓" : "!"}</span><div><h3>${item.title}</h3><p>${item.detail}</p></div><div class="row-owner"><span class="meta-label">Responsable</span><span class="meta-value">${item.owner}</span></div><div class="row-date"><span class="meta-label">Revisión</span><span class="meta-value">${item.date}</span></div><button class="button small close-action" data-action-id="${item.id}">${closed ? "Reabrir" : "Cerrar"}</button></div>`;
+        }).join("");
+      }
+
+      function summaryA() {
+        return `${scopeBar()}<section class="panel hero-a"><div><p class="eyebrow">Resumen de la escuela</p><h1>Tres decisiones necesitan responsable o cierre.</h1><p class="lede">La vista prioriza trabajo institucional confirmado. Los ceros y los datos faltantes no se presentan como avance.</p></div><div class="next-card"><span class="pill danger">Prioridad de hoy</span><strong>3.º A sigue sin docente titular</strong><p>Hay dos cuentas existentes posibles. Revisa el conflicto antes de confirmar.</p><button class="button primary" data-go="importar">Revisar importación</button></div></section>
+        <div class="section-head"><div><h2>Qué requiere una decisión</h2><p>Pendiente → responsable → fecha → cierre.</p></div><button class="button quiet" data-go="acciones">Ver todas</button></div><section class="panel action-list">${actionRows(3)}</section>
+        <div class="section-head"><div><h2>Cambios recientes</h2><p>Hechos confirmados, no métricas ornamentales.</p></div></div><div class="change-strip"><article class="change"><span class="pill ok">Confirmado</span><strong>4.º A actualizado</strong><small>Ana Sofía confirmó la adscripción ayer, 13:22.</small></article><article class="change"><span class="pill neutral">Sin cambios</span><strong>1.º A estable</strong><small>La última asignación continúa vigente.</small></article><article class="change"><span class="pill warn">Dato faltante</span><strong>5.º B incompleto</strong><small>No se calcula avance para dos actividades.</small></article></div>`;
+      }
+      function summaryB() {
+        return `<div class="variant-b-shell"><aside class="side-nav"><a class="brand" href="?variant=B&area=resumen">Aula<span>Lista</span></a>${navLinks("")}<hr><a href="../docente-skeleton/index.html?variant=B">Comparar docente ↗</a><small>Primaria Horizonte<br>Ciclo 2026–2027<br>Actualizado hoy, 08:40</small></aside><main><div class="desk-head"><div><p class="eyebrow">Mesa operativa de Dirección</p><h1>Resuelve lo que bloquea el trabajo de hoy.</h1><p class="lede">Una agenda corta para coordinación institucional, sin perfiles de alumnos ni evaluación de docentes.</p></div><div class="desk-date">Viernes<strong>29 de agosto</strong></div></div><div class="workbench"><section class="focus-task"><p class="eyebrow">Siguiente acción clara</p><h2>Resolver la adscripción de 3.º A</h2><p>La vista previa dejó una ambigüedad sin aplicar. Dirección debe elegir una cuenta existente o dejar la fila pendiente.</p><button class="button" data-go="importar">Abrir mesa de revisión →</button></section><aside class="panel panel-pad flat"><h2>Agenda breve</h2><div class="agenda"><div class="agenda-item"><time>09:00</time><div><b>Revisar 3.º A</b><p>2 candidatas, ninguna aplicada.</p></div></div><div class="agenda-item"><time>11:30</time><div><b>Acuerdo con 5.º B</b><p>Definir responsable de datos faltantes.</p></div></div><div class="agenda-item"><time>14:00</time><div><b>Cierre semanal</b><p>1 acuerdo listo para cerrar.</p></div></div></div></aside></div><div class="section-head"><div><h2>Después</h2><p>Dos pendientes ordenados por fecha de revisión.</p></div></div><section class="panel action-list flat">${actionRows(3)}</section></main></div>`;
+      }
+      function summaryC() {
+        const selected = groups.find(g => g.code === state.selectedGroup) || groups[0];
+        return `${scopeBar()}<div class="map-hero"><div><p class="eyebrow">Mapa institucional</p><h1>Explora el contexto y decide sin perder el alcance.</h1><p class="lede">Cada nodo representa un ClassroomGroup de esta escuela. No contiene lista nominal de alumnado.</p></div><button class="button primary" data-go="acciones">Abrir decisiones</button></div><div class="map-layout"><aside class="panel map-rail flat">${navLinks("")}</aside><section class="school-map">${groups.map(group => `<button class="group-node ${group.code === state.selectedGroup ? "active" : ""}" data-group="${group.code}"><span class="group-code">${group.code}</span><span><b>${group.name}</b><p>${group.teacher}</p></span><span class="pill ${group.assignment === "Pendiente" ? "warn" : "ok"}">${group.assignment}</span></button>`).join("")}</section><aside class="panel map-detail flat"><span class="pill ${selected.assignment === "Pendiente" ? "warn" : "ok"}">${selected.assignment}</span><h2 style="margin-top:12px">${selected.name}</h2><p class="muted">${selected.teacher}</p><div class="detail-list"><div class="detail-item"><b>Sesiones del periodo</b><span>${selected.sessions || "Sin sesiones confirmadas"}</span></div><div class="detail-item"><b>Roadmap agregado</b><span>${selected.progress === null ? "Sin dato: no se calcula un cero" : `${selected.progress}% del periodo`}</span></div><div class="detail-item"><b>Próxima decisión</b><span>${selected.note}</span></div></div><button class="button primary" data-go="${selected.assignment === "Pendiente" ? "importar" : "roadmap"}">${selected.assignment === "Pendiente" ? "Resolver adscripción" : "Ver agregado"}</button></aside></div>`;
+      }
+
+      function paperNav() {
+        const tabs = [
+          ["operacion", "01", "Coordinación"],
+          ["datos", "02", "Datos y Roadmap"],
+          ["gobernanza", "03", "Privacidad y autoridad"],
+          ["validacion", "04", "Validación y ROI"]
+        ];
+        return `<nav class="paper-nav" aria-label="Implementación completa">${tabs.map(([key, number, label]) => `<button class="${state.paperTab === key ? "active" : ""}" data-paper="${key}"><i>${number}</i>${label}</button>`).join("")}</nav>`;
+      }
+      function paperHeader(kicker, title, description) {
+        return `<div class="paper-top"><div><p class="eyebrow">${kicker}</p><h1>${title}</h1><p class="lede">${description}</p></div><div class="paper-profile"><span class="avatar">LC</span><span>Lucía Cruz<br><small>Dirección</small></span></div></div>`;
+      }
+      function paperOperation() {
+        return `${paperHeader("Implementación integral · operación", "Coordinar la escuela sin convertirla en un sistema de vigilancia.", "La superficie combina el Nivel A recomendado y un Nivel B todavía condicionado a evidencia. Cada dato conduce a una persona, una fecha y una decisión.")}
+          <section class="paper-hero"><div class="paper-focus"><p class="eyebrow">Siguiente decisión verificable</p><h2>Resolver la adscripción de 3.º A antes de la reunión de las 11:30</h2><p>La plantilla encontró dos cuentas existentes. Ninguna coincidencia ambigua se aplica automáticamente; Dirección puede elegir una cuenta o conservar la fila pendiente.</p><button class="button" data-paper="datos">Abrir revisión de datos →</button></div><div class="paper-score"><article class="score-card"><span class="pill warn">Hoy</span><strong>3</strong><small>decisiones abiertas con responsable</small></article><article class="score-card"><span class="pill ok">Semana</span><strong>7/9</strong><small>acuerdos cerrados sin datos nominales</small></article><article class="score-card"><span class="pill neutral">Fuente</span><strong>92%</strong><small>grupos con datos agregados suficientes</small></article><article class="score-card"><span class="pill warn">Carga</span><strong>—</strong><small>ahorro aún no validado con directores</small></article></div></section>
+          <div class="paper-band"><article class="paper-module"><span class="pill ok">Nivel A</span><b>Grupos y adscripciones</b><p>Historia, modalidad, ciclo, turno y cuentas existentes.</p></article><article class="paper-module"><span class="pill ok">Nivel A</span><b>Importación revisable</b><p>Vista previa, conflictos, confirmación e idempotencia.</p></article><article class="paper-module"><span class="pill warn">Nivel B · piloto</span><b>Roadmap agregado</b><p>Sólo métricas con fuente, mínimo de celda y decisión asociada.</p></article><article class="paper-module"><span class="pill ok">Gobernanza</span><b>Acuerdos y auditoría</b><p>Responsable, revisión, cierre y autoridad humana.</p></article></div>
+          <div class="section-head"><div><h2>Cola institucional</h2><p>Acciones existentes, no recomendaciones automáticas.</p></div><button class="button quiet" data-paper="validacion">Ver criterios de éxito</button></div><section class="panel action-list flat">${actionRows(3)}</section>
+          <div class="section-head"><div><h2>Acuerdos de coordinación</h2><p>Sin chat público ni nombres de estudiantes.</p></div></div><div class="grid grid-2"><article class="panel panel-pad flat"><span class="pill warn">Revisión 4 sep</span><h3 style="margin-top:12px">Acompañamiento de planeación · 5.º B</h3><p class="muted">Responsable: Ana Sofía Martín · Propósito: recuperar dos fuentes agregadas faltantes.</p><button class="button small">Registrar cierre</button></article><article class="panel panel-pad flat"><span class="pill ok">Cerrado</span><h3 style="margin-top:12px">Distribución de dispositivos · turno matutino</h3><p class="muted">Responsable: Coordinación local · Cierre confirmado el 27 ago.</p><button class="button small">Ver auditoría</button></article></div>`;
+      }
+      function paperData() {
+        return `${paperHeader("Implementación integral · datos", "Importación, calidad y Roadmap con significado explícito.", "Los papers piden reducir doble captura, marcar toda ambigüedad y evitar que un dato faltante se convierta en cero o en una conclusión sobre aprendizaje.")}
+          <div class="evidence-grid"><section class="evidence-list"><article class="evidence-row"><span class="evidence-icon">XLS</span><div><b>Plantilla docente–salón</b><p>5 filas sintéticas · esquema reconocido · vista previa sin escritura</p></div><span class="pill ok">Lista</span></article><article class="evidence-row"><span class="evidence-icon">!</span><div><b>Homónimos y ambigüedades</b><p>1 conflicto de 1 detectado · ninguna fila ambigua aplicada</p></div><span class="pill ok">100%</span></article><article class="evidence-row"><span class="evidence-icon">↺</span><div><b>Idempotencia</b><p>Segunda aplicación simulada · 0 grupos y 0 adscripciones duplicadas</p></div><span class="pill ok">Pasa</span></article><article class="evidence-row"><span class="evidence-icon">LOG</span><div><b>Trazabilidad</b><p>Actor, fuente, fecha y decisión conservados en auditoría institucional</p></div><span class="pill ok">Activa</span></article></section><aside class="gate-card"><span class="pill warn">Gate de evidencia</span><h2 style="margin-top:12px">La interfaz está lista; el 98% aún debe medirse.</h2><p>La prueba real requiere al menos tres hojas anonimizadas, errores deliberados y 100% de ambigüedades marcadas. Este panel no convierte una simulación en evidencia.</p><button class="button" data-paper="validacion">Abrir protocolo de prueba</button></aside></div>
+          <div class="section-head"><div><h2>Roadmap agregado por grupo</h2><p>Fuente, actualización, suficiencia y próxima decisión.</p></div><span class="pill neutral">Mínimo visible: k ≥ 10</span></div><div class="paper-table"><table><thead><tr><th>Grupo</th><th>Fuente</th><th>Actividad agregada</th><th>Suficiencia</th><th>Decisión</th></tr></thead><tbody><tr><td><b>1.º A</b><br><small>7 sesiones</small></td><td><span class="source-health">Nodo local · hoy</span></td><td>42% del periodo</td><td><span class="pill ok">n=18 · visible</span></td><td>Sin acción abierta</td></tr><tr><td><b>2.º B</b><br><small>5 sesiones</small></td><td><span class="source-health warn">1 sesión pendiente</span></td><td>31% provisional</td><td><span class="pill ok">n=16 · visible</span></td><td>Confirmar fuente</td></tr><tr><td><b>3.º A</b><br><small>sin sesiones</small></td><td><span class="source-health warn">Sin fuente</span></td><td>— No se calcula cero</td><td><span class="pill neutral">Suprimido</span></td><td>Resolver adscripción</td></tr><tr><td><b>5.º B</b><br><small>6 sesiones</small></td><td><span class="source-health warn">2 actividades faltantes</span></td><td>38% con advertencia</td><td><span class="pill ok">n=21 · visible</span></td><td>Asignar revisión</td></tr></tbody></table></div>
+          <div class="metric-definition"><article><b>Qué significa “actividad”</b><p>Porcentaje agregado de actividades trabajadas en el snapshot del periodo. No significa aprendizaje ni dominio.</p></article><article><b>Cuándo se oculta</b><p>Se suprime si la celda tiene menos de 10 participantes o si la fuente no permite una lectura confiable.</p></article><article><b>Qué decisión habilita</b><p>Preparar una reunión, resolver una fuente faltante o registrar acompañamiento; nunca rankear docentes.</p></article></div>`;
+      }
+      function paperGovernance() {
+        return `${paperHeader("Implementación integral · gobernanza", "Autoridad, privacidad y ciclo de vida visibles en la propia interfaz.", "La instalación representa una sola escuela. Dirección coordina; IT administra cuentas; docentes conservan la autoridad editorial y operativa del aula.")}
+          <div class="governance-map"><article class="role-card"><span class="pill ok">Dirección</span><h3 style="margin-top:12px">Decisión institucional</h3><ul><li>Confirma adscripciones</li><li>Cierra acciones y acuerdos</li><li>Consulta agregados por grupo</li><li>No publica currícula</li></ul></article><article class="role-card"><span class="pill neutral">IT</span><h3 style="margin-top:12px">Capacidad técnica</h3><ul><li>Cuentas y credenciales</li><li>Roles y nodo local</li><li>Respaldos y recuperación</li><li>No decide adscripciones</li></ul></article><article class="role-card"><span class="pill warn">Docente</span><h3 style="margin-top:12px">Autoridad pedagógica</h3><ul><li>Revisa y publica contenido</li><li>Abre y dirige sesiones</li><li>Confirma avance curricular</li><li>No alimenta rankings</li></ul></article></div>
+          <div class="section-head"><div><h2>Ciclo de vida de datos</h2><p>La historia institucional y la capa estudiantil tienen destinos distintos.</p></div></div><div class="lifecycle"><article class="life-step"><b>1 · Captura mínima</b><p>Grupo, adscripción, fuente y acción.</p></article><article class="life-step"><b>2 · Vista previa</b><p>No escribe; revela conflictos.</p></article><article class="life-step"><b>3 · Confirmación</b><p>Actor humano y fecha auditables.</p></article><article class="life-step"><b>4 · Agregación</b><p>Mínimos de celda y supresión.</p></article><article class="life-step"><b>5 · Retención</b><p>Historia institucional archivada; capa temporal purgada.</p></article></div>
+          <div class="grid grid-2" style="margin-top:15px"><section class="panel panel-pad flat"><span class="pill ${state.privacyTested ? "ok" : "warn"}">${state.privacyTested ? "Prueba sintética aprobada" : "Prueba pendiente"}</span><h2 style="margin-top:12px">Control de exportación y alcance</h2><p class="muted">La exportación institucional excluye username, correo, UUID, claves pseudónimas, IDs técnicos, alias, dispositivos y respuestas individuales.</p><button class="button primary" id="privacy-test">${state.privacyTested ? "Repetir prueba" : "Ejecutar prueba sintética"}</button></section><section class="panel panel-pad flat"><span class="pill neutral">LLM opcional</span><h2 style="margin-top:12px">Asistencia limitada</h2><p class="muted">Puede proponer un mapeo de columnas o resumir agregados desidentificados. Nunca crea cuentas, resuelve homónimos, asigna docentes, contacta familias ni aplica cambios.</p><button class="button">Ver registro de propuestas</button></section></div>
+          <div class="section-head"><div><h2>Funciones deliberadamente bloqueadas</h2><p>También son parte de implementar correctamente los papers.</p></div></div><div class="blocked-feature"><span class="pill danger">Fuera de alcance</span><h3 style="margin-top:11px">CRM nominal, scoring de riesgo, diagnósticos y ranking docente</h3><p>No aparecen como módulos “futuros” esperando activación. Requerirían evidencia local, autoridad, finalidad, revisión jurídica y un protocolo humano distinto; el primer producto no los necesita.</p></div>`;
+      }
+      function paperValidation() {
+        const directorPercent = Math.round((state.pilotDirectors / 6) * 100);
+        return `${paperHeader("Implementación integral · validación", "El tablero también muestra qué sabemos y qué todavía es una hipótesis.", "Los papers exigen medir tiempo, errores, adopción, carga y comprensión. Esta superficie evita presentar una UI terminada como impacto demostrado.")}
+          <div class="validation-grid"><article class="validation-card"><header><div><span class="pill warn">Piloto pendiente</span><h3 style="margin-top:10px">Tarea con directores</h3></div><b>${state.pilotDirectors}/6</b></header><p>Meta: asignar 20 salones al menos 30% más rápido sin aumentar errores.</p><div class="target-track"><i style="width:${directorPercent}%"></i></div><button class="button small" id="record-director" style="margin-top:13px">Registrar participante sintético</button></article><article class="validation-card"><header><div><span class="pill warn">Sin evidencia</span><h3 style="margin-top:10px">Preparación de reunión</h3></div><b>≥25%</b></header><p>Comparar el tiempo de preparar una reunión con el proceso actual y con el tablero agregado.</p><div class="target-track"><i style="width:0%"></i></div><small class="muted">No se ha ejecutado una tarea contrabalanceada.</small></article><article class="validation-card"><header><div><span class="pill warn">Dataset requerido</span><h3 style="margin-top:10px">Calidad de importación</h3></div><b>≥98%</b></header><p>Tres hojas anonimizadas, coincidencias exactas y 100% de ambigüedades visibles sin autoaplicar.</p><div class="target-track"><i style="width:20%"></i></div><small class="muted">Sólo existe el recorrido sintético de interfaz.</small></article><article class="validation-card"><header><div><span class="pill warn">Entrevistas</span><h3 style="margin-top:10px">Necesidad local</h3></div><b>0/8</b></header><p>Reconstruir tareas recientes con Dirección, docentes y familias sin pedir nombres ni datos reales.</p><div class="target-track"><i style="width:0%"></i></div><small class="muted">No se debe ampliar el modelo antes de esta evidencia.</small></article></div>
+          <div class="section-head"><div><h2>Decisión de inversión por nivel</h2><p>El alcance avanza sólo cuando pasa su gate.</p></div></div><div class="paper-table"><table><thead><tr><th>Nivel</th><th>Estado</th><th>Gate</th><th>Decisión actual</th></tr></thead><tbody><tr><td><b>A · Coordinación</b></td><td><span class="pill ok">Prototipo listo</span></td><td>30% menos tiempo, 98% importación, adopción 4/6</td><td>Validar con tareas</td></tr><tr><td><b>B · Roadmap agregado</b></td><td><span class="pill warn">Condicionado</span></td><td>Una decisión distinta por escuela y sin captura extra</td><td>Piloto sintético solamente</td></tr><tr><td><b>C · CRM nominal</b></td><td><span class="pill danger">No fase</span></td><td>Dos ciclos, necesidad repetida, autorización y EIPD</td><td>No construir</td></tr></tbody></table></div>
+          <div class="paper-footnote"><b>Lectura honesta del prototipo:</b> “implementación completa” significa que la experiencia incorpora todos los controles, límites y mediciones recomendados. No significa que ya exista evidencia de campo, integración con SIGED, autorización institucional ni validación pedagógica.</div>`;
+      }
+      function fullPaperView() {
+        const tabs = { operacion: paperOperation, datos: paperData, gobernanza: paperGovernance, validacion: paperValidation };
+        if (!tabs[state.paperTab]) state.paperTab = "operacion";
+        return `<div class="paper-shell"><aside class="paper-sidebar"><a class="brand" href="?variant=D&paper=operacion">Aula<span>Lista</span></a><div class="school-id"><b>Primaria Horizonte</b>Ciclo 2026–2027 · Nodo local<br>Actualizado hoy, 08:40</div>${paperNav()}<div class="paper-gates"><b>Estado del alcance</b><span>Nivel A · prototipo listo</span><span class="conditional">Nivel B · validación requerida</span><span class="blocked">Nivel C · no construir</span></div></aside><main class="paper-main">${tabs[state.paperTab]()}</main></div>`;
+      }
+
+      function pageHead(eyebrow, title, description, action = "") {
+        return `${scopeBar()}<div class="page-head"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p class="lede">${description}</p></div>${action}</div>`;
+      }
+      function groupsView() {
+        return `${pageHead("Directorio institucional", "Grupos y docentes", "Consulta adscripciones confirmadas y pendientes dentro de esta escuela. La autoría de contenido no equivale a una adscripción.", `<button class="button primary" data-go="importar">Importar/revisar</button>`)}<section class="panel table-wrap"><table><thead><tr><th>Grupo</th><th>Ciclo / modalidad</th><th>Docente asignado</th><th>Estado</th><th>Próxima acción</th></tr></thead><tbody>${groups.map(group => `<tr><td><b>${group.name}</b></td><td>2026–2027 · Primaria</td><td>${group.teacher}</td><td><span class="pill ${group.assignment === "Pendiente" ? "warn" : "ok"}">${group.assignment}</span></td><td><button class="button small" data-go="${group.assignment === "Pendiente" ? "importar" : "auditoria"}">${group.assignment === "Pendiente" ? "Resolver" : "Ver historial"}</button></td></tr>`).join("")}</tbody></table></section><div class="privacy-note"><b>Límite visible:</b> esta superficie no muestra nombres, alias, dispositivos, respuestas ni identificadores de alumnos. La historia de adscripciones se archiva; no se borra desde esta interfaz.</div>`;
+      }
+      function importView() {
+        const step = state.importStep;
+        let content = "";
+        if (step === 1) content = `<div class="upload-zone"><span class="pill neutral">Plantilla sintética</span><h2 style="margin-top:14px">Carga una distribución docente–salón</h2><p>Este prototipo simula una hoja local. La carga no crea cuentas, no aplica cambios y sólo opera sobre Primaria Horizonte.</p><span class="file-chip">▣ docentes-salones-demo.xlsx · 5 filas</span><div style="margin-top:18px"><button class="button primary" id="load-demo">Previsualizar plantilla</button></div></div>`;
+        if (step === 2) content = `<div class="notice warn"><b>1 conflicto requiere decisión.</b> Cuatro filas coinciden con cuentas existentes. La fila de 3.º A tiene dos candidatas y permanecerá sin aplicar.</div><div class="panel table-wrap flat" style="margin-top:14px"><table><thead><tr><th>Fila</th><th>Grupo</th><th>Docente en hoja</th><th>Resultado</th><th>Resolución</th></tr></thead><tbody><tr><td>2</td><td>1.º A</td><td>María Elena López</td><td><span class="pill ok">Coincidencia exacta</span></td><td>Lista para confirmar</td></tr><tr><td>3</td><td>2.º B</td><td>Rafael Chan</td><td><span class="pill ok">Coincidencia exacta</span></td><td>Lista para confirmar</td></tr><tr class="conflict"><td>4</td><td>3.º A</td><td>María López</td><td><span class="pill warn">2 candidatas</span></td><td><select id="conflict-select"><option value="">Dejar pendiente</option><option value="maria-elena">María Elena López · cuenta existente</option><option value="maria-ines">María Inés López · cuenta existente</option></select></td></tr><tr><td>5</td><td>4.º A</td><td>Ana Sofía Martín</td><td><span class="pill ok">Coincidencia exacta</span></td><td>Sin cambio</td></tr><tr><td>6</td><td>5.º B</td><td>José Luis Pech</td><td><span class="pill ok">Coincidencia exacta</span></td><td>Sin cambio</td></tr></tbody></table></div><div class="view-actions"><button class="button" id="back-import">Volver</button><button class="button primary" id="review-import">Revisar confirmación</button></div>`;
+        if (step === 3) content = `<div class="grid grid-2"><section class="panel panel-pad flat"><span class="pill ok">4 filas confirmables</span><h2 style="margin-top:13px">Cambios preparados</h2><p class="muted">Se conservarán ciclo, modalidad, grupo, turno, docente y fuente. Repetir la plantilla no creará duplicados.</p><div class="notice">La vista previa no escribió datos. Dirección sigue siendo quien confirma.</div></section><section class="panel panel-pad flat"><span class="pill ${state.importResolved ? "ok" : "warn"}">${state.importResolved ? "Conflicto resuelto" : "1 fila pendiente"}</span><h2 style="margin-top:13px">3.º A</h2><p class="muted">${state.importResolved ? "Se usará la cuenta existente elegida por Dirección." : "No se asignará docente. La fila quedará pendiente para una revisión posterior."}</p></section></div><div class="view-actions"><button class="button" id="back-preview">Volver a conflictos</button><button class="button primary" id="apply-import">Confirmar ${state.importResolved ? "5" : "4"} filas</button></div>`;
+        if (step === 4) content = `<div class="panel panel-pad flat"><span class="pill ok">Confirmación simulada</span><h2 style="margin-top:13px">La revisión quedó registrada en memoria.</h2><p class="muted">No hubo llamadas al backend. ${state.importResolved ? "El conflicto de 3.º A fue resuelto manualmente." : "3.º A continúa pendiente; ninguna ambigüedad se aplicó automáticamente."}</p><div class="notice">Aplicar nuevamente la misma plantilla produciría 0 duplicados en este recorrido simulado.</div><div class="view-actions"><button class="button" id="restart-import">Reiniciar recorrido</button><button class="button primary" data-go="auditoria">Ver auditoría</button></div></div>`;
+        return `${pageHead("Importación revisable", "Revisar antes de confirmar", "Una plantilla prepara candidatos; no crea cuentas ni decide adscripciones por Dirección.")}<div class="import-steps"><span class="import-step ${step === 1 ? "active" : ""}">1 · Cargar</span><span class="import-step ${step === 2 ? "active" : ""}">2 · Conflictos</span><span class="import-step ${step === 3 ? "active" : ""}">3 · Confirmar</span><span class="import-step ${step === 4 ? "active" : ""}">4 · Resultado</span></div>${content}<div class="status-line" id="import-status"></div>`;
+      }
+      function actionsView() {
+        return `${pageHead("Acciones y acuerdos", "Cada pendiente termina en una decisión humana", "Asunto, responsable, fecha de revisión y cierre. No es un chat público ni una recomendación automática.", `<button class="button primary" id="new-action">Nueva acción</button>`)}<section class="panel action-list">${actionRows()}</section><div class="notice" style="margin-top:16px"><b>La IA no aplica acciones.</b> Si resume información agregada, su salida sigue siendo un borrador que una persona debe confirmar.</div>`;
+      }
+      function roadmapView() {
+        return `${pageHead("Vista agregada", "Roadmap por grupo y periodo", "Sólo se muestran agregados que apoyan una decisión. Los datos faltantes se nombran y no se convierten en ceros.")}<div class="roadmap-list">${groups.map(group => `<article class="roadmap-row"><div><b>${group.name}</b><p>${group.sessions} sesiones</p></div><div>${group.progress === null ? `<span class="pill neutral">Sin dato suficiente</span>` : `<div class="progress"><i style="width:${group.progress}%"></i></div><p style="margin-top:7px">${group.progress}% de actividades trabajadas en el periodo</p>`}</div><div><span class="pill ${group.note.includes("Falta") || group.note.includes("Sin") || group.note.includes("pendiente") ? "warn" : "ok"}">${group.note.includes("Sin pendientes") ? "Al día" : "Revisar"}</span></div><button class="button small" data-create-for="${group.code}">${group.note.includes("Sin pendientes") ? "Registrar acuerdo" : "Crear acción"}</button></article>`).join("")}</div><div class="privacy-note"><b>Lectura correcta:</b> estas barras describen actividad agregada del grupo y la fuente sintética del periodo. No son calificación, dominio, predicción, ranking docente ni perfil de alumnado.</div>`;
+      }
+      function auditView() {
+        return `${pageHead("Auditoría y configuración", "Quién confirmó qué, y cuándo", "La escuela conserva la historia institucional aunque cambie la persona Directora. IT administra cuentas; Dirección decide adscripciones.")}<div class="grid grid-2"><section class="panel flat"><div class="panel-pad"><h2>Actividad reciente</h2></div><div class="audit-row"><time>Hoy · 08:42</time><b>${state.importApplied ? "Dirección confirmó la importación sintética" : "Vista previa de importación generada"}</b><span>Lucía Cruz · Dirección</span></div><div class="audit-row"><time>Ayer · 13:22</time><b>Adscripción de 4.º A confirmada</b><span>Lucía Cruz · Dirección</span></div><div class="audit-row"><time>27 ago · 10:05</time><b>Cuenta docente activada</b><span>Soporte local · IT</span></div></section><section class="panel panel-pad flat"><h2>Configuración de la escuela</h2><div class="detail-list"><div class="detail-item"><b>Escuela</b><span>Primaria Horizonte · instalación local única</span></div><div class="detail-item"><b>Modalidad confirmada</b><span>Primaria</span></div><div class="detail-item"><b>Ciclo activo</b><span>2026–2027</span></div><div class="detail-item"><b>Operación</b><span>Nodo local · sin integración externa supuesta</span></div></div><button class="button" id="fake-settings">Solicitar cambio a IT</button></section></div><div class="privacy-note"><b>Separación de autoridad:</b> la configuración técnica, cuentas, credenciales y roles pertenecen a PlatformAdministrator; las adscripciones y acciones institucionales requieren confirmación de Dirección.</div>`;
+      }
+      function sharedView() {
+        const views = { grupos: groupsView, importar: importView, acciones: actionsView, roadmap: roadmapView, auditoria: auditView };
+        const body = views[state.area]();
+        if (state.variant === "B") return `<div class="variant-b-shell"><aside class="side-nav"><a class="brand" href="?variant=B&area=resumen">Aula<span>Lista</span></a>${navLinks("")}<hr><a href="../docente-skeleton/index.html?variant=B">Comparar docente ↗</a><small>Primaria Horizonte<br>Ciclo 2026–2027</small></aside><main>${body}</main></div>`;
+        if (state.variant === "C") return `<div class="map-layout"><aside class="panel map-rail flat">${navLinks("")}</aside><main style="grid-column:span 2">${body}</main></div>`;
+        return body;
+      }
+      function render() {
+        if (!variants[state.variant]) state.variant = "A";
+        if (!areas.includes(state.area)) state.area = "resumen";
+        if (state.variant === "D") {
+          document.getElementById("app").innerHTML = `${fullPaperView()}${stateDrawer()}${switcher()}`;
+          bind();
+          return;
+        }
+        let content = "";
+        if (state.area === "resumen") content = state.variant === "A" ? summaryA() : state.variant === "B" ? summaryB() : summaryC();
+        else content = sharedView();
+        const showTopbar = state.variant !== "B";
+        document.getElementById("app").innerHTML = `${showTopbar ? topbar() : ""}<main class="shell page variant-${state.variant.toLowerCase()}">${content}</main>${stateDrawer()}${switcher()}`;
+        bind();
+      }
+      function bind() {
+        document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", () => go(el.dataset.go)));
+        document.querySelectorAll(".close-action").forEach(el => el.addEventListener("click", () => {
+          const id = el.dataset.actionId; const index = state.closedActions.indexOf(id);
+          if (index >= 0) state.closedActions.splice(index, 1); else state.closedActions.push(id);
+          render(); toast(index >= 0 ? "Acción reabierta en memoria" : "Cierre registrado en memoria");
+        }));
+        document.querySelectorAll("[data-group]").forEach(el => el.addEventListener("click", () => { state.selectedGroup = el.dataset.group; render(); }));
+        document.querySelectorAll("[data-paper]").forEach(el => el.addEventListener("click", () => { state.paperTab = el.dataset.paper; setQuery({ variant: "D", paper: state.paperTab }); render(); scrollTo({ top: 0, behavior: "smooth" }); }));
+        document.querySelectorAll("[data-create-for]").forEach(el => el.addEventListener("click", () => {
+          const code = el.dataset.createFor; state.addedActions.push({ id: `n${Date.now()}`, level: "amber", title: `Revisar acuerdo de ${code}`, detail: "Acción creada desde el agregado; requiere responsable y confirmación humana.", owner: "Dirección", date: "6 sep" });
+          go("acciones"); toast(`Acción para ${code} creada en memoria`);
+        }));
+        document.getElementById("prev-variant")?.addEventListener("click", () => switchVariant(-1));
+        document.getElementById("next-variant")?.addEventListener("click", () => switchVariant(1));
+        document.getElementById("profile-toggle")?.addEventListener("click", () => { state.profileOpen = !state.profileOpen; render(); });
+        document.getElementById("state-toggle")?.addEventListener("click", () => { state.stateOpen = true; state.profileOpen = false; render(); });
+        document.getElementById("close-state")?.addEventListener("click", () => { state.stateOpen = false; render(); });
+        document.getElementById("logout")?.addEventListener("click", () => toast("Cierre de sesión simulado; no cambió ninguna cuenta"));
+        document.getElementById("load-demo")?.addEventListener("click", () => { state.importStep = 2; render(); toast("Plantilla sintética previsualizada") });
+        document.getElementById("back-import")?.addEventListener("click", () => { state.importStep = 1; render(); });
+        document.getElementById("review-import")?.addEventListener("click", () => { state.importResolved = Boolean(document.getElementById("conflict-select")?.value); state.importStep = 3; render(); });
+        document.getElementById("back-preview")?.addEventListener("click", () => { state.importStep = 2; render(); });
+        document.getElementById("apply-import")?.addEventListener("click", () => { state.importApplied = true; state.importStep = 4; render(); toast("Confirmación simulada; no hubo escritura real"); });
+        document.getElementById("restart-import")?.addEventListener("click", () => { state.importStep = 1; state.importResolved = false; state.importApplied = false; render(); });
+        document.getElementById("new-action")?.addEventListener("click", () => { state.addedActions.push({ id: `n${Date.now()}`, level: "amber", title: "Preparar revisión semanal", detail: "Acción sintética creada manualmente por Dirección.", owner: "Lucía Cruz", date: "6 sep" }); render(); toast("Acción creada en memoria"); });
+        document.getElementById("fake-settings")?.addEventListener("click", () => toast("Solicitud simulada para IT; no cambió configuración"));
+        document.getElementById("privacy-test")?.addEventListener("click", () => { state.privacyTested = true; render(); toast("Prueba sintética: exportación sin identificadores técnicos"); });
+        document.getElementById("record-director")?.addEventListener("click", () => { state.pilotDirectors = Math.min(6, state.pilotDirectors + 1); render(); toast("Participante sintético registrado; no cuenta como evidencia real"); });
+      }
+      document.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (["input", "textarea", "select"].includes(tag) || document.activeElement?.isContentEditable) return;
+        switchVariant(event.key === "ArrowRight" ? 1 : -1);
+      });
+      window.addEventListener("popstate", () => {
+        const params = new URLSearchParams(location.search); state.variant = params.get("variant") || "A"; state.area = params.get("area") || "resumen"; state.paperTab = params.get("paper") || "operacion"; render();
+      });
+      render();
+    </script>
+  </body>
+</html>

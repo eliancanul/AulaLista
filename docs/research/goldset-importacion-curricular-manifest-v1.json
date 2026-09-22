@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Read-only source inventory and leakage-safe split for shadow extraction; no source PDFs are copied into this repository.",
+  "documents": [
+    {"id": "C01", "path": "output/pdf/prueba-issue-96-paginas-4-a-8.pdf", "sha256": "33d7c2862a7d14127b2906518b26bc16f0f571f85d765dd6cd63325f52337648", "page_count": 5, "family": "weekly_annex_fragment", "derived_from": "C02 pages 4-8", "split": "calibration", "runner_eligible": true, "deep_sample_pages": [1, 3, 4, 5]},
+    {"id": "C02", "path": "/Users/dojo/Downloads/curricula completa.pdf", "sha256": "c5a5455b52aa55dba2c9f58b650c8d37cdf1a486c07ce6a4645230d296bc043a", "page_count": 44, "family": "weekly_annex_fragment", "split": "calibration", "runner_eligible": true, "deep_sample_pages": [1, 4, 6, 8, 12, 20, 31, 44]},
+    {"id": "C03", "path": "/Users/dojo/Downloads/Planeacio5toGradoSemana02MeReconozco_a_Através_De_Mi_Familia.docx.pdf", "sha256": "12f24c6b2ea356edfde1fb31c1f112644d72b386a87798d17d8a66e8c04f0354", "page_count": 15, "family": "horizontal_project_sessions", "split": "test", "runner_eligible": true, "deep_sample_pages": [1, 3, 7, 11, 15]},
+    {"id": "C04", "path": "/Users/dojo/Downloads/planeacion-julio-quinto-grado.pdf", "sha256": "065e5bed6bddf2f88035c1088f6b4dd450136ab0b2a718825da03239ff41aadb", "page_count": 11, "family": "horizontal_monthly_multisubject", "split": "test", "runner_eligible": true, "deep_sample_pages": [1, 2, 5, 9, 11]},
+    {"id": "W01", "url": "https://www.redmagisterial.com/planeacionesnme/primaria/5-5to/53-espanol/1", "family": "html_sessions", "split": "reference_only", "runner_eligible": false, "reason": "web source is not a local PDF and is not fetched or copied by this harness"}
+  ],
+  "split_rule": "C01 and C02 stay together because C01 is derived from C02; held-out test families are C03 and C04. No thresholds may be selected from test results."
+}

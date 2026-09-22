@@ -30,10 +30,13 @@ pytestmark = pytest.mark.django_db
 sync_stage = override_settings(AULALISTA_IMPORT_ASYNC=False)
 
 
+from helpers import MINIMAL_VALID_PDF_BYTES, tutor_client
+
+
 def pdf_upload():
     return SimpleUploadedFile(
         "curricula.pdf",
-        b"%PDF-1.4 fake bytes",
+        MINIMAL_VALID_PDF_BYTES,
         content_type="application/pdf",
     )
 

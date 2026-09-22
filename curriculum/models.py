@@ -4,8 +4,9 @@ import os
 import re
 import unicodedata
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Max
@@ -34,6 +35,306 @@ from curriculum.distribution import calculate_distribution, validate_distributio
 
 
 EDITORIAL_REVIEWER_GROUP_NAME = "EditorialReviewer"
+DIRECTOR_GROUP_NAME = "Director"
+PLATFORM_ADMINISTRATOR_GROUP_NAME = "PlatformAdministrator"
+
+
+def _normalize_datetime(dt):
+    """Safely convert naive or aware datetimes to the active timezone, handling None robustly."""
+    if dt is None:
+        return None
+    if timezone.is_aware(dt):
+        return dt
+    return timezone.make_aware(dt, timezone.get_current_timezone())
+
+
+def _package_source_upload_to(instance, filename):
+    """Store imported PDFs under an opaque, package-owned name."""
+
+    return f"curriculum/package-sources/{instance.pk or 'pending'}/{uuid.uuid4().hex}.pdf"
+
+
+def _published_source_upload_to(instance, filename):
+    """Give each immutable published snapshot its own source object."""
+
+    return f"curriculum/published-sources/{instance.package_id}/{instance.version}/{uuid.uuid4().hex}.pdf"
+
+
+def _is_platform_administrator(user):
+    return bool(
+        getattr(user, "is_authenticated", False)
+        and user.is_active
+        and user.is_staff
+        and (
+            user.is_superuser
+            or user.groups.filter(name=PLATFORM_ADMINISTRATOR_GROUP_NAME).exists()
+        )
+    )
+
+
+class School(models.Model):
+    """The single institutional boundary configured for a local installation."""
+
+    MODALITY_PRIMARY = "primary"
+    MODALITY_SECONDARY_GENERAL = "secondary_general"
+    MODALITY_SECONDARY_TECHNICAL = "secondary_technical"
+    MODALITY_TELESECUNDARIA = "telesecundaria"
+    MODALITY_CHOICES = (
+        (MODALITY_PRIMARY, "Primaria"),
+        (MODALITY_SECONDARY_GENERAL, "Secundaria general"),
+        (MODALITY_SECONDARY_TECHNICAL, "Secundaria técnica"),
+        (MODALITY_TELESECUNDARIA, "Telesecundaria"),
+    )
+
+    name = models.CharField("nombre de la School", max_length=160)
+    modality = models.CharField(
+        "modalidad pedagógica",
+        max_length=32,
+        choices=MODALITY_CHOICES,
+        default=MODALITY_PRIMARY,
+    )
+    director = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="directed_schools",
+        null=True,
+        blank=True,
+    )
+    is_configured = models.BooleanField("School configurada", default=True)
+    archived = models.BooleanField("archivada", default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "School"
+        verbose_name_plural = "Schools"
+
+    @classmethod
+    def configured(cls):
+        """Return the active configured school, failing closed when absent."""
+
+        return cls.objects.filter(is_configured=True, archived=False).order_by("id").first()
+
+    @classmethod
+    def provision(
+        cls,
+        *,
+        name,
+        modality=MODALITY_PRIMARY,
+        director,
+        actor,
+        source="manual",
+    ):
+        """Explicitly provision the sole School and its sole active Director."""
+
+        if not _is_platform_administrator(actor):
+            raise ValidationError("La provisión requiere un PlatformAdministrator activo.")
+        if director is None or not director.is_active or not director.is_staff:
+            raise ValidationError("La provisión requiere una persona Directora activa.")
+        if _is_platform_administrator(director):
+            raise ValidationError("PlatformAdministrator y Director son funciones separadas.")
+        with transaction.atomic():
+            if cls.objects.select_for_update().exists():
+                raise ValidationError("La instalación ya tiene una School provisionada.")
+            school = cls(
+                name=name,
+                modality=modality,
+                director=director,
+                is_configured=True,
+            )
+            school._explicit_provision = True
+            school.save(force_insert=True)
+            director_group, _ = Group.objects.get_or_create(name=DIRECTOR_GROUP_NAME)
+            director.groups.add(director_group)
+            InstitutionalAuditEvent.record(
+                school=school,
+                actor=actor,
+                action="school_provisioned",
+                object_type="School",
+                object_id=school.pk,
+                new_state={
+                    "director": director.get_full_name().strip() or "Cuenta institucional",
+                    "modality": school.modality,
+                    "school": school.name,
+                },
+                source=source,
+            )
+            return school
+
+    @classmethod
+    def bootstrap(cls, *, name, modality=MODALITY_PRIMARY, director=None, actor=None):
+        """Compatibility name for explicit, fail-closed provisioning."""
+
+        if director is None or actor is None:
+            raise ValidationError("La provisión explícita requiere Director y PlatformAdministrator.")
+        return cls.provision(name=name, modality=modality, director=director, actor=actor)
+
+    def handoff_director(self, new_director, *, actor, source="manual"):
+        """Atomically replace the sole Director under technical authorization."""
+
+        if not _is_platform_administrator(actor):
+            raise ValidationError("El cambio de Dirección requiere PlatformAdministrator.")
+        if (
+            new_director is None
+            or not new_director.is_active
+            or not new_director.is_staff
+        ):
+            raise ValidationError("La nueva persona Directora debe ser una cuenta activa de personal.")
+        if _is_platform_administrator(new_director):
+            raise ValidationError("PlatformAdministrator y Director son funciones separadas.")
+        source = str(source or "").strip()
+        if not source:
+            raise ValidationError("El cambio de Dirección requiere un origen.")
+
+        with transaction.atomic():
+            locked = type(self).objects.select_for_update().select_related("director").get(
+                pk=self.pk,
+                is_configured=True,
+                archived=False,
+            )
+            previous = locked.director
+            director_group, _ = Group.objects.get_or_create(name=DIRECTOR_GROUP_NAME)
+            active_directors = list(
+                new_director.__class__.objects.select_for_update()
+                .filter(is_active=True, groups=director_group)
+                .exclude(pk=new_director.pk)
+            )
+            if previous is not None and previous.pk != new_director.pk:
+                new_director.__class__.objects.select_for_update().filter(
+                    pk=previous.pk
+                ).update(is_active=False)
+                if all(item.pk != previous.pk for item in active_directors):
+                    active_directors.append(previous)
+            for outgoing in active_directors:
+                outgoing.groups.remove(director_group)
+                if outgoing.is_active:
+                    outgoing.is_active = False
+                    outgoing.save(update_fields=["is_active"])
+            new_director.groups.add(director_group)
+            locked.director = new_director
+            locked.save(update_fields=["director"])
+            InstitutionalAuditEvent.record(
+                school=locked,
+                actor=actor,
+                action="director_handoff",
+                object_type="School",
+                object_id=locked.pk,
+                previous_state={
+                    "director": (
+                        previous.get_full_name().strip() or "Cuenta institucional"
+                    )
+                    if previous is not None
+                    else None
+                },
+                new_state={
+                    "director": new_director.get_full_name().strip()
+                    or "Cuenta institucional"
+                },
+                source=source,
+            )
+            return locked
+
+    def set_director(self, director, *, actor=None, source="manual"):
+        """Compatibility alias that preserves the authorized handoff boundary."""
+
+        return self.handoff_director(director, actor=actor, source=source)
+
+    def clean(self):
+        self.name = str(self.name or "").strip()
+        if not self.name:
+            raise ValidationError("La School requiere un nombre.")
+        if self.director_id and self.director and (
+            not self.director.is_active or not self.director.is_staff
+        ):
+            raise ValidationError("La School requiere una persona Directora activa.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not getattr(self, "_explicit_provision", False):
+            raise ValidationError("Use la provisión explícita para crear la School.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class InstitutionalAuditEvent(models.Model):
+    """Append-only institutional audit record without access credentials."""
+
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="audit_events",
+        null=True,
+        blank=True,
+    )
+    actor = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="institutional_audit_events",
+        null=True,
+        blank=True,
+    )
+    actor_display_name = models.CharField("nombre histórico de presentación", max_length=160)
+    actor_role = models.CharField("función histórica", max_length=80, blank=True)
+    action = models.CharField("acción", max_length=80)
+    object_type = models.CharField("tipo de objeto", max_length=80)
+    object_id = models.CharField("referencia interna del objeto", max_length=80, blank=True)
+    classroom_group = models.ForeignKey(
+        "ClassroomGroup",
+        on_delete=models.PROTECT,
+        related_name="audit_events",
+        null=True,
+        blank=True,
+    )
+    previous_state = models.JSONField(default=dict, blank=True)
+    new_state = models.JSONField(default=dict, blank=True)
+    source = models.CharField("origen", max_length=80, default="manual")
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["occurred_at", "id"]
+        verbose_name = "InstitutionalAuditEvent"
+        verbose_name_plural = "InstitutionalAuditEvents"
+
+    @classmethod
+    def record(cls, *, school=None, actor=None, action, object_type, object_id="", classroom_group=None,
+               previous_state=None, new_state=None, source="manual"):
+        display_name = "Sistema local"
+        role = ""
+        if actor is not None:
+            display_name = actor.get_full_name().strip() or "Cuenta institucional"
+            if _is_platform_administrator(actor):
+                role = PLATFORM_ADMINISTRATOR_GROUP_NAME
+            elif actor.groups.filter(name=DIRECTOR_GROUP_NAME).exists():
+                role = DIRECTOR_GROUP_NAME
+            else:
+                role = "Personal"
+        return cls.objects.create(
+            school=school,
+            actor=actor,
+            actor_display_name=display_name[:160],
+            actor_role=role,
+            action=action,
+            object_type=object_type,
+            object_id=str(object_id or ""),
+            classroom_group=classroom_group,
+            previous_state=previous_state or {},
+            new_state=new_state or {},
+            source=source,
+        )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("La auditoría institucional es inmutable.")
+        if not self.actor_display_name:
+            self.actor_display_name = "Sistema local"
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("La auditoría institucional no se elimina.")
+
+
+# Compatibility vocabulary for callers that used the shorter domain name.
+AuditEvent = InstitutionalAuditEvent
 
 
 def _parse_cached_datetime(value):
@@ -117,6 +418,191 @@ class CurriculumQuestionBlock(blocks.StructBlock):
         icon = "help"
 
 
+class CurriculumSourceBlobQuerySet(models.QuerySet):
+    """Immutable, append-only QuerySet for CurriculumSourceBlob."""
+
+    def update(self, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: updates are forbidden.")
+
+    def aupdate(self, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: updates are forbidden.")
+
+    def delete(self):
+        raise PermissionError("CurriculumSourceBlob is immutable: deletes are forbidden.")
+
+    def adelete(self):
+        raise PermissionError("CurriculumSourceBlob is immutable: deletes are forbidden.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise PermissionError("CurriculumSourceBlob is immutable: bulk updates are forbidden.")
+
+    def abulk_update(self, objs, fields, batch_size=None):
+        raise PermissionError("CurriculumSourceBlob is immutable: bulk updates are forbidden.")
+
+    def update_or_create(self, defaults=None, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: update_or_create is forbidden.")
+
+    def aupdate_or_create(self, defaults=None, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: update_or_create is forbidden.")
+
+    @staticmethod
+    def _validate_bulk_objects(objs):
+        validated = list(objs)
+        for blob in validated:
+            blob.clean()
+        return validated
+
+    def bulk_create(
+        self,
+        objs,
+        batch_size=None,
+        ignore_conflicts=False,
+        update_conflicts=False,
+        update_fields=None,
+        unique_fields=None,
+    ):
+        if update_conflicts:
+            raise PermissionError(
+                "CurriculumSourceBlob is immutable: conflict updates are forbidden."
+            )
+        return super().bulk_create(
+            self._validate_bulk_objects(objs),
+            batch_size=batch_size,
+            ignore_conflicts=ignore_conflicts,
+            update_conflicts=False,
+            update_fields=update_fields,
+            unique_fields=unique_fields,
+        )
+
+    async def abulk_create(
+        self,
+        objs,
+        batch_size=None,
+        ignore_conflicts=False,
+        update_conflicts=False,
+        update_fields=None,
+        unique_fields=None,
+    ):
+        if update_conflicts:
+            raise PermissionError(
+                "CurriculumSourceBlob is immutable: conflict updates are forbidden."
+            )
+        return await super().abulk_create(
+            self._validate_bulk_objects(objs),
+            batch_size=batch_size,
+            ignore_conflicts=ignore_conflicts,
+            update_conflicts=False,
+            update_fields=update_fields,
+            unique_fields=unique_fields,
+        )
+
+
+class CurriculumSourceBlobManager(models.Manager.from_queryset(CurriculumSourceBlobQuerySet)):
+    """Manager enforcing append-only immutability for CurriculumSourceBlob."""
+
+    def update_or_create(self, defaults=None, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: update_or_create is forbidden.")
+
+    def aupdate_or_create(self, defaults=None, **kwargs):
+        raise PermissionError("CurriculumSourceBlob is immutable: update_or_create is forbidden.")
+
+
+class CurriculumSourceBlob(models.Model):
+    """Immutable, content-addressed transactional source blob stored directly in the database.
+
+    Eliminates DB+filesystem dual-state impossibility:
+    - Guaranteed atomic commit/rollback with CurriculumImportApproval and CurriculumPackage.
+    - Zero orphaned files on crash, SystemExit, or transaction abort.
+    - Append-only: immutable once written; update/delete/bulk_update/update_or_create are forbidden.
+    - Model rejects update, delete, and empty bytes (content_size > 0).
+    - Cannot be deleted while referenced by any approval or package (PROTECT / PermissionError).
+    """
+
+    sha256 = models.CharField(
+        "SHA-256",
+        max_length=64,
+        unique=True,
+        db_index=True,
+        editable=False,
+    )
+    content = models.BinaryField("contenido binario", editable=False)
+    content_size = models.PositiveBigIntegerField("tamaño en bytes", editable=False)
+    created_at = models.DateTimeField("fecha de creación", auto_now_add=True)
+
+    objects = CurriculumSourceBlobManager()
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "CurriculumSourceBlob"
+        verbose_name_plural = "CurriculumSourceBlobs"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(content_size__gt=0),
+                name="check_curriculum_source_blob_content_size_gt_0",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(sha256__regex=r"^[0-9a-f]{64}$"),
+                name="check_curriculum_source_blob_sha256_format",
+            ),
+        ]
+
+    @property
+    def size(self) -> int:
+        return self.content_size
+
+    def is_valid_blob(self) -> bool:
+        """Verify cryptographic and size integrity of the stored content."""
+        try:
+            if self.content is None:
+                return False
+            raw = bytes(self.content)
+            if len(raw) == 0:
+                return False
+            if self.content_size is None or int(self.content_size) != len(raw):
+                return False
+            calc_sha = hashlib.sha256(raw).hexdigest().lower()
+            if (self.sha256 or "").lower() != calc_sha:
+                return False
+            return True
+        except Exception:
+            return False
+
+    def clean(self):
+        super().clean()
+        if self.content is None:
+            raise ValidationError("CurriculumSourceBlob content cannot be None.")
+        raw_content = bytes(self.content)
+        if len(raw_content) == 0:
+            raise ValidationError("CurriculumSourceBlob content cannot be empty.")
+        calc_sha = hashlib.sha256(raw_content).hexdigest().lower()
+        calc_size = len(raw_content)
+        if self.content_size is not None and int(self.content_size) != calc_size:
+            raise ValidationError(
+                f"El tamaño especificado ({self.content_size}) no coincide con la longitud del contenido ({calc_size})."
+            )
+        if self.sha256 and self.sha256.lower() != calc_sha:
+            raise ValidationError("El hash SHA-256 no coincide con el contenido del blob.")
+        self.sha256 = calc_sha
+        self.content_size = calc_size
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            if not self._state.adding or CurriculumSourceBlob.objects.filter(pk=self.pk).exists():
+                raise PermissionError("CurriculumSourceBlob records are immutable and cannot be updated.")
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise PermissionError("CurriculumSourceBlob records are immutable and cannot be deleted.")
+
+    async def adelete(self, *args, **kwargs):
+        raise PermissionError("CurriculumSourceBlob records are immutable and cannot be deleted.")
+
+    def __str__(self):
+        return f"CurriculumSourceBlob {self.sha256[:12]} ({self.content_size} bytes)"
+
+
+
 class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Model):
     """A Wagtail-authored DemoPackage with human approval before publication."""
 
@@ -129,6 +615,38 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         blank=True,
     )
     final_explanation = models.TextField("explicación final autorizada", blank=True)
+    source_references = models.JSONField(
+        "referencias de fuente",
+        default=list,
+        blank=True,
+        editable=False,
+        help_text=(
+            "Páginas y recursos de origen conservados para revisión y snapshots; "
+            "no son reescritos por la asistencia automática."
+        ),
+    )
+    source_blob = models.ForeignKey(
+        CurriculumSourceBlob,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="packages",
+        verbose_name="blob fuente inmutable",
+    )
+    source_pdf = models.FileField(
+        "PDF fuente conservado",
+        upload_to=_package_source_upload_to,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Copia inmutable de la fuente usada para este borrador; no se expone sin autorización.",
+    )
+    source_pdf_sha256 = models.CharField(
+        "SHA-256 del PDF fuente",
+        max_length=64,
+        blank=True,
+        editable=False,
+    )
     validation_summary = models.TextField(
         "validación estructural",
         blank=True,
@@ -161,6 +679,7 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
         FieldPanel("micro_lesson"),
         FieldPanel("questions"),
         FieldPanel("final_explanation"),
+        FieldPanel("source_references", read_only=True),
         FieldPanel("validation_summary", read_only=True),
         FieldPanel("ai_assisted", read_only=True),
     ]
@@ -172,6 +691,28 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
 
     def __str__(self):
         return self.title or f"CurriculumPackage {self.pk}"
+
+    def get_source_bytes(self) -> bytes | None:
+        """Return source PDF bytes from source_blob with fallback to legacy source_pdf.
+        If source_blob is present but invalid/corrupted, fails closed and returns None."""
+        if getattr(self, "source_blob_id", None) and self.source_blob:
+            blob = self.source_blob
+            if not blob.is_valid_blob():
+                return None
+            if self.source_pdf_sha256 and (blob.sha256 or "").lower() != self.source_pdf_sha256.lower():
+                return None
+            return bytes(blob.content)
+        if self.source_pdf:
+            try:
+                with self.source_pdf.open("rb") as s:
+                    raw = s.read()
+                if self.source_pdf_sha256 and hashlib.sha256(raw).hexdigest().lower() != self.source_pdf_sha256.lower():
+                    return None
+                return raw
+            except Exception:
+                return None
+        return None
+
 
     def structural_validation(self):
         """Explain structural gaps without blocking draft saves or publishing anything."""
@@ -369,8 +910,31 @@ class CurriculumPackage(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Mo
             sha256=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
             source_revision=revision,
             published_by=user,
+            source_pdf=_snapshot_source_file(self, version),
+            source_pdf_sha256=self.source_pdf_sha256 or "",
         )
         return result
+
+
+def _snapshot_source_file(package, version):
+    """Return a fresh ContentFile for the snapshot, never a mutable job file."""
+
+    content = None
+    if getattr(package, "source_blob_id", None) and package.source_blob:
+        content = bytes(package.source_blob.content)
+    elif package.source_pdf:
+        with package.source_pdf.open("rb") as source:
+            content = source.read()
+
+    if content is None:
+        return None
+
+    from django.core.files.base import ContentFile
+
+    digest = hashlib.sha256(content).hexdigest()
+    if package.source_pdf_sha256 and digest != package.source_pdf_sha256:
+        raise ValidationError("El PDF fuente conservado no coincide con su SHA-256.")
+    return ContentFile(content, name=f"package-{package.pk}-v{version}.pdf")
 
 
 class PublishedPackageSnapshot(models.Model):
@@ -388,6 +952,20 @@ class PublishedPackageSnapshot(models.Model):
     )
     published_by = models.ForeignKey("auth.User", on_delete=models.PROTECT)
     published_at = models.DateTimeField(auto_now_add=True)
+    source_pdf = models.FileField(
+        "PDF fuente publicado",
+        upload_to=_published_source_upload_to,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Copia inmutable de la fuente conservada para auditoría autorizada.",
+    )
+    source_pdf_sha256 = models.CharField(
+        "SHA-256 del PDF publicado",
+        max_length=64,
+        blank=True,
+        editable=False,
+    )
 
     class Meta:
         ordering = ["package_id", "version"]
@@ -620,9 +1198,16 @@ class CurriculumProgress(models.Model):
 
 
 class ClassroomGroup(models.Model):
-    """A teacher-created classroom label with no student roster."""
+    """An institutional classroom label with no student roster."""
 
     name = models.CharField("nombre del salón", max_length=80)
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="classroom_groups",
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey(
         "auth.User",
         on_delete=models.PROTECT,
@@ -630,6 +1215,27 @@ class ClassroomGroup(models.Model):
         null=True,
         blank=True,
     )
+    # Kept nullable for pre-School rows; new institutional flows use
+    # School.director and TeacherAssignment instead of group ownership.
+    director = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="legacy_directed_classroom_groups",
+        null=True,
+        blank=True,
+    )
+    academic_year = models.CharField("ciclo escolar", max_length=32, blank=True, default="")
+    modality = models.CharField("modalidad", max_length=32, blank=True, default="")
+    grade = models.PositiveSmallIntegerField("grado", null=True, blank=True)
+    group_key = models.CharField("clave de grupo", max_length=80, blank=True, default="")
+    shift = models.CharField("turno", max_length=32, blank=True, default="")
+    legacy_school_unresolved = models.BooleanField(
+        "School histórica no recuperable",
+        default=False,
+        editable=False,
+    )
+    archived = models.BooleanField("archivado", default=False)
+    archived_at = models.DateTimeField("archivado en", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -638,8 +1244,15 @@ class ClassroomGroup(models.Model):
         verbose_name_plural = "ClassroomGroups"
         constraints = [
             models.UniqueConstraint(
-                fields=("created_by", "name"),
-                name="unique_teacher_classroom_group_name",
+                fields=(
+                    "school",
+                    "academic_year",
+                    "modality",
+                    "grade",
+                    "group_key",
+                    "shift",
+                ),
+                name="unique_school_classroom_identity",
             )
         ]
 
@@ -649,14 +1262,256 @@ class ClassroomGroup(models.Model):
             raise ValidationError("El salón requiere un nombre corto.")
         if len(self.name) > 80:
             raise ValidationError("El salón no puede superar 80 caracteres.")
+        if not self.group_key:
+            self.group_key = self.name
+        if self.modality not in {"", *dict(School.MODALITY_CHOICES)}:
+            raise ValidationError("La modalidad del salón no está autorizada.")
+        if self.grade is not None:
+            maximum = 6 if self.modality == School.MODALITY_PRIMARY else 3
+            if self.grade < 1 or (self.modality and self.grade > maximum):
+                raise ValidationError("El grado no corresponde a la modalidad.")
+        if self.school_id and self.school and self.school.archived and not self.archived:
+            raise ValidationError("No se puede activar un grupo de una School archivada.")
         super().clean()
 
     def save(self, *args, **kwargs):
         self.name = str(self.name or "").strip()
+        if not self.group_key:
+            self.group_key = self.name
+        if self.school_id is None:
+            self.school = School.configured()
         return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+
+    def archive(self, *, actor=None, source="manual"):
+        if self.archived:
+            return self
+        self.archived = True
+        self.archived_at = timezone.now()
+        self.save(update_fields=["archived", "archived_at"])
+        InstitutionalAuditEvent.record(
+            school=self.school,
+            actor=actor,
+            action="group_archived",
+            object_type="ClassroomGroup",
+            object_id=self.pk,
+            classroom_group=self,
+            new_state={"archived": True},
+            source=source,
+        )
+        return self
+
+
+class TeacherAssignment(models.Model):
+    """Historical institutional relationship between a teacher and group."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_ENDED = "ended"
+    STATUS_REJECTED = "rejected"
+    STATUS_ARCHIVED = "archived"
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, "Activa"),
+        (STATUS_ENDED, "Terminada"),
+        (STATUS_REJECTED, "Rechazada"),
+        (STATUS_ARCHIVED, "Archivada"),
+    )
+
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="teacher_assignments")
+    teacher = models.ForeignKey(
+        "auth.User", on_delete=models.PROTECT, related_name="teacher_assignments"
+    )
+    classroom_group = models.ForeignKey(
+        ClassroomGroup, on_delete=models.PROTECT, related_name="teacher_assignments"
+    )
+    function = models.CharField("función", max_length=120, blank=True, default="")
+    subject = models.CharField("materia", max_length=120, blank=True, default="")
+    valid_from = models.DateField("vigente desde", null=True, blank=True)
+    valid_until = models.DateField("vigente hasta", null=True, blank=True)
+    status = models.CharField("estado", max_length=16, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    assigned_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="created_teacher_assignments",
+        null=True,
+        blank=True,
+    )
+    source = models.CharField("origen", max_length=80, default="manual")
+    created_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField("terminada en", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "TeacherAssignment"
+        verbose_name_plural = "TeacherAssignments"
+
+    def clean(self):
+        if self.classroom_group_id and self.school_id:
+            group_school_id = self.classroom_group.school_id
+            if group_school_id != self.school_id:
+                raise ValidationError("La adscripción y el grupo deben pertenecer a la misma School.")
+        if self.status == self.STATUS_ACTIVE and self.teacher_id and not self.teacher.is_active:
+            raise ValidationError("Una maestra inactiva no puede recibir una adscripción activa.")
+        if self.valid_from and self.valid_until and self.valid_until < self.valid_from:
+            raise ValidationError("La vigencia de la adscripción no es válida.")
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        previous = None
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).values(
+                "teacher_id", "classroom_group_id", "status", "function", "subject",
+                "valid_from", "valid_until",
+            ).first()
+        if self.school_id is None and self.classroom_group_id:
+            self.school_id = self.classroom_group.school_id
+        if self.valid_from is None:
+            self.valid_from = timezone.localdate()
+        self.full_clean()
+        result = super().save(*args, **kwargs)
+        if is_new:
+            InstitutionalAuditEvent.record(
+                school=self.school,
+                actor=self.assigned_by,
+                action="assignment_created",
+                object_type="TeacherAssignment",
+                object_id=self.pk,
+                classroom_group=self.classroom_group,
+                new_state={"teacher": self.teacher_id, "status": self.status, "source": self.source},
+                source=self.source,
+            )
+        elif previous:
+            InstitutionalAuditEvent.record(
+                school=self.school,
+                actor=self.assigned_by,
+                action="assignment_changed",
+                object_type="TeacherAssignment",
+                object_id=self.pk,
+                classroom_group=self.classroom_group,
+                previous_state={
+                    key: value.isoformat() if hasattr(value, "isoformat") else value
+                    for key, value in previous.items()
+                },
+                new_state={
+                    "teacher_id": self.teacher_id,
+                    "classroom_group_id": self.classroom_group_id,
+                    "status": self.status,
+                    "function": self.function,
+                    "subject": self.subject,
+                    "valid_from": self.valid_from.isoformat() if self.valid_from else None,
+                    "valid_until": self.valid_until.isoformat() if self.valid_until else None,
+                },
+                source=self.source,
+            )
+        return result
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Una TeacherAssignment histórica no se elimina.")
+
+    @classmethod
+    def create_assignment(cls, *, teacher, classroom_group, actor=None, source="manual", **kwargs):
+        if teacher == actor:
+            raise ValidationError("Dirección no puede adscribirse a sí misma como maestra.")
+        if not teacher.is_active or not teacher.is_staff:
+            raise ValidationError("La cuenta docente debe estar activa y ser de personal.")
+        if classroom_group.school_id is None:
+            raise ValidationError("El grupo requiere una School antes de adscribir una maestra.")
+        return cls.objects.create(
+            school_id=classroom_group.school_id,
+            teacher=teacher,
+            classroom_group=classroom_group,
+            assigned_by=actor,
+            source=source,
+            **kwargs,
+        )
+
+    @transaction.atomic
+    def end(self, *, actor=None, source="manual"):
+        locked = type(self).objects.select_for_update().get(pk=self.pk)
+        if locked.status != self.STATUS_ACTIVE:
+            return locked
+        old_status = locked.status
+        locked.status = self.STATUS_ENDED
+        locked.valid_until = locked.valid_until or timezone.localdate()
+        locked.ended_at = timezone.now()
+        locked.assigned_by = actor or locked.assigned_by
+        locked.source = source
+        locked.save(update_fields=["status", "valid_until", "ended_at", "assigned_by", "source"])
+        InstitutionalAuditEvent.record(
+            school=locked.school,
+            actor=actor,
+            action="assignment_ended",
+            object_type="TeacherAssignment",
+            object_id=locked.pk,
+            classroom_group=locked.classroom_group,
+            previous_state={"status": old_status},
+            new_state={"status": locked.status},
+            source=source,
+        )
+        return locked
+
+
+class SupportRequest(models.Model):
+    """A teacher-authored, non-nominal request for institutional support."""
+
+    CATEGORY_RESOURCES = "resources"
+    CATEGORY_SESSION = "session_operation"
+    CATEGORY_FAMILIES = "family_communication"
+    CATEGORY_TECHNICAL = "technical_training"
+    CATEGORY_CHOICES = (
+        (CATEGORY_RESOURCES, "Recursos"),
+        (CATEGORY_SESSION, "Operación de sesión"),
+        (CATEGORY_FAMILIES, "Comunicación general con familias"),
+        (CATEGORY_TECHNICAL, "Apoyo técnico o capacitación"),
+    )
+    STATUS_PENDING = "pending"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_NEEDS_CLARIFICATION = "needs_clarification"
+    STATUS_RESOLVED = "resolved"
+    STATUS_DISMISSED = "dismissed"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "Pendiente"),
+        (STATUS_IN_PROGRESS, "En atención"),
+        (STATUS_NEEDS_CLARIFICATION, "Requiere aclaración"),
+        (STATUS_RESOLVED, "Resuelta"),
+        (STATUS_DISMISSED, "Descartada"),
+    )
+
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="support_requests")
+    classroom_group = models.ForeignKey("ClassroomGroup", on_delete=models.PROTECT, related_name="support_requests")
+    created_by = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="support_requests")
+    category = models.CharField(max_length=32, choices=CATEGORY_CHOICES)
+    description = models.CharField(max_length=500)
+    responsible = models.ForeignKey(
+        "auth.User", on_delete=models.PROTECT, related_name="assigned_support_requests", null=True, blank=True
+    )
+    target_date = models.DateField()
+    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def clean(self):
+        self.description = str(self.description or "").strip()
+        if not self.description:
+            raise ValidationError("La solicitud requiere una descripción breve.")
+        if self.classroom_group_id and self.school_id != self.classroom_group.school_id:
+            raise ValidationError("La solicitud debe permanecer en la School del salón.")
+        if self.responsible_id and (not self.responsible.is_active or not self.responsible.is_staff):
+            raise ValidationError("La persona responsable debe ser personal activo.")
+
+    def close(self, *, status):
+        if status not in (self.STATUS_RESOLVED, self.STATUS_DISMISSED):
+            raise ValidationError("Sólo se puede cerrar una solicitud como resuelta o descartada.")
+        self.status = status
+        self.closed_at = timezone.now()
+        self.save(update_fields=["status", "closed_at", "updated_at"])
+        return self
 
 
 class GroupRoadmapProgress(models.Model):
@@ -787,8 +1642,15 @@ class ClassroomSession(models.Model):
     )
     classroom_group = models.ForeignKey(
         "ClassroomGroup",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         related_name="sessions",
+        null=True,
+        blank=True,
+    )
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="classroom_sessions",
         null=True,
         blank=True,
     )
@@ -801,6 +1663,11 @@ class ClassroomSession(models.Model):
     )
     legacy_owner_unresolved = models.BooleanField(
         "propietaria histórica no recuperable",
+        default=False,
+        editable=False,
+    )
+    legacy_school_unresolved = models.BooleanField(
+        "School histórica no recuperable",
         default=False,
         editable=False,
     )
@@ -919,6 +1786,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            school=classroom_group.school if classroom_group is not None else None,
             created_by=teacher,
         )
 
@@ -963,6 +1831,7 @@ class ClassroomSession(models.Model):
             snapshot=published_snapshot,
             roadmap_snapshot=published_roadmap,
             classroom_group=classroom_group,
+            school=classroom_group.school if classroom_group is not None else None,
             created_by=teacher,
             status=cls.STATUS_PREPARED,
             student_count=int(str(student_count).strip()),
@@ -1016,7 +1885,8 @@ class ClassroomSession(models.Model):
     def save(self, *args, **kwargs):
         if not self._state.adding:
             original = type(self).objects.filter(pk=self.pk).values(
-                "snapshot_id", "roadmap_snapshot_id", "status", "closed_at"
+                "snapshot_id", "roadmap_snapshot_id", "status", "closed_at",
+                "classroom_group_id", "school_id",
             ).first()
             original_snapshot_id = original["snapshot_id"] if original else None
             original_roadmap_snapshot_id = (
@@ -1033,6 +1903,10 @@ class ClassroomSession(models.Model):
                 raise ValidationError(
                     "El snapshot de roadmap de una ClassroomSession queda fijado."
                 )
+            if original and original["classroom_group_id"] != self.classroom_group_id:
+                raise ValidationError("El grupo de una ClassroomSession queda fijado.")
+            if original and original["school_id"] != self.school_id:
+                raise ValidationError("La School de una ClassroomSession queda fijada.")
             if (
                 original
                 and original["status"] == self.STATUS_PREPARED
@@ -1071,6 +1945,8 @@ class ClassroomSession(models.Model):
             raise ValidationError(
                 "Una sesión T06 activa requiere una confirmación registrada."
             )
+        if self.school_id is None and self.classroom_group_id:
+            self.school_id = self.classroom_group.school_id
         return super().save(*args, **kwargs)
 
     @transaction.atomic
@@ -1750,7 +2626,7 @@ class CurriculumImportJob(models.Model):
     separate, human-approved step.
     """
 
-    STATUS_UPLOADED = "uploaded"
+    STATUS_UPLOADED = "uploaded"  # Fuente PDF aceptada y disponible; no significa "sin interpretar".
     STATUS_TOPICS_PROPOSED = "topics_proposed"
     STATUS_SUBTOPICS_PROPOSED = "subtopics_proposed"
     STATUS_ACTIVITIES_PROPOSED = "activities_proposed"
@@ -1765,6 +2641,17 @@ class CurriculumImportJob(models.Model):
         (STATUS_COMPLETED, "Jerarquía confirmada"),
         (STATUS_CONVERTED, "Borradores generados"),
         (STATUS_FAILED, "Procesamiento fallido"),
+    )
+
+    INTERPRETATION_STATE_NOT_STARTED = "not_started"
+    INTERPRETATION_STATE_ORGANIZING = "organizing"
+    INTERPRETATION_STATE_READY = "ready"
+    INTERPRETATION_STATE_FAILED = "failed"
+    INTERPRETATION_STATE_CHOICES = (
+        (INTERPRETATION_STATE_NOT_STARTED, "No iniciada"),
+        (INTERPRETATION_STATE_ORGANIZING, "Organizando planeación"),
+        (INTERPRETATION_STATE_READY, "Planeación organizada/lista para revisar"),
+        (INTERPRETATION_STATE_FAILED, "Interpretación interrumpida o fallida"),
     )
 
     pdf = models.FileField(
@@ -1784,6 +2671,24 @@ class CurriculumImportJob(models.Model):
         max_length=24,
         choices=STATUS_CHOICES,
         default=STATUS_UPLOADED,
+        help_text=(
+            "Estado del pipeline legado de extracción jerárquica y autoría "
+            "(temas, subtemas, actividades y conversión). STATUS_UPLOADED indica "
+            "únicamente que el PDF fuente fue recibido y aceptado en storage; "
+            "el ciclo de interpretación de la fuente es gobernado por 'interpretation_state'."
+        ),
+    )
+    interpretation_state = models.CharField(
+        "estado de interpretación",
+        max_length=24,
+        choices=INTERPRETATION_STATE_CHOICES,
+        default=INTERPRETATION_STATE_NOT_STARTED,
+        db_index=True,
+        help_text=(
+            "Estado canónico del ciclo de vida de interpretación V0 de la fuente "
+            "(not_started, organizing, ready, failed). Es ortogonal e independiente "
+            "del campo 'status' del pipeline legado de temas/subtemas."
+        ),
     )
     source_text = models.TextField(
         "texto extraído del PDF",
@@ -1805,6 +2710,33 @@ class CurriculumImportJob(models.Model):
         "actividades propuestas",
         default=list,
         blank=True,
+    )
+    interpretation_dossier = models.JSONField(
+        "dossier de interpretación V0",
+        default=dict,
+        blank=True,
+        help_text="Dossier estructurado y versionado de interpretación curricular V0.",
+    )
+    interpretation_claim_token = models.UUIDField(
+        "token de reclamo de interpretación",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    interpretation_claimed_at = models.DateTimeField(
+        "fecha de reclamo de interpretación",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    interpretation_error_message = models.TextField(
+        "error de interpretación",
+        blank=True,
+        default="",
+        help_text=(
+            "Mensaje de error específico del ciclo de vida de interpretación V0. "
+            "Es ortogonal e independiente del campo 'error_message' del pipeline legado."
+        ),
     )
     progress_stage = models.CharField(
         "etapa en curso",
@@ -1834,6 +2766,8 @@ class CurriculumImportJob(models.Model):
         blank=True,
         editable=False,
     )
+    cancel_requested = models.BooleanField(default=False, editable=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True, editable=False)
     llm_trace = models.JSONField(
         "bitácora técnica del modelo local",
         default=list,
@@ -1871,6 +2805,355 @@ class CurriculumImportJob(models.Model):
         self.page_count = len(pages)
         self._chunks = chunk_pages(pages)
         return self._chunks
+
+    def get_interpretation_dossier(self):
+        """Return the deserialized ImportDossier or None if corrupt/malformed."""
+        if not self.interpretation_dossier or not isinstance(self.interpretation_dossier, dict):
+            return None
+        from curriculum.source_interpreter import ImportDossier
+        try:
+            return ImportDossier.from_dict(self.interpretation_dossier)
+        except (ValueError, TypeError, KeyError, AttributeError, json.JSONDecodeError):
+            return None
+
+    def save_interpretation_dossier(self, dossier, explicit_state=None, error_message=None, owner_token=None):
+        """Persist a versioned ImportDossier and derive/persist interpretation_state atomically.
+
+        Single source of truth for persisting an interpretation dossier:
+        Delegates exclusively to interpretation_commands.save_interpretation_dossier_command
+        to enforce the unified CAS and fail-closed concurrency policy.
+        """
+        from curriculum.interpretation_commands import save_interpretation_dossier_command
+
+        return save_interpretation_dossier_command(
+            self,
+            dossier,
+            explicit_state=explicit_state,
+            error_message=error_message,
+            owner_token=owner_token,
+        )
+
+    def is_stage_stale(self, now=None) -> bool:
+        """Check whether the current progress stage or active claim has exceeded timeout (90m)."""
+        if now is None:
+            now = timezone.now()
+        else:
+            now = _normalize_datetime(now)
+
+        timeout = timedelta(minutes=90)
+
+        if self.progress_stage and self.progress_started_at:
+            started_at = _normalize_datetime(self.progress_started_at)
+            if started_at and (now - started_at) > timeout:
+                return True
+
+        if self.interpretation_claim_token and self.interpretation_claimed_at:
+            claimed_at = _normalize_datetime(self.interpretation_claimed_at)
+            if claimed_at and (now - claimed_at) > timeout:
+                return True
+
+        return False
+
+    def has_valid_ready_dossier(self, pdf_bytes: bytes | None = None) -> bool:
+        """Check if job possesses a valid, active, deserializable ImportDossier matching source PDF."""
+        raw = self.interpretation_dossier
+        if not raw or not isinstance(raw, dict):
+            return False
+        # Part B: Strict explicit raw key verification prior to deserialization
+        version = raw.get("version")
+        if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+            return False
+        if raw.get("status") != "active":
+            return False
+        source_sha = raw.get("source_sha256")
+        if not isinstance(source_sha, str) or not bool(re.fullmatch(r"^[0-9a-fA-F]{64}$", source_sha.strip())):
+            return False
+
+        dossier = self.get_interpretation_dossier()
+        if dossier is None or getattr(dossier, "version", 0) < 1:
+            return False
+        if getattr(dossier, "status", "") != "active":
+            return False
+        if pdf_bytes is None:
+            if not self.pdf:
+                return False
+            try:
+                with self.pdf.open("rb") as stream:
+                    pdf_bytes = stream.read()
+            except (FileNotFoundError, OSError, IOError, ValueError):
+                return False
+
+        current_sha = hashlib.sha256(pdf_bytes).hexdigest()
+        if current_sha.lower() != source_sha.strip().lower():
+            return False
+
+        report = raw.get("verification_report")
+        if not isinstance(report, dict) or not report:
+            return False
+
+        from curriculum.verification import validate_canonical_verification_report
+
+        if not validate_canonical_verification_report(dossier, pdf_bytes, report):
+            return False
+
+        return True
+
+    def get_interpretation_state(self, now=None) -> str:
+        """Return the persisted canonical interpretation state."""
+        return self.interpretation_state or self.INTERPRETATION_STATE_NOT_STARTED
+
+    def get_active_approval(self, pdf_bytes: bytes | None = None, has_valid_ready_dossier: bool | None = None):
+        """Return the active CurriculumImportApproval derived from canonical ready status, version, and SHA match.
+        Requires job READY, version+SHA match, valid source blob, and canonical job.has_valid_ready_dossier().
+        If current source is missing, or report/blob is invalid/tampered, returns None."""
+        if self.interpretation_state != self.INTERPRETATION_STATE_READY:
+            return None
+        dossier = self.get_interpretation_dossier()
+        if not dossier:
+            return None
+        v = getattr(dossier, "version", None)
+        sha = getattr(dossier, "source_sha256", None)
+        if not v or not sha:
+            return None
+        approval = self.approvals.filter(
+            dossier_version=v,
+            source_sha256=sha,
+        ).first()
+        if not approval:
+            return None
+        if not approval.is_active:
+            return None
+        if has_valid_ready_dossier is None:
+            has_valid_ready_dossier = self.has_valid_ready_dossier(pdf_bytes=pdf_bytes)
+        if not has_valid_ready_dossier:
+            return None
+        return approval
+
+
+    @property
+    def is_approved(self) -> bool:
+        """True if the job has a currently active and valid approval matching current dossier."""
+        return self.get_active_approval() is not None
+
+    def invalidate_approvals(self, reason="Edición o nueva versión del dossier"):
+        """No-op: Approval active status is strictly derived from dossier version, SHA, and ready report match.
+        Historical records are append-only and never updated."""
+        pass
+
+
+class CurriculumImportApprovalQuerySet(models.QuerySet):
+    """QuerySet enforcing append-only invariants and dynamically derived is_active filtering."""
+
+    def update(self, **kwargs):
+        raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+
+    def delete(self):
+        raise PermissionError("CurriculumImportApproval records are permanent audit logs and cannot be deleted.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+
+    def update_or_create(self, defaults=None, **kwargs):
+        lookup = {k: v for k, v in kwargs.items() if k != "defaults"}
+        if self.filter(**lookup).exists():
+            raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+        return super().update_or_create(defaults=defaults, **kwargs)
+
+    async def aupdate(self, **kwargs):
+        raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+
+    async def abulk_update(self, objs, fields, batch_size=None):
+        raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+
+    async def adelete(self):
+        raise PermissionError("CurriculumImportApproval records are permanent audit logs and cannot be deleted.")
+
+    def filter(self, *args, **kwargs):
+        if "is_active" in kwargs:
+            is_active_val = bool(kwargs.pop("is_active"))
+            job = kwargs.get("job")
+            job_id = kwargs.get("job_id") or (getattr(job, "pk", None) if job else None)
+            if job_id is not None:
+                job_obj = job if isinstance(job, CurriculumImportJob) else CurriculumImportJob.objects.filter(pk=job_id).first()
+                if job_obj:
+                    active_approval = job_obj.get_active_approval()
+                    if is_active_val:
+                        if active_approval:
+                            return super().filter(*args, pk=active_approval.pk, **kwargs)
+                        return super().none()
+                    else:
+                        qs = super().filter(*args, **kwargs)
+                        if active_approval:
+                            return qs.exclude(pk=active_approval.pk)
+                        return qs
+                else:
+                    if is_active_val:
+                        return super().none()
+                    return super().filter(*args, **kwargs)
+            # When job is not specified in filter, filter by comparing is_active on instances
+            matched_pks = [
+                obj.pk for obj in super().filter(*args, **kwargs)
+                if obj.is_active == is_active_val
+            ]
+            return super().filter(pk__in=matched_pks)
+        return super().filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs):
+        if "is_active" in kwargs:
+            is_active_val = not bool(kwargs.pop("is_active"))
+            return self.filter(*args, is_active=is_active_val, **kwargs)
+        return super().exclude(*args, **kwargs)
+
+
+class CurriculumImportApproval(models.Model):
+    """Auditable teacher approval for an imported curriculum planning job.
+
+    Enforces ADR 0001/0002/0006:
+    - Approval is explicit, authenticated, teacher-owned, and bound to an exact canonical dossier snapshot, version, and SHA.
+    - Approval DOES NOT publish, DOES NOT create PublishedPackageSnapshot, and DOES NOT activate sessions.
+    - Approval creates/updates a draft CurriculumPackage in 'Aprobada para preparar' status.
+    - Model is strictly append-only: save() of existing instances, delete(), update(), bulk_update() are rejected with PermissionError.
+    - Active status is strictly derived: requires job READY, version+SHA match, and canonical job.has_valid_ready_dossier().
+    - FS mutations or missing source files are automatically detected by active guard.
+    - No mutable DB flag exists (removed in migration 0041).
+    """
+
+    job = models.ForeignKey(
+        CurriculumImportJob,
+        on_delete=models.CASCADE,
+        related_name="approvals",
+        verbose_name="trabajo de importación",
+    )
+    dossier_version = models.PositiveIntegerField("versión del dossier")
+    source_sha256 = models.CharField("SHA-256 del PDF fuente", max_length=64)
+    dossier_snapshot = models.JSONField("snapshot canónico del dossier", default=dict)
+    approved_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="curriculum_import_approvals",
+        verbose_name="docente que aprobó",
+    )
+    approved_at = models.DateTimeField("fecha de aprobación", default=timezone.now)
+    package = models.ForeignKey(
+        "curriculum.CurriculumPackage",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="import_approvals",
+        verbose_name="paquete curricular borrador",
+    )
+    source_blob = models.ForeignKey(
+        CurriculumSourceBlob,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="approvals",
+        verbose_name="blob fuente inmutable",
+    )
+    invalidated_at = models.DateTimeField("fecha de invalidación", null=True, blank=True, editable=False)
+    invalidation_reason = models.CharField("motivo de invalidación", max_length=255, blank=True, default="", editable=False)
+    pending_acknowledged = models.BooleanField("elementos pendientes reconocidos", default=False)
+    pending_items_count = models.PositiveIntegerField("elementos opcionales pendientes", default=0)
+
+    objects = CurriculumImportApprovalQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-approved_at", "-id"]
+        verbose_name = "CurriculumImportApproval"
+        verbose_name_plural = "CurriculumImportApprovals"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "dossier_version"],
+                name="unique_curriculum_import_approval_job_version",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(dossier_version__gt=0),
+                name="check_approval_dossier_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(pending_items_count__gte=0),
+                name="check_approval_pending_items_count_gte_zero",
+            ),
+        ]
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("is_active", None)
+        kwargs.pop("_is_active", None)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def is_active(self) -> bool:
+        """Derived active status: requires job READY, version+SHA match, valid canonical report,
+        and valid immutable source blob matching source_sha256.
+        If source blob is missing, tampered, or invalid, returns False (fail closed)."""
+        if not self.job_id:
+            return False
+        try:
+            job = CurriculumImportJob.objects.filter(pk=self.job_id).first()
+            if not job:
+                return False
+            if job.interpretation_state != job.INTERPRETATION_STATE_READY:
+                return False
+            dossier = job.get_interpretation_dossier()
+            if not dossier:
+                return False
+            v = getattr(dossier, "version", None)
+            sha = getattr(dossier, "source_sha256", None)
+            if self.dossier_version != v or (self.source_sha256 or "").lower() != (sha or "").lower():
+                return False
+            if not job.has_valid_ready_dossier():
+                return False
+            # Strict blob validation: must be present, valid, and match source_sha256 exactly
+            if not self.source_blob_id:
+                return False
+            blob = self.source_blob
+            if blob is None or not blob.is_valid_blob():
+                return False
+            if (blob.sha256 or "").lower() != (self.source_sha256 or "").lower():
+                return False
+            return True
+        except Exception:
+            return False
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and self.pk:
+            raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise PermissionError("CurriculumImportApproval records are permanent audit logs and cannot be deleted.")
+
+    async def asave(self, *args, **kwargs):
+        if not self._state.adding and self.pk:
+            raise PermissionError("CurriculumImportApproval records are append-only and cannot be updated.")
+        await super().asave(*args, **kwargs)
+
+    async def adelete(self, *args, **kwargs):
+        raise PermissionError("CurriculumImportApproval records are permanent audit logs and cannot be deleted.")
+
+    def __str__(self):
+        status = "vigente" if self.is_active else "histórica"
+        return f"Aprobación job {self.job_id} v{self.dossier_version} ({status})"
+
+    def get_source_bytes(self) -> bytes | None:
+        """Return source PDF bytes from source_blob with fallback to job PDF.
+        If source_blob is present but invalid/corrupted, fails closed and returns None."""
+        if getattr(self, "source_blob_id", None) and self.source_blob:
+            blob = self.source_blob
+            if not blob.is_valid_blob() or (blob.sha256 or "").lower() != (self.source_sha256 or "").lower():
+                return None
+            return bytes(blob.content)
+        if self.job and self.job.pdf:
+            try:
+                with self.job.pdf.open("rb") as s:
+                    raw = s.read()
+                if (self.source_sha256 or "").lower() != hashlib.sha256(raw).hexdigest().lower():
+                    return None
+                return raw
+            except Exception:
+                return None
+        return None
+
 
 
 class PseudonymousSurveyResponse(models.Model):

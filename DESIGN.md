@@ -22,13 +22,13 @@ Los valores son la fuente de verdad para implementaciones locales. Deben expresa
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--color-ink` | `#17212b` | Texto principal y QR sintético |
-| `--color-action` | `#075985` | Acción primaria y enlaces |
-| `--color-paper` | `#f6f7f2` | Fondo de página |
-| `--color-surface` | `#fffdfa` | Superficies de contenido |
-| `--color-review` | `#b45309` | Revisión humana y foco |
-| `--color-error` | `#9f1239` | Error, nunca decoración |
-| `--color-focus` | `#b45309` | Anillo de foco de 4px |
+| `--color-ink` | `#161a1d` | Texto principal y QR sintético |
+| `--color-action` | `#611232` | Acción primaria y enlaces |
+| `--color-paper` | `#f7f5f0` | Fondo de página |
+| `--color-surface` | `#ffffff` | Superficies de contenido |
+| `--color-review` | `#795b1e` | Revisión humana y foco |
+| `--color-error` | `#a32125` | Error, nunca decoración |
+| `--color-focus` | `#795b1e` | Anillo de foco de 4px |
 | `--space-1` | `0.5rem` | Separación mínima |
 | `--space-2` | `0.75rem` | Controles y etiquetas |
 | `--space-3` | `1rem` | Bloques compactos |
