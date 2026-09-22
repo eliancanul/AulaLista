@@ -672,7 +672,7 @@
           <div class="verification-banner-header">
             <div class="verification-banner-title">
               <span class="verification-badge-icon" aria-hidden="true">📋</span>
-              <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #166534;">Comprobación automática completada</h3>
+              <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #166534;">Datos comprobados con tu PDF</h3>
             </div>
             <div class="verification-pills">
               <span class="count-pill count-pill-green" title="Datos cotejados mecánicamente contra páginas físicas">
@@ -731,7 +731,7 @@
         <section class="queue-section" id="seccion-por-revisar" aria-labelledby="por-revisar-heading">
           <div class="queue-section-header">
             <h2 id="por-revisar-heading" style="font-size: 1.15rem; font-weight: 800; margin: 0 0 0.5rem 0;">
-              Por revisar: Decisiones prioritarias ({{ queue.actionable_count }})
+              Dudas y respuestas ({{ queue.actionable_count }} pendientes)
             </h2>
             <span style="font-size: 0.85rem; color: var(--color-muted);">
               {{ queue.items|length }} elementos en esta vista
@@ -742,7 +742,7 @@
           <div class="priority-sticky-bar" id="priority-summary-bar">
             <div class="summary-header-row">
               <div class="summary-title">
-                <span>Resumen de Revisión</span>
+                <span>Estado de esta revisión</span>
                 <span class="badge-tag tag-origin" style="font-size: 0.7rem;">
                   {% if queue.scope == 'general' %}
                     Alcance: Datos generales del documento
@@ -815,6 +815,10 @@
             {% endfor %}
           </nav>
 
+          <p style="margin: -0.25rem 0 0.75rem;">
+            <a href="#seccion-clases" class="button button-secondary button-small">Ver todas las clases</a>
+          </p>
+
           <!-- Queue List: Strict priority conflicts/blockers -> missing -> ambiguous/proposed -> resto -->
           <div class="queue-list">
             <!-- 1. Requires resolution (rojos) -->
@@ -861,6 +865,25 @@
               </div>
             {% endfor %}
           </div>
+
+          {% if queue.items_postponed %}
+            <details class="postponed-items-collapse" style="margin-top: 0.75rem;">
+              <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #1e3a8a; padding: 0.5rem 0.75rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                Revisar después ({{ queue.postponed_count }}) ▾
+              </summary>
+              <div class="queue-list" style="margin-top: 0.5rem;">
+                {% for it in queue.items_postponed %}
+                  <div class="queue-item item-neutral {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                    <div class="queue-item-info">
+                      <div class="queue-item-title"><strong>{{ it.human_label }}</strong> <span class="badge-tag tag-pending">Aplazada</span></div>
+                      <div class="queue-item-sub">Puedes volver a esta respuesta y corregirla cuando quieras.</div>
+                    </div>
+                    <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}" class="button button-small">Volver a revisar</a>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
 
           <!-- 3. Not specified (neutrales) collapsed by default -->
           {% if queue.items_not_specified %}
@@ -973,9 +996,9 @@
                     ← Anterior
                   </a>
                 {% endif %}
-                {% if pending_progress_current %}
+                {% if pending_progress_total %}
                   <span class="decision-counter">
-                    Decisión {{ pending_progress_current }} de {{ pending_progress_total }}
+                    {{ pending_progress_total }} duda{{ pending_progress_total|pluralize }} pendiente{{ pending_progress_total|pluralize }} en este alcance
                   </span>
                 {% endif %}
                 {% if next_item %}
@@ -990,21 +1013,12 @@
             <!-- Side-by-side grid on desktop: editor left, source right -->
             <div class="active-decision-body">
               <div class="decision-main-col">
-                <!-- Problem statement in one clear sentence -->
+                <!-- One concrete review question, with source beside it -->
                 <div class="problem-statement problem-{{ active_item.priority_state|slice:':6' }}{% if active_item.priority_state == 'requires_resolution' %} problem-red{% elif active_item.priority_state == 'pending_review' %} problem-yellow{% elif active_item.priority_state == 'not_specified' %} problem-neutral{% else %} problem-green{% endif %}">
                   <div>
-                    <strong>Problema:</strong> {{ active_item.problem_summary }}
+                    <strong>¿Este dato coincide con tu planeación?</strong>
+                    <span style="display: block; margin-top: 0.2rem;">{{ active_item.problem_summary }}</span>
                   </div>
-                  {% if active_item.blocks_action %}
-                    <div class="blocking-alert">
-                      <span>⚠️ Bloqueo:</span> {{ active_item.blocks_action }}
-                    </div>
-                  {% endif %}
-                  {% if active_item.required_for %}
-                    <div class="required-for-alert" style="margin-top: 0.25rem; font-size: 0.8rem; color: #475569;">
-                      <span>📌 Necesario para:</span> {{ active_item.required_for|join:", " }}
-                    </div>
-                  {% endif %}
                 </div>
 
                 {% if active_item_inline_error %}
@@ -1188,27 +1202,24 @@
             <!-- Actions row -->
             <div class="decision-actions">
               {% if not source_tampered %}
-                <button type="submit" name="action" value="save_queue_item" class="button button-primary">
-                  💾 Guardar corrección
+                <button type="submit" name="action" value="confirm_queue_item" class="button button-primary">
+                  Está bien, continuar
                 </button>
-                <button type="submit" name="action" value="confirm_queue_item" class="button button-secondary">
-                  ✓ Confirmar dato
+                <button type="submit" name="action" value="save_queue_item" class="button button-secondary" aria-describedby="correction-help">
+                  Corregir
                 </button>
-                <button type="submit" name="action" value="leave_queue_item_pending" class="button button-secondary">
-                  Dejar pendiente
+                <button type="submit" name="action" value="postpone_queue_item" class="button button-secondary">
+                  Revisar después
                 </button>
               {% else %}
                 <span style="color: #b91c1c; font-size: 0.85rem; font-weight: 700;">
                   Acciones bloqueadas: Documento alterado.
                 </span>
               {% endif %}
-              {% if next_item %}
-                <a href="{% if next_item.scope == 'general' %}?scope=general&item={{ next_item.stable_key }}#control-{{ next_item.field_name }}{% elif next_item.scope == 'session' %}?session_id={{ next_item.session_id }}&scope={{ next_item.session_id }}&item={{ next_item.stable_key }}#control-{{ next_item.field_name }}{% else %}?session_id={{ next_item.session_id }}&scope={{ next_item.session_id }}&item={{ next_item.stable_key }}#control-annex-{{ next_item.reference_id }}{% endif %}"
-                   class="button button-secondary">
-                  Omitir por ahora →
-                </a>
-              {% endif %}
             </div>
+            <p id="correction-help" class="muted" style="font-size: 0.8rem; margin: 0.45rem 0 0;">
+              Corregir guarda el contenido escrito y marca esta duda como resuelta. Si el guardado falla, tu edición permanece en pantalla para que puedas reintentar.
+            </p>
           </form>
         </section>
       {% endif %}
@@ -1646,28 +1657,125 @@
       (function() {
         let isFormDirty = false;
         let isSubmitting = false;
-        const form = document.getElementById('interpretation-form');
-        const queueForm = document.getElementById('queue-item-form');
-        const dirtyIndicator = document.getElementById('dirty-indicator');
 
         function setDirty() {
           if (!isFormDirty) {
             isFormDirty = true;
+            const dirtyIndicator = document.getElementById('dirty-indicator');
             if (dirtyIndicator) {
               dirtyIndicator.style.display = 'inline-flex';
             }
           }
         }
 
-        [form, queueForm].forEach(function(f) {
-          if (f) {
-            f.addEventListener('input', setDirty);
-            f.addEventListener('change', setDirty);
-            f.addEventListener('submit', function() {
-              isSubmitting = true;
-            });
+        function showAsyncError(form, message) {
+          let alert = form.querySelector('.async-save-error');
+          if (!alert) {
+            alert = document.createElement('div');
+            alert.className = 'message message-danger async-save-error';
+            alert.setAttribute('role', 'alert');
+            alert.setAttribute('tabindex', '-1');
+            form.prepend(alert);
           }
-        });
+          alert.textContent = message || 'No se pudo guardar. Tu edición sigue aquí; revisa la conexión e inténtalo de nuevo.';
+          alert.focus();
+        }
+
+        async function submitGuidedReview(event) {
+          event.preventDefault();
+          const queueForm = event.currentTarget;
+          const submitter = event.submitter;
+          const formData = new FormData(queueForm);
+          if (submitter && submitter.name) {
+            formData.set(submitter.name, submitter.value);
+          }
+          const buttons = queueForm.querySelectorAll('button[type="submit"]');
+          buttons.forEach(function(button) { button.disabled = true; });
+          isSubmitting = true;
+
+          try {
+            const response = await fetch(queueForm.action, {
+              method: 'POST',
+              body: formData,
+              credentials: 'same-origin',
+              headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            });
+            const raw = await response.text();
+            let payload = {};
+            try { payload = JSON.parse(raw); } catch (ignore) { payload = {}; }
+            if (!response.ok || payload.status !== 'ok') {
+              throw new Error(payload.message || raw || 'No se pudo guardar la respuesta.');
+            }
+
+            const nextUrl = new URL(queueForm.action, window.location.href);
+            nextUrl.searchParams.delete('item');
+            nextUrl.hash = 'workspace-activo';
+            const pageResponse = await fetch(nextUrl.toString(), {
+              credentials: 'same-origin',
+              headers: {'Accept': 'text/html'}
+            });
+            if (!pageResponse.ok) {
+              throw new Error('La respuesta se guardó, pero no fue posible cargar la siguiente duda.');
+            }
+            const pageHtml = await pageResponse.text();
+            const parsed = new DOMParser().parseFromString(pageHtml, 'text/html');
+            const replacement = parsed.querySelector('main.v0-container');
+            const current = document.querySelector('main.v0-container');
+            if (!replacement || !current) {
+              throw new Error('La respuesta se guardó, pero la vista no pudo actualizarse.');
+            }
+
+            const scrollPosition = window.scrollY;
+            current.replaceWith(replacement);
+            history.replaceState({}, '', nextUrl.toString());
+            isFormDirty = false;
+            isSubmitting = false;
+            bindInteractive(replacement);
+            window.scrollTo(0, scrollPosition);
+            const nextControl = replacement.querySelector('#queue-item-form textarea, #queue-item-form input:not([type="hidden"]), #queue-item-form button');
+            if (nextControl) {
+              nextControl.focus({preventScroll: true});
+            }
+          } catch (error) {
+            isSubmitting = false;
+            showAsyncError(queueForm, error.message);
+            buttons.forEach(function(button) { button.disabled = false; });
+          }
+        }
+
+        function bindInteractive(root) {
+          const form = root.querySelector ? root.querySelector('#interpretation-form') : null;
+          const queueForm = root.querySelector ? root.querySelector('#queue-item-form') : null;
+          [form, queueForm].forEach(function(boundForm) {
+            if (boundForm && !boundForm.dataset.guidedBound) {
+              boundForm.dataset.guidedBound = 'true';
+              boundForm.addEventListener('input', setDirty);
+              boundForm.addEventListener('change', setDirty);
+              if (boundForm === queueForm) {
+                boundForm.addEventListener('submit', submitGuidedReview);
+              } else {
+                boundForm.addEventListener('submit', function() { isSubmitting = true; });
+              }
+            }
+          });
+
+          root.querySelectorAll('a[href]').forEach(function(anchor) {
+            if (anchor.dataset.dirtyBound) return;
+            anchor.dataset.dirtyBound = 'true';
+            anchor.addEventListener('click', function(e) {
+              if (anchor.getAttribute('target') === '_blank') return;
+              if (isFormDirty && !isSubmitting) {
+                const proceed = window.confirm('Tienes cambios no guardados en la planeación. ¿Deseas salir sin guardar?');
+                if (!proceed) e.preventDefault();
+              }
+            });
+          });
+        }
+
+        bindInteractive(document);
 
         // Intercept page unload / navigation away
         window.addEventListener('beforeunload', function(e) {
@@ -1676,21 +1784,6 @@
             e.returnValue = 'Tienes cambios no guardados en la revisión. ¿Seguro que deseas salir?';
             return e.returnValue;
           }
-        });
-
-        // Intercept internal link clicks
-        document.querySelectorAll('a[href]').forEach(function(anchor) {
-          anchor.addEventListener('click', function(e) {
-            if (anchor.getAttribute('target') === '_blank') {
-              return;
-            }
-            if (isFormDirty && !isSubmitting) {
-              const proceed = window.confirm('Tienes cambios no guardados en la planeación. ¿Deseas salir sin guardar?');
-              if (!proceed) {
-                e.preventDefault();
-              }
-            }
-          });
         });
 
         // Handle hash anchor focus and autofocus on load / hashchange

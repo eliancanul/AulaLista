@@ -1816,9 +1816,9 @@ def test_f7_ui_labels_in_spanish_and_clean_presentation():
     assert "Alcance: Documento completo" in html
 
     # Buttons
-    assert "Confirmar dato" in html
-    assert "Guardar corrección" in html
-    assert "Dejar pendiente" in html
+    assert "Está bien, continuar" in html
+    assert "Corregir" in html
+    assert "Revisar después" in html
 
 
 def test_f7_confirm_single_field_action():

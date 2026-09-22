@@ -204,13 +204,13 @@ class TestTask6TeacherReviewUI:
 
         soup = BeautifulSoup(response.content.decode("utf-8"), "html.parser")
 
-        # Find "Por revisar" section
+        # Find the guided "Dudas y respuestas" section
         por_revisar_heading = None
         for h in soup.find_all(["h2", "h3"]):
-            if "por revisar" in h.get_text().lower() or "cola de revisión" in h.get_text().lower():
+            if "dudas y respuestas" in h.get_text().lower():
                 por_revisar_heading = h
                 break
-        assert por_revisar_heading is not None, "Bloque 'Por revisar' no encontrado"
+        assert por_revisar_heading is not None, "Bloque 'Dudas y respuestas' no encontrado"
 
         # Check that it appears BEFORE the sessions section
         sessions_heading = None
@@ -230,6 +230,35 @@ class TestTask6TeacherReviewUI:
         assert not re.search(r"\bop_[0-9a-f]{16,}\b", body_text), "Leak of opaque item ID in visible text"
         assert not re.search(r"\btgt_[0-9a-f]{16,}\b", body_text), "Leak of opaque target ID in visible text"
         assert '{"target_type"' not in body_text, "Leak of JSON in visible text"
+
+    def test_t6_guided_copy_and_async_progression_contract(self):
+        """The primary review card uses the approved B wording and fetch-based progression."""
+        client, user = tutor_teacher("t6-guided-copy")
+        job, _dossier = create_ready_job(user)
+
+        response = client.get(reverse("tutor-import-interpretation", args=[job.pk]))
+        assert response.status_code == 200
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        visible_text = soup.get_text(" ", strip=True)
+
+        assert "Dudas y respuestas" in visible_text
+        assert "Datos comprobados con tu PDF" in visible_text
+        assert "Ver todas las clases" in visible_text
+        assert "Está bien, continuar" in visible_text
+        assert "Corregir" in visible_text
+        assert "Revisar después" in visible_text
+        assert "Problema:" not in visible_text
+        assert "Bloqueo:" not in visible_text
+        assert not re.search(r"Decisión\s+\d+\s+de\s+\d+", visible_text)
+
+        script = soup.find("script", id="dirty-guard-script")
+        assert script is not None
+        script_text = script.get_text()
+        assert "submitGuidedReview" in script_text
+        assert "fetch(queueForm.action" in script_text
+        assert "current.replaceWith(replacement)" in script_text
+        assert "Tu edición sigue aquí" in script_text
 
     def test_t6_sessions_cards_or_accordions_in_order(self):
         """4. Sessions as cards/accordions in order, pedagogical moments (Inicio, Desarrollo, Cierre), annexes, human copy."""

@@ -166,6 +166,11 @@ def test_postpone_queue_item_causal_flow():
     assert reloaded_item.priority_state != "pending_review"
     assert reloaded_item.priority_state != "reviewed"
 
+    reloaded_html = reload_resp.content.decode("utf-8")
+    assert "Revisar después (1)" in reloaded_html
+    assert "Aplazada" in reloaded_html
+    assert "Volver a revisar" in reloaded_html
+
     # Verify history in persisted dossier
     job.refresh_from_db()
     persisted_dossier = job.get_interpretation_dossier()
