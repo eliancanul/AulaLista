@@ -259,7 +259,10 @@ def test_an_annex_without_answer_key_cannot_be_converted_but_other_companions_ca
 
     response = client.post(
         reverse("tutor-import-detail", args=[job.pk]),
-        {"action": "convert_selected", "select": ["0", "1", "2"]},
+        {
+            "action": "convert_selected",
+            "select": [entry["id"] for entry in result["activities"]],
+        },
     )
 
     assert response.status_code == 200
@@ -370,7 +373,10 @@ def test_real_upload_worker_review_convert_and_publish_preserves_annex_sources()
 
     converted = client.post(
         reverse("tutor-import-detail", args=[job.pk]),
-        {"action": "convert_selected", "select": ["1", "2"]},
+        {
+            "action": "convert_selected",
+            "select": [entry["id"] for entry in job.activities[1:]],
+        },
     )
     assert converted.status_code == 200
     packages = list(CurriculumPackage.objects.filter(created_by=reviewer).order_by("id"))

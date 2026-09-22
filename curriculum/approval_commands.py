@@ -873,32 +873,14 @@ def execute_teacher_approval(
         except django.db.utils.OperationalError as exc:
             err_text = str(exc).lower()
             if "locked" in err_text or "busy" in err_text:
-                winning = (
-                    CurriculumImportApproval.objects.filter(
-                        job_id=job_id,
-                        dossier_version=expected_version,
-                    )
-                    .select_related("package")
-                    .first()
-                )
-                if winning:
-                    if _verify_and_repair_approval_source(winning, initial_job):
-                        return ApprovalResult(
-                            status=ApprovalStatus.ALREADY_APPROVED,
-                            message=f"Planeación ya se encuentra aprobada para la versión {expected_version}.",
-                            http_status=200,
-                            approval=winning,
-                            package=winning.package,
-                        )
-                    return ApprovalResult(
-                        status=ApprovalStatus.INTEGRITY_CONFLICT,
-                        message="El archivo fuente de la planeación aprobada no se encuentra disponible y no pudo ser reparado.",
-                        http_status=500,
-                    )
+                # Do not issue another SELECT while SQLite is still locked.
+                # The next iteration performs the normal idempotency lookup
+                # after the competing transaction has had time to commit.
                 if attempt < max_retries - 1:
                     sleep_time = base_delay * (1.5 ** attempt) + random.uniform(0.01, 0.04)
                     time.sleep(sleep_time)
                     continue
+                break
             raise
 
         except Exception as exc:

@@ -26,6 +26,7 @@ def get_db_referenced_media_paths(media_root: Path) -> set[Path]:
     """Collect all normalized file paths referenced by FileField or ImageField across models."""
     import django
     from django.apps import apps
+    from django.db import connection
     from django.db.models import FileField
 
     if not apps.ready:
@@ -33,10 +34,14 @@ def get_db_referenced_media_paths(media_root: Path) -> set[Path]:
 
     referenced_paths: set[Path] = set()
     media_root_resolved = media_root.resolve()
+    existing_tables = set(connection.introspection.table_names())
 
     for model in apps.get_models():
         file_fields = [f.name for f in model._meta.fields if isinstance(f, FileField)]
-        if not file_fields:
+        # A fresh checkout may not have been migrated yet.  The audit remains
+        # useful (and strictly read-only) for the tables that do exist instead
+        # of crashing on the first optional app table that is absent.
+        if not file_fields or model._meta.db_table not in existing_tables:
             continue
 
         for obj in model.objects.all().iterator():
