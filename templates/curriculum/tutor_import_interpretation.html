@@ -504,7 +504,6 @@
         <div class="v0-title-row">
           <h1 class="v0-title">Revisa tu planeación</h1>
           <div>
-            <span class="badge-tag tag-confirmed" title="Versión actual del dossier">v{{ dossier.version }}</span>
             <span class="badge-tag {% if source_tampered or dossier.status == 'invalidated_source_tampered' %}tag-missing{% else %}tag-supported{% endif %}">
               {% if source_tampered or dossier.status == 'invalidated_source_tampered' %}
                 Fuente alterada
@@ -515,8 +514,7 @@
           </div>
         </div>
         <p class="v0-subtitle">
-          Documento: <strong>{{ job.pdf.name|default:dossier.source_name }}</strong>
-          ({{ dossier.page_count }} páginas fuente)
+          {{ dossier.page_count }} páginas fuente listas para comparar con el contenido organizado.
         </p>
         <p class="teacher-explanation-banner" style="margin: 0.5rem 0 0.85rem 0; padding: 0.65rem 0.85rem; background: #f0f9ff; border-left: 4px solid var(--color-action); border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.9rem; line-height: 1.45; color: #0f172a;">
           AulaLista organizó y cotejó tu documento a partir del archivo original. Tú decides qué conservar o ajustar en cada sección; nada se publica automáticamente.
@@ -550,7 +548,7 @@
                     Planeación aprobada para preparar
                   </h3>
                   <p style="margin: 0 0 0.5rem 0; font-size: 0.88rem; line-height: 1.45; color: #047857;">
-                    Esta planeación fue revisada y aprobada por el docente{% if active_approval.approved_by %} ({{ active_approval.approved_by.get_full_name|default:active_approval.approved_by.username }}){% endif %} para la versión {{ dossier.version }}. Ha sido registrada como borrador editorial para que puedas preparar tus sesiones. No ha sido publicada automáticamente a los estudiantes.
+                    Esta planeación fue revisada y aprobada por el docente{% if active_approval.approved_by %} ({{ active_approval.approved_by.get_full_name|default:active_approval.approved_by.username }}){% endif %}. Ha sido registrada como borrador editorial para que puedas preparar tus sesiones. No ha sido publicada automáticamente a los estudiantes.
                   </p>
                   <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #a7f3d0; font-size: 0.85rem; color: #065f46;">
                     <strong>Siguiente paso:</strong> Continúa con la preparación de tus clases desde el catálogo de planeaciones.
@@ -819,8 +817,12 @@
             <a href="#seccion-clases" class="button button-secondary button-small">Ver todas las clases</a>
           </p>
 
-          <!-- Queue List: Strict priority conflicts/blockers -> missing -> ambiguous/proposed -> resto -->
-          <div class="queue-list">
+          <!-- Optional index for free navigation; the active question remains the only unfolded decision. -->
+          <details class="questions-index-collapse" style="margin-bottom: 0.75rem;">
+            <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
+              Abrir índice de dudas y respuestas ▾
+            </summary>
+            <div class="queue-list" style="margin-top: 0.5rem;">
             <!-- 1. Requires resolution (rojos) -->
             {% for it in queue.items_requires_resolution %}
               <div class="queue-item item-red {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
@@ -864,7 +866,7 @@
                 </div>
               </div>
             {% endfor %}
-          </div>
+            </div>
 
           {% if queue.items_postponed %}
             <details class="postponed-items-collapse" style="margin-top: 0.75rem;">
@@ -945,6 +947,7 @@
                 <p class="muted" style="padding: 0.5rem; font-size: 0.88rem;">Aún no hay elementos revisados.</p>
               {% endfor %}
             </div>
+          </details>
           </details>
         </section>
       {% endif %}
@@ -1576,7 +1579,7 @@
         <div class="action-bar sticky-action-bar" id="sticky-actions-bar" role="region" aria-label="Barra de acciones de revisión">
           {% if not source_tampered %}
             <button type="submit" name="action" value="save_corrections" class="button button-primary">
-              💾 Guardar correcciones (v{{ dossier.version|add:1 }})
+              💾 Guardar correcciones
             </button>
             <button type="submit" name="action" value="confirm_all" class="button button-secondary">
               ✓ Confirmar campos fundamentados
@@ -1628,7 +1631,7 @@
         <section aria-labelledby="history-heading" style="margin-top: 1.5rem; border-top: 1px solid var(--color-line); padding-top: 1.5rem;">
           <details class="history-details">
             <summary style="cursor: pointer; font-weight: 700; font-size: 1.1rem; color: var(--color-ink); margin-bottom: 1rem;">
-              Historial de Decisiones Editoriales y Auditoría ({{ dossier.history|length }} versión{{ dossier.history|length|pluralize:"es" }} registrada{{ dossier.history|length|pluralize:"s" }}) ▾
+              Historial de decisiones editoriales ({{ dossier.history|length }} registro{{ dossier.history|length|pluralize }}) ▾
             </summary>
             <div class="history-list">
               {% for h in dossier.history %}

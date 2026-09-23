@@ -251,6 +251,9 @@ class TestTask6TeacherReviewUI:
         assert "Problema:" not in visible_text
         assert "Bloqueo:" not in visible_text
         assert not re.search(r"Decisión\s+\d+\s+de\s+\d+", visible_text)
+        assert soup.find("details", class_="questions-index-collapse") is not None
+        assert "Documento:" not in visible_text
+        assert not re.search(r"\bV\d+\b", visible_text)
 
         script = soup.find("script", id="dirty-guard-script")
         assert script is not None
