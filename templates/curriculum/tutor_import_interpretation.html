@@ -729,7 +729,7 @@
         <section class="queue-section" id="seccion-por-revisar" aria-labelledby="por-revisar-heading">
           <div class="queue-section-header">
             <h2 id="por-revisar-heading" style="font-size: 1.15rem; font-weight: 800; margin: 0 0 0.5rem 0;">
-              Dudas y respuestas ({{ queue.actionable_count }} pendientes)
+              Dudas y respuestas ({{ pending_progress_total }} pendientes)
             </h2>
             <span style="font-size: 0.85rem; color: var(--color-muted);">
               {{ queue.items|length }} elementos en esta vista
@@ -967,7 +967,7 @@
       {% elif active_item %}
         <!-- Single Unfolded Priority Decision Panel -->
         <section class="active-decision-card" id="workspace-activo" aria-labelledby="active-decision-title">
-          <form method="post" id="queue-item-form" action="?{% if active_item.scope != 'general' %}session_id={{ active_session_id }}&{% endif %}{% if queue.session_filter %}scope={{ queue.session_filter }}&{% elif active_item.scope == 'general' %}scope=general&{% endif %}item={{ active_item.stable_key }}#control-{% if active_item.scope == 'annex' %}annex-{{ active_item.reference_id }}{% else %}{{ active_item.field_name }}{% endif %}">
+          <form method="post" id="queue-item-form" action="?{% if active_item.scope != 'general' %}session_id={{ active_session_id }}&{% endif %}{% if queue.session_filter %}scope={{ queue.session_filter }}&{% endif %}item={{ active_item.stable_key }}#control-{% if active_item.scope == 'annex' %}annex-{{ active_item.reference_id }}{% else %}{{ active_item.field_name }}{% endif %}">
             {% csrf_token %}
             <input type="hidden" name="expected_version" value="{{ dossier.version }}">
             <input type="hidden" name="item_id" value="{{ active_item.item_id }}">
@@ -1153,12 +1153,13 @@
                   <span class="evidence-label" style="display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.82rem;">
                     Evidencia extraída del PDF original
                   </span>
-                  {% if active_item.evidence %}
-                    {% if active_item.evidence.source_page %}
+                  {% if active_item.source_refs %}
+                    {% for ref in active_item.source_refs %}
+                    {% if ref.page_number %}
                       <div style="margin-bottom: 0.5rem;">
-                        <span class="badge-tag tag-source-page">Página {{ active_item.evidence.source_page }}</span>
+                        <span class="badge-tag tag-source-page">Página {{ ref.page_number }}</span>
                         {% if not source_tampered %}
-                          <a href="{% url 'tutor-import-source-page' job.pk active_item.evidence.source_page %}#page={{ active_item.evidence.source_page }}"
+                          <a href="{% url 'tutor-import-source-page' job.pk ref.page_number %}#page={{ ref.page_number }}"
                              target="_blank"
                              rel="noopener noreferrer"
                              class="evidence-link button button-small"
@@ -1168,15 +1169,16 @@
                         {% endif %}
                       </div>
                     {% endif %}
-                    {% if active_item.evidence.excerpt %}
+                    {% if ref.excerpt %}
                       <blockquote class="evidence-quote" style="margin: 0.35rem 0 0 0; padding-left: 0.6rem; border-left: 3px solid #cbd5e1; font-style: italic; font-size: 0.82rem;">
-                        "{{ active_item.evidence.excerpt }}"
+                        "{{ ref.excerpt }}"
                       </blockquote>
-                    {% else %}
+                    {% elif forloop.first %}
                       <p class="muted" style="font-size: 0.85rem; font-style: italic; margin: 0;">
                         Sin fragmento textual directo asociado en la extracción.
                       </p>
                     {% endif %}
+                    {% endfor %}
                   {% elif active_item.scope == 'annex' and active_item.candidate_pages %}
                     <p style="font-size: 0.85rem; margin: 0 0 0.25rem 0;">
                       Láminas candidatas detectadas en páginas {{ active_item.candidate_pages|join:", " }}.
@@ -1688,6 +1690,12 @@
           event.preventDefault();
           const queueForm = event.currentTarget;
           const submitter = event.submitter;
+          if (queueForm.dataset.edited === 'true' &&
+              (submitter?.value === 'postpone_queue_item' ||
+               (submitter?.value === 'confirm_queue_item' && !queueForm.querySelector('.active-annex-controls')))) {
+            showAsyncError(queueForm, 'Hay una edición sin guardar. Pulsa Corregir para guardarla antes de continuar.');
+            return;
+          }
           const formData = new FormData(queueForm);
           if (submitter && submitter.name) {
             formData.set(submitter.name, submitter.value);
@@ -1695,9 +1703,11 @@
           const buttons = queueForm.querySelectorAll('button[type="submit"]');
           buttons.forEach(function(button) { button.disabled = true; });
           isSubmitting = true;
+          let saved = false;
 
           try {
-            const response = await fetch(queueForm.action, {
+            const formUrl = queueForm.getAttribute('action');
+            const response = await fetch(formUrl, {
               method: 'POST',
               body: formData,
               credentials: 'same-origin',
@@ -1712,9 +1722,13 @@
             if (!response.ok || payload.status !== 'ok') {
               throw new Error(payload.message || raw || 'No se pudo guardar la respuesta.');
             }
+            saved = true;
 
-            const nextUrl = new URL(queueForm.action, window.location.href);
+            const nextUrl = new URL(formUrl, window.location.href);
             nextUrl.searchParams.delete('item');
+            if (!nextUrl.searchParams.has('scope') || nextUrl.searchParams.get('scope') === 'document') {
+              nextUrl.searchParams.delete('session_id');
+            }
             nextUrl.hash = 'workspace-activo';
             const pageResponse = await fetch(nextUrl.toString(), {
               credentials: 'same-origin',
@@ -1744,8 +1758,13 @@
             }
           } catch (error) {
             isSubmitting = false;
-            showAsyncError(queueForm, error.message);
-            buttons.forEach(function(button) { button.disabled = false; });
+            if (saved) {
+              isFormDirty = false;
+              showAsyncError(queueForm, 'La respuesta se guardó, pero la vista no pudo actualizarse. Recarga la página para continuar.');
+            } else {
+              showAsyncError(queueForm, error.message);
+              buttons.forEach(function(button) { button.disabled = false; });
+            }
           }
         }
 
@@ -1758,6 +1777,8 @@
               boundForm.addEventListener('input', setDirty);
               boundForm.addEventListener('change', setDirty);
               if (boundForm === queueForm) {
+                boundForm.addEventListener('input', function() { boundForm.dataset.edited = 'true'; });
+                boundForm.addEventListener('change', function() { boundForm.dataset.edited = 'true'; });
                 boundForm.addEventListener('submit', submitGuidedReview);
               } else {
                 boundForm.addEventListener('submit', function() { isSubmitting = true; });

@@ -171,7 +171,7 @@ def test_v0_teacher_correction_and_reopening():
     assert "v2" in reopen_html
     assert "El uso de las vocales y la letra M (adaptado Grupo 1B)" in reopen_html
     assert "Inicio corregido: Ronda de presentación de vocales." in reopen_html
-    assert "Historial de Decisiones Editoriales" in reopen_html
+    assert "Historial de decisiones editoriales" in reopen_html
     assert "Resolución v2" in reopen_html
 
 

@@ -5253,6 +5253,10 @@ def tutor_import_interpretation(request, job_id):
         if matched_item:
             active_item = matched_item
 
+    if (active_item and active_item.session_id and request_selected_session is None
+            and req_scope in (None, "", "all", "document")):
+        selected_session = dossier.get_session(active_item.session_id) or selected_session
+
     active_item_index = operational_queue.items.index(active_item) if (operational_queue and active_item) else -1
     prev_item = operational_queue.items[active_item_index - 1] if (operational_queue and active_item_index > 0) else None
     next_item = (

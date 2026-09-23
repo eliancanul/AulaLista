@@ -259,9 +259,24 @@ class TestTask6TeacherReviewUI:
         assert script is not None
         script_text = script.get_text()
         assert "submitGuidedReview" in script_text
-        assert "fetch(queueForm.action" in script_text
+        assert "queueForm.getAttribute('action')" in script_text
+        assert "fetch(formUrl" in script_text
+        assert "nextUrl.searchParams.delete('session_id')" in script_text
         assert "current.replaceWith(replacement)" in script_text
         assert "Tu edición sigue aquí" in script_text
+
+        guided_form = soup.find("form", id="queue-item-form")
+        assert guided_form is not None
+        assert "scope=" not in guided_form["action"]
+
+        active = soup.find(id="workspace-activo")
+        assert active is not None
+        first_source = response.context["active_item"].source_refs[0]
+        if first_source.get("page_number"):
+            source_url = reverse("tutor-import-source-page", args=[job.pk, first_source["page_number"]])
+            assert active.find("a", href=lambda href: href and source_url in href)
+        if first_source.get("excerpt"):
+            assert first_source["excerpt"] in active.get_text(" ", strip=True)
 
     def test_t6_sessions_cards_or_accordions_in_order(self):
         """4. Sessions as cards/accordions in order, pedagogical moments (Inicio, Desarrollo, Cierre), annexes, human copy."""

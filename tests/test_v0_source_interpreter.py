@@ -2071,7 +2071,7 @@ def test_b1_final_review_history_and_deltas_deserialization_no_500():
         "selected_session": None,
         "campos_formativos_options": [],
     })
-    assert "Historial de Decisiones Editoriales y Auditoría" in html
+    assert "Historial de decisiones editoriales" in html
 
 
 def test_b2_final_review_ambiguous_identity_when_multiple_repeated_sessions_change_simultaneously():
