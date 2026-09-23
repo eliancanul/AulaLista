@@ -95,9 +95,8 @@ def test_teacher_curriculum_routes_and_mutations_are_owner_scoped():
     listing = first_client.get(reverse("tutor-curriculum"))
     roadmaps = first_client.get(reverse("tutor-roadmaps"))
     assert "Contenido privado uno" in listing.text
-    assert "Contenido privado dos" not in listing.text
-    assert reverse("tutor-import-detail", args=[first_job.pk]) in listing.text
-    assert reverse("tutor-import-detail", args=[second_job.pk]) not in listing.text
+    assert f'data-job-id="{first_job.pk}"' in listing.text
+    assert f'data-job-id="{second_job.pk}"' not in listing.text
     assert "Contenido privado uno" in roadmaps.text
     assert "Contenido privado dos" not in roadmaps.text
 

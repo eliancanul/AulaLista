@@ -6,6 +6,7 @@
     <title>AulaLista · entrada</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -13,33 +14,22 @@
       <div class="site-header-inner">
         <a class="wordmark" href="{% url 'student-packages' %}" aria-label="AulaLista, inicio">Aula<span>Lista</span></a>
         <span class="demo-badge">Demostración sintética</span>
-        <nav class="top-nav" aria-label="Navegación principal">
-          <a href="#student-entry">Estudiante</a>
-          <a href="{% url 'tutor-sessions' %}">Docente</a>
-        </nav>
+        <nav class="top-nav" aria-label="Navegación principal"><a href="{% url 'tutor-home' %}">Iniciar sesión <span aria-hidden="true">→</span></a></nav>
       </div>
     </header>
 
     <main id="contenido" class="shell">
-      <section class="home-hero" aria-labelledby="home-title">
-        <div class="hero-copy">
-          <p class="eyebrow">AULA DIRECTA · NODO LOCAL</p>
-          <h1 id="home-title">Una actividad clara para <em>todo el grupo.</em></h1>
-          <p class="hero-lead">Entra al camino que comparte tu maestra o prepara una sesión para acompañar la clase. Sin cuentas estudiantiles ni conexión externa.</p>
-        </div>
-        <aside class="hero-aside" aria-label="Límites de la demostración">
-          <span class="card-kicker">Entrada local</span>
-          <strong>Contenido primero</strong>
-          <p>El estado y la siguiente decisión siempre están a la vista.</p>
-          <span class="trust-line"><span class="signal-dot" aria-hidden="true"></span> Sin red · datos sintéticos</span>
-        </aside>
+      <section class="welcome-heading" aria-labelledby="home-title">
+        <p class="eyebrow">COMUNIDAD EDUCATIVA · ACCESO LOCAL</p>
+        <h1 id="home-title">El aprendizaje<br><em>nos reúne.</em></h1>
+        <p class="hero-lead">Un espacio para aprender en el aula, con la guía de tu maestra.</p>
       </section>
 
-      <section id="student-entry" class="choice-grid" aria-label="Elige tu entrada">
+      <section id="student-entry" class="student-entry-panel" aria-label="Entrada a la actividad">
         <article class="choice-card choice-card--student">
           <p class="card-kicker">Para participar</p>
-          <h2>Entrar como estudiante</h2>
-          <p>Abre la sesión activa que proyectó tu maestra y continúa tu camino por unidades, lecciones y actividades.</p>
+          <h2>Tu sesión de clase</h2>
+          <p>Selecciona tu actividad o escanea el QR que comparte tu maestra.</p>
           {% if active_sessions %}
             <div class="session-choice-list">
               {% for session in active_sessions %}
@@ -54,22 +44,17 @@
             <p class="microcopy">Cuando la maestra active una sesión, aparecerá aquí.</p>
           {% endif %}
         </article>
-        <article class="choice-card choice-card--teacher">
-          <p class="card-kicker">Para conducir</p>
-          <h2>Preparar como docente</h2>
-          <p>Revisa el contenido publicado, prepara la distribución y decide cuándo comienza la sesión.</p>
-          <a class="secondary-action" href="{% url 'tutor-sessions' %}">Abrir vista docente <span aria-hidden="true">→</span></a>
-        </article>
+
       </section>
 
       <section class="editorial-boundary" aria-labelledby="boundary-heading">
         <div class="boundary-mark" aria-hidden="true">✓</div>
         <div>
-          <h2 id="boundary-heading">Una decisión humana en cada límite</h2>
-          <p>La IA solo propone. <strong>EditorialReviewer</strong> revisa, aprueba y publica; la maestra activa la sesión. La demostración no afirma validación pedagógica.</p>
+          <h2 id="boundary-heading">Con la guía de tu maestra</h2>
+          <p>La maestra revisa el contenido y decide cuándo comenzar. No necesitas una cuenta para participar.</p>
         </div>
       </section>
     </main>
-    <footer class="site-footer shell"><span>AulaLista · nodo local</span><span>Demostración sintética · sin cuentas ni datos reales</span></footer>
+    <footer class="site-footer shell"><span>AulaLista · Educación en comunidad</span><span>Demostración sintética · Sin validación pedagógica</span></footer>
   </body>
 </html>

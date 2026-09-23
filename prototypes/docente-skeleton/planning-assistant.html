@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PROTOTIPO — Asistente de planeación · AulaLista</title>
+    <style>
+      :root {
+        --ink: #18352f;
+        --muted: #63716c;
+        --paper: #f7f2e8;
+        --surface: #fffdf7;
+        --line: #d9d8ce;
+        --green: #245b4b;
+        --green-soft: #e2eee7;
+        --orange: #e76f34;
+        --orange-soft: #fff0e6;
+        --blue-soft: #eaf0f6;
+        --shadow: 0 18px 55px rgb(25 45 38 / 10%);
+        --radius: 22px;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgb(231 111 52 / 10%), transparent 29rem),
+          linear-gradient(180deg, #f8f4ec 0%, #eef3ee 100%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      button, input, textarea, select { font: inherit; }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+        outline: 3px solid rgb(231 111 52 / 38%);
+        outline-offset: 2px;
+      }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 6px; font-size: clamp(1.28rem, 2vw, 1.72rem); letter-spacing: -.025em; }
+      h2 { margin-bottom: 8px; font-size: 1.12rem; }
+      h3 { margin-bottom: 5px; font-size: .96rem; }
+      p { line-height: 1.52; }
+      small { line-height: 1.4; }
+      [hidden] { display: none !important; }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 13px clamp(16px, 3vw, 42px);
+        color: #fff;
+        background: rgb(24 53 47 / 96%);
+        backdrop-filter: blur(12px);
+      }
+      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .brand-mark {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 11px;
+        color: var(--ink);
+        background: #ffd7bd;
+        font-weight: 900;
+      }
+      .brand strong, .brand small { display: block; }
+      .brand small { color: #cbdad4; }
+      .decision-note { display: flex; align-items: center; gap: 8px; color: #e6efe9; font-size: .88rem; }
+      .decision-dot { width: 9px; height: 9px; border-radius: 50%; background: #ffae72; box-shadow: 0 0 0 5px rgb(255 174 114 / 14%); }
+
+      .shell { max-width: 1500px; margin: 0 auto; padding: 28px clamp(14px, 3vw, 42px) 112px; }
+      .page-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+      .eyebrow { margin-bottom: 7px; color: var(--orange); font-size: .74rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+      .lede { max-width: 770px; margin-bottom: 0; color: var(--muted); }
+      .prototype-badge, .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        border: 1px solid #efc29e;
+        border-radius: 999px;
+        padding: 5px 9px;
+        color: #8d431d;
+        background: var(--orange-soft);
+        font-size: .72rem;
+        font-weight: 800;
+      }
+      .tag.official { border-color: #a8c5b7; color: #1d5948; background: var(--green-soft); }
+      .tag.local { border-color: #bdcbd8; color: #3b526a; background: var(--blue-soft); }
+      .tag.suggested { border-color: #efc29e; color: #8d431d; background: var(--orange-soft); }
+
+      .workspace { display: grid; gap: 18px; align-items: start; }
+      .variant-a { grid-template-columns: minmax(0, 2.2fr) minmax(300px, .8fr); }
+      .variant-b { grid-template-columns: minmax(250px, .7fr) minmax(0, 1.75fr); }
+      .variant-b .assistant-panel { grid-column: 2; grid-row: 1; }
+      .variant-b .context-panel { grid-column: 1; grid-row: 1; position: sticky; top: 78px; }
+      .variant-c { grid-template-columns: minmax(0, 1.35fr) minmax(0, .85fr); }
+      .variant-c .assistant-panel { grid-column: 1 / -1; }
+      .variant-c .assistant-body { display: grid; grid-template-columns: minmax(280px, .75fr) minmax(340px, 1.25fr); }
+      .variant-c .conversation { max-height: 520px; border-right: 1px solid var(--line); }
+      .variant-c .proposal-stage { padding: 22px; }
+      .variant-c .context-panel { grid-column: 2; }
+      .variant-c .state-card { display: block; grid-column: 1; }
+
+      .panel {
+        overflow: hidden;
+        border: 1px solid rgb(31 73 60 / 14%);
+        border-radius: var(--radius);
+        background: rgb(255 253 247 / 94%);
+        box-shadow: var(--shadow);
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--line);
+        background: rgb(255 255 255 / 45%);
+      }
+      .panel-head p { margin: 3px 0 0; color: var(--muted); font-size: .83rem; }
+      .assistant-title { display: flex; align-items: center; gap: 11px; }
+      .assistant-avatar {
+        display: grid;
+        width: 39px;
+        height: 39px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 14px;
+        color: #fff;
+        background: var(--green);
+        font-weight: 900;
+      }
+      .status { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: .76rem; font-weight: 800; }
+      .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #40a27d; }
+      .assistant-body { min-height: 675px; }
+      .conversation { display: flex; flex-direction: column; min-height: 675px; max-height: calc(100vh - 190px); overflow: auto; }
+      .messages { display: flex; flex: 1; flex-direction: column; gap: 13px; padding: 22px; }
+      .message { display: flex; gap: 9px; max-width: 82%; }
+      .message.teacher { align-self: flex-end; flex-direction: row-reverse; }
+      .message-dot { width: 25px; height: 25px; flex: 0 0 auto; border-radius: 9px; background: var(--green-soft); }
+      .message.teacher .message-dot { background: #ffd7bd; }
+      .bubble { border-radius: 5px 17px 17px; padding: 11px 13px; color: #29453d; background: #edf4ef; font-size: .91rem; line-height: 1.48; }
+      .message.teacher .bubble { border-radius: 17px 5px 17px 17px; color: #fff; background: var(--green); }
+      .bubble strong { color: inherit; }
+      .chat-actions { padding: 0 22px 10px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip {
+        border: 1px solid #b9ccc4;
+        border-radius: 999px;
+        padding: 9px 12px;
+        color: var(--green);
+        background: #fff;
+        cursor: pointer;
+        font-size: .82rem;
+        font-weight: 750;
+      }
+      .chip:hover { border-color: var(--green); background: var(--green-soft); }
+      .composer { display: flex; gap: 9px; padding: 14px 18px 18px; border-top: 1px solid var(--line); background: #fff; }
+      .composer input {
+        min-width: 0;
+        flex: 1;
+        border: 1px solid #c9d0cc;
+        border-radius: 13px;
+        padding: 11px 13px;
+        color: var(--ink);
+        background: #fffefb;
+      }
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px solid #acc0b7;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: var(--green);
+        background: #fff;
+        cursor: pointer;
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .button:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgb(24 53 47 / 10%); }
+      .button.primary { border-color: var(--green); color: #fff; background: var(--green); }
+      .button.ghost { border-color: transparent; color: var(--muted); background: transparent; }
+      .button.small { padding: 7px 10px; border-radius: 10px; font-size: .78rem; }
+
+      .context-panel { position: sticky; top: 78px; }
+      .context-content { padding: 18px; }
+      .selectors { display: grid; gap: 10px; margin-bottom: 16px; }
+      .selectors label { display: grid; gap: 5px; color: var(--muted); font-size: .74rem; font-weight: 800; }
+      .selectors select { width: 100%; border: 1px solid #cbd2ce; border-radius: 10px; padding: 9px 10px; color: var(--ink); background: #fff; }
+      .roadmap { display: grid; gap: 9px; margin: 16px 0; }
+      .roadmap-step { display: grid; grid-template-columns: 25px 1fr; gap: 9px; align-items: start; padding: 9px 0; border-bottom: 1px dashed #d9d8ce; }
+      .roadmap-step:last-child { border-bottom: 0; }
+      .roadmap-index { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--muted); background: #eceeea; font-size: .72rem; font-weight: 850; }
+      .roadmap-step.active .roadmap-index { color: #fff; background: var(--orange); }
+      .roadmap-step.active strong { color: #9a451d; }
+      .roadmap-step small { display: block; margin-top: 3px; color: var(--muted); }
+      .context-card { margin-top: 14px; border: 1px solid var(--line); border-radius: 15px; padding: 14px; background: #fff; }
+      .context-card p { margin-bottom: 11px; color: #334a43; font-size: .88rem; }
+      .context-card p:last-child { margin-bottom: 0; }
+      .context-label { display: block; margin-bottom: 3px; color: var(--muted); font-size: .69rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+      .context-actions { display: grid; gap: 8px; margin-top: 14px; }
+      .context-actions .button { width: 100%; }
+      .synthetic-note { margin: 14px 0 0; color: var(--muted); font-size: .72rem; }
+
+      .proposal-stage { display: none; }
+      .variant-c .proposal-stage { display: block; }
+      .proposal { margin: 0 22px 22px; border: 1px solid #edbb94; border-radius: 18px; background: #fffaf4; box-shadow: 0 12px 30px rgb(155 77 35 / 8%); }
+      .variant-c .proposal { margin: 0; }
+      .proposal-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 17px; border-bottom: 1px solid #edd8c5; }
+      .proposal-head p { margin: 4px 0 0; color: var(--muted); font-size: .79rem; }
+      .trace { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 17px 0; }
+      .plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px 17px; }
+      .plan-block { border-radius: 13px; padding: 12px; background: #fff; }
+      .plan-block.wide { grid-column: 1 / -1; }
+      .plan-block p, .plan-block ol { margin-bottom: 0; color: #3b4f49; font-size: .84rem; line-height: 1.48; }
+      .plan-block ol { padding-left: 19px; }
+      .plan-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 17px 17px; }
+      .edit-grid { display: grid; gap: 12px; padding: 15px 17px; }
+      .edit-grid label { display: grid; gap: 6px; color: var(--muted); font-size: .78rem; font-weight: 800; }
+      .edit-grid textarea { min-height: 82px; resize: vertical; border: 1px solid #c9d0cc; border-radius: 12px; padding: 11px; color: var(--ink); background: #fff; }
+      .confirmed { margin: 0 22px 22px; border: 1px solid #9ec5b3; border-radius: 18px; padding: 18px; background: #edf7f1; }
+      .variant-c .confirmed { margin: 0; }
+      .confirmed-mark { display: grid; width: 38px; height: 38px; margin-bottom: 11px; place-items: center; border-radius: 13px; color: #fff; background: var(--green); font-weight: 900; }
+      .confirmed p { color: #3d554d; }
+      .confirmed-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+      .authority-note { display: flex; gap: 9px; margin: 0 22px 18px; border-radius: 13px; padding: 10px 12px; color: #55655f; background: #f1f2ed; font-size: .76rem; }
+      .variant-c .authority-note { margin: 14px 0 0; }
+
+      .state-card { display: block; grid-column: 1 / -1; padding: 17px 18px; }
+      .state-card dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; }
+      .state-card dt { color: var(--muted); font-size: .69rem; font-weight: 800; text-transform: uppercase; }
+      .state-card dd { margin: 4px 0 0; font-size: .85rem; font-weight: 800; }
+
+      .switcher {
+        position: fixed;
+        z-index: 30;
+        bottom: 18px;
+        left: 50%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 315px;
+        padding: 9px;
+        border: 1px solid rgb(255 255 255 / 20%);
+        border-radius: 999px;
+        color: #fff;
+        background: rgb(19 40 35 / 96%);
+        box-shadow: 0 18px 50px rgb(10 25 20 / 28%);
+        transform: translateX(-50%);
+      }
+      .switcher button { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 50%; color: #fff; background: rgb(255 255 255 / 12%); cursor: pointer; }
+      .variant-label { flex: 1; text-align: center; }
+      .variant-label strong, .variant-label small { display: block; }
+      .variant-label small { margin-top: 2px; color: #bfd0c9; font-size: .68rem; }
+
+      .toast { position: fixed; z-index: 40; top: 72px; left: 50%; max-width: min(90vw, 520px); border-radius: 13px; padding: 11px 15px; color: #fff; background: var(--green); box-shadow: var(--shadow); transform: translate(-50%, -20px); opacity: 0; pointer-events: none; transition: .2s ease; }
+      .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+      @media (max-width: 980px) {
+        .workspace, .variant-a, .variant-b, .variant-c { grid-template-columns: 1fr; }
+        .variant-b .assistant-panel, .variant-b .context-panel, .variant-c .assistant-panel, .variant-c .context-panel, .variant-c .state-card { grid-column: 1; grid-row: auto; }
+        .variant-b .assistant-panel { grid-row: 1; }
+        .variant-b .context-panel { grid-row: 2; }
+        .context-panel { position: static; }
+        .conversation { max-height: none; }
+        .variant-c .assistant-body { grid-template-columns: 1fr; }
+        .variant-c .conversation { border-right: 0; border-bottom: 1px solid var(--line); }
+      }
+      @media (max-width: 620px) {
+        .topbar { align-items: flex-start; }
+        .decision-note { display: none; }
+        .shell { padding-top: 19px; }
+        .page-head { display: block; }
+        .prototype-badge { margin-top: 13px; }
+        .assistant-body, .conversation { min-height: 610px; }
+        .message { max-width: 94%; }
+        .messages { padding: 16px; }
+        .chat-actions { padding-inline: 16px; }
+        .composer { padding: 12px 13px 15px; }
+        .composer .button { padding-inline: 11px; }
+        .plan-grid { grid-template-columns: 1fr; }
+        .plan-block.wide { grid-column: auto; }
+        .switcher { min-width: min(92vw, 360px); }
+        .state-card dl { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- PROTOTIPO DESECHABLE: tres variantes assistant-first, con ?variant=A|B|C. Sin backend ni persistencia. -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">A</div>
+        <div><strong>AulaLista</strong><small>Currícula y planeación · Planear clase</small></div>
+      </div>
+      <div class="decision-note"><span class="decision-dot" aria-hidden="true"></span>Asistente de apoyo · la docente decide</div>
+    </header>
+
+    <main class="shell">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Prototipo visual desechable</p>
+          <h1>Planea la clase conversando.</h1>
+          <p class="lede">El asistente reúne sólo el contexto indispensable, propone una planeación y muestra su relación con el mapa curricular sin avanzar el progreso ni crear una sesión.</p>
+        </div>
+        <span class="prototype-badge">Contenido pedagógico · datos sintéticos</span>
+      </div>
+
+      <div id="workspace" class="workspace variant-a">
+        <section class="panel assistant-panel" aria-labelledby="assistant-heading">
+          <header class="panel-head">
+            <div class="assistant-title">
+              <div class="assistant-avatar" aria-hidden="true">✦</div>
+              <div><h2 id="assistant-heading">Asistente de planeación</h2><p id="assistant-subtitle">Te acompaña una pregunta a la vez</p></div>
+            </div>
+            <span class="status">Apoyo local</span>
+          </header>
+          <div class="assistant-body">
+            <div class="conversation">
+              <div id="messages" class="messages" aria-live="polite"></div>
+              <div id="chat-actions" class="chat-actions"></div>
+              <form id="composer" class="composer">
+                <input id="message-input" autocomplete="off" aria-label="Respuesta para el asistente" placeholder="Escribe tu respuesta…">
+                <button class="button primary" type="submit">Enviar</button>
+              </form>
+            </div>
+            <div id="proposal-stage" class="proposal-stage" aria-live="polite"></div>
+          </div>
+          <div id="inline-result"></div>
+          <div class="authority-note"><span aria-hidden="true">ⓘ</span><span>La propuesta no publica contenido, no inicia una sesión y no cambia <strong>CurriculumProgress</strong>. La docente debe confirmarla y después preparar la sesión.</span></div>
+        </section>
+
+        <aside class="panel context-panel" aria-labelledby="context-heading">
+          <header class="panel-head">
+            <div><h2 id="context-heading">Contexto curricular</h2><p>Referencia y ubicación del roadmap</p></div>
+            <span class="tag official">Referencia SEP*</span>
+          </header>
+          <div class="context-content">
+            <div class="selectors">
+              <label>Fase y grado
+                <select id="phase-select"></select>
+              </label>
+              <label>Campo formativo
+                <select id="field-select"></select>
+              </label>
+              <label>Contenido activo
+                <select id="content-select"></select>
+              </label>
+            </div>
+            <div id="roadmap" class="roadmap"></div>
+            <div id="context-detail" class="context-card"></div>
+            <div class="context-actions">
+              <button id="use-content" class="button" type="button">Usar este contenido</button>
+            </div>
+            <p class="synthetic-note">* Referencia simulada para evaluar la interfaz. No es una carga oficial completa ni sustituye la consulta de fuentes SEP versionadas.</p>
+          </div>
+        </aside>
+
+        <section class="panel state-card" aria-label="Estado visible del prototipo">
+          <dl>
+            <div><dt>Estado</dt><dd id="state-value">empty</dd></div>
+            <div><dt>Contenido principal</dt><dd id="state-content">—</dd></div>
+            <div><dt>Siguiente decisión</dt><dd id="state-next">Aportar contexto</dd></div>
+          </dl>
+        </section>
+      </div>
+    </main>
+
+    <nav class="switcher" aria-label="Cambiar variante del prototipo">
+      <button id="previous-variant" type="button" aria-label="Variante anterior">←</button>
+      <div class="variant-label"><strong id="variant-name">A · Conversación dominante</strong><small>Usa ← → fuera de campos de texto</small></div>
+      <button id="next-variant" type="button" aria-label="Variante siguiente">→</button>
+    </nav>
+    <div id="toast" class="toast" role="status"></div>
+
+    <script>
+      const variants = [
+        { key: "A", name: "Conversación dominante", description: "Chat amplio + ficha contextual" },
+        { key: "B", name: "Mapa como índice", description: "Contexto fijo + conversación editorial" },
+        { key: "C", name: "Mesa de planeación", description: "Conversación + propuesta lado a lado" }
+      ];
+
+      const catalog = {
+        "3": {
+          label: "Fase 3 · 1.º–2.º de primaria",
+          fields: {
+            etica: {
+              label: "Ética, Naturaleza y Sociedades",
+              items: [
+                { id: "entorno", title: "Responsabilidad en el cuidado del entorno", pda: "Reconoce problemas comunes y participa en acuerdos.", local: "Reducir residuos durante el recreo.", axes: "Pensamiento crítico · Vida saludable", status: "Actual" },
+                { id: "acuerdos", title: "Acuerdos para convivir en la comunidad", pda: "Participa en la construcción de acuerdos para el bienestar común.", local: "Mejorar el uso compartido del patio.", axes: "Inclusión · Pensamiento crítico", status: "Disponible" },
+                { id: "agua", title: "Acciones para cuidar bienes comunes", pda: "Identifica acciones cotidianas para cuidar recursos compartidos.", local: "Cuidar el agua en los lavamanos escolares.", axes: "Vida saludable · Interculturalidad crítica", status: "Después" }
+              ]
+            },
+            lenguajes: {
+              label: "Lenguajes",
+              items: [
+                { id: "acuerdo-oral", title: "Diálogo para construir acuerdos", pda: "Escucha ideas y expresa propuestas en conversaciones grupales.", local: "Asamblea breve después del recreo.", axes: "Apropiación de las culturas a través de la lectura y la escritura", status: "Disponible" },
+                { id: "cartel", title: "Textos breves para comunicar a la comunidad", pda: "Produce mensajes breves con un propósito común.", local: "Cartel colectivo para mantener limpio el patio.", axes: "Artes y experiencias estéticas · Inclusión", status: "Después" }
+              ]
+            },
+            saberes: {
+              label: "Saberes y Pensamiento Científico",
+              items: [
+                { id: "residuos", title: "Observación y clasificación de materiales", pda: "Compara materiales a partir de características observables.", local: "Clasificar residuos encontrados en el patio sin manipularlos.", axes: "Pensamiento crítico · Vida saludable", status: "Disponible" },
+                { id: "registro", title: "Registro de observaciones del entorno", pda: "Organiza observaciones sencillas mediante dibujos o conteos.", local: "Conteo visual de residuos por zona.", axes: "Pensamiento crítico", status: "Después" }
+              ]
+            }
+          }
+        },
+        "4": {
+          label: "Fase 4 · 3.º–4.º de primaria",
+          fields: {
+            etica: {
+              label: "Ética, Naturaleza y Sociedades",
+              items: [
+                { id: "participacion", title: "Participación para resolver problemas comunes", pda: "Propone acciones colectivas ante situaciones de su comunidad.", local: "Organizar responsabilidades para el cuidado del patio.", axes: "Pensamiento crítico · Inclusión", status: "Actual" },
+                { id: "consumo", title: "Consumo responsable y entorno", pda: "Reconoce efectos de decisiones de consumo en el entorno cercano.", local: "Revisar residuos de envolturas del recreo.", axes: "Vida saludable · Pensamiento crítico", status: "Disponible" }
+              ]
+            },
+            lenguajes: {
+              label: "Lenguajes",
+              items: [
+                { id: "campana", title: "Mensajes para una campaña escolar", pda: "Planifica mensajes considerando destinatario y propósito.", local: "Campaña breve para reducir basura en el patio.", axes: "Apropiación de las culturas a través de la lectura y la escritura", status: "Actual" },
+                { id: "argumentos", title: "Intercambio de opiniones y argumentos", pda: "Expone razones y escucha perspectivas diferentes.", local: "Debatir alternativas viables con los recursos de la escuela.", axes: "Pensamiento crítico · Inclusión", status: "Disponible" }
+              ]
+            }
+          }
+        }
+      };
+
+      // Estructura de referencia del Plan de Estudio 2022 para primaria:
+      // fases 3, 4 y 5; cuatro campos formativos. Los ejemplos siguen siendo sintéticos.
+      const humanDevelopmentField = {
+        label: "De lo Humano y lo Comunitario",
+        items: [
+          { id: "bienestar", title: "Bienestar y participación en la comunidad", pda: "Reconoce formas de colaboración y cuidado mutuo en actividades compartidas.", local: "Definir roles para cuidar un espacio común.", axes: "Inclusión · Vida saludable", status: "Disponible" }
+        ]
+      };
+      catalog["3"].fields.humano = humanDevelopmentField;
+      catalog["4"].fields.humano = humanDevelopmentField;
+      catalog["5"] = {
+        label: "Fase 5 · 5.º–6.º de primaria",
+        fields: {
+          lenguajes: { label: "Lenguajes", items: [{ id: "campana-5", title: "Comunicación para transformar el entorno", pda: "Elabora mensajes dirigidos a una comunidad para comunicar propuestas.", local: "Campaña escolar sobre residuos.", axes: "Pensamiento crítico · Inclusión", status: "Actual" }] },
+          saberes: { label: "Saberes y Pensamiento Científico", items: [{ id: "evidencia-5", title: "Análisis de situaciones del entorno", pda: "Analiza información y argumenta decisiones ante problemas de su comunidad.", local: "Comparar hábitos de consumo y residuos.", axes: "Pensamiento crítico · Vida saludable", status: "Disponible" }] },
+          etica: { label: "Ética, Naturaleza y Sociedades", items: [{ id: "comunidad-5", title: "Acciones colectivas para el bien común", pda: "Participa en propuestas colectivas para atender necesidades de su comunidad.", local: "Acordar acciones sostenibles para el patio.", axes: "Interculturalidad crítica · Inclusión", status: "Disponible" }] },
+          humano: humanDevelopmentField
+        }
+      };
+
+      const state = {
+        stage: "empty",
+        phase: "3",
+        field: "etica",
+        itemId: "entorno",
+        messages: [{ role: "assistant", text: "¿Qué quieres trabajar hoy? Cuéntame una situación concreta del grupo o elige un ejemplo." }],
+        answers: { situation: "", duration: "", resources: "", observation: "" },
+        planOption: 1,
+        editedPurpose: "",
+        editedSequence: ""
+      };
+
+      const prompts = {
+        empty: {
+          placeholder: "Ejemplo: queda basura en el patio…",
+          chips: ["Después del recreo queda mucha basura en el patio", "Nos cuesta llegar a acuerdos como grupo", "Quiero observar y registrar nuestro entorno"]
+        },
+        duration: { placeholder: "Ejemplo: 45 minutos", chips: ["30 minutos", "45 minutos", "60 minutos"] },
+        resources: { placeholder: "Ejemplo: 8 dispositivos y hojas", chips: ["8 dispositivos y hojas", "Sin dispositivos", "1 proyector y cuadernos"] },
+        observation: { placeholder: "Una observación general, sin datos individuales", chips: ["El grupo participa mejor en equipos pequeños", "Necesitamos una actividad con movimiento", "Prefiero cerrar con un acuerdo del grupo"] }
+      };
+
+      const workspace = document.querySelector("#workspace");
+      const messages = document.querySelector("#messages");
+      const chatActions = document.querySelector("#chat-actions");
+      const composer = document.querySelector("#composer");
+      const messageInput = document.querySelector("#message-input");
+      const inlineResult = document.querySelector("#inline-result");
+      const proposalStage = document.querySelector("#proposal-stage");
+      const phaseSelect = document.querySelector("#phase-select");
+      const fieldSelect = document.querySelector("#field-select");
+      const contentSelect = document.querySelector("#content-select");
+      const roadmap = document.querySelector("#roadmap");
+      const contextDetail = document.querySelector("#context-detail");
+      const useContent = document.querySelector("#use-content");
+      const stateValue = document.querySelector("#state-value");
+      const stateContent = document.querySelector("#state-content");
+      const stateNext = document.querySelector("#state-next");
+      const variantName = document.querySelector("#variant-name");
+      const toast = document.querySelector("#toast");
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
+      }
+
+      function currentPhase() { return catalog[state.phase]; }
+      function currentField() { return currentPhase().fields[state.field]; }
+      function currentItem() { return currentField().items.find((item) => item.id === state.itemId) || currentField().items[0]; }
+      function variantIndex() {
+        const requested = new URLSearchParams(location.search).get("variant") || "A";
+        const index = variants.findIndex((variant) => variant.key === requested.toUpperCase());
+        return index < 0 ? 0 : index;
+      }
+
+      function setVariant(index) {
+        const variant = variants[(index + variants.length) % variants.length];
+        const nextUrl = new URL(location.href);
+        nextUrl.searchParams.set("variant", variant.key);
+        history.replaceState({}, "", nextUrl);
+        workspace.className = `workspace variant-${variant.key.toLowerCase()}`;
+        variantName.innerHTML = `<strong>${variant.key} · ${variant.name}</strong><small>${variant.description} · usa ← →</small>`;
+        renderPlanSurface();
+      }
+
+      function addMessage(role, text) {
+        state.messages.push({ role, text });
+      }
+
+      function showToast(text) {
+        toast.textContent = text;
+        toast.classList.add("show");
+        window.setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function renderMessages() {
+        messages.innerHTML = state.messages.map((message) => `
+          <div class="message ${message.role === "teacher" ? "teacher" : "assistant"}">
+            <span class="message-dot" aria-hidden="true"></span>
+            <div class="bubble">${escapeHtml(message.text)}</div>
+          </div>`).join("");
+        window.requestAnimationFrame(() => { messages.parentElement.scrollTop = messages.parentElement.scrollHeight; });
+      }
+
+      function nextQuestionFor(stage) {
+        if (stage === "duration") return `Puedo relacionarlo con “${currentItem().title}”. ¿Cuánto tiempo tienes?`;
+        if (stage === "resources") return "¿Con qué recursos cuentas hoy?";
+        if (stage === "observation") return "¿Hay alguna observación general del grupo que deba considerar? No necesito datos de alumnos.";
+        return "Con esto puedo preparar una propuesta. Tú podrás editarla, pedir otra opción o confirmarla.";
+      }
+
+      function handleAnswer(text) {
+        const clean = text.trim();
+        if (!clean || ["proposing-plan", "editing-plan", "confirmed"].includes(state.stage)) return;
+        addMessage("teacher", clean);
+        if (state.stage === "empty") {
+          state.answers.situation = clean;
+          state.stage = "duration";
+        } else if (state.stage === "duration") {
+          state.answers.duration = clean;
+          state.stage = "resources";
+        } else if (state.stage === "resources") {
+          state.answers.resources = clean;
+          state.stage = "observation";
+        } else if (state.stage === "observation") {
+          state.answers.observation = clean;
+          state.stage = "proposing-plan";
+        }
+        addMessage("assistant", nextQuestionFor(state.stage));
+        render();
+      }
+
+      function sequenceItems() {
+        if (state.planOption === 2) {
+          return [
+            `5 min · Recorrido visual o evocación del problema: ${state.answers.situation || "situación del entorno"}.`,
+            "12 min · Equipos proponen causas y alternativas con los materiales disponibles.",
+            "18 min · Asamblea: comparar propuestas y elegir dos acciones alcanzables.",
+            "10 min · Registrar el acuerdo y asignar una revisión grupal posterior."
+          ];
+        }
+        return [
+          `7 min · Conversación inicial sobre: ${state.answers.situation || "una situación del entorno"}.`,
+          "12 min · Observación segura y registro por equipos, sin datos individuales.",
+          "16 min · Puesta en común: identificar patrones y proponer soluciones.",
+          "10 min · Construir y confirmar un acuerdo del grupo."
+        ];
+      }
+
+      function defaultPurpose() {
+        return `Que el grupo reconozca un problema común relacionado con “${currentItem().title}” y participe en un acuerdo colectivo viable.`;
+      }
+
+      function planMarkup() {
+        const item = currentItem();
+        const purpose = state.editedPurpose || defaultPurpose();
+        const sequence = state.editedSequence ? state.editedSequence.split("\n").filter(Boolean) : sequenceItems();
+        return `<article class="proposal">
+          <header class="proposal-head"><div><h2>Propuesta ${state.planOption === 1 ? "principal" : "alternativa"}</h2><p>Datos sintéticos · borrador asistido que requiere confirmación docente</p></div><span class="tag suggested">Actividad sugerida</span></header>
+          <div class="trace"><span class="tag official">Basado en referencia SEP*</span><span class="tag local">Contextualización local</span><span class="tag suggested">Actividad sugerida</span></div>
+          <div class="plan-grid">
+            <section class="plan-block wide"><h3>Propósito de la clase</h3><p>${escapeHtml(purpose)}</p></section>
+            <section class="plan-block"><h3>Contenido / PDA principal</h3><p><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.pda)}</p></section>
+            <section class="plan-block"><h3>Conexiones complementarias</h3><p>${state.field === "etica" ? "Lenguajes: diálogo y registro de acuerdos. Saberes: observación y clasificación." : "Ética: responsabilidad compartida. Saberes: observación del entorno."}</p></section>
+            <section class="plan-block"><h3>Ejes articuladores</h3><p>${escapeHtml(item.axes)}</p></section>
+            <section class="plan-block"><h3>Materiales y organización</h3><p>${escapeHtml(state.answers.resources || "Recursos disponibles por confirmar")} · ${escapeHtml(state.answers.observation || "Organización flexible del grupo")}</p></section>
+            <section class="plan-block wide"><h3>Secuencia y tiempos</h3><ol>${sequence.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol></section>
+            <section class="plan-block wide"><h3>Alternativa corta o sin dispositivos</h3><p>Trabajar con observación oral, tarjetas reutilizables y un solo registro colectivo. Si sólo hay 25 minutos, conservar apertura, una ronda de propuestas y el acuerdo final.</p></section>
+          </div>
+          <div class="plan-actions"><button class="button primary" type="button" data-confirm-plan>Confirmar planeación</button><button class="button" type="button" data-edit-plan>Editar</button><button class="button ghost" type="button" data-another-plan>Otra opción</button></div>
+        </article>`;
+      }
+
+      function editMarkup() {
+        return `<article class="proposal">
+          <header class="proposal-head"><div><h2>Editar propuesta</h2><p>Los cambios siguen siendo un borrador hasta que tú confirmes.</p></div><span class="tag local">Decisión docente</span></header>
+          <div class="edit-grid">
+            <label>Propósito<textarea id="purpose-edit">${escapeHtml(state.editedPurpose || defaultPurpose())}</textarea></label>
+            <label>Secuencia — un paso por línea<textarea id="sequence-edit">${escapeHtml((state.editedSequence || sequenceItems().join("\n")))}</textarea></label>
+            <div class="plan-actions" style="padding:0"><button class="button primary" type="button" data-save-edits>Aplicar cambios</button><button class="button" type="button" data-cancel-edits>Cancelar</button></div>
+          </div>
+        </article>`;
+      }
+
+      function confirmedMarkup() {
+        const item = currentItem();
+        return `<section class="confirmed">
+          <div class="confirmed-mark" aria-hidden="true">✓</div>
+          <h2>Planeación confirmada</h2>
+          <p><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(state.answers.duration)} · ${escapeHtml(state.answers.resources)}</p>
+          <p>La planeación quedó confirmada sólo dentro de esta simulación. El progreso curricular no cambió y todavía no existe una sesión.</p>
+          <div class="confirmed-actions"><a class="button primary" href="./index.html?variant=C&step=prepare&prep=1">Preparar sesión</a><button class="button" type="button" data-start-over>Planear otra clase</button></div>
+        </section>`;
+      }
+
+      function renderPlanSurface() {
+        const markup = state.stage === "editing-plan" ? editMarkup() : state.stage === "confirmed" ? confirmedMarkup() : state.stage === "proposing-plan" ? planMarkup() : "";
+        const isVariantC = variants[variantIndex()].key === "C";
+        proposalStage.innerHTML = isVariantC ? markup : "";
+        inlineResult.innerHTML = isVariantC ? "" : markup;
+      }
+
+      function renderChatControls() {
+        const prompt = prompts[state.stage];
+        const conversational = Boolean(prompt);
+        chatActions.innerHTML = conversational ? `<div class="chips">${prompt.chips.map((chip) => `<button class="chip" type="button" data-answer="${escapeHtml(chip)}">${escapeHtml(chip)}</button>`).join("")}</div>` : "";
+        composer.hidden = !conversational;
+        if (conversational) messageInput.placeholder = prompt.placeholder;
+      }
+
+      function populateSelectors() {
+        phaseSelect.innerHTML = Object.entries(catalog).map(([key, phase]) => `<option value="${key}" ${key === state.phase ? "selected" : ""}>${escapeHtml(phase.label)}</option>`).join("");
+        fieldSelect.innerHTML = Object.entries(currentPhase().fields).map(([key, field]) => `<option value="${key}" ${key === state.field ? "selected" : ""}>${escapeHtml(field.label)}</option>`).join("");
+        contentSelect.innerHTML = currentField().items.map((item) => `<option value="${item.id}" ${item.id === state.itemId ? "selected" : ""}>${escapeHtml(item.title)}</option>`).join("");
+      }
+
+      function renderContext() {
+        populateSelectors();
+        const item = currentItem();
+        roadmap.innerHTML = currentField().items.map((roadmapItem, index) => `<div class="roadmap-step ${roadmapItem.id === item.id ? "active" : ""}"><span class="roadmap-index">${index + 1}</span><div><strong>${escapeHtml(roadmapItem.title)}</strong><small>${escapeHtml(roadmapItem.status)} · ${roadmapItem.id === item.id ? "Contenido seleccionado" : "En el roadmap"}</small></div></div>`).join("");
+        contextDetail.innerHTML = `
+          <p><span class="context-label">Fase / campo</span>${escapeHtml(currentPhase().label)}<br>${escapeHtml(currentField().label)}</p>
+          <p><span class="context-label">Contenido · referencia sintética</span>${escapeHtml(item.title)}</p>
+          <p><span class="context-label">PDA · referencia sintética</span>${escapeHtml(item.pda)}</p>
+          <p><span class="context-label">Programa analítico local</span>${escapeHtml(item.local)}</p>
+          <p><span class="context-label">Ejes elegidos</span>${escapeHtml(item.axes)}</p>`;
+        useContent.textContent = state.stage === "confirmed" ? "Planeación ya confirmada" : "Usar este contenido";
+        useContent.disabled = state.stage === "confirmed";
+      }
+
+      function renderState() {
+        const nextLabels = { empty: "Describir situación", duration: "Definir duración", resources: "Indicar recursos", observation: "Añadir observación grupal", "proposing-plan": "Revisar y confirmar", "editing-plan": "Aplicar o cancelar cambios", confirmed: "Preparar sesión" };
+        const visibleState = ["duration", "resources", "observation"].includes(state.stage) ? `gathering-context · ${state.stage}` : state.stage;
+        stateValue.textContent = visibleState;
+        stateContent.textContent = currentItem().title;
+        stateNext.textContent = nextLabels[state.stage];
+      }
+
+      function render() {
+        renderMessages();
+        renderChatControls();
+        renderContext();
+        renderPlanSurface();
+        renderState();
+      }
+
+      function resetPlanning() {
+        state.stage = "empty";
+        state.messages = [{ role: "assistant", text: "¿Qué quieres trabajar hoy? Cuéntame una situación concreta del grupo o elige un ejemplo." }];
+        state.answers = { situation: "", duration: "", resources: "", observation: "" };
+        state.planOption = 1;
+        state.editedPurpose = "";
+        state.editedSequence = "";
+        render();
+      }
+
+      composer.addEventListener("submit", (event) => {
+        event.preventDefault();
+        handleAnswer(messageInput.value);
+        messageInput.value = "";
+      });
+
+      document.addEventListener("click", (event) => {
+        const answer = event.target.closest("[data-answer]");
+        if (answer) handleAnswer(answer.dataset.answer);
+        if (event.target.closest("[data-edit-plan]")) { state.stage = "editing-plan"; render(); }
+        if (event.target.closest("[data-cancel-edits]")) { state.stage = "proposing-plan"; render(); }
+        if (event.target.closest("[data-save-edits]")) {
+          state.editedPurpose = document.querySelector("#purpose-edit").value.trim();
+          state.editedSequence = document.querySelector("#sequence-edit").value.trim();
+          state.stage = "proposing-plan";
+          addMessage("assistant", "Apliqué tus cambios a la propuesta. Revísala antes de confirmarla.");
+          render();
+        }
+        if (event.target.closest("[data-another-plan]")) {
+          state.planOption = state.planOption === 1 ? 2 : 1;
+          state.editedPurpose = "";
+          state.editedSequence = "";
+          addMessage("teacher", "Muéstrame otra opción.");
+          addMessage("assistant", "Preparé una alternativa con más decisión grupal y menos registro. El contexto curricular se conserva.");
+          render();
+        }
+        if (event.target.closest("[data-confirm-plan]")) {
+          state.stage = "confirmed";
+          addMessage("teacher", "Confirmar planeación.");
+          addMessage("assistant", "Planeación confirmada. El siguiente paso es preparar la sesión; nada se ha publicado ni activado todavía.");
+          render();
+        }
+        if (event.target.closest("[data-start-over]")) resetPlanning();
+      });
+
+      phaseSelect.addEventListener("change", () => {
+        state.phase = phaseSelect.value;
+        state.field = Object.keys(currentPhase().fields)[0];
+        state.itemId = currentField().items[0].id;
+        renderContext();
+        renderState();
+      });
+      fieldSelect.addEventListener("change", () => {
+        state.field = fieldSelect.value;
+        state.itemId = currentField().items[0].id;
+        renderContext();
+        renderState();
+      });
+      contentSelect.addEventListener("change", () => {
+        state.itemId = contentSelect.value;
+        renderContext();
+        renderState();
+      });
+      useContent.addEventListener("click", () => {
+        if (state.stage === "confirmed") return;
+        addMessage("teacher", `Usar el contenido: ${currentItem().title}.`);
+        addMessage("assistant", "Actualicé la referencia principal. Es una referencia sintética para el prototipo; la propuesta sigue requiriendo tu confirmación.");
+        state.editedPurpose = "";
+        state.editedSequence = "";
+        render();
+        showToast("Contenido principal actualizado sin perder la conversación");
+      });
+
+      document.querySelector("#previous-variant").addEventListener("click", () => setVariant(variantIndex() - 1));
+      document.querySelector("#next-variant").addEventListener("click", () => setVariant(variantIndex() + 1));
+      document.addEventListener("keydown", (event) => {
+        const focused = document.activeElement;
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(focused.tagName) || focused.isContentEditable) return;
+        if (event.key === "ArrowLeft") setVariant(variantIndex() - 1);
+        if (event.key === "ArrowRight") setVariant(variantIndex() + 1);
+      });
+
+      setVariant(variantIndex());
+      render();
+    </script>
+  </body>
+</html>

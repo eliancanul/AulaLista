@@ -1,0 +1,1855 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · Revisa tu planeación</title>
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <style>
+      *, *:before, *:after { box-sizing: border-box; }
+      html, body { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
+      .v0-container { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0.6rem 0.85rem 3rem; box-sizing: border-box; }
+      .v0-header { margin-bottom: 0.6rem; }
+      .v0-kicker { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-action-dark); margin-bottom: 0.2rem; }
+      .v0-title-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem; }
+      .v0-title { font-size: 1.35rem; font-weight: 800; margin: 0; color: var(--color-ink); }
+      .v0-subtitle { font-size: 0.82rem; color: var(--color-muted); margin: 0 0 0.35rem 0; }
+
+      /* Sticky Priority Summary */
+      .priority-sticky-bar {
+        position: sticky;
+        top: 0;
+        z-index: 80;
+        background: #ffffff;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+        padding: 0.45rem 0.85rem;
+        margin-bottom: 0.65rem;
+        scroll-margin-top: 70px;
+      }
+      .summary-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+      }
+      .summary-title { font-weight: 800; font-size: 0.88rem; color: var(--color-ink); display: flex; align-items: center; gap: 0.4rem; }
+      .summary-counts-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+      }
+      .count-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1;
+        text-decoration: none;
+      }
+      .count-pill-red { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+      .count-pill-yellow { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+      .count-pill-neutral { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+      .count-pill-green { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+      .dirty-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #ffedd5;
+        color: #9a3412;
+        border: 1px solid #fdba74;
+        padding: 0.2rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .progress-container {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 0.25rem;
+      }
+      .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: #16a34a;
+        transition: width 0.3s ease;
+      }
+      .progress-text { font-size: 0.76rem; font-weight: 700; color: var(--color-muted); white-space: normal; overflow-wrap: anywhere; }
+
+      /* Scope Tabs */
+      .scope-nav { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.65rem; align-items: center; }
+      .scope-label { font-size: 0.8rem; font-weight: 700; color: var(--color-muted); margin-right: 0.25rem; }
+      .scope-tab {
+        padding: 0.25rem 0.6rem;
+        border-radius: var(--radius);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--color-line);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        white-space: normal;
+      }
+      .scope-tab.active {
+        background: var(--color-action);
+        color: #ffffff;
+        border-color: var(--color-action-dark);
+      }
+
+      main.v0-container {
+        padding-top: 0.5rem;
+      }
+
+      /* Active Decision Card */
+      .active-decision-card {
+        background: #ffffff;
+        border: 2px solid var(--color-action);
+        border-radius: var(--radius);
+        padding: 0.7rem 0.85rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.08);
+      }
+      .card-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .decision-kicker { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--color-action-dark); letter-spacing: 0.05em; }
+      .decision-step-nav { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; font-weight: 600; }
+      .decision-title { font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--color-ink); }
+
+      /* Side-by-side layout on desktop */
+      .active-decision-body {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      @media (min-width: 768px) {
+        .active-decision-body {
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 1.25rem;
+          align-items: start;
+        }
+      }
+
+      .problem-statement {
+        background: #f8fafc;
+        border-left: 4px solid var(--color-action);
+        padding: 0.45rem 0.75rem;
+        border-radius: 0 var(--radius) var(--radius) 0;
+        margin-bottom: 0.55rem;
+        font-size: 0.88rem;
+      }
+      .problem-statement.problem-red { border-left-color: #ef4444; background: #fef2f2; color: #991b1b; }
+      .problem-statement.problem-yellow { border-left-color: #f59e0b; background: #fffbeb; color: #92400e; }
+      .problem-statement.problem-neutral { border-left-color: #94a3b8; background: #f8fafc; color: #334155; }
+      .problem-statement.problem-green { border-left-color: #22c55e; background: #f0fdf4; color: #166534; }
+      .blocking-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-weight: 700;
+        font-size: 0.82rem;
+        margin-top: 0.25rem;
+      }
+      .decision-input-box { margin-bottom: 0.55rem; }
+      .decision-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 0.55rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid #e2e8f0;
+      }
+      .decision-actions .button {
+        min-block-size: 36px;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.84rem;
+      }
+
+      /* Source & Evidence Panel in Decision Card */
+      .source-evidence-panel {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--radius);
+        padding: 0.65rem 0.85rem;
+        font-size: 0.85rem;
+      }
+
+      /* Document Queue */
+      .queue-section { margin-bottom: 2rem; }
+      .queue-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.75rem;
+      }
+      .queue-list { display: flex; flex-direction: column; gap: 0.5rem; }
+      .queue-item {
+        background: var(--color-surface);
+        border: 1px solid var(--color-line);
+        border-radius: 6px;
+        padding: 0.65rem 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: var(--color-ink);
+        transition: background 0.15s ease;
+      }
+      .queue-item:hover { background: #f8fafc; }
+      .queue-item.active {
+        border-left: 5px solid var(--color-action);
+        background: #f0f9ff;
+      }
+      .queue-item.item-red { border-left: 5px solid #ef4444; }
+      .queue-item.item-yellow { border-left: 5px solid #f59e0b; }
+      .queue-item.item-neutral { border-left: 5px solid #94a3b8; }
+      .queue-item.item-green { border-left: 5px solid #22c55e; }
+      .queue-item-info { display: flex; flex-direction: column; gap: 0.15rem; }
+      .queue-item-title { font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem; }
+      .queue-item-sub { font-size: 0.8rem; color: var(--color-muted); }
+
+      /* Completion Banner */
+      .completion-card {
+        background: #f0fdf4;
+        border: 2px solid #22c55e;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+      .completion-card h3 { margin: 0 0 0.5rem 0; color: #166534; font-size: 1.4rem; }
+      .completion-card p { margin: 0; color: #15803d; font-size: 0.95rem; }
+
+      /* General & Session Fields Container */
+      .full-fields-details {
+        background: var(--color-surface);
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .full-fields-details summary {
+        font-weight: 800;
+        font-size: 1.05rem;
+        cursor: pointer;
+        color: var(--color-ink);
+      }
+
+      /* Common styles from existing template */
+      .meta-box { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.9rem; }
+      .meta-item strong { color: var(--color-ink); display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
+      .field-card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem; }
+      .field-card-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+      .field-title { font-weight: 700; font-size: 1.1rem; color: var(--color-ink); }
+      .badge-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .badge-tag { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; }
+      .tag-origin { background: #e0f2fe; color: #0369a1; }
+      .tag-supported { background: #dcfce7; color: #15803d; }
+      .tag-ambiguous { background: #fef3c7; color: #b45309; }
+      .tag-missing { background: #fee2e2; color: #b91c1c; }
+      .tag-pending { background: #f3f4f6; color: #4b5563; }
+      .tag-confirmed { background: #dcfce7; color: #166534; font-weight: 800; }
+      .tag-corrected { background: #fae8ff; color: #86198f; font-weight: 800; }
+      .reason-box { background: #fffbeb; border-left: 3px solid #f59e0b; padding: 0.6rem 0.8rem; margin: 0.75rem 0; font-size: 0.85rem; color: #92400e; border-radius: 0 var(--radius) var(--radius) 0; }
+      .evidence-box { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.82rem; color: #475569; margin-top: 0.6rem; }
+      .evidence-box strong { color: #1e293b; }
+      .evidence-link { font-weight: 700; color: var(--color-action); text-decoration: underline; }
+      .form-input-full { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-line); border-radius: var(--radius); font-size: 0.95rem; line-height: 1.4; margin-top: 0.35rem; }
+      textarea.form-input-full { min-height: 90px; resize: vertical; }
+      .table-responsive { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
+      .annex-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.9rem; box-sizing: border-box; word-break: break-word; overflow-wrap: anywhere; }
+      .annex-table th, .annex-table td { border: 1px solid var(--color-line); padding: 0.75rem; text-align: left; }
+      .annex-table th { background: #f1f5f9; font-weight: 700; }
+      .annex-table td::before { content: none; }
+      :focus-visible { outline: 3px solid var(--color-action); outline-offset: 2px; }
+      .action-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 85;
+        background: #ffffff;
+        border-top: 2px solid var(--color-line);
+        box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.08);
+        padding: 0.75rem 1rem;
+        margin-top: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      .button,
+      .scope-tab,
+      .action-bar .button,
+      .action-bar .back-link,
+      .evidence-link {
+        min-height: 44px;
+        min-block-size: 44px;
+        min-width: 44px;
+        min-inline-size: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+      .evidence-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+      }
+      .action-bar .button-disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #f1f5f9;
+        color: #94a3b8;
+        border-color: #cbd5e1;
+      }
+      .history-list { font-size: 0.85rem; }
+      .history-item { border-left: 2px solid var(--color-action); padding-left: 0.75rem; margin-bottom: 0.75rem; }
+      .tamper-banner { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; padding: 1.25rem; border-radius: var(--radius); margin-bottom: 1.5rem; }
+      .tamper-banner h3 { margin-top: 0; color: #b91c1c; }
+      .continuation-banner { background: #eff6ff; border-left: 3px solid #3b82f6; padding: 0.6rem 0.8rem; margin: 0.75rem 0; font-size: 0.85rem; color: #1e40af; border-radius: 0 var(--radius) var(--radius) 0; }
+
+      /* Verification Banner */
+      .verification-banner {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-left: 5px solid #16a34a;
+        border-radius: var(--radius);
+        padding: 0.65rem 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      .verification-banner-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      .verification-banner-title {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .verification-pills {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+
+      .mobile-toolbar-spacer { display: none !important; }
+      @media (min-width: 768px) {
+        .decision-evidence-details summary { display: none !important; }
+        .decision-evidence-details > .source-evidence-panel { display: block !important; }
+        .decision-evidence-details { display: block !important; }
+      }
+
+      @media (max-width: 767px) {
+        html { scroll-behavior: auto !important; }
+        body { padding-bottom: 40px; }
+        .site-header { padding: 0.15rem 0.4rem; }
+        .site-header-inner { min-height: 36px; padding: 0; gap: 0.3rem; }
+        .site-header .demo-badge,
+        .site-header .top-nav { display: none; }
+        .site-header .account-actions { margin-left: auto; }
+        .v0-container { padding: 0.2rem 0.4rem 2rem; }
+        .v0-header { margin-bottom: 0.2rem; }
+        .v0-kicker { display: none; }
+        .v0-title-row { margin-bottom: 0.1rem; }
+        .v0-title { font-size: 0.95rem; }
+        .v0-subtitle { display: none; }
+        .priority-sticky-bar { padding: 0.25rem 0.45rem; margin-bottom: 0.25rem; }
+        .summary-header-row { margin-bottom: 0.15rem; gap: 0.2rem; }
+        .summary-title { font-size: 0.74rem; }
+        .summary-counts-row { gap: 0.2rem; }
+        .count-pill { font-size: 0.66rem; padding: 0.1rem 0.28rem; }
+        .progress-container { margin-top: 0.15rem; gap: 0.3rem; }
+        .progress-text { font-size: 0.7rem; white-space: normal; overflow-wrap: anywhere; }
+        .scope-note-collapse { margin-top: 0.15rem; font-size: 0.7rem; }
+        .scope-nav { gap: 0.25rem; margin-bottom: 0.25rem; flex-wrap: wrap; }
+        .scope-label { font-size: 0.7rem; }
+        .scope-tab { font-size: 0.7rem; padding: 0.25rem 0.45rem; white-space: normal; }
+        .active-decision-card { padding: 0.35rem 0.45rem 0.5rem; margin-bottom: 0.35rem; }
+        .card-top-bar { margin-bottom: 0.2rem; padding-bottom: 0.15rem; }
+        .decision-title { font-size: 0.9rem; }
+        .decision-kicker { font-size: 0.65rem; }
+        .problem-statement { padding: 0.25rem 0.45rem; font-size: 0.76rem; margin-bottom: 0.25rem; }
+        .blocking-alert { font-size: 0.72rem; margin-top: 0.1rem; }
+        .required-for-alert { font-size: 0.72rem; margin-top: 0.1rem; }
+        .decision-input-box { margin-bottom: 0.25rem; }
+        .decision-input-box label { font-size: 0.75rem !important; margin-bottom: 0.1rem !important; }
+        .form-input-full { padding: 0.25rem 0.4rem; font-size: 0.8rem; }
+        textarea.form-input-full { min-height: 44px; }
+        .decision-evidence-col { margin-top: 0 !important; }
+        .decision-evidence-details { margin-top: 0.35rem; }
+        .decision-evidence-details summary { display: block; cursor: pointer; }
+        .decision-evidence-details[open] > .source-evidence-panel { margin-top: 0.35rem; }
+        .mobile-toolbar-spacer { display: none !important; }
+        .decision-actions {
+          position: static !important;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          padding: 0.75rem 0 0 0;
+          background: transparent;
+          box-shadow: none;
+          border-top: 1px solid #e2e8f0;
+          margin-top: 0.75rem;
+        }
+        .decision-actions .button {
+          min-height: 44px !important;
+          min-block-size: 44px !important;
+          min-width: 44px !important;
+          min-inline-size: 44px !important;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.85rem;
+          width: 100%;
+          text-align: center;
+          white-space: normal;
+        }
+        .action-bar {
+          position: static !important;
+          box-shadow: none !important;
+        }
+        .action-bar .button,
+        .action-bar .back-link,
+        .approval-notice {
+          min-height: 44px !important;
+          min-block-size: 44px !important;
+          min-width: 44px !important;
+          min-inline-size: 44px !important;
+          width: 100%;
+          text-align: center;
+        }
+        .table-responsive {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch;
+        }
+        .annex-table,
+        .annex-table tbody,
+        .annex-table tr,
+        .annex-table td {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          word-break: break-word !important;
+          overflow-wrap: anywhere !important;
+        }
+        .annex-table thead {
+          display: none !important;
+        }
+        .annex-table tr {
+          margin-bottom: 0.85rem !important;
+          border: 1px solid var(--color-line) !important;
+          border-radius: var(--radius) !important;
+          padding: 0.65rem !important;
+          background: #fafafa !important;
+        }
+        .annex-table td {
+          border: none !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          padding: 0.45rem 0 !important;
+        }
+        .annex-table td:last-child {
+          border-bottom: none !important;
+        }
+        .annex-table td[data-label]::before {
+          content: attr(data-label) ": ";
+          display: block;
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--color-action-dark, #0369a1);
+          margin-bottom: 0.2rem;
+        }
+      }
+
+    </style>
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
+  </head>
+  <body>
+    {% include "curriculum/tutor_nav.html" %}
+    <main class="v0-container">
+      <div class="v0-header teacher-header">
+        <p class="v0-kicker">AulaLista · Asistente de Planeación Semanal</p>
+        <div class="v0-title-row">
+          <h1 class="v0-title">Revisa tu planeación</h1>
+          <div>
+            <span class="badge-tag {% if source_tampered or dossier.status == 'invalidated_source_tampered' %}tag-missing{% else %}tag-supported{% endif %}">
+              {% if source_tampered or dossier.status == 'invalidated_source_tampered' %}
+                Fuente alterada
+              {% else %}
+                Listo para revisión
+              {% endif %}
+            </span>
+          </div>
+        </div>
+        <p class="v0-subtitle">
+          {{ dossier.page_count }} páginas fuente listas para comparar con el contenido organizado.
+        </p>
+        <p class="teacher-explanation-banner" style="margin: 0.5rem 0 0.85rem 0; padding: 0.65rem 0.85rem; background: #f0f9ff; border-left: 4px solid var(--color-action); border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.9rem; line-height: 1.45; color: #0f172a;">
+          AulaLista organizó y cotejó tu documento a partir del archivo original. Tú decides qué conservar o ajustar en cada sección; nada se publica automáticamente.
+        </p>
+
+        <!-- Resumen general del proyecto arriba -->
+        <section class="project-summary-card" aria-labelledby="project-summary-heading" style="background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 0.75rem;">
+          <h2 id="project-summary-heading" style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--color-ink);">
+            Proyecto: {{ dossier.general_fields.proyecto.value|default:"Planeación semanal" }}
+          </h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.84rem; color: var(--color-muted);">
+            <span><strong>Sesiones:</strong> {{ dossier.sessions|length }} sesión{{ dossier.sessions|length|pluralize:"es" }}</span>
+            <span><strong>Páginas:</strong> {{ dossier.page_count }}</span>
+            {% if dossier.general_fields.metodologia.value %}
+              <span><strong>Metodología:</strong> {{ dossier.general_fields.metodologia.value }}</span>
+            {% endif %}
+            {% if dossier.general_fields.escenario_proyecto.value %}
+              <span><strong>Escenario:</strong> {{ dossier.general_fields.escenario_proyecto.value }}</span>
+            {% endif %}
+            {% if dossier.general_fields.grado.value %}
+              <span><strong>Grado:</strong> {{ dossier.general_fields.grado.value }}</span>
+            {% endif %}
+          </div>
+
+          {% if is_approved %}
+            <div class="approval-success-card" style="margin-top: 0.85rem; padding: 0.85rem 1rem; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: var(--radius);">
+              <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="font-size: 1.5rem; line-height: 1; color: #059669;" aria-hidden="true">✓</span>
+                <div style="flex: 1;">
+                  <h3 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.25rem 0; color: #065f46;">
+                    Planeación aprobada para preparar
+                  </h3>
+                  <p style="margin: 0 0 0.5rem 0; font-size: 0.88rem; line-height: 1.45; color: #047857;">
+                    Esta planeación fue revisada y aprobada por el docente{% if active_approval.approved_by %} ({{ active_approval.approved_by.get_full_name|default:active_approval.approved_by.username }}){% endif %}. Ha sido registrada como borrador editorial para que puedas preparar tus sesiones. No ha sido publicada automáticamente a los estudiantes.
+                  </p>
+                  <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #a7f3d0; font-size: 0.85rem; color: #065f46;">
+                    <strong>Siguiente paso:</strong> Continúa con la preparación de tus clases desde el catálogo de planeaciones.
+                    <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                      <a href="{% url 'tutor-curriculum' %}" class="button button-primary" style="background: #059669; border-color: #047857; min-height: 44px; display: inline-flex; align-items: center;">
+                        Ver mis planeaciones aprobadas
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Identificación y Proyecto Escolar (Datos generales colapsables) -->
+          <div class="general-fields-section" id="seccion-datos-generales" style="margin-top: 0.75rem; border-top: 1px solid var(--color-line); padding-top: 0.5rem;">
+            <details class="full-fields-details" style="margin-bottom: 0;" {% if queue.scope == 'general' or queue.session_filter == 'general' %}open{% endif %}>
+              <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--color-ink);">
+                Identificación y Datos Generales del Proyecto ({{ dossier.general_fields|length }} campos) ▾
+              </summary>
+              <div style="margin-top: 0.75rem;">
+                <p class="muted" style="margin-bottom: 0.75rem; font-size: 0.85rem;">
+                  Datos generales compartidos entre todas las sesiones del proyecto pedagógico.
+                </p>
+
+                {% if dossier.general_fields.proyecto %}
+                  {% if active_item.field_name == 'proyecto' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.proyecto field_id="proyecto" label="Nombre del Proyecto" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.proyecto field_id="proyecto" label="Nombre del Proyecto" input_type="text" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.campos_formativos %}
+                  {% if active_item.field_name == 'campos_formativos' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.campos_formativos field_id="campos_formativos" label="Campos Formativos (preservados sin fragmentación sintáctica)" input_type="checkboxes" readonly=source_tampered job=job available_campos=available_campos current_campos=current_campos campos_formativos_options=campos_formativos_options is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.campos_formativos field_id="campos_formativos" label="Campos Formativos (preservados sin fragmentación sintáctica)" input_type="checkboxes" readonly=source_tampered job=job available_campos=available_campos current_campos=current_campos campos_formativos_options=campos_formativos_options %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.proposito %}
+                  {% if active_item.field_name == 'proposito' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.proposito field_id="proposito" label="Propósito para el Alumno" input_type="textarea" rows="3" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.proposito field_id="proposito" label="Propósito para el Alumno" input_type="textarea" rows="3" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.finalidad %}
+                  {% if active_item.field_name == 'finalidad' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.finalidad field_id="finalidad" label="Finalidad e Intención Docente (extracción completa sin truncamiento)" input_type="textarea" rows="4" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.finalidad field_id="finalidad" label="Finalidad e Intención Docente (extracción completa sin truncamiento)" input_type="textarea" rows="4" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.metodologia %}
+                  {% if active_item.field_name == 'metodologia' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.metodologia field_id="metodologia" label="Metodología de Proyecto" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.metodologia field_id="metodologia" label="Metodología de Proyecto" input_type="text" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.escenario_proyecto %}
+                  {% if active_item.field_name == 'escenario_proyecto' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.escenario_proyecto field_id="escenario_proyecto" label="Escenario General del Proyecto (Aula / Escuela / Comunidad)" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.escenario_proyecto field_id="escenario_proyecto" label="Escenario General del Proyecto (Aula / Escuela / Comunidad)" input_type="text" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.grado %}
+                  {% if active_item.field_name == 'grado' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.grado field_id="grado" label="Grado Escolar" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.grado field_id="grado" label="Grado Escolar" input_type="text" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+              </div>
+            </details>
+          </div>
+        </section>
+
+        {% if source_tampered %}
+          <div class="tamper-banner" role="alert">
+            <h3>⚠️ Alerta de integridad del documento fuente</h3>
+            <p>
+              El archivo PDF actual en el servidor ha sido modificado o reemplazado y no coincide con el documento original registrado.
+            </p>
+            <p>
+              <strong>Las correcciones y confirmaciones están bloqueadas para prevenir desalineación de láminas y datos.</strong>
+              Para reanudar el trabajo con el nuevo archivo PDF, ejecute una reextracción explícita:
+            </p>
+            <form method="post" style="margin-top: 0.75rem;">
+              {% csrf_token %}
+              <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+              <input type="hidden" name="session_id" value="{{ active_session_id }}">
+              <button type="submit" name="action" value="reextract" class="button button-primary" style="background: #dc2626; border-color: #b91c1c;">
+                🔄 Ejecutar reextracción desde el PDF actual
+              </button>
+            </form>
+          </div>
+        {% endif %}
+
+        {% if success_message %}
+          <div class="message" role="status">{{ success_message }}</div>
+        {% endif %}
+
+        {% if error_message %}
+          <div class="message message-danger" role="alert" id="page-error-alert">{{ error_message }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Automatic Mechanical Verification Summary -->
+      {% if verification_report and verification_report.is_valid %}
+        <section class="verification-banner" id="seccion-comprobacion" role="region" aria-label="Comprobación automática de la planeación">
+          <div class="verification-banner-header">
+            <div class="verification-banner-title">
+              <span class="verification-badge-icon" aria-hidden="true">📋</span>
+              <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #166534;">Datos comprobados con tu PDF</h3>
+            </div>
+            <div class="verification-pills">
+              <span class="count-pill count-pill-green" title="Datos cotejados mecánicamente contra páginas físicas">
+                ✅ <strong>{{ verification_report.checked_count }}</strong> cotejados contra páginas físicas
+              </span>
+              {% if verification_report.needs_review_count > 0 %}
+                <span class="count-pill count-pill-yellow" title="Datos que requieren revisión o confirmación docente">
+                  🟡 <strong>{{ verification_report.needs_review_count }}</strong> requieren revisión humana
+                </span>
+              {% endif %}
+              <span class="count-pill count-pill-neutral">
+                🔒 0 bloqueos detectados
+              </span>
+            </div>
+          </div>
+          <p class="verification-banner-summary" style="margin: 0.35rem 0 0.5rem 0; font-size: 0.85rem; color: #15803d;">
+            Comprobación automática completada: {{ verification_report.checked_count }} fuentes cotejadas mecánicamente contra páginas físicas del PDF.{% if verification_report.needs_review_count > 0 %} {{ verification_report.needs_review_count }} requieren revisión o confirmación docente.{% endif %}
+          </p>
+          {% if checked_items %}
+            <details class="verification-details-collapse" style="font-size: 0.82rem; color: #334155; margin-top: 0.35rem;">
+              <summary style="cursor: pointer; font-weight: 700; color: #1e40af;">
+                Ver páginas físicas cotejadas ({{ verification_report.checked_count }} cotejos)
+              </summary>
+              <ul class="verification-items-list" style="margin: 0.4rem 0 0.2rem 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.25rem;">
+                {% for item in checked_items %}
+                  {% if item.page_number %}
+                    <li class="verification-item-checked">
+                      <a href="{% url 'tutor-import-source-page' job.pk item.page_number %}#page={{ item.page_number }}" target="_blank" rel="noopener noreferrer" class="evidence-link" style="font-weight: 700; color: #0284c7; text-decoration: underline;">
+                        Página {{ item.page_number }} ↗
+                      </a>:
+                      <span>{{ item.message }}</span>
+                      {% if item.excerpt %}
+                        <span style="color: #64748b; font-style: italic;">(«{{ item.excerpt }}»)</span>
+                      {% endif %}
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </details>
+          {% endif %}
+          {% if dossier.page_warnings %}
+            <div class="page-warnings-alert" role="alert" style="margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 0.85rem; color: #92400e;">
+              <strong>Advertencias de lectura en páginas fuente:</strong>
+              <ul style="margin: 0.25rem 0 0 1.25rem; padding: 0;">
+                {% for page_num, warning in dossier.page_warnings.items %}
+                  <li>Página {{ page_num }}: {{ warning }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      <!-- Por revisar: Priority Decisions Queue Section -->
+      {% if queue %}
+        <section class="queue-section" id="seccion-por-revisar" aria-labelledby="por-revisar-heading">
+          <div class="queue-section-header">
+            <h2 id="por-revisar-heading" style="font-size: 1.15rem; font-weight: 800; margin: 0 0 0.5rem 0;">
+              Dudas y respuestas ({{ pending_progress_total }} pendientes)
+            </h2>
+            <span style="font-size: 0.85rem; color: var(--color-muted);">
+              {{ queue.items|length }} elementos en esta vista
+            </span>
+          </div>
+
+          <!-- Sticky Priority Summary Bar -->
+          <div class="priority-sticky-bar" id="priority-summary-bar">
+            <div class="summary-header-row">
+              <div class="summary-title">
+                <span>Estado de esta revisión</span>
+                <span class="badge-tag tag-origin" style="font-size: 0.7rem;">
+                  {% if queue.scope == 'general' %}
+                    Alcance: Datos generales del documento
+                  {% elif queue.session_filter and queue.session_filter != 'all' and queue.session_filter != 'document' %}
+                    Alcance: Sesión {{ selected_session.session_number }}
+                  {% else %}
+                    Alcance: Documento completo
+                  {% endif %}
+                </span>
+                <span id="dirty-indicator" class="dirty-badge" style="display: none;">
+                  ⚠️ Modificado sin guardar
+                </span>
+              </div>
+              <div class="summary-counts-row">
+                <span class="count-pill count-pill-red" title="Elementos que requieren resolución obligatoria">
+                  🔴 Por resolver: <strong id="count-requires-resolution">{{ queue.requires_resolution_count }}</strong>
+                </span>
+                <span class="count-pill count-pill-yellow" title="Elementos pendientes de confirmación docente">
+                  🟡 Por revisar: <strong id="count-pending-review">{{ queue.pending_review_count }}</strong>
+                </span>
+                <span class="count-pill count-pill-green" title="Elementos revisados y confirmados">
+                  ✅ Revisados: <strong id="count-reviewed">{{ queue.reviewed_count }}</strong>
+                </span>
+                <span class="count-pill count-pill-neutral" title="Campos complementarios no especificados en la fuente">
+                  ⚪ No especificado: <strong id="count-not-specified">{{ queue.not_specified_count }}</strong>
+                </span>
+              </div>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ queue.progress_percent }}%;"></div>
+              </div>
+              <div class="progress-text">
+                {% if queue.is_completed %}
+                  {% if queue.not_specified_count > 0 %}
+                    🎉 Revisión terminada para este alcance; {{ queue.not_specified_count }} no especificados ({{ queue.progress_percent }}%)
+                  {% else %}
+                    🎉 Revisión terminada para este alcance (100%)
+                  {% endif %}
+                {% else %}
+                  Avance: {{ queue.reviewed_count }}/{{ queue.actionable_count }} ({{ queue.progress_percent }}%){% if queue.not_specified_count > 0 %} · {{ queue.not_specified_count }} no especificados{% endif %}
+                {% endif %}
+              </div>
+            </div>
+            <details class="scope-note-collapse" style="margin-top: 0.35rem; font-size: 0.75rem; color: var(--color-muted);">
+              <summary style="cursor: pointer; font-weight: 600;">Nota sobre alcance y proyectos</summary>
+              <p style="margin: 0.2rem 0 0; padding: 0.35rem 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; color: #475569;">
+                Los datos generales se interpretan a nivel de documento; la verificación multiproyecto se realiza contra la fuente.
+              </p>
+            </details>
+          </div>
+
+          <!-- Scope Switcher / Session Navigation -->
+          <nav aria-label="Selección de sesión a trabajar" class="scope-nav">
+            <span class="scope-label">Filtro de sesión:</span>
+            <a href="?session_id={{ active_session_id }}&scope=document"
+               class="scope-tab {% if not queue.session_filter and queue.scope != 'general' %}active{% endif %}">
+              Todo el documento ({{ dossier.sessions|length }} sesiones)
+            </a>
+            <a href="?scope=general"
+               class="scope-tab {% if queue.scope == 'general' %}active{% endif %}">
+              Datos generales
+            </a>
+            {% for s in dossier.sessions %}
+              <a href="?session_id={{ s.session_id }}&scope={{ s.session_id }}"
+                 class="scope-tab {% if s.session_id == active_session_id and queue.session_filter == s.session_id %}active{% endif %}"
+                 title="Páginas: {{ s.pages|join:', ' }}{% if s.project_title %} · Proyecto: {{ s.project_title }}{% endif %}">
+                {{ s.title|default:"Sesión" }} (Pág. {{ s.pages|join:', ' }})
+              </a>
+            {% endfor %}
+          </nav>
+
+          <p style="margin: -0.25rem 0 0.75rem;">
+            <a href="#seccion-clases" class="button button-secondary button-small">Ver todas las clases</a>
+          </p>
+
+          <!-- Optional index for free navigation; the active question remains the only unfolded decision. -->
+          <details class="questions-index-collapse" style="margin-bottom: 0.75rem;">
+            <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
+              Abrir índice de dudas y respuestas ▾
+            </summary>
+            <div class="queue-list" style="margin-top: 0.5rem;">
+            <!-- 1. Requires resolution (rojos) -->
+            {% for it in queue.items_requires_resolution %}
+              <div class="queue-item item-red {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                <div class="queue-item-info">
+                  <div class="queue-item-title">
+                    <span>🔴</span>
+                    <strong>{{ it.human_label }}</strong>
+                    <span class="badge-tag tag-missing">Requiere resolución</span>
+                  </div>
+                  <div class="queue-item-sub">
+                    {{ it.problem_summary }}
+                  </div>
+                </div>
+                <div>
+                  <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}"
+                     class="button button-small">
+                    Revisar
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+
+            <!-- 2. Pending review (amarillos) -->
+            {% for it in queue.items_pending_review %}
+              <div class="queue-item item-yellow {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                <div class="queue-item-info">
+                  <div class="queue-item-title">
+                    <span>🟡</span>
+                    <strong>{{ it.human_label }}</strong>
+                    <span class="badge-tag tag-ambiguous">Por revisar</span>
+                  </div>
+                  <div class="queue-item-sub">
+                    {{ it.problem_summary }}
+                  </div>
+                </div>
+                <div>
+                  <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}"
+                     class="button button-small">
+                    Revisar
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+            </div>
+
+          {% if queue.items_postponed %}
+            <details class="postponed-items-collapse" style="margin-top: 0.75rem;">
+              <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #1e3a8a; padding: 0.5rem 0.75rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                Revisar después ({{ queue.postponed_count }}) ▾
+              </summary>
+              <div class="queue-list" style="margin-top: 0.5rem;">
+                {% for it in queue.items_postponed %}
+                  <div class="queue-item item-neutral {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                    <div class="queue-item-info">
+                      <div class="queue-item-title"><strong>{{ it.human_label }}</strong> <span class="badge-tag tag-pending">Aplazada</span></div>
+                      <div class="queue-item-sub">Puedes volver a esta respuesta y corregirla cuando quieras.</div>
+                    </div>
+                    <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}" class="button button-small">Volver a revisar</a>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+
+          <!-- 3. Not specified (neutrales) collapsed by default -->
+          {% if queue.items_not_specified %}
+            <details class="not-specified-collapse" style="margin-top: 0.75rem;">
+              <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #475569; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
+                ⚪ Elementos no especificados ({{ queue.not_specified_count }}) ▾
+              </summary>
+              <div class="queue-list" style="margin-top: 0.5rem;">
+                {% for it in queue.items_not_specified %}
+                  <div class="queue-item item-neutral {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                    <div class="queue-item-info">
+                      <div class="queue-item-title">
+                        <span>⚪</span>
+                        <strong>{{ it.human_label }}</strong>
+                        <span class="badge-tag tag-pending">No especificado</span>
+                      </div>
+                      <div class="queue-item-sub">
+                        {{ it.problem_summary }}
+                      </div>
+                    </div>
+                    <div>
+                      <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}"
+                         class="button button-small">
+                        Editar
+                      </a>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+
+          <!-- 4. Reviewed items collapsed by default -->
+          <details class="reviewed-items-collapse" style="margin-top: 0.75rem;">
+            <summary style="cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #166534; padding: 0.5rem 0.75rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+              ✅ Elementos revisados ({{ queue.reviewed_count }}) ▾
+            </summary>
+            <div class="queue-list" style="margin-top: 0.5rem;">
+              {% for it in queue.items_reviewed %}
+                <div class="queue-item item-green {% if active_item and active_item.stable_key == it.stable_key %}active{% endif %}">
+                  <div class="queue-item-info">
+                    <div class="queue-item-title">
+                      <span>✅</span>
+                      <strong>{{ it.human_label }}</strong>
+                      <span class="badge-tag tag-confirmed">Revisado</span>
+                    </div>
+                    <div class="queue-item-sub">
+                      {{ it.problem_summary }}
+                    </div>
+                  </div>
+                  <div>
+                    <a href="{% if it.scope == 'general' %}?scope=general&item={{ it.stable_key }}#control-{{ it.field_name }}{% elif it.scope == 'session' %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-{{ it.field_name }}{% else %}?session_id={{ it.session_id }}&scope={{ it.session_id }}&item={{ it.stable_key }}#control-annex-{{ it.reference_id }}{% endif %}"
+                       class="button button-small">
+                      Ver
+                    </a>
+                  </div>
+                </div>
+              {% empty %}
+                <p class="muted" style="padding: 0.5rem; font-size: 0.88rem;">Aún no hay elementos revisados.</p>
+              {% endfor %}
+            </div>
+          </details>
+          </details>
+        </section>
+      {% endif %}
+
+      {% if queue.is_completed %}
+        <!-- Completion Card when everything is reviewed -->
+        <div class="completion-card">
+          <h3>🎉 Revisión terminada para este alcance</h3>
+          <p>
+            Todos los campos obligatorios y anexos detectados para este alcance han sido revisados y confirmados.
+            {% if queue.not_specified_count > 0 %}
+              Contiene {{ queue.not_specified_count }} elemento{{ queue.not_specified_count|pluralize }} complementario{{ queue.not_specified_count|pluralize }} no especificado{{ queue.not_specified_count|pluralize }} en la fuente que permanece{{ queue.not_specified_count|pluralize:"n" }} neutral{{ queue.not_specified_count|pluralize:"es" }}.
+            {% endif %}
+            La planeación cuenta con fundamentación y trazabilidad editorial docente.
+          </p>
+        </div>
+      {% elif active_item %}
+        <!-- Single Unfolded Priority Decision Panel -->
+        <section class="active-decision-card" id="workspace-activo" aria-labelledby="active-decision-title">
+          <form method="post" id="queue-item-form" action="?{% if active_item.scope != 'general' %}session_id={{ active_session_id }}&{% endif %}{% if queue.session_filter %}scope={{ queue.session_filter }}&{% endif %}item={{ active_item.stable_key }}#control-{% if active_item.scope == 'annex' %}annex-{{ active_item.reference_id }}{% else %}{{ active_item.field_name }}{% endif %}">
+            {% csrf_token %}
+            <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+            <input type="hidden" name="item_id" value="{{ active_item.item_id }}">
+            {% if active_item.scope == 'general' %}
+              <input type="hidden" name="scope" value="general">
+            {% elif active_item.session_id %}
+              <input type="hidden" name="scope" value="{{ active_item.session_id }}">
+            {% endif %}
+
+            <div class="card-top-bar">
+              <div>
+                <span class="decision-kicker">
+                  {% if active_item.scope == 'general' %}
+                    Proyecto escolar
+                  {% elif active_item.scope == 'session' %}
+                    Sesión {{ active_item.session_number }}
+                  {% else %}
+                    Anexo · Sesión {{ active_item.session_number }}
+                  {% endif %}
+                </span>
+                <h2 class="decision-title" id="active-decision-title">
+                  {{ active_item.human_label }}
+                </h2>
+              </div>
+              <div class="decision-step-nav">
+                {% if prev_item %}
+                  <a href="{% if prev_item.scope == 'general' %}?scope=general&item={{ prev_item.stable_key }}#control-{{ prev_item.field_name }}{% elif prev_item.scope == 'session' %}?session_id={{ prev_item.session_id }}&scope={{ prev_item.session_id }}&item={{ prev_item.stable_key }}#control-{{ prev_item.field_name }}{% else %}?session_id={{ prev_item.session_id }}&scope={{ prev_item.session_id }}&item={{ prev_item.stable_key }}#control-annex-{{ prev_item.reference_id }}{% endif %}"
+                     class="button button-small" title="Ir a la decisión anterior">
+                    ← Anterior
+                  </a>
+                {% endif %}
+                {% if pending_progress_total %}
+                  <span class="decision-counter">
+                    {{ pending_progress_total }} duda{{ pending_progress_total|pluralize }} pendiente{{ pending_progress_total|pluralize }} en este alcance
+                  </span>
+                {% endif %}
+                {% if next_item %}
+                  <a href="{% if next_item.scope == 'general' %}?scope=general&item={{ next_item.stable_key }}#control-{{ next_item.field_name }}{% elif next_item.scope == 'session' %}?session_id={{ next_item.session_id }}&scope={{ next_item.session_id }}&item={{ next_item.stable_key }}#control-{{ next_item.field_name }}{% else %}?session_id={{ next_item.session_id }}&scope={{ next_item.session_id }}&item={{ next_item.stable_key }}#control-annex-{{ next_item.reference_id }}{% endif %}"
+                     class="button button-small" title="Ir a la decisión siguiente">
+                    Siguiente →
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Side-by-side grid on desktop: editor left, source right -->
+            <div class="active-decision-body">
+              <div class="decision-main-col">
+                <!-- One concrete review question, with source beside it -->
+                <div class="problem-statement problem-{{ active_item.priority_state|slice:':6' }}{% if active_item.priority_state == 'requires_resolution' %} problem-red{% elif active_item.priority_state == 'pending_review' %} problem-yellow{% elif active_item.priority_state == 'not_specified' %} problem-neutral{% else %} problem-green{% endif %}">
+                  <div>
+                    <strong>¿Este dato coincide con tu planeación?</strong>
+                    <span style="display: block; margin-top: 0.2rem;">{{ active_item.problem_summary }}</span>
+                  </div>
+                </div>
+
+                {% if active_item_inline_error %}
+                  <div id="error-{{ invalid_field }}" class="inline-error-alert" role="alert" style="color: #b91c1c; background: #fef2f2; border: 1px solid #f87171; padding: 0.5rem 0.75rem; border-radius: 4px; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                    ⚠️ {{ active_item_inline_error }}
+                  </div>
+                {% endif %}
+
+                <!-- Editable Form Input for this item -->
+                <div class="decision-input-box">
+                  {% if active_item.input_type == 'textarea' %}
+                    <label for="control-{{ active_item.field_name }}" style="display: block; font-weight: 700; margin-bottom: 0.25rem; font-size: 0.88rem;">
+                      Contenido editable:
+                    </label>
+                    <textarea id="control-{{ active_item.field_name }}"
+                              name="{{ active_item.field_name }}"
+                              class="form-input-full"
+                              rows="3"
+                              {% if active_item_inline_error %}aria-invalid="true" aria-describedby="error-{{ invalid_field }}" autofocus{% endif %}
+                              {% if source_tampered %}readonly{% endif %}>{{ active_item_current_value }}</textarea>
+                  {% elif active_item.field_name == 'campos_formativos' %}
+                    <label style="display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.88rem;">
+                      Selección de Campos Formativos:
+                    </label>
+                    <div class="checkbox-group" id="control-campos_formativos" tabindex="-1">
+                      <input type="hidden" name="campos_formativos_present" value="1">
+                      {% for opt in campos_formativos_options %}
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; font-weight: normal; cursor: pointer; font-size: 0.85rem;">
+                          <input type="checkbox"
+                                 name="campos_formativos"
+                                 value="{{ opt.value }}"
+                                 {% if opt.selected %}checked{% endif %}
+                                 {% if source_tampered %}disabled{% endif %}>
+                          <span>{{ opt.value }}</span>
+                        </label>
+                      {% empty %}
+                        {% for opt in available_campos %}
+                          <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; font-weight: normal; cursor: pointer; font-size: 0.85rem;">
+                            <input type="checkbox"
+                                   name="campos_formativos"
+                                   value="{{ opt }}"
+                                   {% if opt == active_item.current_value %}checked{% endif %}
+                                   {% if source_tampered %}disabled{% endif %}>
+                            <span>{{ opt }}</span>
+                          </label>
+                        {% endfor %}
+                      {% endfor %}
+                    </div>
+                  {% elif active_item.scope == 'annex' %}
+                    <div class="active-annex-controls" id="control-annex-{{ active_item.reference_id }}" tabindex="-1">
+                      <p style="margin: 0 0 0.4rem 0; font-size: 0.85rem;">
+                        Mención en sesión: <em>"{{ active_item.raw_mention }}"</em>
+                      </p>
+                      <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem;">
+                        <input type="radio"
+                                name="annex_confirm_{{ active_item.reference_id }}"
+                                value=""
+                                {% if not active_item.confirmed_page %}checked{% endif %}
+                                {% if source_tampered %}disabled{% endif %}>
+                        <em>Sin confirmar (Pendiente de revisión)</em>
+                      </label>
+                      {% for cp in active_item.candidate_pages %}
+                        <label style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; font-size: 0.85rem; cursor: pointer;">
+                          <input type="radio"
+                                 name="annex_confirm_{{ active_item.reference_id }}"
+                                 value="{{ cp }}"
+                                 {% if active_item.confirmed_page == cp %}checked{% endif %}
+                                 {% if source_tampered %}disabled{% endif %}>
+                          <span>Confirmar lámina Pág. {{ cp }}</span>
+                          {% if not source_tampered %}
+                            <a href="{% url 'tutor-import-source-page' job.pk cp %}#page={{ cp }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="button button-small" style="font-size: 0.72rem; padding: 0.1rem 0.35rem;">
+                              Ver Lámina ↗
+                            </a>
+                          {% endif %}
+                        </label>
+                      {% endfor %}
+                      <div style="margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <label for="control-annex-manual-page-{{ active_item.reference_id }}" style="display: block; font-weight: 600; margin-bottom: 0.2rem;">
+                          Asociar página manual (1 a {{ dossier.page_count }}):
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                          <input type="number"
+                                 id="control-annex-manual-page-{{ active_item.reference_id }}"
+                                 name="annex_manual_page_{{ active_item.reference_id }}"
+                                 value="{{ active_annex_manual_page|default:'' }}"
+                                 min="1"
+                                 max="{{ dossier.page_count }}"
+                                 style="width: 70px; padding: 0.25rem 0.4rem; border: 1px solid var(--color-line); border-radius: 4px; font-size: 0.85rem;"
+                                 placeholder="Pág."
+                                 {% if active_inline_errors.annex_manual_page %}aria-invalid="true" aria-describedby="error-annex-manual-page-{{ active_item.reference_id }}" autofocus{% endif %}
+                                 {% if source_tampered %}disabled{% endif %}>
+                          <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                            <input type="checkbox"
+                                   name="annex_manual_confirm_{{ active_item.reference_id }}"
+                                   value="1"
+                                   {% if active_annex_manual_confirmed %}checked{% endif %}
+                                   {% if source_tampered %}disabled{% endif %}>
+                            Confirmar
+                          </label>
+                        </div>
+                        {% if active_inline_errors.annex_manual_page %}
+                          <p id="error-annex-manual-page-{{ active_item.reference_id }}" role="alert" style="color: var(--color-error, #dc2626); font-size: 0.8rem; margin: 0.25rem 0 0 0;">
+                            {{ active_inline_errors.annex_manual_page }}
+                          </p>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% else %}
+                    <label for="control-{{ active_item.field_name }}" style="display: block; font-weight: 700; margin-bottom: 0.25rem; font-size: 0.88rem;">
+                      Contenido editable:
+                    </label>
+                    <input type="text"
+                           id="control-{{ active_item.field_name }}"
+                           name="{{ active_item.field_name }}"
+                           value="{{ active_item_current_value|default:'' }}"
+                           class="form-input-full"
+                           {% if active_item_inline_error %}aria-invalid="true" aria-describedby="error-{{ invalid_field }}" autofocus{% endif %}
+                           {% if source_tampered %}readonly{% endif %}>
+                  {% endif %}
+                </div>
+              </div><!-- /decision-main-col -->
+
+              <!-- Evidence and Source Context Column -->
+              <div class="decision-evidence-col">
+                <div class="evidence-box">
+                  <span class="evidence-label" style="display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.82rem;">
+                    Evidencia extraída del PDF original
+                  </span>
+                  {% if active_item.source_refs %}
+                    {% for ref in active_item.source_refs %}
+                    {% if ref.page_number %}
+                      <div style="margin-bottom: 0.5rem;">
+                        <span class="badge-tag tag-source-page">Página {{ ref.page_number }}</span>
+                        {% if not source_tampered %}
+                          <a href="{% url 'tutor-import-source-page' job.pk ref.page_number %}#page={{ ref.page_number }}"
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             class="evidence-link button button-small"
+                             style="font-size: 0.75rem; margin-left: 0.4rem; padding: 0.2rem 0.5rem;">
+                            Ver página original ↗
+                          </a>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                    {% if ref.excerpt %}
+                      <blockquote class="evidence-quote" style="margin: 0.35rem 0 0 0; padding-left: 0.6rem; border-left: 3px solid #cbd5e1; font-style: italic; font-size: 0.82rem;">
+                        "{{ ref.excerpt }}"
+                      </blockquote>
+                    {% elif forloop.first %}
+                      <p class="muted" style="font-size: 0.85rem; font-style: italic; margin: 0;">
+                        Sin fragmento textual directo asociado en la extracción.
+                      </p>
+                    {% endif %}
+                    {% endfor %}
+                  {% elif active_item.scope == 'annex' and active_item.candidate_pages %}
+                    <p style="font-size: 0.85rem; margin: 0 0 0.25rem 0;">
+                      Láminas candidatas detectadas en páginas {{ active_item.candidate_pages|join:", " }}.
+                    </p>
+                    {% for cp in active_item.candidate_pages %}
+                      <div style="margin-top: 0.25rem;">
+                        {% if not source_tampered %}
+                          <a href="{% url 'tutor-import-source-page' job.pk cp %}#page={{ cp }}"
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             class="evidence-link button button-small">
+                            Ver lámina en Pág. {{ cp }} ↗
+                          </a>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <p class="muted" style="font-size: 0.85rem; font-style: italic; margin: 0;">
+                      Campo sin evidencia explícita localizada en el documento fuente.
+                    </p>
+                  {% endif %}
+                </div>
+              </div><!-- /decision-evidence-col -->
+            </div><!-- /active-decision-body -->
+
+            <!-- Actions row -->
+            <div class="decision-actions">
+              {% if not source_tampered %}
+                <button type="submit" name="action" value="confirm_queue_item" class="button button-primary">
+                  Está bien, continuar
+                </button>
+                <button type="submit" name="action" value="save_queue_item" class="button button-secondary" aria-describedby="correction-help">
+                  Corregir
+                </button>
+                <button type="submit" name="action" value="postpone_queue_item" class="button button-secondary">
+                  Revisar después
+                </button>
+              {% else %}
+                <span style="color: #b91c1c; font-size: 0.85rem; font-weight: 700;">
+                  Acciones bloqueadas: Documento alterado.
+                </span>
+              {% endif %}
+            </div>
+            <p id="correction-help" class="muted" style="font-size: 0.8rem; margin: 0.45rem 0 0;">
+              Corregir guarda el contenido escrito y marca esta duda como resuelta. Si el guardado falla, tu edición permanece en pantalla para que puedas reintentar.
+            </p>
+          </form>
+        </section>
+      {% endif %}
+
+      <!-- Formulario principal de revisión completa -->
+      <form method="post" id="interpretation-form" class="interpretation-form" action="?{% if active_session_id %}session_id={{ active_session_id }}&{% endif %}{% if queue.session_filter %}scope={{ queue.session_filter }}{% elif active_session_id %}scope={{ active_session_id }}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+        <input type="hidden" name="session_id" value="{{ active_session_id }}">
+        <input type="hidden" name="session_number" value="{{ active_session_number }}">
+
+        <!-- 2. Sesiones de Clase (TODAS las clases en orden) -->
+        <section aria-labelledby="all-classes-heading" class="all-classes-section" id="seccion-clases" style="margin-top: 2rem;">
+          <h2 id="all-classes-heading" style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">
+            2. Sesiones de Clase ({{ dossier.sessions|length }} sesiones en secuencia)
+          </h2>
+          <p class="muted" style="margin-bottom: 1.25rem;">
+            Secuencia didáctica diaria completa: cada sesión incluye sus momentos pedagógicos y anexos asociados.
+          </p>
+
+          <div class="sessions-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% for sess in dossier.sessions %}
+              {% if sess.session_id == selected_session.session_id %}
+                <!-- Sesión activa y editable -->
+                <div class="session-card session-card-active" id="session-card-{{ sess.session_id }}" style="background: var(--color-surface); border: 2px solid var(--color-action, #0284c7); border-radius: var(--radius); padding: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid var(--color-line); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                    <div>
+                      <span class="badge-tag tag-origin" style="margin-bottom: 0.25rem; display: inline-block;">Sesión en edición activa</span>
+                      <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--color-ink);">
+                        Sesión {{ sess.session_number }}: {{ sess.title }}
+                      </h3>
+                      <span class="muted" style="font-size: 0.85rem;">
+                        Páginas fuente en PDF: {{ sess.pages|join:', ' }}
+                        {% if sess.project_title %} · <strong>Proyecto:</strong> {{ sess.project_title }}{% endif %}
+                      </span>
+                    </div>
+                  </div>
+
+                  {% if sess.continues_on %}
+                    <div class="continuation-banner" style="margin-bottom: 1rem;">
+                      ℹ️ <strong>Continuación de la sesión:</strong> La secuencia didáctica continúa en la{{ sess.continues_on|length|pluralize:"s" }} página{{ sess.continues_on|length|pluralize:"s" }} {{ sess.continues_on|join:", " }}.
+                    </div>
+                  {% endif %}
+
+                  <!-- Momentos y Actividades pedagógicas -->
+                  <h4 style="font-size: 1rem; font-weight: 800; margin: 1rem 0 0.5rem 0;">Momentos de la sesión</h4>
+                  {% if sess.fields.contexto_ejecucion %}
+                    {% if active_item.field_name == 'contexto_ejecucion' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.contexto_ejecucion field_id="contexto_ejecucion" label="Lugar y Contexto de Ejecución (Aula vs Casa)" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.contexto_ejecucion field_id="contexto_ejecucion" label="Lugar y Contexto de Ejecución (Aula vs Casa)" input_type="text" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% if sess.fields.inicio %}
+                    {% if active_item.field_name == 'inicio' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.inicio field_id="inicio" label="Momento 1: Inicio" input_type="textarea" rows="3" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.inicio field_id="inicio" label="Momento 1: Inicio" input_type="textarea" rows="3" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% if sess.fields.desarrollo %}
+                    {% if active_item.field_name == 'desarrollo' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.desarrollo field_id="desarrollo" label="Momento 2: Desarrollo" input_type="textarea" rows="4" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.desarrollo field_id="desarrollo" label="Momento 2: Desarrollo" input_type="textarea" rows="4" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% if sess.fields.cierre %}
+                    {% if active_item.field_name == 'cierre' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.cierre field_id="cierre" label="Momento 3: Cierre" input_type="textarea" rows="3" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.cierre field_id="cierre" label="Momento 3: Cierre" input_type="textarea" rows="3" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% if sess.fields.materiales %}
+                    {% if active_item.field_name == 'materiales' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.materiales field_id="materiales" label="Materiales y Recursos" input_type="textarea" rows="3" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.materiales field_id="materiales" label="Materiales y Recursos" input_type="textarea" rows="3" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% if sess.fields.evaluacion %}
+                    {% if active_item.field_name == 'evaluacion' %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.evaluacion field_id="evaluacion" label="Evaluación Formativa" input_type="textarea" rows="3" readonly=source_tampered job=job is_proxy=True %}
+                    {% else %}
+                      {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.evaluacion field_id="evaluacion" label="Evaluación Formativa" input_type="textarea" rows="3" readonly=source_tampered job=job %}
+                    {% endif %}
+                  {% endif %}
+                  <!-- Actividades identificadas en la sesión activa -->
+                  {% if sess.activities %}
+                    <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
+                      <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                        Actividades identificadas en la Sesión {{ sess.session_number }} ({{ sess.activities|length }})
+                      </h4>
+                      <div class="table-responsive">
+                        <table class="annex-table">
+                          <thead>
+                            <tr>
+                              <th scope="col" style="width: 25%;">Actividad</th>
+                              <th scope="col" style="width: 35%;">Descripción</th>
+                              <th scope="col" style="width: 20%;">Evidencia de origen</th>
+                              <th scope="col" style="width: 20%;">Anexos vinculados</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for act in sess.activities %}
+                              <tr id="activity-row-{{ act.activity_id }}">
+                                <td data-label="Actividad">
+                                  <strong>{{ act.title|default:act.activity_id }}</strong>
+                                  {% if act.order %}<span class="muted" style="display: block; font-size: 0.75rem;">Orden: {{ act.order }}</span>{% endif %}
+                                </td>
+                                <td data-label="Descripción">
+                                  <span>{{ act.description }}</span>
+                                </td>
+                                <td data-label="Evidencia de origen">
+                                  {% if act.evidence %}
+                                    {% for ev in act.evidence %}
+                                      <div style="font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                        {% if ev.page_number %}
+                                          <a href="{% url 'tutor_package_source_page' package.pk ev.page_number %}" class="evidence-link" target="_blank" rel="noopener">
+                                            📄 Pág. {{ ev.page_number }}
+                                          </a>
+                                        {% endif %}
+                                        {% if ev.excerpt %}
+                                          <span class="muted" style="font-size: 0.75rem; display: block;"><em>"{{ ev.excerpt }}"</em></span>
+                                        {% endif %}
+                                      </div>
+                                    {% endfor %}
+                                  {% else %}
+                                    <span class="muted" style="font-size: 0.8rem;">Sin citas directas</span>
+                                  {% endif %}
+                                </td>
+                                <td data-label="Anexos vinculados">
+                                  {% if act.annex_ids %}
+                                    {% for aid in act.annex_ids %}
+                                      <span class="badge-tag tag-supported" style="margin-right: 0.25rem;">{{ aid }}</span>
+                                    {% endfor %}
+                                  {% else %}
+                                    <span class="muted" style="font-size: 0.8rem;">Ninguno</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  {% endif %}
+
+                  <!-- Anexos de la sesión activa -->
+
+                  <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                      Anexos y láminas asociadas a la Sesión {{ sess.session_number }}
+                    </h4>
+                    {% if sess.annex_references %}
+                      <div class="table-responsive">
+                        <table class="annex-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Referencia</th>
+                              <th scope="col">Evidencia</th>
+                              <th scope="col">Página candidata</th>
+                              <th scope="col">Decisión</th>
+                              <th scope="col">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for ref in sess.annex_references %}
+                              <tr id="annex-row-{{ ref.reference_id }}">
+                                <td data-label="Referencia" aria-label="Referencia">
+                                  {% if active_item.reference_id != ref.reference_id %}
+                                    <span id="control-annex-{{ ref.reference_id }}" tabindex="-1"></span>
+                                  {% endif %}
+                                  <strong>Anexo {{ ref.annex_number }}</strong>
+                                </td>
+                                <td data-label="Evidencia" aria-label="Evidencia"><em>"{{ ref.raw_mention }}"</em></td>
+                                <td data-label="Página candidata" aria-label="Página candidata">
+                                  {% if ref.candidate_pages %}
+                                    {% for cp in ref.candidate_pages %}
+                                      {% if source_tampered %}
+                                        <span class="button button-small muted" style="color: #b91c1c; opacity: 0.6; cursor: not-allowed; margin-bottom: 0.25rem;">
+                                          Lámina bloqueada (Pág. {{ cp }})
+                                        </span>
+                                      {% else %}
+                                        <a href="{% url 'tutor-import-source-page' job.pk cp %}#page={{ cp }}"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="button button-small evidence-link"
+                                           style="margin-bottom: 0.25rem;">
+                                          Ver Lámina (Pág. {{ cp }}) ↗
+                                        </a>
+                                      {% endif %}
+                                    {% endfor %}
+                                  {% else %}
+                                    <span class="badge-tag tag-missing">Sin lámina detectada en PDF</span>
+                                  {% endif %}
+                                  {% if ref.confirmed_page and ref.confirmed_page not in ref.candidate_pages %}
+                                    <div style="margin-top: 0.35rem;">
+                                      {% if source_tampered %}
+                                        <span class="button button-small muted" style="color: #b91c1c; opacity: 0.6; cursor: not-allowed;">
+                                          Lámina manual (Pág. {{ ref.confirmed_page }})
+                                        </span>
+                                      {% else %}
+                                        <a href="{% url 'tutor-import-source-page' job.pk ref.confirmed_page %}#page={{ ref.confirmed_page }}"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="button button-small evidence-link"
+                                           style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc;">
+                                          Ver Lámina Confirmada (Pág. {{ ref.confirmed_page }}) ↗
+                                        </a>
+                                      {% endif %}
+                                    </div>
+                                  {% endif %}
+                                </td>
+                                <td data-label="Decisión" aria-label="Decisión">
+                                  {% if active_item.reference_id == ref.reference_id %}
+                                    <p class="muted" style="font-size: 0.85rem; margin: 0;">
+                                      <em>(Se está editando en el panel de decisión prioritaria arriba ↑)</em>
+                                    </p>
+                                  {% else %}
+                                    <label style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem;">
+                                      <input type="radio"
+                                             name="annex_confirm_{{ ref.reference_id }}"
+                                             value=""
+                                             {% if not ref.confirmed_page %}checked{% endif %}
+                                             {% if source_tampered %}disabled{% endif %}>
+                                      <em>Sin confirmar (Pendiente de revisión)</em>
+                                    </label>
+                                    {% for cp in ref.candidate_pages %}
+                                      <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem;">
+                                        <input type="radio"
+                                               name="annex_confirm_{{ ref.reference_id }}"
+                                               value="{{ cp }}"
+                                               {% if ref.confirmed_page == cp %}checked{% endif %}
+                                               {% if source_tampered %}disabled{% endif %}>
+                                        Pág. {{ cp }} confirmada
+                                      </label>
+                                    {% endfor %}
+
+                                    <div class="manual-annex-box" style="margin-top: 0.5rem; padding: 0.4rem 0.6rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                                      <label for="manual-page-{{ ref.reference_id }}" style="display: block; font-weight: 600; margin-bottom: 0.25rem; color: #334155;">
+                                        Asociar página manual (1 a {{ dossier.page_count }}):
+                                      </label>
+                                      <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                        <input type="number"
+                                               id="manual-page-{{ ref.reference_id }}"
+                                               name="annex_manual_page_{{ ref.reference_id }}"
+                                               value="{% if ref.confirmed_page and ref.confirmed_page not in ref.candidate_pages %}{{ ref.confirmed_page }}{% endif %}"
+                                               min="1"
+                                               max="{{ dossier.page_count }}"
+                                               style="width: 70px; padding: 0.25rem 0.4rem; border: 1px solid var(--color-line); border-radius: 4px; font-size: 0.85rem;"
+                                               placeholder="Pág."
+                                               {% if source_tampered %}disabled{% endif %}>
+                                        <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                                          <input type="checkbox"
+                                                 name="annex_manual_confirm_{{ ref.reference_id }}"
+                                                 value="1"
+                                                 {% if ref.confirmed_page and ref.confirmed_page not in ref.candidate_pages %}checked{% endif %}
+                                                 {% if source_tampered %}disabled{% endif %}>
+                                          Confirmar
+                                        </label>
+                                      </div>
+                                      {% if ref.confirmed_page %}
+                                        <label style="display: block; margin-top: 0.3rem; font-size: 0.78rem; color: #b91c1c; cursor: pointer;">
+                                          <input type="checkbox" name="annex_disassociate_{{ ref.reference_id }}" value="1" {% if source_tampered %}disabled{% endif %}>
+                                          Desasociar anexo
+                                        </label>
+                                      {% endif %}
+                                    </div>
+                                  {% endif %}
+                                </td>
+                                <td data-label="Acción" aria-label="Acción">
+                                  <span class="badge-tag tag-{{ ref.status }}">
+                                    {% if ref.status == 'supported' %}Fundamentado{% elif ref.status == 'missing' %}Falta información{% elif ref.status == 'ambiguous' %}Interpretación ambigua{% elif ref.status == 'unsupported' %}Sin fuente{% elif ref.status == 'conflict' or ref.status == 'conflicting' %}En conflicto{% elif ref.status == 'checked' %}Cotejado{% else %}Por verificar{% endif %}
+                                  </span>
+                                  <span class="badge-tag tag-{{ ref.review }}">
+                                    {% if ref.review == 'confirmed' %}Confirmado{% elif ref.review == 'corrected' %}Ajustado{% elif ref.review == 'pending_review' or ref.review == 'pending' %}Por revisar{% elif ref.review == 'not_specified' %}No especificado{% else %}Pendiente docente{% endif %}
+                                  </span>
+                                  {% if ref.confirmed_page %}
+                                    <div style="font-size: 0.75rem; color: #166534; font-weight: 700; margin-top: 0.25rem;">
+                                      Confirmado en pág. {{ ref.confirmed_page }}
+                                      {% if ref.origin == 'teacher_selected_source_page' %}
+                                        <span style="display: block; font-size: 0.7rem; color: #0369a1; font-weight: normal;">(asociación manual docente)</span>
+                                      {% endif %}
+                                    </div>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                    </div>
+                  {% else %}
+                      <p class="muted" style="font-size: 0.88rem;">No se detectaron menciones de anexos en esta sesión.</p>
+                    {% endif %}
+                  </div>
+                </div>
+              {% else %}
+                <!-- Otra sesión: Acordeón / Tarjeta de resumen de clase -->
+                <details class="session-card session-accordion" id="session-card-{{ sess.session_id }}" style="background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 1rem 1.25rem;">
+                  <summary style="font-weight: 800; font-size: 1.1rem; cursor: pointer; color: var(--color-ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                      <span>Sesión {{ sess.session_number }}: {{ sess.title }}</span>
+                      <span class="muted" style="font-weight: normal; font-size: 0.82rem; margin-left: 0.5rem;">(Págs. {{ sess.pages|join:', ' }})</span>
+                    </div>
+                    <a href="?session_id={{ sess.session_id }}&scope={{ sess.session_id }}" class="button button-small" style="font-size: 0.8rem;">
+                      Editar esta sesión ↗
+                    </a>
+                  </summary>
+
+                  <div style="margin-top: 1rem; border-top: 1px solid #f1f5f9; padding-top: 0.75rem; font-size: 0.88rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                    {% if sess.fields.inicio.value %}
+                      <div>
+                        <strong>Inicio:</strong>
+                        <span class="muted">{{ sess.fields.inicio.value }}</span>
+                      </div>
+                    {% endif %}
+                    {% if sess.fields.desarrollo.value %}
+                      <div>
+                        <strong>Desarrollo:</strong>
+                        <span class="muted">{{ sess.fields.desarrollo.value }}</span>
+                      </div>
+                    {% endif %}
+                    {% if sess.fields.cierre.value %}
+                      <div>
+                        <strong>Cierre:</strong>
+                        <span class="muted">{{ sess.fields.cierre.value }}</span>
+                      </div>
+                    {% endif %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0; flex-wrap: wrap; gap: 0.35rem;">
+                      <span class="muted" style="font-size: 0.82rem;">
+                        {{ sess.annex_references|length }} anexo{{ sess.annex_references|length|pluralize }} asociado{{ sess.annex_references|length|pluralize }}
+                        {% if sess.activities %} · {{ sess.activities|length }} actividad{{ sess.activities|length|pluralize:"es" }}{% endif %}
+                      </span>
+                      <a href="?session_id={{ sess.session_id }}&scope={{ sess.session_id }}" class="button button-small button-secondary">
+                        Abrir y editar Sesión {{ sess.session_number }} ↗
+                      </a>
+                    </div>
+
+                  </div>
+                </details>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
+
+        <!-- Form Action Bar -->
+        <div class="action-bar sticky-action-bar" id="sticky-actions-bar" role="region" aria-label="Barra de acciones de revisión">
+          {% if not source_tampered %}
+            <button type="submit" name="action" value="save_corrections" class="button button-primary">
+              💾 Guardar correcciones
+            </button>
+            <button type="submit" name="action" value="confirm_all" class="button button-secondary">
+              ✓ Confirmar campos fundamentados
+            </button>
+          {% else %}
+            <span style="color: #b91c1c; font-weight: 700;">
+              Acciones de edición bloqueadas: PDF alterado en el servidor.
+            </span>
+          {% endif %}
+          {% if is_approved %}
+            <span class="approval-badge-success" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.6rem 1rem; border-radius: var(--radius); font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px;">
+              ✓ Planeación aprobada para preparar
+            </span>
+          {% elif can_approve %}
+            <div class="approval-cta-group" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; background: #f0fdf4; border: 1px solid #86efac; padding: 0.4rem 0.75rem; border-radius: var(--radius);">
+              {% if queue.pending_review_count > 0 %}
+                <div style="width: 100%; font-size: 0.82rem; color: #854d0e; margin-bottom: 0.25rem;">
+                  Hay <strong>{{ queue.pending_review_count }} elemento{{ queue.pending_review_count|pluralize:"s" }} opcional{{ queue.pending_review_count|pluralize:"es" }}</strong> pendiente{{ queue.pending_review_count|pluralize:"s" }} de revisión.
+                </div>
+                <label for="id_confirm_pending_items" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #166534; cursor: pointer; min-height: 44px;">
+                  <input type="checkbox" name="confirm_pending_items" id="id_confirm_pending_items" value="1" style="width: 1.1rem; height: 1.1rem;">
+                  <span>Acepto continuar con {{ queue.pending_review_count }} elemento{{ queue.pending_review_count|pluralize:"s" }} opcional{{ queue.pending_review_count|pluralize:"es" }} pendiente{{ queue.pending_review_count|pluralize:"s" }}</span>
+                </label>
+              {% endif %}
+              <label for="id_confirm_approval" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #166534; cursor: pointer; min-height: 44px;">
+                <input type="checkbox" name="confirm_approval" id="id_confirm_approval" value="1" style="width: 1.1rem; height: 1.1rem;">
+                <span>Confirmar aprobación de la planeación</span>
+              </label>
+              <button type="submit" name="action" value="approve" class="button button-primary" style="background: #15803d; border-color: #166534; font-weight: 700; min-height: 44px;">
+                ✓ Aprobar planeación
+              </button>
+            </div>
+          {% else %}
+            <span class="approval-notice" style="color: var(--color-muted); font-size: 0.88rem; padding: 0.6rem 1rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius); display: inline-flex; align-items: center; min-height: 44px;">
+              La aprobación estará disponible una vez resueltos todos los conflictos y completada la revisión docente.
+            </span>
+          {% endif %}
+          <a href="{% url 'tutor-import-interpretation' job.pk %}" class="button button-secondary">
+            Reabrir / Recargar
+          </a>
+          <a href="{% url 'tutor-curriculum' %}" class="back-link">
+            ← Volver a planeaciones
+          </a>
+        </div>
+      </form>
+
+      <!-- Historial de Auditoría Editorial -->
+      {% if dossier.history %}
+        <section aria-labelledby="history-heading" style="margin-top: 1.5rem; border-top: 1px solid var(--color-line); padding-top: 1.5rem;">
+          <details class="history-details">
+            <summary style="cursor: pointer; font-weight: 700; font-size: 1.1rem; color: var(--color-ink); margin-bottom: 1rem;">
+              Historial de decisiones editoriales ({{ dossier.history|length }} registro{{ dossier.history|length|pluralize }}) ▾
+            </summary>
+            <div class="history-list">
+              {% for h in dossier.history %}
+                <div class="history-item" style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9;">
+                  <div>
+                    <strong>Versión {{ h.version }}</strong> · <span style="color: var(--color-muted);">{{ h.timestamp }}</span> — <em>{{ h.actor|default:"Sistema" }}</em>
+                  </div>
+                  <div style="margin-top: 0.25rem;">{{ h.summary }}</div>
+                  {% if h.changes %}
+                    <ul style="margin: 0.25rem 0; padding-left: 1.25rem; font-size: 0.88rem; color: #334155;">
+                      {% for ch in h.changes %}
+                        <li>{{ ch }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </details>
+        </section>
+      {% endif %}
+    </main>
+
+    <!-- Dirty State Guard and Focus Handler Script -->
+    <script id="dirty-guard-script">
+      (function() {
+        let isFormDirty = false;
+        let isSubmitting = false;
+
+        function setDirty() {
+          if (!isFormDirty) {
+            isFormDirty = true;
+            const dirtyIndicator = document.getElementById('dirty-indicator');
+            if (dirtyIndicator) {
+              dirtyIndicator.style.display = 'inline-flex';
+            }
+          }
+        }
+
+        function showAsyncError(form, message) {
+          let alert = form.querySelector('.async-save-error');
+          if (!alert) {
+            alert = document.createElement('div');
+            alert.className = 'message message-danger async-save-error';
+            alert.setAttribute('role', 'alert');
+            alert.setAttribute('tabindex', '-1');
+            form.prepend(alert);
+          }
+          alert.textContent = message || 'No se pudo guardar. Tu edición sigue aquí; revisa la conexión e inténtalo de nuevo.';
+          alert.focus();
+        }
+
+        async function submitGuidedReview(event) {
+          event.preventDefault();
+          const queueForm = event.currentTarget;
+          const submitter = event.submitter;
+          if (queueForm.dataset.edited === 'true' &&
+              (submitter?.value === 'postpone_queue_item' ||
+               (submitter?.value === 'confirm_queue_item' && !queueForm.querySelector('.active-annex-controls')))) {
+            showAsyncError(queueForm, 'Hay una edición sin guardar. Pulsa Corregir para guardarla antes de continuar.');
+            return;
+          }
+          const formData = new FormData(queueForm);
+          if (submitter && submitter.name) {
+            formData.set(submitter.name, submitter.value);
+          }
+          const buttons = queueForm.querySelectorAll('button[type="submit"]');
+          buttons.forEach(function(button) { button.disabled = true; });
+          isSubmitting = true;
+          let saved = false;
+
+          try {
+            const formUrl = queueForm.getAttribute('action');
+            const response = await fetch(formUrl, {
+              method: 'POST',
+              body: formData,
+              credentials: 'same-origin',
+              headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            });
+            const raw = await response.text();
+            let payload = {};
+            try { payload = JSON.parse(raw); } catch (ignore) { payload = {}; }
+            if (!response.ok || payload.status !== 'ok') {
+              throw new Error(payload.message || raw || 'No se pudo guardar la respuesta.');
+            }
+            saved = true;
+
+            const nextUrl = new URL(formUrl, window.location.href);
+            nextUrl.searchParams.delete('item');
+            if (!nextUrl.searchParams.has('scope') || nextUrl.searchParams.get('scope') === 'document') {
+              nextUrl.searchParams.delete('session_id');
+            }
+            nextUrl.hash = 'workspace-activo';
+            const pageResponse = await fetch(nextUrl.toString(), {
+              credentials: 'same-origin',
+              headers: {'Accept': 'text/html'}
+            });
+            if (!pageResponse.ok) {
+              throw new Error('La respuesta se guardó, pero no fue posible cargar la siguiente duda.');
+            }
+            const pageHtml = await pageResponse.text();
+            const parsed = new DOMParser().parseFromString(pageHtml, 'text/html');
+            const replacement = parsed.querySelector('main.v0-container');
+            const current = document.querySelector('main.v0-container');
+            if (!replacement || !current) {
+              throw new Error('La respuesta se guardó, pero la vista no pudo actualizarse.');
+            }
+
+            const scrollPosition = window.scrollY;
+            current.replaceWith(replacement);
+            history.replaceState({}, '', nextUrl.toString());
+            isFormDirty = false;
+            isSubmitting = false;
+            bindInteractive(replacement);
+            window.scrollTo(0, scrollPosition);
+            const nextControl = replacement.querySelector('#queue-item-form textarea, #queue-item-form input:not([type="hidden"]), #queue-item-form button');
+            if (nextControl) {
+              nextControl.focus({preventScroll: true});
+            }
+          } catch (error) {
+            isSubmitting = false;
+            if (saved) {
+              isFormDirty = false;
+              showAsyncError(queueForm, 'La respuesta se guardó, pero la vista no pudo actualizarse. Recarga la página para continuar.');
+            } else {
+              showAsyncError(queueForm, error.message);
+              buttons.forEach(function(button) { button.disabled = false; });
+            }
+          }
+        }
+
+        function bindInteractive(root) {
+          const form = root.querySelector ? root.querySelector('#interpretation-form') : null;
+          const queueForm = root.querySelector ? root.querySelector('#queue-item-form') : null;
+          [form, queueForm].forEach(function(boundForm) {
+            if (boundForm && !boundForm.dataset.guidedBound) {
+              boundForm.dataset.guidedBound = 'true';
+              boundForm.addEventListener('input', setDirty);
+              boundForm.addEventListener('change', setDirty);
+              if (boundForm === queueForm) {
+                boundForm.addEventListener('input', function() { boundForm.dataset.edited = 'true'; });
+                boundForm.addEventListener('change', function() { boundForm.dataset.edited = 'true'; });
+                boundForm.addEventListener('submit', submitGuidedReview);
+              } else {
+                boundForm.addEventListener('submit', function() { isSubmitting = true; });
+              }
+            }
+          });
+
+          root.querySelectorAll('a[href]').forEach(function(anchor) {
+            if (anchor.dataset.dirtyBound) return;
+            anchor.dataset.dirtyBound = 'true';
+            anchor.addEventListener('click', function(e) {
+              if (anchor.getAttribute('target') === '_blank') return;
+              if (isFormDirty && !isSubmitting) {
+                const proceed = window.confirm('Tienes cambios no guardados en la planeación. ¿Deseas salir sin guardar?');
+                if (!proceed) e.preventDefault();
+              }
+            });
+          });
+        }
+
+        bindInteractive(document);
+
+        // Intercept page unload / navigation away
+        window.addEventListener('beforeunload', function(e) {
+          if (isFormDirty && !isSubmitting) {
+            e.preventDefault();
+            e.returnValue = 'Tienes cambios no guardados en la revisión. ¿Seguro que deseas salir?';
+            return e.returnValue;
+          }
+        });
+
+        // Handle hash anchor focus and autofocus on load / hashchange
+        function handleHashAndFocus() {
+          const invalidElem = document.querySelector('[aria-invalid="true"]');
+          if (invalidElem) {
+            let parentDetails = invalidElem.closest('details');
+            while (parentDetails) {
+              parentDetails.open = true;
+              parentDetails = parentDetails.parentElement ? parentDetails.parentElement.closest('details') : null;
+            }
+            invalidElem.focus();
+            invalidElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+
+          if (window.location.hash) {
+            const target = document.querySelector(window.location.hash);
+            if (target) {
+              let parentDetails = target.closest('details');
+              while (parentDetails) {
+                parentDetails.open = true;
+                parentDetails = parentDetails.parentElement ? parentDetails.parentElement.closest('details') : null;
+              }
+              if (typeof target.focus === 'function') {
+                if (!target.hasAttribute('tabindex') && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && target.tagName !== 'BUTTON' && target.tagName !== 'A') {
+                  target.setAttribute('tabindex', '-1');
+                }
+                target.focus();
+              }
+              target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', handleHashAndFocus);
+        } else {
+          handleHashAndFocus();
+        }
+        window.addEventListener('hashchange', handleHashAndFocus);
+      })();
+    </script>
+  </body>
+</html>

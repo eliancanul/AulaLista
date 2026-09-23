@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · Currícula y planeación</title>
+    <style>
+      :root { color-scheme:light; --ink:#172033; --muted:#68748a; --line:#dbe3ee; --paper:#f4f7fb; --panel:#fff; --blue:#3566f0; --soft:#edf2ff; --green:#14755b; --amber:#996019; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--paper); color:var(--ink); }
+      button { font:inherit; }
+      .shell { width:min(1180px,calc(100% - 32px)); margin:0 auto; }
+      .topbar { border-bottom:1px solid var(--line); background:#fff; }
+      .topbar-inner { display:flex; align-items:center; gap:20px; min-height:72px; }
+      .brand { font-size:1.2rem; font-weight:900; letter-spacing:-.05em; }
+      .brand span { color:var(--blue); }
+      .teacher { border-radius:999px; padding:6px 10px; background:var(--soft); color:#3153b7; font-size:.76rem; font-weight:850; }
+      nav.primary { display:flex; gap:4px; margin-left:auto; }
+      nav.primary a { border-radius:10px; padding:9px 11px; color:var(--muted); font-size:.84rem; font-weight:800; text-decoration:none; }
+      nav.primary a.active { background:var(--soft); color:var(--ink); }
+      .profile { position:relative; }
+      .avatar { display:grid; width:34px; height:34px; place-items:center; border:0; border-radius:50%; background:#d9e2ff; color:#2448b8; font-weight:850; cursor:pointer; }
+      .avatar:hover,.avatar:focus-visible { outline:3px solid #dce5ff; }
+      .profile-menu { position:absolute; right:0; top:44px; z-index:15; width:230px; border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; box-shadow:0 16px 36px rgb(23 32 51 / 18%); }
+      .profile-menu[hidden] { display:none; }
+      .profile-menu strong { display:block; padding:5px 8px 1px; font-size:.82rem; }
+      .profile-menu small { display:block; padding:0 8px 8px; color:var(--muted); font-size:.7rem; }
+      .profile-menu button { display:block; width:100%; border:0; border-radius:8px; padding:8px; background:transparent; color:var(--ink); text-align:left; font-size:.75rem; font-weight:800; cursor:pointer; }
+      .profile-menu button:hover { background:var(--soft); }
+      .profile-menu .danger { color:#a23b3b; }
+      main { padding:36px 0 90px; }
+      .page-head { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:20px; }
+      .eyebrow { margin:0 0 8px; color:var(--blue); font-size:.72rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+      h1,h2,h3,p { margin-top:0; }
+      h1 { margin-bottom:7px; font-size:clamp(2rem,4vw,3.4rem); line-height:1; letter-spacing:-.055em; }
+      .lede { max-width:700px; margin:0; color:var(--muted); line-height:1.5; }
+      .button { border:1px solid var(--line); border-radius:11px; padding:10px 14px; background:#fff; color:var(--ink); font-weight:850; cursor:pointer; }
+      .button.primary { border-color:var(--blue); background:var(--blue); color:#fff; }
+      .tabs { display:flex; gap:6px; margin-bottom:12px; overflow:auto; }
+      .tab { border:0; border-radius:10px; padding:9px 12px; background:#e9edf4; color:var(--muted); font-weight:850; cursor:pointer; white-space:nowrap; }
+      .tab.active { background:#172033; color:#fff; }
+      .workspace { display:grid; grid-template-columns:220px minmax(0,1fr) 300px; min-height:570px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:#fff; }
+      .column { padding:18px; }
+      .column + .column { border-left:1px solid var(--line); }
+      .column-head { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:13px; }
+      .column-head h2 { margin-bottom:3px; font-size:1rem; }
+      .column-head p { margin:0; color:var(--muted); font-size:.76rem; line-height:1.35; }
+      .pill { display:inline-flex; width:fit-content; border-radius:999px; padding:5px 8px; background:var(--soft); color:#3153b7; font-size:.69rem; font-weight:850; }
+      .folder-list,.file-list,.roadmap-list { display:grid; gap:7px; }
+      .folder { display:flex; justify-content:space-between; gap:8px; width:100%; border:0; border-radius:9px; padding:9px 10px; background:transparent; color:var(--ink); text-align:left; cursor:pointer; }
+      .folder.active,.folder:hover { background:var(--soft); }
+      .folder small { color:var(--muted); }
+      .file,.roadmap-item { border:1px solid var(--line); border-radius:11px; padding:11px; background:#fff; }
+      .file { cursor:pointer; transition:border-color .14s ease,box-shadow .14s ease,transform .14s ease; }
+      .file:hover { border-color:var(--blue); box-shadow:0 10px 24px rgb(53 102 240 / 12%); transform:translateY(-2px); }
+      .file:hover::after { content:"Abrir detalle →"; display:block; margin-top:9px; color:var(--blue); font-size:.7rem; font-weight:850; }
+      .file.selected,.roadmap-item.selected { border-color:var(--blue); background:#f7f9ff; }
+      .file-top,.roadmap-top { display:flex; justify-content:space-between; gap:12px; align-items:start; }
+      .file h3,.roadmap-item h3 { margin-bottom:3px; font-size:.87rem; }
+      .file p,.roadmap-item p { margin:0; color:var(--muted); font-size:.74rem; line-height:1.4; }
+      .status { border-radius:999px; padding:4px 7px; background:#eef1f6; color:var(--muted); font-size:.65rem; font-weight:850; white-space:nowrap; }
+      .status.ready { background:#e6f5ef; color:var(--green); }
+      .status.pending { background:#fff2dc; color:var(--amber); }
+      .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+      .small { border:1px solid var(--line); border-radius:8px; padding:6px 8px; background:#fff; color:var(--ink); font-size:.7rem; font-weight:800; cursor:pointer; }
+      .small.primary { border-color:var(--blue); background:var(--blue); color:#fff; }
+      .dropzone { margin-top:12px; border:1px dashed #abb9ce; border-radius:11px; padding:14px; color:var(--muted); text-align:center; font-size:.76rem; }
+      .detail-row { padding:10px 0; border-bottom:1px solid var(--line); }
+      .detail-row strong { display:block; font-size:.8rem; }
+      .detail-row small { color:var(--muted); font-size:.7rem; }
+      .notice { margin-top:12px; border-radius:10px; padding:10px; background:#eef7f4; color:#1f6253; font-size:.76rem; line-height:1.4; }
+      .roadmap-focus { margin-top:14px; border:1px solid #cbd8ff; border-radius:12px; padding:13px; background:#f7f9ff; }
+      .roadmap-focus h3 { margin:0 0 4px; font-size:.88rem; }
+      .roadmap-focus p { margin:0; color:var(--muted); font-size:.74rem; line-height:1.4; }
+      .planning-wrap { display:grid; gap:14px; max-width:760px; }
+      .planning-card { border:1px solid var(--line); border-radius:12px; padding:16px; background:#fff; }
+      .planning-card h2 { margin-bottom:5px; font-size:1.1rem; }
+      .planning-card > p { margin-bottom:14px; color:var(--muted); font-size:.78rem; line-height:1.45; }
+      .planning-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:13px; }
+      .planning-form { display:grid; gap:11px; }
+      .field { display:grid; gap:5px; color:var(--ink); font-size:.78rem; font-weight:800; }
+      .field small { color:var(--muted); font-size:.7rem; font-weight:500; }
+      .field input,.field select,.field textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:#fff; color:var(--ink); font:inherit; font-size:.78rem; }
+      .field textarea { min-height:72px; resize:vertical; }
+      .planning-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:3px; }
+      .saved { color:var(--green); font-size:.72rem; font-weight:800; }
+      .results-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+      .result-card { border:1px solid var(--line); border-radius:11px; padding:12px; background:#fff; }
+      .result-card small { display:block; color:var(--muted); font-size:.68rem; }
+      .result-card strong { display:block; margin-top:5px; font-size:1.2rem; letter-spacing:-.03em; }
+      .result-card p { margin:4px 0 0; color:var(--muted); font-size:.72rem; line-height:1.35; }
+      .result-callout { margin-top:13px; border:1px solid #cbd8ff; border-radius:11px; padding:13px; background:#f7f9ff; }
+      .result-callout h3 { margin-bottom:4px; font-size:.88rem; }
+      .result-callout p { margin:0; color:var(--muted); font-size:.74rem; line-height:1.4; }
+      .result-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+      .modal-backdrop { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:20px; background:rgb(23 32 51 / 35%); }
+      .modal { width:min(680px,100%); max-height:min(760px,calc(100vh - 40px)); overflow:auto; border:1px solid var(--line); border-radius:16px; padding:18px; background:#fff; box-shadow:0 24px 80px rgb(23 32 51 / 28%); }
+      .modal-head { display:flex; justify-content:space-between; gap:14px; align-items:start; margin-bottom:12px; }
+      .modal-head h2 { margin:0 0 4px; font-size:1.25rem; }
+      .modal-head p { margin:0; color:var(--muted); font-size:.76rem; line-height:1.4; }
+      .modal-back { border:0; background:transparent; color:var(--blue); font-size:.76rem; font-weight:850; cursor:pointer; }
+      .memory-note { margin-top:12px; border-radius:10px; padding:10px; background:#eef7f4; color:#1f6253; font-size:.74rem; line-height:1.4; }
+      @media (max-width:720px) { .results-grid { grid-template-columns:1fr; } }
+      .sep-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+      .sep-card { border:1px solid var(--line); border-radius:11px; padding:12px; background:#fbfcfe; }
+      .sep-card h3 { margin-bottom:4px; font-size:.86rem; }
+      .sep-card p { margin:0; color:var(--muted); font-size:.74rem; line-height:1.4; }
+      .sep-wide { grid-column:1 / -1; }
+      .axis-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+      .axis-list span { border-radius:999px; padding:5px 8px; background:var(--soft); color:#3153b7; font-size:.68rem; font-weight:800; }
+      @media (max-width:900px) { .workspace { grid-template-columns:190px 1fr; } .workspace aside { grid-column:1 / -1; border-left:0!important; border-top:1px solid var(--line); } }
+      @media (max-width:650px) { nav.primary { display:none; } .workspace { grid-template-columns:1fr; } .column + .column { border-left:0; border-top:1px solid var(--line); } .page-head { align-items:start; } }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <div class="brand">Aula<span>Lista</span></div>
+        <span class="teacher">Docente · María López</span>
+        <nav class="primary" aria-label="Navegación docente"><a href="./index.html?variant=B">Aula</a><a class="active" href="#">Currícula y planeación</a><a href="./index.html?variant=B#resultados">Resultados</a></nav>
+        <div class="profile"><button class="avatar" id="profile-trigger" type="button" aria-expanded="false" aria-controls="profile-menu">ML</button><div class="profile-menu" id="profile-menu" hidden><strong>María López</strong><small>Docente · Primaria</small><button type="button" data-profile-action="settings">Configuración</button><button type="button" data-profile-action="assistant">Preferencias del asistente</button><button class="danger" type="button" data-profile-action="logout">Cerrar sesión</button></div></div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <div class="page-head">
+        <div><p class="eyebrow">Currícula y planeación</p><h1>Biblioteca curricular</h1><p class="lede">Consulta el roadmap, organiza materiales y decide qué referencias puede usar tu asistente docente.</p></div>
+      </div>
+      <nav class="tabs" aria-label="Secciones"><button class="tab active" data-mode="library">Biblioteca</button><button class="tab" data-mode="roadmap">Roadmap</button></nav>
+      <section id="workspace" class="workspace"></section>
+    </main>
+
+    <script>
+      const initial = {
+        folders:[{id:"official",name:"Referencias publicadas"},{id:"school",name:"Material de la escuela"},{id:"teacher",name:"Mis archivos"},{id:"archive",name:"Archivo"}],
+        files:[
+          {id:"f1",folder:"official",name:"Referencia curricular publicada.pdf",type:"PDF",status:"ready",assistant:true,locked:true,links:["r1","r2"]},
+          {id:"f2",folder:"school",name:"Proyecto comunitario de la escuela.docx",type:"DOCX",status:"ready",assistant:true,locked:false,links:["r2"]},
+          {id:"f3",folder:"teacher",name:"Notas sobre el patio.pdf",type:"PDF",status:"pending",assistant:false,locked:false,links:[]}
+        ],
+        roadmap:[{id:"r1",title:"La comunidad que queremos"},{id:"r2",title:"Exploramos nuestro entorno"},{id:"r3",title:"Compartimos lo aprendido"},{id:"r4",title:"Acuerdos para convivir"}],
+        folder:"official",file:"f1",topic:"r2",mode:"library",notice:"Selecciona un archivo para consultar sus vínculos.",
+        plan:{range:"Esta semana",purpose:"Reconocer una situación del entorno y acordar una acción colectiva.",activity:"Exploramos nuestro entorno",evidence:"Explicación oral y registro colectivo.",adjustment:"",saved:false,memorySaved:false},
+        result:{status:"Pendiente de cierre",note:"",next:"Retomar la comparación de ideas en la siguiente sesión."}
+      };
+      let state=JSON.parse(JSON.stringify(initial));
+      const requestedMode=new URLSearchParams(location.search).get("mode");
+      if(["library","roadmap","planning"].includes(requestedMode)) state.mode=requestedMode;
+      state.profileOpen=false;
+      const currentFile=()=>state.files.find((item)=>item.id===state.file);
+      const topic=()=>state.roadmap.find((item)=>item.id===state.topic);
+      const linked=(id)=>state.files.filter((file)=>file.links.includes(id));
+      const usable=(id)=>linked(id).filter((file)=>file.status==="ready"&&file.assistant);
+      const label=(status)=>status==="ready"?"Revisado":"Pendiente";
+
+      function planningContent(){
+        const selected=topic();
+        const linkedCount=usable(selected?.id||state.topic).length;
+        return `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="planning-title"><div class="modal-head"><div><button class="modal-back" type="button" data-mode="roadmap">← Regresar al roadmap</button><h2 id="planning-title">Planear periodo</h2><p>La LLM puede ayudarte a convertir este tema en una intención breve para las próximas sesiones.</p></div><span class="pill">Habilidad del asistente</span></div><div class="planning-meta"><span class="pill">${selected?.title||"Tema del roadmap"}</span><span class="pill">${linkedCount} referencia${linkedCount===1?"":"s"} disponible${linkedCount===1?"":"s"}</span></div><form class="planning-form" id="planning-form"><label class="field">¿Qué quieres organizar?<select id="plan-range"><option ${state.plan.range==="Esta semana"?"selected":""}>Esta semana</option><option ${state.plan.range==="Próximas dos semanas"?"selected":""}>Próximas dos semanas</option><option ${state.plan.range==="Este proyecto"?"selected":""}>Este proyecto</option></select></label><label class="field">Propósito o pregunta guía<input id="plan-purpose" value="${state.plan.purpose.replace(/"/g,"&quot;")}"></label><label class="field">Actividad o proyecto<input id="plan-activity" value="${state.plan.activity.replace(/"/g,"&quot;")}"></label><label class="field">¿Qué observarás?<textarea id="plan-evidence">${state.plan.evidence}</textarea></label><label class="field">Ajuste para la siguiente sesión <small>Opcional</small><textarea id="plan-adjustment" placeholder="Lo que conviene retomar o cambiar…">${state.plan.adjustment}</textarea></label><div class="planning-actions"><button class="button primary" type="submit">Guardar como memoria del asistente</button>${state.plan.saved?"<span class=\"saved\">✓ Memoria guardada</span>":""}</div></form><div class="memory-note">La memoria queda disponible para esta conversación y orienta las próximas propuestas; la docente puede editarla o reemplazarla.</div></section></div>`;
+      }
+
+      function resultsContent(){
+        const status=state.result.status;
+        return `<div class="planning-wrap"><section class="planning-card"><div class="column-head"><div><h2>Resultados del ciclo</h2><p>Una lectura agregada para decidir la siguiente acción.</p></div><span class="pill">Datos del grupo</span></div><div class="results-grid"><article class="result-card"><small>Avance del ciclo</small><strong>46%</strong><p>7 de 15 contenidos confirmados</p></article><article class="result-card"><small>Última sesión</small><strong>24 / 28</strong><p>Participaron en la actividad</p></article><article class="result-card"><small>Estado del tema</small><strong>${status}</strong><p>${status==="Pendiente de cierre"?"Falta registrar una decisión docente.":"Registro confirmado por la docente."}</p></article></div><div class="result-callout"><h3>Siguiente acción sugerida</h3><p>${state.result.next}</p><div class="result-actions"><button class="small ${status==="Trabajado"?"primary":""}" type="button" data-result-status="Trabajado">Trabajado</button><button class="small ${status==="Parcial"?"primary":""}" type="button" data-result-status="Parcial">Parcial</button><button class="small ${status==="Retomar"?"primary":""}" type="button" data-result-status="Retomar">Retomar</button></div></div></section><section class="planning-card"><h2>Nota de cierre</h2><p>Una observación opcional ayuda a ajustar la próxima sesión sin crear perfiles individuales.</p><textarea class="field" id="result-note" placeholder="Qué observaste en el grupo…">${state.result.note}</textarea><div class="planning-actions"><button class="button" type="button" data-save-result>Guardar nota</button>${state.result.note?"<span class=\"saved\">✓ Nota guardada</span>":""}</div></section></div>`;
+      }
+
+      function render(){
+        const counts=Object.fromEntries(state.folders.map((folder)=>[folder.id,state.files.filter((file)=>file.folder===folder.id).length]));
+        const files=state.files.filter((file)=>file.folder===state.folder);
+        const file=currentFile();
+        const libraryContent=`<div class="file-list">${files.length?files.map((item)=>`<article class="file ${state.file===item.id?"selected":""}" data-file="${item.id}" tabindex="0"><div class="file-top"><div><h3>${item.name}</h3><p>${item.type} · ${item.links.length} vínculo${item.links.length===1?"":"s"}</p></div><span class="status ${item.status}">${label(item.status)}</span></div></article>`).join(""):`<div class="dropzone">Esta carpeta está vacía.</div>`}</div>`;
+        const selectedRoadmap=topic();
+        const roadmapContent=`<div class="roadmap-list">${state.roadmap.map((item,index)=>{const use=usable(item.id);return`<article class="roadmap-item ${state.topic===item.id?"selected":""}"><div class="roadmap-top"><div><h3>${index+1} · ${item.title}</h3><p>${linked(item.id).length} referencias · ${use.length} utilizables</p></div><span class="status ${use.length?"ready":"pending"}">${use.length?"Con respaldo":"Sin respaldo"}</span></div><div class="actions"><button class="small" data-topic="${item.id}">Abrir</button><button class="small primary" data-plan-topic="${item.id}">Planear periodo</button></div></article>`}).join("")}<div class="roadmap-focus"><h3>${selectedRoadmap?.title||"Selecciona un tema"}</h3><p>Consulta sus referencias y crea una planeación ligera vinculada a este punto del recorrido.</p></div></div>`;
+        const content=state.mode==="library"?libraryContent:state.mode==="roadmap"?roadmapContent:planningContent();
+        const inspector=file?`<div class="detail-row"><strong>${file.name}</strong><small>${file.locked?"Referencia publicada · solo lectura":label(file.status)}</small></div><div class="detail-row"><strong>Vinculado a</strong><small>${file.links.map((id)=>state.roadmap.find((item)=>item.id===id)?.title).filter(Boolean).join(" · ")||"Ningún tema"}</small></div><div class="detail-row"><strong>Uso por el asistente</strong><small>${file.assistant&&file.status==="ready"?"Permitido":"No permitido"}</small></div>${file.locked?"":`<div class="actions"><button class="small" data-action="REVIEW">Marcar revisado</button><button class="small" data-action="LINK">Vincular al tema</button><button class="small primary" data-action="ALLOW">Permitir uso</button><button class="small" data-action="ARCHIVE">Archivar</button></div>`}`:`<p>No hay un archivo seleccionado.</p>`;
+        const centerTitle=state.mode==="library"?"Contenido":state.mode==="roadmap"?"Roadmap del ciclo":"Planeación ligera";
+        const centerText=state.mode==="library"?"Archivos de la carpeta seleccionada.":state.mode==="roadmap"?"Temas y fuentes disponibles para el asistente.":"Conecta un tema con la próxima acción docente.";
+        const workspace=document.querySelector("#workspace");
+        if(state.mode==="planning"||state.mode==="results"){
+          workspace.innerHTML=`<div class="column" style="grid-column:1 / -1"><div class="column-head"><div><h2>${centerTitle}</h2><p>${centerText}</p></div><span class="pill">Datos sintéticos</span></div>${content}<div class="notice">${state.notice}</div></div>`;
+        } else {
+          workspace.innerHTML=`<div class="column"><div class="column-head"><div><h2>Biblioteca</h2><p>Organizada por tipo de referencia.</p></div></div><div class="folder-list">${state.folders.map((folder)=>`<button class="folder ${state.folder===folder.id?"active":""}" data-folder="${folder.id}"><span>${folder.name}</span><small>${counts[folder.id]}</small></button>`).join("")}</div><div class="dropzone">PDF, DOCX o imagen<br><button class="small primary" data-action="ADD_FILE">Agregar archivo</button></div></div><div class="column"><div class="column-head"><div><h2>${centerTitle}</h2><p>${centerText}</p></div></div>${content}</div><aside class="column"><div class="column-head"><div><h2>Detalle</h2><p>Vínculos y alcance del asistente.</p></div><span class="pill">Datos sintéticos</span></div>${inspector}<div class="notice">${state.notice}</div></aside>`;
+        }
+        document.querySelectorAll("[data-mode]").forEach((node)=>node.classList.toggle("active",node.dataset.mode===state.mode));
+        const profileMenu=document.querySelector("#profile-menu");
+        const profileButton=document.querySelector("#profile-trigger");
+        if(profileMenu&&profileButton){profileMenu.hidden=!state.profileOpen;profileButton.setAttribute("aria-expanded",String(state.profileOpen));}
+      }
+
+      document.addEventListener("click",(event)=>{
+        const profileTrigger=event.target.closest("#profile-trigger");
+        if(profileTrigger){state.profileOpen=!state.profileOpen;const menu=document.querySelector("#profile-menu");menu.hidden=!state.profileOpen;profileTrigger.setAttribute("aria-expanded",String(state.profileOpen));return;}
+        const profileAction=event.target.closest("[data-profile-action]");
+        if(profileAction){
+          const actionName=profileAction.dataset.profileAction;
+          state.profileOpen=false;
+          if(actionName==="logout") state.notice="Cierre de sesión simulado. En producción volvería a la entrada de acceso.";
+          if(actionName==="settings") state.notice="Configuración abierta (prototipo). Aquí se definirían preferencias generales de la escuela.";
+          if(actionName==="assistant") state.notice="Preferencias del asistente abiertas (prototipo).";
+          render();return;
+        }
+        const mode=event.target.closest("[data-mode]"); if(mode){state.mode=mode.dataset.mode;state.notice=`Se abrió ${mode.textContent}.`;render();return;}
+        const folder=event.target.closest("[data-folder]"); if(folder){state.folder=folder.dataset.folder;const first=state.files.find((item)=>item.folder===state.folder);state.file=first?.id||null;state.notice="Carpeta abierta.";render();return;}
+        const file=event.target.closest("[data-file]"); if(file){state.file=file.dataset.file;state.notice="Archivo seleccionado.";render();return;}
+        const selectedTopic=event.target.closest("[data-topic]"); if(selectedTopic){state.topic=selectedTopic.dataset.topic;state.notice="Tema seleccionado para revisar cobertura o vincular archivos.";render();return;}
+        const planTopic=event.target.closest("[data-plan-topic]"); if(planTopic){state.topic=planTopic.dataset.planTopic;state.mode="planning";state.plan.activity=topic()?.title||state.plan.activity;state.plan.saved=false;state.notice="Planeación vinculada al tema seleccionado.";render();return;}
+        const resultStatus=event.target.closest("[data-result-status]"); if(resultStatus){state.result.status=resultStatus.dataset.resultStatus;state.notice=`Cierre registrado: ${state.result.status.toLowerCase()}.`;render();return;}
+        const saveResult=event.target.closest("[data-save-result]"); if(saveResult){state.result.note=document.querySelector("#result-note")?.value.trim()||"";state.notice="Nota de cierre guardada.";render();return;}
+        const action=event.target.closest("[data-action]"); if(!action)return;
+        const current=currentFile();
+        if(action.dataset.action==="ADD_FILE"){const id=`f${state.files.length+1}`;state.files.push({id,folder:"teacher",name:"Guía de observación del entorno.pdf",type:"PDF",status:"pending",assistant:false,locked:false,links:[]});state.folder="teacher";state.file=id;state.notice="Archivo agregado. Revísalo antes de permitir su uso.";}
+        if(action.dataset.action==="REVIEW"&&current&&!current.locked){current.status="ready";state.notice="Archivo marcado como revisado.";}
+        if(action.dataset.action==="LINK"&&current&&!current.links.includes(state.topic)){current.links.push(state.topic);state.notice="Archivo vinculado al tema seleccionado.";}
+        if(action.dataset.action==="ALLOW"&&current&&current.status==="ready"){current.assistant=true;state.notice="El asistente puede consultar este archivo en sus temas vinculados.";}
+        if(action.dataset.action==="ARCHIVE"&&current&&!current.locked){current.folder="archive";current.assistant=false;state.folder="archive";state.notice="Archivo archivado y retirado del asistente.";}
+        render();
+      });
+      document.addEventListener("submit",(event)=>{
+        if(event.target.id!=="planning-form")return;
+        event.preventDefault();
+        state.plan.range=document.querySelector("#plan-range")?.value||state.plan.range;
+        state.plan.purpose=document.querySelector("#plan-purpose")?.value.trim()||state.plan.purpose;
+        state.plan.activity=document.querySelector("#plan-activity")?.value.trim()||state.plan.activity;
+        state.plan.evidence=document.querySelector("#plan-evidence")?.value.trim()||state.plan.evidence;
+        state.plan.adjustment=document.querySelector("#plan-adjustment")?.value.trim()||"";
+        state.plan.saved=true;
+        state.plan.memorySaved=true;
+        state.notice="Memoria del asistente guardada para este tema.";
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

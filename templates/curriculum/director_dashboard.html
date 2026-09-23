@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaLista · Dirección</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
+    <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <span class="wordmark" aria-label="AulaLista">Aula<span>Lista</span></span>
+        <span class="brand-context">Educación · Dirección</span><nav class="top-nav" aria-label="Dirección"><a href="{% url 'director-import-preview' %}">Importar Excel</a></nav><div class="account-actions"><form method="post" action="{% url 'wagtailadmin_logout' %}">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div>
+      </div>
+    </header>
+    <main id="contenido" class="shell teacher-page">
+      <header class="view-heading">
+        <p class="eyebrow">GESTIÓN ESCOLAR</p>
+        <h1>Coordinación escolar</h1>
+        {% if school %}<p class="card-kicker">{{ school.name }}</p>{% endif %}
+        <p class="lede">Consulta historia institucional y señales agregadas; no perfiles individuales de alumnado.</p>
+      </header>
+
+      <section class="authority-boundary" aria-labelledby="director-boundary">
+        <div class="boundary-mark" aria-hidden="true">i</div>
+        <div>
+          <h2 id="director-boundary">Autoridades separadas</h2>
+          <p>Dirección decide adscripciones. El administrador de plataforma gestiona cuentas y estado técnico; la autoridad editorial humana conserva la publicación.</p>
+        </div>
+      </section>
+
+      {% if classroom_cards %}
+        <section class="editorial-section" aria-labelledby="classrooms-heading">
+          <div class="section-heading"><div><p class="eyebrow">ESCUELA</p><h2 id="classrooms-heading">Salones activos y archivados</h2></div></div>
+          <div class="editorial-list">
+            {% for card in classroom_cards %}
+              <article class="editorial-card">
+                <div>
+                  <p class="card-kicker">{% if card.group_status == "archived" %}ARCHIVADO{% else %}ACTIVO{% endif %}</p>
+                  <h3>{{ card.group }}</h3>
+                  <p>Ciclo {{ card.academic_year|default:"sin especificar" }} · {{ card.modality|default:"modalidad no especificada" }} · grado {{ card.grade|default:"—" }} · turno {{ card.shift|default:"—" }}</p>
+                  <p>Roadmap: <strong>{{ card.roadmap_title }}</strong> · {{ card.latest_session_status }}</p>
+                  <div class="result-facts">
+                    <span><strong>{{ card.session_count }}</strong> sesión{% if card.session_count != 1 %}es{% endif %}</span>
+                    <span><strong>{{ card.worked_activity_count }}</strong> actividad{% if card.worked_activity_count != 1 %}es{% endif %} trabajada{% if card.worked_activity_count != 1 %}s{% endif %}</span>
+                    <span><strong>{{ card.participation_count }}</strong> participaciones agregadas</span>
+                  </div>
+                  <details class="disclosure"><summary>Fuentes, periodo y actualización</summary><ul class="metric-sources">{% for metric in card.metrics %}<li><strong>{{ metric.label }}:</strong> {{ metric.value }} · fuente: {{ metric.source }} · periodo: {{ metric.period }} · actualización: {% if metric.updated_at %}{{ metric.updated_at|date:"Y-m-d H:i" }}{% else %}No disponible{% endif %}</li>{% endfor %}</ul></details>
+                  {% if card.assignments %}
+                    <h4>Adscripciones e historial</h4>
+                    <ul>
+                      {% for assignment in card.assignments %}
+                        <li>{{ assignment.teacher }} · {{ assignment.status }}{% if assignment.subject %} · {{ assignment.subject }}{% endif %}{% if assignment.function %} · {{ assignment.function }}{% endif %}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}<p class="muted">Sin adscripciones registradas.</p>{% endif %}
+                </div>
+                {% if card.group_status == "active" %}
+                  <details class="disclosure assignment-disclosure"><summary>Gestionar adscripción</summary><form method="post" action="{{ card.assignment_url }}" class="preparation-form">
+                    {% csrf_token %}
+                    <label for="teacher-{{ forloop.counter }}">Confirmar cuenta docente existente</label>
+                    <select id="teacher-{{ forloop.counter }}" name="teacher_token" required>
+                      <option value="">Selecciona una persona</option>
+                      {% for teacher in teachers %}<option value="{{ teacher.token }}">{{ teacher.label }}</option>{% endfor %}
+                    </select>
+                    <button class="button button-primary" type="submit">Guardar adscripción</button>
+                  </form></details>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% else %}
+        <p class="empty-note">Aún no hay salones en tu escuela.</p>
+      {% endif %}
+
+      <section class="results-summary" aria-labelledby="support-heading">
+        <div class="section-heading"><div><p class="eyebrow">APOYO A LA OPERACIÓN</p><h2 id="support-heading">Solicitudes de las maestras</h2></div></div>
+        {% if support_requests %}<ul>{% for item in support_requests %}<li><strong>{{ item.get_category_display }}</strong> · {{ item.classroom_group.name }} · {{ item.get_status_display }} · fecha objetivo {{ item.target_date|date:"Y-m-d" }}<p>{{ item.description }}</p>{% if not item.closed_at %}<form method="post" action="{% url 'director-support-request-update' item.pk %}">{% csrf_token %}<label>Responsable <select name="responsible_id"><option value="">Sin asignar</option>{% for person in support_responsibles %}<option value="{{ person.pk }}"{% if item.responsible_id == person.pk %} selected{% endif %}>{{ person.get_full_name|default:person.username }}</option>{% endfor %}</select></label><label>Actualizar estado <select name="status">{% for value, label in item.STATUS_CHOICES %}<option value="{{ value }}"{% if value == item.status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button class="button" type="submit">Confirmar</button></form>{% endif %}</li>{% endfor %}</ul>{% else %}<p class="empty-note">Sin solicitudes de apoyo.</p>{% endif %}
+      </section>
+
+      <section class="results-summary" aria-labelledby="audit-heading">
+        <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2 id="audit-heading">Auditoría institucional</h2></div><a class="secondary-action" href="{% url 'director-import-preview' %}">Importar Excel</a></div>
+        {% if audit_events %}
+          <ul>{% for event in audit_events %}<li>{{ event.actor_display_name }} · {{ event.action }} · {{ event.source }} · {{ event.occurred_at|date:"Y-m-d H:i" }}</li>{% endfor %}</ul>
+        {% else %}<p class="empty-note">Sin eventos de auditoría para mostrar.</p>{% endif %}
+      </section>
+    </main>
+    <footer class="site-footer shell"><span>AulaLista · Dirección</span><span>Sin identidades estudiantiles</span></footer>
+  </body>
+</html>

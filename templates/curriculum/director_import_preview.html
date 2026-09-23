@@ -1,0 +1,17 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Vista previa · AulaLista</title>  <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
+  </head>
+<body><main>
+  <h1>Vista previa de importación</h1>
+  <p>Revisa altas, conflictos y homónimos antes de aplicar. Esta pantalla aún no ha escrito datos.</p>
+  <form method="post" action="{% url 'director-import-apply' %}">{% csrf_token %}
+    <input type="hidden" name="preview_token" value="{{ preview_token }}">
+    <table><thead><tr><th>Fila</th><th>Salón</th><th>Docente</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>
+      {% for row in preview.rows %}<tr>
+        <td>{{ row.row_number }}</td><td>{{ row.name }}</td><td>{{ row.teacher }}</td><td>{{ row.status }}</td><td>{{ row.reason }}
+        {% if row.status == "ambiguous" %}<label>Cuenta confirmada <select name="teacher_{{ row.row_number }}" required><option value="">Selecciona</option>{% for candidate in row.candidates %}<option value="{{ candidate.id }}">{{ candidate.label }}</option>{% endfor %}</select></label>{% endif %}
+        </td>
+      </tr>{% endfor %}
+    </tbody></table>
+    <button type="submit">Confirmar y aplicar</button>
+  </form>
+</main></body></html>

@@ -326,6 +326,23 @@ def _normalize_title(title):
     return re.sub(r"[^a-z0-9]+", "", normalized)
 
 
+def _is_planning_container(title):
+    """Reject labels that organize a plan but are not teachable themes.
+
+    The model may call these a theme, so this is deliberately deterministic.
+    Their source text remains available in the draft for a teacher to use; they
+    simply cannot start automatic subtopic/activity generation.
+    """
+
+    normalized = _normalize_title(title)
+    return normalized.startswith((
+        "planeaciondidactica",
+        "identificaciongeneral",
+        "semana",
+        "proyecto",
+    ))
+
+
 def identify_topics(chunk, *, transport=None):
     """Stage B: propose topics for one chunk, with page citations.
 
@@ -344,7 +361,7 @@ def identify_topics(chunk, *, transport=None):
             continue
         # Missing tipo keeps the candidate: only explicit non-topics drop.
         tipo = str(topic.get("tipo") or "tema").strip().lower()
-        if tipo != "tema":
+        if tipo != "tema" or _is_planning_container(title):
             continue
         topics.append(
             {
@@ -499,6 +516,298 @@ def context_for_pages(source_text, start, end, *, pad=1, max_chars=CHUNK_MAX_CHA
         f"[página {page}]\n{pages[page]}" for page in sorted(pages) if lo <= page <= hi
     )
     return window or source_text[:max_chars]
+
+
+# ---------------------------------------------------------------------------
+# Deterministic annex fast path
+# ---------------------------------------------------------------------------
+
+# This path deliberately recognises structure and explicit instructions rather
+# than filenames, provider URLs, or a particular publisher.  It is a staging
+# adapter only: every generated companion keeps the exact source page text and
+# page number so a teacher can review the printable annex beside it.
+_SOURCE_PAGE_MARKER_RE = re.compile(r"\[página\s+(\d+)\]", re.IGNORECASE)
+_ANNEX_HEADER_RE = re.compile(
+    r"^\s*ANEXO\s*(?:#\s*)?(\d+)\s*$",
+    re.IGNORECASE,
+)
+_URL_RE = re.compile(r"https?://[^\s<>()]+", re.IGNORECASE)
+_VOWELS = ("a", "e", "i", "o", "u")
+_COLOR_LINE_RE = re.compile(
+    # PDF text extraction often drops decorative arrows and leaves
+    # ``Vocal A      verde``; accept both that layout and explicit arrows.
+    r"\bVocal\s+([aeiou])\s*(?:(?:->|→|:|-)\s*)?([A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+)",
+    re.IGNORECASE,
+)
+
+
+def _source_pages(source_text):
+    """Return extracted source text grouped by its immutable page markers."""
+
+    matches = list(_SOURCE_PAGE_MARKER_RE.finditer(source_text or ""))
+    if not matches:
+        return {}
+    pages = {}
+    for index, marker in enumerate(matches):
+        page = int(marker.group(1))
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(source_text)
+        pages[page] = source_text[marker.end() : end].strip()
+    return pages
+
+
+def extract_annex_manifest(source_text):
+    """Extract a source manifest for structured ``ANEXO`` pages.
+
+    The returned text is copied from ``source_text`` and is never rewritten by
+    the model.  A missing page marker or header produces an empty manifest so
+    callers can safely use the normal LLM path.
+    """
+
+    pages = _source_pages(source_text)
+    manifest = []
+    for page, text in sorted(pages.items()):
+        first_line = next((line for line in text.splitlines() if line.strip()), "")
+        # References such as "anexo 3" in a session paragraph are not source
+        # pages.  A high-confidence annex starts its page with the heading.
+        header = _ANNEX_HEADER_RE.fullmatch(first_line)
+        if not header:
+            continue
+        number = int(header.group(1))
+        urls = [match.rstrip(".,;:)") for match in _URL_RE.findall(text)]
+        manifest.append(
+            {
+                "number": number,
+                "page": page,
+                "source_anchor": header.group(0).strip(),
+                "source_text": text,
+                "source_url": urls[0] if urls else "",
+                "source_urls": urls,
+            }
+        )
+    return manifest
+
+
+def _deterministic_question(prompt, options, expected_index, hint):
+    """Build one option question with the package's existing strict contract."""
+
+    return {
+        "block_type": "reactivo",
+        "value": {
+            "prompt": prompt,
+            "options": [
+                {
+                    "position": position,
+                    "text": str(option).strip(),
+                    "expected": position - 1 == expected_index,
+                    "feedback": (
+                        "Correcto."
+                        if position - 1 == expected_index
+                        else "Revisa la instrucción del anexo."
+                    ),
+                }
+                for position, option in enumerate(options, start=1)
+            ],
+            "hints": [hint],
+        },
+    }
+
+
+def _proposal_from_annex(title, objective, micro_lesson, explanation, questions):
+    return {
+        "title": title[:160],
+        "objective": objective,
+        "micro_lesson": micro_lesson,
+        "final_explanation": explanation,
+        "questions": questions,
+    }
+
+
+def _build_fill_blank_annex(manifest_item):
+    text = manifest_item["source_text"]
+    if not re.search(r"cinco\s+vocales", text, re.IGNORECASE):
+        return None
+    blank_lines = [line.strip() for line in text.splitlines() if re.search(r"_{2,}", line)]
+    blank_count = sum(len(re.findall(r"_{2,}", line)) for line in blank_lines)
+    # The educational template is safe only when its five blanks correspond to
+    # the explicit five-vowel instruction.  Otherwise an unknown answer key
+    # must remain on the regular LLM/review path.
+    if blank_count != len(_VOWELS) or not blank_lines:
+        return None
+    proposal = _proposal_from_annex(
+        f"ANEXO # {manifest_item['number']:02d}",
+        "Completar huecos con las cinco vocales.",
+        "La hoja conserva cinco espacios para que la maestra autorice la clave.",
+        "La clave de respuestas no aparece en la fuente; requiere revisión humana antes de evaluar.",
+        [],
+    )
+    return "fill_blank", proposal, {
+        "blank_count": blank_count,
+        "blanks": blank_lines,
+        "vowels_instruction": "Escribe en los círculos las cinco vocales mostradas en el vídeo.",
+        "requires_human_answer_key": True,
+        "non_evaluable": True,
+    }
+
+
+def _build_color_mapping_annex(manifest_item):
+    text = manifest_item["source_text"]
+    mapping = {}
+    for raw_vowel, raw_color in _COLOR_LINE_RE.findall(text):
+        vowel = raw_vowel.lower()
+        color = raw_color.strip()
+        if vowel in _VOWELS and color:
+            mapping[vowel] = color
+    if set(mapping) != set(_VOWELS) or len(set(mapping.values())) != len(_VOWELS):
+        return None
+    colors = list(mapping.values())
+    questions = [
+        _deterministic_question(
+            f"¿De qué color se colorea la vocal {vowel.upper()}?",
+            colors,
+            colors.index(mapping[vowel]),
+            "Busca la leyenda de colores del anexo.",
+        )
+        for vowel in _VOWELS
+    ]
+    proposal = _proposal_from_annex(
+        f"ANEXO # {manifest_item['number']:02d}",
+        "Relacionar cada vocal con el color indicado.",
+        "La leyenda del anexo asigna un color distinto a cada vocal.",
+        "Colorea únicamente según la leyenda; la imagen original permanece disponible para revisión.",
+        questions,
+    )
+    return "color_mapping", proposal, {"mapping": mapping}
+
+
+def _build_matching_annex(manifest_item):
+    text = manifest_item["source_text"]
+    compact = re.sub(r"\s+", " ", text)
+    has_lower = bool(re.search(r"\ba\s*,\s*e\s*,\s*i\s*,\s*o\s*,\s*u\b", compact))
+    has_upper = bool(re.search(r"\bA\s*,\s*E\s*,\s*I\s*,\s*O\s*,\s*U\b", compact))
+    if not (has_lower and has_upper):
+        return None
+    if not all(
+        re.search(pattern, text, re.IGNORECASE)
+        for pattern in (r"vocales\s+mayúsculas", r"vocales\s+minúsculas", r"significa\s+menor", r"significa\s+mayor")
+    ):
+        return None
+    questions = [
+        _deterministic_question(
+            "Relaciona el grupo a, e, i, o, u con su descripción.",
+            ["Vocales minúsculas", "Vocales mayúsculas"],
+            0,
+            "Las letras minúsculas se escriben con menor tamaño.",
+        ),
+        _deterministic_question(
+            "Relaciona el grupo A, E, I, O, U con su descripción.",
+            ["Vocales minúsculas", "Vocales mayúsculas"],
+            1,
+            "Las letras mayúsculas se escriben con mayor tamaño.",
+        ),
+        _deterministic_question(
+            "¿Qué significa minúscula?",
+            ["Significa menor", "Significa mayor"],
+            0,
+            "Observa la relación mostrada en el anexo.",
+        ),
+        _deterministic_question(
+            "¿Qué significa mayúscula?",
+            ["Significa menor", "Significa mayor"],
+            1,
+            "Observa la relación mostrada en el anexo.",
+        ),
+    ]
+    proposal = _proposal_from_annex(
+        f"ANEXO # {manifest_item['number']:02d}",
+        "Relacionar vocales mayúsculas y minúsculas con su significado.",
+        "Las vocales aparecen en grupos mayúscula y minúscula.",
+        "Relaciona cada grupo con la etiqueta correspondiente y conserva el anexo original para revisión.",
+        questions,
+    )
+    return "matching", proposal, {
+        "pairs": [
+            ["a, e, i, o, u", "Vocales minúsculas"],
+            ["A, E, I, O, U", "Vocales mayúsculas"],
+            ["Vocales minúsculas", "Significa menor"],
+            ["Vocales mayúsculas", "Significa mayor"],
+        ]
+    }
+
+
+def _build_annex_companion(manifest_item):
+    """Return a high-confidence deterministic companion or ``None``."""
+
+    builders = (_build_fill_blank_annex, _build_color_mapping_annex, _build_matching_annex)
+    matches = [built for builder in builders if (built := builder(manifest_item))]
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def build_annex_fast_path(source_text):
+    """Build reviewable annex activities without calling the local model.
+
+    ``None`` means the document is not a high-confidence structured planning
+    document; callers must use the unchanged topic/subtopic/activity pipeline.
+    """
+
+    pages = _source_pages(source_text)
+    if not pages or not re.search(r"planeación\s+didáctica", source_text or "", re.IGNORECASE):
+        return None
+    manifest = extract_annex_manifest(source_text)
+    if not manifest:
+        return None
+    activities = []
+    for item in manifest:
+        built = _build_annex_companion(item)
+        if built is None:
+            return None
+        kind, proposal, details = built
+        is_evaluable = not details.get("requires_human_answer_key", False)
+        activities.append(
+            {
+                "id": f"annex-{item['number']:02d}",
+                "topic_title": "",
+                "subtopic_title": f"ANEXO # {item['number']:02d}",
+                "is_valid": is_evaluable,
+                "issues": (
+                    []
+                    if is_evaluable
+                    else [
+                        "requires_human_answer_key",
+                        "El anexo conserva huecos sin clave; no es evaluable todavía.",
+                    ]
+                ),
+                "proposal": proposal,
+                "selected": True,
+                "annex": {
+                    "number": item["number"],
+                    "kind": kind,
+                    "source_pages": [item["page"]],
+                    "source_anchor": item["source_anchor"],
+                    "source_text": item["source_text"],
+                    "source_url": item["source_url"],
+                    "source_urls": item["source_urls"],
+                    "details": details,
+                },
+            }
+        )
+    project_match = re.search(r"(?:^|\n)\s*Proyecto\s*:\s*([^\n]+)", source_text, re.IGNORECASE)
+    content_match = re.search(r"(?:^|\n)\s*Contenido\s*:\s*([^\n]+)", source_text, re.IGNORECASE)
+    topic_title = (project_match or content_match).group(1).strip() if (project_match or content_match) else "Anexos de la planeación"
+    for activity in activities:
+        activity["topic_title"] = topic_title[:200]
+    pages_for_topic = [item["page"] for item in manifest]
+    topic = {
+        "titulo": topic_title[:200],
+        "pagina_inicio": min(pages_for_topic),
+        "pagina_fin": max(pages_for_topic),
+        "subtemas": [
+            {"titulo": activity["subtopic_title"], "actividades_sugeridas": 1}
+            for activity in activities
+        ],
+    }
+    return {"manifest": manifest, "topics": [topic], "activities": activities}
 
 
 def propose_subtopics(topic_title, context_text, *, transport=None):

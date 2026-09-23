@@ -1,16 +1,16 @@
 :root {
-  --color-ink: #17212b;
-  --color-action: #075985;
-  --color-action-dark: #064568;
-  --color-paper: #f6f7f2;
-  --color-surface: #fffdfa;
-  --color-review: #b45309;
-  --color-error: #9f1239;
-  --color-focus: #b45309;
-  --color-muted: #52606d;
-  --color-line: #ccd5d9;
-  --color-soft: #e8f2f6;
-  --color-warm: #fff4d5;
+  --color-ink: #161a1d;
+  --color-action: #611232;
+  --color-action-dark: #450d24;
+  --color-paper: #f7f5f0;
+  --color-surface: #ffffff;
+  --color-review: #795b1e;
+  --color-error: #a32125;
+  --color-focus: #795b1e;
+  --color-muted: #595954;
+  --color-line: #dedbd3;
+  --color-soft: #f4e9ed;
+  --color-warm: #f5eedf;
   --space-1: .5rem;
   --space-2: .75rem;
   --space-3: 1rem;
@@ -60,6 +60,7 @@ p { color: var(--color-muted); }
 .lead { max-width: 650px; font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .landing-header { margin-block-end: 2.5rem; }
 .landing-header--split { display: flex; justify-content: space-between; align-items: end; gap: 2rem; }
+.landing-header-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
 .authority-boundary { display: flex; gap: 1rem; align-items: flex-start; margin-block: 1.5rem 2.5rem; padding: 1rem 1.2rem; border-inline-start: .35rem solid var(--color-review); background: var(--color-warm); }
 .authority-boundary h2 { margin-block-end: .4rem; font-size: 1.15rem; }
 .authority-boundary p { margin-block-end: .35rem; font-size: .88rem; }
@@ -153,6 +154,6 @@ input, select { inline-size: 100%; min-block-size: 44px; padding: .6rem .7rem; b
 .node-decision .button { min-block-size: var(--target-min); padding: .5rem .7rem; }
 .error { padding: .9rem 1rem; border-inline-start: .35rem solid var(--color-error); background: #fbe8ee; color: var(--color-error); }
 .site-footer { display: flex; justify-content: space-between; gap: 1rem; width: min(1180px, calc(100% - 2rem)); margin-inline: auto; padding: 1rem 0 1.5rem; border-block-start: 1px solid var(--color-line); color: var(--color-muted); font-size: .75rem; }
-@media (max-width: 760px) { .landing-header--split { display: block; } .landing-header--split .primary-action { margin-block-start: 1rem; } .session-grid, .roadmap-card-grid, .classroom-grid { grid-template-columns: 1fr; } .teacher-node { grid-template-columns: 2rem minmax(0, 1fr); } .node-decision { grid-column: 2; } }
+@media (max-width: 760px) { .landing-header--split { display: block; } .landing-header--split .primary-action { margin-block-start: 1rem; } .landing-header-actions { margin-block-start: 1rem; } .session-grid, .roadmap-card-grid, .classroom-grid { grid-template-columns: 1fr; } .teacher-node { grid-template-columns: 2rem minmax(0, 1fr); } .node-decision { grid-column: 2; } }
 @media (max-width: 560px) { .site-header-inner { min-height: 64px; flex-wrap: wrap; padding-block: .6rem; } .top-nav { order: 3; inline-size: 100%; margin-inline-start: 0; justify-content: space-between; } .top-nav a { min-block-size: 40px; } .account-actions { order: 2; margin-inline-start: auto; padding-inline-start: .5rem; } .demo-badge { margin-inline-start: auto; font-size: .58rem; } main { padding-block: 2.2rem 3rem; } .session-card, .snapshot-choices, .roadmap-form-card, .roadmap-card, .teacher-roadmap, .classroom-card { padding: 1rem; } .snapshot-choices li { align-items: flex-start; flex-direction: column; } .teacher-node { grid-template-columns: 1.8rem minmax(0, 1fr); gap: .65rem; padding: .75rem; } .teacher-node-marker { inline-size: 1.8rem; block-size: 1.8rem; } .node-decision { grid-column: 1 / -1; } .node-decision .button { inline-size: 100%; } .authority-boundary { padding: .85rem; } .site-footer { flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

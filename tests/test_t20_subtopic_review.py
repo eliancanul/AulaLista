@@ -18,7 +18,7 @@ from curriculum import curriculum_import as pipeline  # noqa: E402
 from curriculum.models import CurriculumImportJob  # noqa: E402
 from curriculum import views  # noqa: E402
 
-from helpers import tutor_client  # noqa: E402
+from helpers import MINIMAL_VALID_PDF_BYTES, tutor_client  # noqa: E402
 
 pytestmark = pytest.mark.django_db
 
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.django_db
 def pdf_upload():
     return SimpleUploadedFile(
         "curricula.pdf",
-        b"%PDF-1.4 fake bytes",
+        MINIMAL_VALID_PDF_BYTES,
         content_type="application/pdf",
     )
 

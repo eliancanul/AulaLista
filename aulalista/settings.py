@@ -123,3 +123,8 @@ AULALISTA_LAN_URL = os.environ.get("AULALISTA_LAN_URL", "").strip()
 # student path, grading or publishing). Defaults match a stock Ollama install.
 AULALISTA_OLLAMA_URL = os.environ.get("AULALISTA_OLLAMA_URL", "http://localhost:11434")
 AULALISTA_LLM_MODEL = os.environ.get("AULALISTA_LLM_MODEL", "qwen2.5:14b")
+
+# Maximum upload size for curriculum PDF imports (25 MiB)
+CURRICULUM_MAX_UPLOAD_SIZE_BYTES = int(
+    os.environ.get("CURRICULUM_MAX_UPLOAD_SIZE_BYTES", 25 * 1024 * 1024)
+)

@@ -1,23 +1,23 @@
 :root {
-  --color-ink: #17212b;
-  --color-action: #075985;
-  --color-action-dark: #064568;
-  --color-paper: #f6f7f2;
-  --color-surface: #fffdfa;
-  --color-review: #b45309;
-  --color-error: #9f1239;
-  --color-focus: #b45309;
-  --color-muted: #52606d;
-  --color-line: #ccd5d9;
-  --color-soft: #e8f2f6;
-  --color-warm: #fff4d5;
+  --color-ink: #161a1d;
+  --color-action: #611232;
+  --color-action-dark: #450d24;
+  --color-paper: #f7f5f0;
+  --color-surface: #ffffff;
+  --color-review: #795b1e;
+  --color-error: #a32125;
+  --color-focus: #795b1e;
+  --color-muted: #595954;
+  --color-line: #dedbd3;
+  --color-soft: #f4e9ed;
+  --color-warm: #f5eedf;
   --color-completed: #176b4d;
   --color-current: #c2412d;
-  --color-available: #075985;
+  --color-available: #611232;
   --color-locked: #68747b;
   --color-completed-soft: #e0f1e8;
   --color-current-soft: #fbe8ee;
-  --color-available-soft: #e8f2f6;
+  --color-available-soft: #f4e9ed;
   --color-locked-soft: #e8ebea;
   --space-1: 0.5rem;
   --space-2: 0.75rem;
@@ -35,7 +35,7 @@
 }
 
 * { box-sizing: border-box; }
-html { min-width: 280px; scroll-behavior: smooth; }
+html { scroll-behavior: smooth; }
 body { min-height: 100vh; margin: 0; background: var(--color-paper); color: var(--color-ink); }
 button, input, select, textarea { font: inherit; }
 a { color: var(--color-action); overflow-wrap: anywhere; }
@@ -198,7 +198,7 @@ th { color: var(--color-muted); font-size: .75rem; text-transform: uppercase; }
 .activity-copy small { color: var(--color-muted); font-size: .72rem; }
 .status-tag { color: var(--color-action-dark); font-size: .66rem; font-weight: 900; letter-spacing: .07em; }
 .activity-open { font-size: .8rem; font-weight: 800; }
-.state-actual, .state-actual .activity-mark { border-color: var(--color-action); background: #e8f2f6; }
+.state-actual, .state-actual .activity-mark { border-color: var(--color-action); background: #f4e9ed; }
 .state-actual .activity-mark { color: #fff; background: var(--color-action); }
 .state-disponible .activity-mark { background: #e9eee5; color: #6d7d73; }
 .state-bloqueada { color: #68747b; background: #e8ebea; }

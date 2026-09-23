@@ -31,22 +31,102 @@ def snapshot(title, version=1, owner=None):
     )
 
 
+from bs4 import BeautifulSoup
+
+
 def test_landing_is_authorized_and_offers_recent_published_choices():
-    client = tutor_client()
+    """With published snapshots: header contains secondary Importar planeación and primary Preparar sesión."""
+    client = tutor_client("landing-snapshots-tester")
     owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
     published = snapshot("Actividad publicada", version=4, owner=owner)
     response = client.get(reverse("tutor-sessions"))
 
     assert response.status_code == 200
-    assert "Actividad publicada" in response.text
-    assert "versión 4" in response.text
-    assert published.sha256[:8] in response.text
-    assert reverse("tutor-session-prepare", args=[published.pk]) in response.text
-    assert "Importar currícula" in response.text
+
+    # Parse .landing-header-actions DOM node
+    soup = BeautifulSoup(response.content.decode("utf-8"), "html.parser")
+    actions = soup.find(class_="landing-header-actions")
+    assert actions is not None, "Container .landing-header-actions must exist in header"
+
+    # 1. Secondary action: Importar planeación associated to exact href in same <a>
+    import_url = reverse("tutor-import-upload")
+    import_link = actions.find("a", href=import_url)
+    assert import_link is not None, f"Link with href {import_url} not found in .landing-header-actions"
+    assert "Importar planeación" in import_link.get_text()
+    assert "secondary-action" in import_link.get("class", [])
+
+    # 2. Primary action: Preparar sesión associated to exact href in same <a>
+    prepare_url = reverse("tutor-session-prepare", args=[published.pk])
+    prepare_link = actions.find("a", href=prepare_url)
+    assert prepare_link is not None, f"Link with href {prepare_url} not found in .landing-header-actions"
+    assert "Preparar sesión" in prepare_link.get_text()
+    prepare_classes = prepare_link.get("class", [])
+    assert "primary-action" in prepare_classes
+    assert "primary-action--large" in prepare_classes
+
+    # Strict check: obsolete copy absent from landing
+    assert "Importar currícula" not in response.text
+
+    # Snapshot details present in choices section
+    choices_section = soup.find(class_="snapshot-choices")
+    assert choices_section is not None
+    choices_text = choices_section.get_text()
+    assert "Actividad publicada" in choices_text
+    assert "versión 4" in choices_text
+    assert published.sha256[:8] in choices_text
+
+    # Authority boundary note
     assert "EditorialReviewer" in response.text
     assert "IA" in response.text
-    assert "activa" in response.text.lower()
 
+
+def test_landing_without_snapshots_header_actions():
+    """Without published snapshots: header contains primary large Importar planeación and NO prepare CTA."""
+    empty_client = tutor_client("landing-empty-tester")
+    response = empty_client.get(reverse("tutor-sessions"))
+    assert response.status_code == 200
+
+    # Parse .landing-header-actions DOM node
+    soup = BeautifulSoup(response.content.decode("utf-8"), "html.parser")
+    actions = soup.find(class_="landing-header-actions")
+    assert actions is not None, "Container .landing-header-actions must exist in header"
+
+    # 1. Primary large action: Importar planeación associated to exact href in same <a>
+    import_url = reverse("tutor-import-upload")
+    import_link = actions.find("a", href=import_url)
+    assert import_link is not None, f"Link with href {import_url} not found in .landing-header-actions"
+    assert "Importar planeación" in import_link.get_text()
+    import_classes = import_link.get("class", [])
+    assert "primary-action" in import_classes
+    assert "primary-action--large" in import_classes
+
+    # 2. NO prepare CTA exists in header actions
+    header_links = actions.find_all("a")
+    for link in header_links:
+        assert "prepare" not in link.get("href", "").lower()
+        assert "preparar" not in link.get_text().lower()
+
+    # Strict check: obsolete copy absent from landing
+    assert "Importar currícula" not in response.text
+
+
+def test_landing_auth_ownership_filters_other_teachers_snapshots():
+    """Published snapshots belonging to other teachers are not visible in this teacher's landing."""
+    client = tutor_client("owner-teacher")
+    owner = get_user_model().objects.get(pk=client.session["_auth_user_id"])
+    snapshot("Actividad propia", version=1, owner=owner)
+
+    other_user = get_user_model().objects.create_user(username="other-teacher")
+    snapshot("Actividad ajena confidencial", version=1, owner=other_user)
+
+    response = client.get(reverse("tutor-sessions"))
+    assert response.status_code == 200
+    assert "Actividad propia" in response.text
+    assert "Actividad ajena confidencial" not in response.text
+
+
+def test_landing_requires_authentication():
+    """Anonymous visitor is redirected to login."""
     anonymous = Client().get(reverse("tutor-sessions"))
     assert anonymous.status_code == 302
     assert "login" in anonymous["Location"].lower()
