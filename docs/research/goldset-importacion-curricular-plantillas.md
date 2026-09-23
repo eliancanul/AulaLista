@@ -8,12 +8,8 @@ La anotación independiente es JSON Lines y valida contra `goldset-importacion-c
 
 Para adjudicar, no sobrescriba A ni B. Cree un archivo separado con `review_status: "adjudicated"`, identidad de la persona adjudicadora y, para cada diferencia, una región o relación nueva respaldada por el PDF renderizado. Registre el desacuerdo original como una entrada en `contradictions` con referencias a los IDs de A/B; no elija por mayoría ni por el extractor.
 
-## Ejecución read-only
+## Estado de ejecución
 
-```bash
-.venv/bin/python scripts/shadow_import_curriculum.py \
-  --manifest docs/research/goldset-importacion-curricular-manifest-v1.json \
-  --output-dir /tmp/aulalista-shadow-raw
-```
+El comando histórico de este documento ya no corresponde al CLI vigente. El harness autónomo y sus pruebas sintéticas están en [aulalista-research](https://github.com/eliancanul/aulalista-research). El manifiesto privado de este directorio referencia documentos locales y **no** se traslada al repositorio público. Cualquier nueva corrida sobre ese corpus requiere comprobar primero permiso, fuente y partición, y usar los subcomandos actuales `run-one`, `close-raw` e `interpret` según sus argumentos reales.
 
-Cada corrida deja un JSON por documento/adaptador y `comparison-matrix.json`. La matriz sólo resume cobertura, estado, tiempos, RSS del proceso y tamaño de artefacto; CER/WER, IoU/mAP, GriTS/TEDS, jerarquía, relaciones, provenance y riesgo-cobertura permanecen `not_evaluable` hasta tener dos anotaciones completas y adjudicadas. `--resume` reutiliza sólo un resultado con el mismo hash fuente y adapter; hay que borrar el artefacto para forzar una corrida nueva.
+Los recibos técnicos pueden resumir cobertura, estado, tiempos y recursos. CER/WER, IoU/mAP, GriTS/TEDS, jerarquía, relaciones y riesgo-cobertura permanecen `not_evaluable` hasta contar con anotaciones independientes completas y adjudicadas. Una plantilla o un recibo de ejecución no cierra ese gate.
