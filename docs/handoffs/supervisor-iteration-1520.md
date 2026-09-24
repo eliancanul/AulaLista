@@ -65,4 +65,4 @@ Next supervisor pass (iteration 1521): Phase 1 baseline architecture and domain 
 
 Checkpoint packaging executed after writing this handoff: cumulative deltas 1511–1520 + catalog Phase 10 row 1520 + gate iteration-1520 note appended (STATUS line untouched). Staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit. Pushed to `supervisor/aulalista-docs`; PR #115 already OPEN so the push updates it (docs-only, unmerged — never merge/approve/close per loop rules). Record finalized post-push below.
 
-PR record: (filled post-push)
+PR record: DONE — commit `1c905b2` (`b83cbeb..1c905b2` pushed to `supervisor/aulalista-docs`, 4 files +89/−2, docs-only via explicit `git add`, `git diff --cached --name-only` verified); PR #115 already OPEN so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules).
