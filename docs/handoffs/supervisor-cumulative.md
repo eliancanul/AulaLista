@@ -2697,4 +2697,4 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 
 ## PR record (iteration-1580 checkpoint)
 
-- PENDING — to be filled after the docs-only commit/push at this checkpoint (files: `IMPLEMENTATION-GATE.md` + `supervisor-cumulative.md` + `supervisor-iteration-1580.md` + `supervisor-prompt-catalog.md`; PR #115 already OPEN for this branch: https://github.com/eliancanul/AulaLista/pull/115 — docs-only, unmerged).
+- DONE — commit `ff57e07` (`docs(supervisor): iteration-1580 checkpoint synthesis, HOLD re-affirmed, decade 1571-1580 gap-free`, 4 files, +85/−1; explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified docs-only pre-commit: exactly `IMPLEMENTATION-GATE.md` + `supervisor-cumulative.md` + `supervisor-iteration-1580.md` + `supervisor-prompt-catalog.md`) pushed `83d9c83..ff57e07` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules).
