@@ -8,7 +8,6 @@ from typing import Any
 from curriculum.source_interpreter import (
     ORIGIN_EXTRACTED,
     ORIGIN_PROPOSED,
-    ORIGIN_TEACHER_ENTERED,
     STATUS_CONFLICTING,
     STATUS_MISSING,
     STATUS_SUPPORTED,
@@ -23,20 +22,16 @@ CLAIM_TYPE_FIELD = "field"
 CLAIM_TYPE_ENTITY = "entity"
 CLAIM_TYPE_RELATION = "relation"
 
-# --- Estados ternarios y de gobernanza --- # --- Estados ternarios y de gobernanza ---
 # --- Estados ternarios y de gobernanza ---
 CLAIM_STATE_CANDIDATE = "candidate"
 CLAIM_STATE_BACKED = "backed"
 CLAIM_STATE_CONTRADICTED = "contradicted"
-CLAIM_STATE_CONTRADICTED = "contradicted"
-CLAIM_STATE_INSUFFICIENT_EVIDENCE = "insufficient_evidence"
 CLAIM_STATE_INSUFFICIENT_EVIDENCE = "insufficient_evidence"
 CLAIM_STATE_NEEDS_HUMAN_REVIEW = "needs_human_review"
 
 # --- Predicados canónicos NEM (Nueva Escuela Mexicana) ---
 PREDICATE_PROYECTO = "proyecto"
 PREDICATE_CAMPO_FORMATIVO = "campo_formativo"
-PREDICATE_ESCENARIO = "escenario"                 # Aula | Escolar | Comunitar# Aula | Escolar | Comunitario
 PREDICATE_ESCENARIO = "escenario"                 # Aula | Escolar | Comunitario
 PREDICATE_EJES_ARTICULADORES = "ejes_articuladores" # Inclusión, Pensamiento crítico, etc.
 PREDICATE_METODOLOGIA = "metodologia"             # ABPC | STEAM | ABP | AS
@@ -102,7 +97,7 @@ def _map_field_to_claim(
     - Conflicto explícito -> contradicted
     - Dato faltante o vacío -> insufficient_evidence
     - Origen propuesto/inferido -> needs_human_review (NUNCA backed)
-    - Extracción literal con evidencia física -> backed
+    - Extracción literal con evidencia del mismo documento -> backed
     """
     val = interpreted_field.value
     stat = interpreted_field.status
@@ -111,10 +106,16 @@ def _map_field_to_claim(
     # 1. Extraer página y texto de la evidencia física
     page = None
     excerpt = ""
+    region = None
+    source_matches = False
     if interpreted_field.evidence:
         first_ev = interpreted_field.evidence[0]
         page = getattr(first_ev, "page_number", None)
         excerpt = getattr(first_ev, "excerpt", "")
+        region = getattr(first_ev, "region", None)
+        source_matches = getattr(first_ev, "document_sha256", None) == doc_sha and bool(doc_sha)
+        if not source_matches:
+            page, excerpt, region = None, "", None
 
     # 2. Evaluar el estado según las reglas de negocio
     if stat == STATUS_CONFLICTING:
@@ -124,7 +125,7 @@ def _map_field_to_claim(
     elif orig in (ORIGIN_PROPOSED, "inferred"):
         # REGLA DE ORO: Lo deducido por IA jamás se auto-aprueba
         initial_state = CLAIM_STATE_NEEDS_HUMAN_REVIEW
-    elif stat == STATUS_SUPPORTED and orig in (ORIGIN_EXTRACTED, ORIGIN_TEACHER_ENTERED) and page is not None:
+    elif stat == STATUS_SUPPORTED and orig == ORIGIN_EXTRACTED and page is not None and excerpt.strip():
         initial_state = CLAIM_STATE_BACKED
     else:
         initial_state = CLAIM_STATE_CANDIDATE
@@ -138,6 +139,7 @@ def _map_field_to_claim(
         object_value=val,
         source_doc_sha256=doc_sha,
         page_number=page,
+        region=region,
         excerpt=excerpt,
         extraction_method="source_interpreter_v0",
         state=initial_state,
@@ -160,10 +162,14 @@ def _map_activity_to_claims(
     act_subject = f"activity:{activity.activity_id}"
     act_page = None
     act_excerpt = ""
+    act_region = None
     if getattr(activity, "evidence", None):
         first_ev = activity.evidence[0]
-        act_page = getattr(first_ev, "page_number", None)
-        act_excerpt = getattr(first_ev, "excerpt", "")
+        if doc_sha and getattr(first_ev, "document_sha256", None) == doc_sha:
+            act_page = getattr(first_ev, "page_number", None)
+            act_excerpt = getattr(first_ev, "excerpt", "")
+            act_region = getattr(first_ev, "region", None)
+    has_act_evidence = act_page is not None and bool(act_excerpt.strip())
 
     # 1. Relación estructural: La actividad pertenece a la sesión
     cid_rel = make_claim_id(act_subject, PREDICATE_PERTENECE_A_SESION, session_subject, doc_sha)
@@ -176,9 +182,10 @@ def _map_activity_to_claims(
             object_value=session_subject,
             source_doc_sha256=doc_sha,
             page_number=act_page,
+            region=act_region,
             excerpt=act_excerpt,
             extraction_method="source_interpreter_v0",
-            state=CLAIM_STATE_BACKED if act_page is not None else CLAIM_STATE_CANDIDATE,
+            state=CLAIM_STATE_BACKED if has_act_evidence else CLAIM_STATE_CANDIDATE,
         )
     )
 
@@ -212,8 +219,9 @@ def _map_activity_to_claims(
             object_value=status_value,
             source_doc_sha256=doc_sha,
             page_number=act_page,
+            region=act_region,
             extraction_method="source_interpreter_v0",
-            state=CLAIM_STATE_BACKED if act_page is not None else CLAIM_STATE_CANDIDATE,
+            state=CLAIM_STATE_BACKED if has_act_evidence else CLAIM_STATE_CANDIDATE,
         )
     )
 

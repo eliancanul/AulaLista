@@ -29,6 +29,7 @@ from curriculum.claims import (
 from curriculum.source_interpreter import (
     ORIGIN_EXTRACTED,
     ORIGIN_PROPOSED,
+    ORIGIN_TEACHER_ENTERED,
     STATUS_CONFLICTING,
     STATUS_MISSING,
     STATUS_SUPPORTED,
@@ -162,6 +163,52 @@ class TestAtomicClaimsContract124:
         # Invariante: Aunque la página física esté identificada, NO puede ser backed
         assert claim.state != CLAIM_STATE_BACKED
         assert claim.state == CLAIM_STATE_NEEDS_HUMAN_REVIEW
+
+    def test_teacher_entry_with_page_is_not_source_backing(self):
+        doc_sha = "sha_teacher_entry"
+        field = _make_field("proyecto", "Proyecto corregido", origin=ORIGIN_TEACHER_ENTERED, doc_sha=doc_sha)
+        claim = compile_dossier_to_atomic_claims(
+            _make_dossier(doc_sha, general_fields={"proyecto": field})
+        )[0]
+
+        assert claim.state == CLAIM_STATE_CANDIDATE
+        assert claim.page_number == 1
+
+    def test_mismatched_source_hash_cannot_back_claim(self):
+        field = _make_field("proyecto", "Proyecto ajeno", doc_sha="otro_documento")
+        claim = compile_dossier_to_atomic_claims(
+            _make_dossier("documento_actual", general_fields={"proyecto": field})
+        )[0]
+
+        assert claim.state == CLAIM_STATE_CANDIDATE
+        assert claim.page_number is None
+        assert claim.excerpt == ""
+
+    def test_source_region_is_preserved_in_claim(self):
+        doc_sha = "sha_region"
+        field = _make_field("proyecto", "Proyecto localizado", doc_sha=doc_sha)
+        field.evidence[0].region = {"x0": 0.1, "y0": 0.2, "x1": 0.7, "y1": 0.4}
+        claim = compile_dossier_to_atomic_claims(
+            _make_dossier(doc_sha, general_fields={"proyecto": field})
+        )[0]
+
+        assert claim.state == CLAIM_STATE_BACKED
+        assert claim.region == field.evidence[0].region
+
+    def test_activity_from_another_document_is_not_backed(self):
+        activity = SessionActivity(
+            activity_id="act_foreign",
+            title="Actividad ajena",
+            order=1,
+            evidence=[SourceReference(document_sha256="otro_documento", page_number=2, excerpt="Actividad ajena")],
+        )
+        session = SessionPlan(session_id="s1", session_number=1, title="Sesión", pages=[2], activities=[activity])
+        claims = compile_dossier_to_atomic_claims(_make_dossier("documento_actual", sessions=[session]))
+
+        activity_claims = [claim for claim in claims if claim.subject == "activity:act_foreign"]
+        assert activity_claims
+        assert all(claim.state != CLAIM_STATE_BACKED for claim in activity_claims)
+        assert all(claim.page_number is None for claim in activity_claims)
 
     # --- GREEN 3: Separación de ausencia y contradicción ---
     def test_absence_and_contradiction_remain_distinct(self):
