@@ -7,6 +7,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import socket
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -265,6 +266,63 @@ class TestAtlasSEPRetrieval125:
             verified_identity=True,
         )
         validate_source_manifest(manifest_aprobado, content_bytes=valid_content)
+        with pytest.raises(AtlasIntegrityError, match="requiere contenido"):
+            validate_source_manifest(manifest_aprobado)
+        with pytest.raises(AtlasIntegrityError, match="requiere contenido"):
+            AtlasIndex().register_manifest(manifest_aprobado)
+
+    def test_index_and_receipt_identity_change_with_fragment_content(self):
+        manifest, fragments = create_synthetic_sep_fixture()
+        atlas = AtlasIndex(index_version="same-version")
+        atlas.register_manifest(manifest)
+        atlas.add_fragments(fragments)
+        first_metrics = atlas.build_index()
+        first_receipt = atlas.retrieve("nombrario")
+
+        changed_fragment = replace(fragments[0], text="Contenido modificado en la misma página")
+        atlas.add_fragment(changed_fragment)
+        second_metrics = atlas.build_index()
+        second_receipt = atlas.retrieve("nombrario")
+
+        assert second_metrics.index_hash != first_metrics.index_hash
+        assert second_receipt.receipt_id != first_receipt.receipt_id
+
+    def test_receipt_identity_includes_hierarchy_filter(self, synthetic_atlas: AtlasIndex):
+        first = synthetic_atlas.retrieve("nombrario", hierarchy_filter={"fase": "Fase 3"})
+        second = synthetic_atlas.retrieve("nombrario", hierarchy_filter={"fase": "Fase 4"})
+
+        assert first.receipt_id != second.receipt_id
+
+    def test_registered_fragments_and_receipts_do_not_share_mutable_data(self):
+        manifest, fragments = create_synthetic_sep_fixture()
+        atlas = AtlasIndex()
+        atlas.register_manifest(manifest)
+        atlas.add_fragments(fragments)
+        first_hash = atlas.build_index().index_hash
+        first_receipt = atlas.retrieve("nombrario")
+        original_text = first_receipt.candidates[0].fragment.text
+
+        fragments[0].hierarchy["fase"] = "Fase ajena"
+        manifest.metadata["fase"] = "Fase ajena"
+        first_receipt.candidates[0].fragment.hierarchy["fase"] = "Fase ajena"
+
+        assert atlas.build_index().index_hash == first_hash
+        assert atlas.retrieve("nombrario").candidates[0].fragment.text == original_text
+        assert atlas.retrieve("nombrario").candidates[0].fragment.hierarchy["fase"] != "Fase ajena"
+
+    @pytest.mark.parametrize("top_k", [0, -1, True, 1.5])
+    def test_invalid_top_k_is_rejected(self, synthetic_atlas: AtlasIndex, top_k):
+        claim = AtomicClaim(
+            claim_id="top_k_claim",
+            claim_type=CLAIM_TYPE_FIELD,
+            subject="document",
+            predicate=PREDICATE_PROYECTO,
+            object_value="nombrario",
+        )
+        with pytest.raises(ValueError, match="top_k"):
+            synthetic_atlas.retrieve("nombrario", top_k=top_k)
+        with pytest.raises(ValueError, match="top_k"):
+            synthetic_atlas.retrieve_for_claim(claim, top_k=top_k)
 
     # ─── Arquitectura: Intercambiabilidad de Retriever y Reranker ─────────
     def test_interchangeable_retriever_and_reranker(self):
