@@ -1,0 +1,215 @@
+{
+  "schema_version": "1.0",
+  "manifest": {
+    "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+    "title": "Atlas SEP Sintético — Primaria Fase 3 (1° Grado) — Proyectos de Aula",
+    "publisher": "Secretaría de Educación Pública (Fixture Sintético de Prueba)",
+    "edition_year": 2024,
+    "version": "1.0.0-synthetic",
+    "license": "SEP-CONALITEG-Uso-Educativo-Nacional",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hierarchy_levels": [
+      "fase",
+      "grado",
+      "campo_formativo",
+      "metodologia"
+    ],
+    "is_synthetic": true,
+    "verified_permission": true,
+    "verified_identity": true,
+    "metadata": {
+      "ambito": "Educación Primaria Oficial",
+      "fase": "Fase 3",
+      "grado": "1°"
+    }
+  },
+  "fragments": [
+    {
+      "fragment_id": "307f2de953b6d670",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 1,
+      "text": "Proyecto de Aula: El nombrario del grupo.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Presentación del Proyecto y Propósito",
+      "sequence_order": 1,
+      "token_count": 7
+    },
+    {
+      "fragment_id": "e27be051b47e6533",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 1,
+      "text": "Propósito: Que las alumnas y los alumnos conozcan la escritura de su nombre, lo comparen con los nombres de sus compañeras y compañeros del aula, reconozcan su identidad y elaboren un collage y gafetes con su nombre propio.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Presentación del Proyecto y Propósito",
+      "sequence_order": 2,
+      "token_count": 34
+    },
+    {
+      "fragment_id": "8eae5d7cecd425c6",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 2,
+      "text": "Metodología: Aprendizaje Basado en Proyectos Comunitarios (ABPC - 11 momentos).",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Estructura Metodológica ABPC",
+      "sequence_order": 1,
+      "token_count": 9
+    },
+    {
+      "fragment_id": "51bb343fb81d1cd8",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 2,
+      "text": "Fase 1: Momentos 1 a 3 (Identificación, Recuperación y Planificación).",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Estructura Metodológica ABPC",
+      "sequence_order": 2,
+      "token_count": 5
+    },
+    {
+      "fragment_id": "5370afead7f25b49",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 2,
+      "text": "En el Momento 1 de Identificación, las niñas y niños identifican su nombre en gafetes de bienvenida y tarjetas con fotos dispuestas en el salón.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Estructura Metodológica ABPC",
+      "sequence_order": 3,
+      "token_count": 22
+    },
+    {
+      "fragment_id": "3f6a9ba63641706d",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 3,
+      "text": "Contenido curricular oficial: Escritura de nombres en la lengua materna.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Contenidos y PDA de la Fase 3",
+      "sequence_order": 1,
+      "token_count": 10
+    },
+    {
+      "fragment_id": "787c9f8ba0364cad",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 3,
+      "text": "Procesos de Desarrollo de Aprendizaje (PDA): Escribe su nombre y lo compara con los nombres de sus compañeros. Identifica la letra inicial y final de su nombre, reconociendo sonidos semejantes.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Contenidos y PDA de la Fase 3",
+      "sequence_order": 2,
+      "token_count": 28
+    },
+    {
+      "fragment_id": "785875f47f5ba328",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 4,
+      "text": "Ejes articuladores del proyecto: Inclusión, Apropiación de las culturas a través de la lectura y la escritura, y Artes y experiencias estéticas.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Ejes Articuladores y Expresión Artística",
+      "sequence_order": 1,
+      "token_count": 18
+    },
+    {
+      "fragment_id": "626ae70028e767b1",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 4,
+      "text": "Actividades de desarrollo psicomotriz: Trazado de letras iniciales con plastilina, arena y pintura dactilar.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Ejes Articuladores y Expresión Artística",
+      "sequence_order": 2,
+      "token_count": 13
+    },
+    {
+      "fragment_id": "84d3f4828396ad02",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 5,
+      "text": "Recursos didácticos y anexos requeridos para la sesión:",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Recursos Didácticos y Anexos",
+      "sequence_order": 1,
+      "token_count": 7
+    },
+    {
+      "fragment_id": "f16f46731a78a9d5",
+      "source_id": "sep_primaria_fase3_lenguajes_sintetico_v1",
+      "page_number": 5,
+      "text": "Materiales: Cartulina, tarjetas blancas para gafetes de bienvenida, plastilina de colores, tijeras de punta redonda y pegamento blanco. Anexo 1: Plantilla para gafete ilustrado.",
+      "region": null,
+      "hierarchy": {
+        "fase": "Fase 3",
+        "grado": "1°",
+        "campo_formativo": "Lenguajes",
+        "metodologia": "Aprendizaje Basado en Proyectos Comunitarios (ABPC)",
+        "escenario": "Aula"
+      },
+      "section_title": "Recursos Didácticos y Anexos",
+      "sequence_order": 2,
+      "token_count": 22
+    }
+  ]
+}
