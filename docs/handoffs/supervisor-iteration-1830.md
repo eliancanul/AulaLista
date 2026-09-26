@@ -76,6 +76,6 @@ This checkpoint pass writes exactly four Markdown files (`docs/handoffs/supervis
 
 ## PR record (iteration-1830 checkpoint)
 
-- (To be filled post-push: commit hash / push range / PR #115 updatedAt.)
+- DONE — commit `be18b89` (`docs: supervisor iteration 1830 checkpoint synthesis, NO sixth drift thirteenth consecutive, HOLD re-affirmed, decade 1821-1830 9-10`, 4 files, +87/−0, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `e605535..be18b89` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted.
 
 (End of file)
