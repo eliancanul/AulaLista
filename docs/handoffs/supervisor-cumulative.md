@@ -2956,4 +2956,4 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 
 ## PR record (iteration-1740 checkpoint)
 
-- PENDING — recorded via fill-in after push (see `docs/handoffs/supervisor-iteration-1740.md` §Docs-only packaging for the packaging plan; PR #115 already OPEN, push updates it, docs-only, unmerged).
+- DONE — commit `8376bd3` (`docs(supervisor): iteration-1740 checkpoint synthesis, NO sixth drift, HOLD re-affirmed, decade 1731-1740 10-10`, 4 files, +96/−0, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c293302..8376bd3` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted.
