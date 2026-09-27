@@ -3298,4 +3298,4 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 
 ## PR record (iteration-1960 checkpoint)
 
-- PENDING — filled in upon push (commit hash, file count, and push range recorded here after the docs-only commit lands on `supervisor/aulalista-docs`, PR #115).
+- DONE — commit `e4bdaa6` (`docs(supervisor): iteration-1960 checkpoint synthesis, membership NO-sixth 26th with timestamp stability, HOLD re-affirmed, decade 1951-1960 10-10`, 4 files, +97/−3, staged via explicit `git add` of the 4 checkpoint Markdown files only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `de66f8c..e4bdaa6` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted.
