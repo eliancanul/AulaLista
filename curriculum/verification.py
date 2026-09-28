@@ -66,6 +66,7 @@ CANONICAL_GENERAL_FIELDS = [
     "campos_formativos",
     "proposito",
     "finalidad",
+    "duracion_proyecto",
 ]
 
 CANONICAL_SESSION_FIELDS = [

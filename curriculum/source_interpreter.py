@@ -23,6 +23,8 @@ from typing import Any, Callable
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError, PyPdfError
 
+from curriculum.verification import normalize_text_for_evidence_check
+
 logger = logging.getLogger(__name__)
 
 
@@ -1044,6 +1046,7 @@ HUMAN_FIELD_NAMES: dict[str, str] = {
     "metodologia": "Metodología de Proyecto",
     "escenario_proyecto": "Escenario del Proyecto",
     "grado": "Grado Escolar",
+    "duracion_proyecto": "Duración Sugerida del Proyecto",
     "inicio": "Momento 1: Inicio",
     "desarrollo": "Momento 2: Desarrollo",
     "cierre": "Momento 3: Cierre",
@@ -1060,6 +1063,7 @@ INPUT_TYPE_MAP: dict[str, str] = {
     "metodologia": "text",
     "escenario_proyecto": "text",
     "grado": "text",
+    "duracion_proyecto": "text",
     "inicio": "textarea",
     "desarrollo": "textarea",
     "cierre": "textarea",
@@ -2248,7 +2252,7 @@ class CurriculumSourceInterpreter:
 
         # 4. Finalidad / Intención didáctica docente (Without arbitrary truncation)
         fin_match = re.search(
-            r"(?:Finalidad|Intención\s+didáctica\s+docente):?\s*([\s\S]+?)(?=(?:\n\s*(?:Ejes(?:\s+articuladores)?|Propósito|Metodología|Escenario|Contenido|Temporalidad|Fase):|\Z))",
+            r"(?:^|\n)\s*(?:Finalidad(?:\s+e\s+intenci[oó]n\s+did[aá]ctica\s+docente)?|Intenci[oó]n\s+did[aá]ctica\s+docente)\b\s*:?\s*([\s\S]+?)(?=(?:\n\s*(?:Ejes(?:\s+articuladores)?|Prop[oó]sito|Metodolog[ií]a|Escenario|Contenido[s]?|Temporalidad|Fase|SESI[OÓ]N)\b:?|\Z))",
             overview_text,
             re.IGNORECASE,
         )
@@ -2272,24 +2276,291 @@ class CurriculumSourceInterpreter:
                 ],
             )
         else:
-            fields_dict["finalidad"] = InterpretedField(
-                name="finalidad",
-                value="",
-                origin=ORIGIN_PROPOSED,
-                status=STATUS_MISSING,
-                reason="No se localizó sección de finalidad o intención didáctica explícita.",
-                action_required="Redactar la finalidad o intención didáctica docente.",
+            # Candidate detection for implicit finalidad on overview page (physical page 1)
+            implicit_candidate = None
+            candidate_excerpt = ""
+            candidate_page = 1
+
+            p1_text = overview_pages[0] if overview_pages else ""
+
+            # 1. Delimit starting position: only after real "Proyecto [Titulo]" header line if present
+            # Avoid cutting on mid-sentence occurrences of the word "proyecto" or prose starting with "Proyecto Comunitario..."
+            proj_header_re = re.compile(
+                r"(?:^|\n)\s*(?:"
+                r"(?i:(?:Nombre\s+del\s+)?Proyecto\s*:)|"
+                r"(?i:(?:Nombre\s+del\s+)?Proyecto\b[^\n\r]*\bEscenario\b)|"
+                r"(?i:Nombre\s+del\s+Proyecto\b)"
+                r")[^\n\r]*(?:\n|\Z)"
+            )
+            proj_match = proj_header_re.search(p1_text)
+            if proj_match:
+                p1_sub = p1_text[proj_match.end():]
+            else:
+                p1_sub = p1_text
+
+            # 2. Delimit ending boundary: strictly by real structure of headers and table column headers.
+            # Handles single-line and multiline table columns ('Campos formativos', 'Contenidos', etc.).
+            structural_boundary = re.search(
+                r"(?:\n|\A)\s*(?:"
+                r"Campos?(?:\s+formativos?)?\b\s*(?:[:\n\r]|\s+(?:Contenidos?|Proceso|PDA)\b|\Z)|"
+                r"Contenidos?\b\s*(?:[:\n\r]|\s+del\b|\s+sint[eé]tico|\s+Proceso|\s+PDA|\Z)|"
+                r"Procesos?\s+de\s+desarrollo(?:\s+de\s+aprendizaje[s]?)?\b|"
+                r"PDA\b|"
+                r"Ejes?(?:\s+articuladores?)?\b\s*(?:[:\n\r]|\Z)|"
+                r"Metodolog[ií]a\b\s*(?:[:\n\r]|\s+(?:Aprendizaje|de\s+proyecto)\b|\Z)|"
+                r"Tiempo\s+de\s+aplicaci[oó]n\b|"
+                r"Temporalidad\b\s*(?:[:\n\r]|\Z)|"
+                r"DESARROLLO\s+DEL\s+PROYECTO\b|"
+                r"Fase\s*#?\s*\d+\b\s*[:.]|"
+                r"SESI[OÓ]N\b|"
+                r"Ajustes(?:\s+razonables)?\b|"
+                r"Materiales(?:\s+(?:educativos|did[aá]cticos))?\b|"
+                r"Recursos(?:\s+(?:did[aá]cticos|y\s+materiales))?\b|"
+                r"Evaluaci[oó]n(?:\s+formativa)?\b|"
+                r"Instrumentos?(?:\s+de\s+evaluaci[oó]n)?\b|"
+                r"Productos?(?:\s+esperados?)?\b|"
+                r"Observaciones\b|"
+                r"Notas?(?:\s+al\s+docente)?\b|"
+                r"Visto\s+Bueno\b|Vo\.?\s*Bo\.?\b"
+                r")",
+                p1_sub,
+                re.IGNORECASE,
+            )
+            candidate_area = p1_sub[:structural_boundary.start()] if structural_boundary else p1_sub
+
+            # 3. Regular expressions for filtering out generic preambles vs identifying real project candidates
+            generic_intro_re = re.compile(
+                r"^(?:"
+                r"El\s+enfoque\b|"
+                r"(?:En\s+la\s+|La\s+)?Nueva\s+Escuela\s+Mexicana\b|"
+                r"El\s+plan\s+de\s+estudio[s]?\b|"
+                r"Propuesta\s+(?:did[aá]ctica|pedag[oó]gica|de\s+trabajo)\b|"
+                r"Orientaciones\s+(?:did[aá]cticas|pedag[oó]gicas|generales)\b|"
+                r"Estrategia\s+nacional\b|"
+                r"(?:El|La)\s+presente\s+(?:documento|planeaci[oó]n|proyecto)\s+(?:busca|tiene|pretende|promueve)\b|"
+                r"Las\s+actividades\s+(?:propuestas\s+)?promueven\b|"
+                r"El\s+trabajo\s+por\s+proyectos\s+promueve\b|"
+                r"La\s+educaci[oó]n\s+primaria\b|"
+                r"En\s+este\s+ciclo\s+escolar\b|"
+                r"Ciclo\s+escolar\b|"
+                r"Escuela\s+(?:primaria|b[aá]sica|urbana|rural)\b|"
+                r"Zona\s+escolar\b|"
+                r"Sector\b|"
+                r"Turno\b|"
+                r"Docente\s+titular\b"
+                r")",
+                re.IGNORECASE,
             )
 
+            card_metadata_re = re.compile(
+                r"^(?:"
+                r"P[aá]ginas\s+(?:de\s+la\s+)?\d+|"
+                r"Escenario\b|"
+                r"Grado\s*:?\s*\d+|"
+                r"Fase\s+\d+|"
+                r"Libro\s+de\s+texto"
+                r")",
+                re.IGNORECASE,
+            )
+
+            pedagogical_verbs_pattern = (
+                r"Conocer|Identificar|Elaborar|Desarrollar|Reconocer|Explorar|Escribir|"
+                r"Reflexionar|Comprender|Investigar|Diseñar|Crear|Aprender|Analizar|Construir|"
+                r"Participar|Organizar|Promover|Descubrir|Valorar|Realizar|Sensibilizar|"
+                r"Propiciar|Fomentar|Indagar|Recopilar|Difundir|Examinar|Documentar|"
+                r"Implementar|Socializar|Festejar|Fortalecer|Favorecer|Impulsar|"
+                r"Generar|Proponer|Explicar|Compartir|Cuidar|Proteger|Expresar|Comunicar|"
+                r"Practicar|Integrar|Lograr|Establecer|Involucrar|Consolidar|Potenciar|"
+                r"Abordar|Distinguir|Ejercitar|Experimentar|Demostrar|Interpretar|Evaluar|"
+                r"Resolver|Transformar|Rescatar|Vincular|Afianzar"
+            )
+            pedagogical_verbs_re = re.compile(
+                rf"\b(?:{pedagogical_verbs_pattern})\b",
+                re.IGNORECASE,
+            )
+
+            # Action verbs in infinitive after finalistic connectors, explicitly excluding non-verb words (tercer, primer, escolar, etc.)
+            finalistic_verb_pattern = (
+                rf"(?:{pedagogical_verbs_pattern}|"
+                r"(?!(?:primer|tercer|cuart|quint|sext|escolar|familiar|particular|regular|popular|similar|lugar|hogar|solar|militar|celular|nuclear|taller|l[ií]der|mujer|ayer|mar|par|bar|sin|con)\b)"
+                r"[a-záéíóúñ]{4,}(?:ar|er|ir))"
+            )
+            subjunctive_forms = set()
+            irregular_subjunctives = {
+                "conocer": ("conozca", "conozcan"),
+                "reconocer": ("reconozca", "reconozcan"),
+                "resolver": ("resuelva", "resuelvan"),
+                "proponer": ("proponga", "propongan"),
+                "distinguir": ("distinga", "distingan"),
+            }
+            for infinitive in pedagogical_verbs_pattern.lower().split("|"):
+                if infinitive in irregular_subjunctives:
+                    subjunctive_forms.update(irregular_subjunctives[infinitive])
+                elif infinitive.endswith("uir"):
+                    root = infinitive[:-3]
+                    subjunctive_forms.update((root + "uya", root + "uyan"))
+                elif infinitive.endswith("ar"):
+                    root = infinitive[:-2]
+                    if infinitive.endswith("car"):
+                        root = root[:-1] + "qu"
+                    elif infinitive.endswith("gar"):
+                        root = root[:-1] + "gu"
+                    elif infinitive.endswith("zar"):
+                        root = root[:-1] + "c"
+                    subjunctive_forms.update((root + "e", root + "en"))
+                elif infinitive.endswith(("er", "ir")):
+                    if infinitive.endswith("cer"):
+                        root = infinitive[:-3]
+                        subjunctive_forms.update((root + "zca", root + "zcan"))
+                    else:
+                        root = infinitive[:-2]
+                        subjunctive_forms.update((root + "a", root + "an"))
+            finalistic_subjunctive_pattern = "|".join(sorted(subjunctive_forms, key=len, reverse=True))
+
+            objective_start_re = re.compile(
+                r"^(?:"
+                # 1. Action verb at line start (optionally with bullet / list number)
+                rf"(?:[•\-*]|\d+[\.\)])?\s*(?:{pedagogical_verbs_pattern})\b|"
+                # 2. Finalistic connectors at line start must be followed by an action verb.
+                rf"Para\s+(?:{finalistic_verb_pattern}\b|que\s+[^\n.]*?\b(?:{finalistic_subjunctive_pattern})\b)|"
+                rf"(?:Con\s+la\s+finalidad\s+de|Tiene\s+como\s+finalidad|Tiene\s+por\s+objetivo|Tiene\s+por\s+objeto|"
+                rf"Con\s+el\s+prop[oó]sito\s+de|Tiene\s+como\s+prop[oó]sito|El\s+prop[oó]sito\s+(?:es|consiste\s+en)|"
+                rf"El\s+objetivo\s+(?:es|consiste\s+en)|La\s+finalidad\s+(?:es|consiste\s+en))\s+{finalistic_verb_pattern}\b|"
+                # 3. Explicit subject / project context at line start
+                rf"(?:En\s+este\s+proyecto\b[^\n.]*?|Las\s+y\s+los\s+alumnos\b[^\n.]*?|El\s+alumnado\b[^\n.]*?|"
+                rf"Los\s+estudiantes\b[^\n.]*?|La\s+comunidad\s+escolar\b[^\n.]*?|Docentes\s+y\s+estudiantes\b[^\n.]*?)\s*"
+                rf"(?:[,\-:]\s*)?(?:para\s+)?(?:{pedagogical_verbs_pattern})\b|"
+                # 4. Project description / prose starting with Proyecto ... requiring verifiable finalistic intention
+                rf"Proyecto\b[^\n.]*?\s+(?:"
+                rf"para\s+(?:que\s+[^\n.]*?\b{finalistic_verb_pattern}\b|{finalistic_verb_pattern}\b)|"
+                rf"(?:enfocado\s+en|orientado\s+a|con\s+la\s+finalidad\s+de|con\s+el\s+prop[oó]sito\s+de|destinado\s+a|busca|pretende)\s*(?:[,\-:]\s*)?{finalistic_verb_pattern}\b|"
+                rf"\b{finalistic_verb_pattern}\b"
+                rf")"
+                r")",
+                re.IGNORECASE,
+            )
+
+            post_objective_labels_re = re.compile(
+                r"^(?:"
+                r"Materiales(?:\s+(?:educativos|did[aá]cticos))?\b|"
+                r"Recursos(?:\s+(?:did[aá]cticos|y\s+materiales|e\s+implicaciones))?\b|"
+                r"Evaluaci[oó]n(?:\s+formativa)?\b|"
+                r"Instrumentos?(?:\s+de\s+evaluaci[oó]n)?\b|"
+                r"Productos?(?:\s+(?:esperados?|y\s+evidencias))?\b|"
+                r"Evidencias?(?:\s+de\s+aprendizaje)?\b|"
+                r"Observaciones(?:\s+generales)?\b|"
+                r"Notas?(?:\s+(?:al\s+docente|para\s+padres|pedag[oó]gica))?\b|"
+                r"Ajustes(?:\s+razonables)?\b|"
+                r"razonables\b|"
+                r"Estrategias?(?:\s+did[aá]cticas?)?\b|"
+                r"Organizaci[oó]n(?:\s+del\s+grupo)?\b|"
+                r"Actividades(?:\s+(?:permanentes|previas))?\b|"
+                r"Sugerencias\b|"
+                r"Visto(?:\s+Bueno)?\b|"
+                r"Vo\.?\s*Bo\.?\b|"
+                r"Firma\b|"
+                r"(?:Texto\s+ajeno|Comentarios?(?:\s+adicionales)?)\b"
+                r")\s*:?",
+                re.IGNORECASE,
+            )
+
+            list_marker_re = re.compile(r"^(?:[•\-\*]|\d+[\.\)])\s+", re.IGNORECASE)
+
+            # 4. Extract candidate lines: skip generic pedagogical/admin intros, start on syntactic objective trigger,
+            # delimit by paragraph structure (stopping on blank lines) and post-objective boundaries.
+            raw_lines = candidate_area.splitlines()
+            captured_lines: list[str] = []
+            capturing = False
+
+            for raw_line in raw_lines:
+                line = raw_line.strip()
+                if not line:
+                    if capturing:
+                        # Paragraph ended: do not absorb subsequent independent paragraphs
+                        break
+                    continue
+
+                if not capturing:
+                    if card_metadata_re.search(line):
+                        continue
+                    if generic_intro_re.search(line):
+                        continue
+                    if objective_start_re.search(line):
+                        capturing = True
+                        captured_lines.append(line)
+                else:
+                    # While capturing, stop before metadata, post-objective labels, list markers, or table headers
+                    if (
+                        card_metadata_re.search(line)
+                        or post_objective_labels_re.search(line)
+                        or list_marker_re.search(line)
+                        or generic_intro_re.search(line)
+                    ):
+                        break
+                    captured_lines.append(line)
+
+            if captured_lines:
+                cand_full = " ".join(captured_lines).strip()
+                cand_full = re.sub(r"\s+", " ", cand_full)
+                if len(cand_full) > 30 and (pedagogical_verbs_re.search(cand_full) or objective_start_re.search(cand_full)):
+                    first_line = captured_lines[0]
+                    pos = p1_text.find(first_line)
+                    if pos != -1:
+                        raw_slice = p1_text[pos : pos + min(200, len(first_line))]
+                        candidate_excerpt = raw_slice
+                    else:
+                        candidate_excerpt = first_line[:200]
+                    implicit_candidate = cand_full
+
+            if implicit_candidate:
+                fields_dict["finalidad"] = InterpretedField(
+                    name="finalidad",
+                    value=implicit_candidate,
+                    origin=ORIGIN_PROPOSED,
+                    status=STATUS_AMBIGUOUS,
+                    review=REVIEW_PENDING,
+                    reason=(
+                        "Párrafo de objetivo/finalidad identificado de forma inferida en portada sin encabezado explícito; "
+                        "requiere revisión docente."
+                    ),
+                    action_required="Confirmar si este párrafo corresponde a la finalidad e intención didáctica del proyecto.",
+                    evidence=[
+                        SourceReference(
+                            document_sha256=sha256,
+                            page_number=candidate_page,
+                            excerpt=candidate_excerpt,
+                        )
+                    ],
+                )
+            else:
+                fields_dict["finalidad"] = InterpretedField(
+                    name="finalidad",
+                    value="",
+                    origin=ORIGIN_PROPOSED,
+                    status=STATUS_MISSING,
+                    reason="No se localizó sección de finalidad explícita ni un candidato de objetivo delimitado en portada.",
+                    action_required="Redactar la finalidad o intención didáctica docente.",
+                )
+
         # 5. Metodología
+        # Table headers can place "Tiempo de aplicación" immediately after the
+        # methodology on the same line, with its value continuing on page 2.
+        # Capture only the physical line that supplies the method; a citation
+        # assembled across pages cannot pass the source verifier.
+        table_method = re.search(
+            r"Metodolog[ií]a\s*:?[ \t]*([^\n\r]*?)(?=[ \t]+Tiempo\s+de\b)",
+            overview_pages[0] if overview_pages else "",
+            re.IGNORECASE,
+        )
         met_match = re.search(
             r"Metodolog[ií]a:?\s*(.+?)(?=(?:\s{2,}|\n\s*)(?:Campos|Contenidos|Escenario|Ejes|Prop[oó]sito|Finalidad|Temporalidad|[-•–])|\Z)",
             overview_text,
             re.DOTALL | re.IGNORECASE,
         )
-        if met_match:
-            val = re.sub(r"\s+", " ", met_match.group(1)).strip().rstrip(".")
-            matched_page = _find_page(met_match.group(0))
+        if table_method or met_match:
+            source_match = table_method or met_match
+            val = re.sub(r"\s+", " ", source_match.group(1)).strip().rstrip(".")
+            matched_page = 1 if table_method else _find_page(source_match.group(0))
             is_warned = matched_page in page_warnings
             # If methodology ends with preposition, partial words, or is too long/runaway
             is_partial = val.endswith(("de", "en", "para", "con", "por", "a")) or len(val) > 150
@@ -2359,7 +2630,13 @@ class CurriculumSourceInterpreter:
             r"(?:Grado\s*:\s*|(?<=\b))([1-6][º°]|Primer[oa]?|Segundo|Tercer[oa]?|Cuarto|Quinto|Sexto)(?:\s*Grado)?\b",
             re.IGNORECASE,
         )
-        grado_match = grado_regex.search(overview_text)
+        # Prefer an explicit grade label in the header. Otherwise prose such as
+        # "lo primero" on a later page can be mistaken for primero grado.
+        grado_match = re.search(
+            r"\bGrado\s*:?\s*([1-6])\s*[º°]?\b",
+            overview_text,
+            re.IGNORECASE,
+        ) or grado_regex.search(overview_text)
         if grado_match:
             raw_matched = grado_match.group(1).lower().rstrip("º°")
             g_num = words_to_num.get(raw_matched)
@@ -2398,6 +2675,91 @@ class CurriculumSourceInterpreter:
                 status=STATUS_MISSING,
                 reason="No se detectó mención explícita de grado escolar en las páginas de portada/encabezado.",
                 action_required="Especificar el grado escolar de la planeación.",
+            )
+        # 8. Duración global del proyecto (Tiempo de aplicación / Temporalidad)
+        dur_val = ""
+        dur_evidence: list[SourceReference] = []
+        dur_status = STATUS_SUPPORTED
+        dur_origin = ORIGIN_EXTRACTED
+        dur_reason = ""
+
+        # A. Check for cross-page split between page 1 and page 2
+        if len(overview_pages) >= 2:
+            m_t1 = re.search(r"Tiempo\s+de\s+(?:aplicaci[oó]n\s*:?\s*)?([^\n\r]+)", overview_pages[0], re.IGNORECASE)
+            # A split label must resume with a plausible duration value in the
+            # page header region, not an unrelated later mention of "aplicación".
+            duration_quantity = r"(?:\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte)"
+            duration_unit = r"(?:d[ií]as?|semanas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|a[nñ]os?|ciclos?)"
+            m_t2 = re.search(
+                rf"aplicaci[oó]n\s+((?:(?:se\s+sugiere|aproximadamente|de)\s+)?(?:{duration_quantity}\s+)?{duration_unit}\b[^\n\r]*?)(?=\s*\n\s*(?:DESARROLLO|Fase|Metodolog[ií]a|Campo)|\Z)",
+                overview_pages[1],
+                re.IGNORECASE,
+            )
+            if m_t2:
+                prefix = overview_pages[1][:m_t2.start()]
+                if prefix.count("\n") > 2 or len(prefix) > 256:
+                    m_t2 = None
+            if m_t1 and m_t2:
+                p1_time = m_t1.group(1).strip()
+                p2_time = m_t2.group(1).strip()
+                combined = re.sub(r"\s+", " ", f"{p1_time} {p2_time}").strip()
+                ex1 = m_t1.group(0).strip()
+                ex2 = m_t2.group(0).strip()
+                norm_ex1 = normalize_text_for_evidence_check(ex1)
+                norm_p1 = normalize_text_for_evidence_check(overview_pages[0])
+                norm_ex2 = normalize_text_for_evidence_check(ex2)
+                norm_p2 = normalize_text_for_evidence_check(overview_pages[1])
+                if norm_ex1 and norm_ex1 in norm_p1 and norm_ex2 and norm_ex2 in norm_p2:
+                    dur_val = combined
+                    dur_origin = ORIGIN_PROPOSED
+                    dur_status = STATUS_AMBIGUOUS
+                    dur_reason = (
+                        "Sugerencia de temporalidad global del proyecto identificada a través del salto de páginas 1 y 2; "
+                        "no define sesiones ni horario."
+                    )
+                    dur_evidence = [
+                        SourceReference(document_sha256=sha256, page_number=1, excerpt=ex1),
+                        SourceReference(document_sha256=sha256, page_number=2, excerpt=ex2),
+                    ]
+
+        # B. Check for single-page match if not resolved cross-page
+        if not dur_val:
+            single_m = re.search(
+                r"(?:Tiempo\s+de(?:\s+aplicaci[oó]n)?|Duraci[oó]n\s+del\s+proyecto)\s*:?\s*([^\n\r]+?)(?=(?:\s{2,}|\n|\s+Metodolog[ií]a|\s+Fase|\Z))",
+                overview_text,
+                re.IGNORECASE,
+            )
+            if single_m:
+                raw_dur = single_m.group(1).strip()
+                clean_dur = re.sub(r"\s+", " ", raw_dur).strip()
+                if clean_dur and len(clean_dur) > 2 and not clean_dur.lower().startswith("de aplicación"):
+                    m_page = _find_page(single_m.group(0))
+                    ex = single_m.group(0).strip()[:200]
+                    norm_ex = normalize_text_for_evidence_check(ex)
+                    norm_p = normalize_text_for_evidence_check(overview_pages[m_page - 1]) if 0 <= m_page - 1 < len(overview_pages) else ""
+                    if norm_ex and norm_ex in norm_p:
+                        dur_val = clean_dur
+                        dur_origin = ORIGIN_EXTRACTED if not ("sugiere" in clean_dur.lower()) else ORIGIN_PROPOSED
+                        dur_status = STATUS_AMBIGUOUS if (m_page in page_warnings or "sugiere" in clean_dur.lower()) else STATUS_SUPPORTED
+                        dur_reason = f"Duración global del proyecto identificada en página {m_page}."
+                        dur_evidence = [SourceReference(document_sha256=sha256, page_number=m_page, excerpt=ex)]
+                    else:
+                        dur_val = clean_dur
+                        dur_origin = ORIGIN_PROPOSED
+                        dur_status = STATUS_AMBIGUOUS
+                        dur_reason = "Duración sugerida detectada pero no se pudo cotejar cita contigua unívoca en una sola página."
+                        dur_evidence = []
+
+        if dur_val:
+            fields_dict["duracion_proyecto"] = InterpretedField(
+                name="duracion_proyecto",
+                value=dur_val,
+                origin=dur_origin,
+                status=dur_status,
+                review=REVIEW_PENDING,
+                reason=dur_reason,
+                action_required="Revisar y definir la temporalidad o duración real del proyecto.",
+                evidence=dur_evidence,
             )
 
         return fields_dict
@@ -2439,7 +2801,10 @@ class CurriculumSourceInterpreter:
                 candidate_title = proj_match.group(1).strip()
                 # Sol Item 9: Filter out accidental mid-sentence or bullet matches
                 if not candidate_title.startswith(("Comunitarios", "o P1", "o P2", "•")):
-                    current_project = re.sub(r"\s+", " ", candidate_title).strip()
+                    current_project = re.sub(
+                        r"\s+", " ",
+                        re.split(r"\s+Escenario\b", candidate_title, maxsplit=1, flags=re.IGNORECASE)[0],
+                    ).strip()
 
             if has_numbered_sessions:
                 for m in session_header_pattern.finditer(text):
@@ -2472,6 +2837,213 @@ class CurriculumSourceInterpreter:
                         "day_of_week": day_str,
                         "project_title": current_project,
                     })
+
+        # Some project plans have phases but no lesson/session divisions. Keep
+        # one explicitly ambiguous review unit for the project; do not infer a
+        # number of lessons or turn methodological phases into sessions.
+        if not all_matches:
+            project_start = next(
+                (i for i, text in enumerate(pages_text, start=1)
+                 if re.search(r"(?:^|\n)\s*DESARROLLO\s+DEL\s+PROYECTO\b", text, re.IGNORECASE)
+                 and re.search(r"(?:^|\n)\s*Fase\s*#?\s*1\b", text, re.IGNORECASE)),
+                None,
+            )
+            if project_start is not None:
+                project_pages = []
+                for page_num in range(project_start, len(pages_text) + 1):
+                    page_text = pages_text[page_num - 1]
+                    if page_num > project_start and re.search(r"(?:^|\n)\s*ANEXOS?\b", page_text, re.IGNORECASE):
+                        break
+                    project_pages.append(page_num)
+                    if re.search(r"(?:^|\n)\s*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b", page_text, re.IGNORECASE):
+                        break
+
+                activities: list[SessionActivity] = []
+                act_pattern = re.compile(
+                    r"(?:^|\n)\s*(?:(Actividad\b(?:\s+\d+\s*[:.-]|\s+[A-Za-z]\s*[:.-])?\s*[^\n\r]+)|"
+                    r"[•\-\*]\s*([^\n\r]+(?:\n(?!\s*(?:[•\-\*]|\d+[.)]|Fase\b|DESARROLLO\b|Productos\b|ANEXO\b|Recursos\b|implicaciones\b))[^\n\r]+)*)|"
+                    r"\d+[.)]\s*([^\n\r]+(?:\n(?!\s*(?:[•\-\*]|\d+[.)]|Fase\b|DESARROLLO\b|Productos\b|ANEXO\b|Recursos\b|implicaciones\b))[^\n\r]+)*))",
+                    re.IGNORECASE,
+                )
+                order = 0
+                for p_num in project_pages:
+                    p_text = pages_text[p_num - 1]
+                    boundary = re.search(
+                        r"(?im)^\s*(?:Recursos|Materiales|Evaluaci[oó]n|Productos(?:\s+y\s+evidencias)?|Implicaciones|Anexos?)\b",
+                        p_text,
+                    )
+                    # Some exported plans place a resources/implications label
+                    # before their activity list. Treat it as a cutoff only
+                    # after at least one activity has started on this page.
+                    activity_text = p_text
+                    if boundary and act_pattern.search(p_text[:boundary.start()]):
+                        activity_text = p_text[:boundary.start()]
+                    for m in act_pattern.finditer(activity_text):
+                        raw_desc = (m.group(1) or m.group(2) or m.group(3) or "").strip()
+                        raw_desc = re.sub(r"^[•\-\*]\s*", "", raw_desc).strip()
+                        clean_desc = re.sub(r"\s+", " ", raw_desc)
+                        if not clean_desc or len(clean_desc) < 5:
+                            continue
+                        if re.match(r"^(?:Recursos\b|implicaciones\b|Evaluaci[oó]n\b|Fase\b|DESARROLLO\b|Aspectos\s+a\s+evaluar)", clean_desc, re.IGNORECASE):
+                            continue
+                        order += 1
+                        act_title = f"Actividad {order}: {clean_desc[:40].rstrip('.')}"
+                        excerpt = clean_desc[:120].strip()
+                        norm_ex = normalize_text_for_evidence_check(excerpt)
+                        norm_p = normalize_text_for_evidence_check(p_text)
+                        if not (norm_ex and norm_ex in norm_p):
+                            first_line = clean_desc.split(".")[0].strip()[:60]
+                            if normalize_text_for_evidence_check(first_line) in norm_p:
+                                excerpt = first_line
+                            else:
+                                excerpt = m.group(0).strip()[:60].strip()
+
+                        activities.append(
+                            SessionActivity(
+                                activity_id=f"p{project_start}_act_{order}",
+                                title=act_title,
+                                description=clean_desc,
+                                order=order,
+                                evidence=[
+                                    SourceReference(
+                                        document_sha256=sha256,
+                                        page_number=p_num,
+                                        excerpt=excerpt,
+                                    )
+                                ],
+                            )
+                        )
+
+                fields: dict[str, InterpretedField] = {}
+                if activities:
+                    act_1 = activities[0]
+                    fields["inicio"] = InterpretedField(
+                        name="inicio",
+                        value=act_1.description,
+                        origin=ORIGIN_PROPOSED,
+                        status=STATUS_AMBIGUOUS,
+                        review=REVIEW_PENDING,
+                        reason=(
+                            "Propuesta pedagógica inicial: se sugiere la primera actividad del proyecto "
+                            "como momento de inicio; requiere validación docente."
+                        ),
+                        action_required="Revisar la asignación y adecuación de la actividad de inicio.",
+                        evidence=list(act_1.evidence),
+                    )
+                    if len(activities) == 2:
+                        act_2 = activities[1]
+                        fields["desarrollo"] = InterpretedField(
+                            name="desarrollo",
+                            value=act_2.description,
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_AMBIGUOUS,
+                            review=REVIEW_PENDING,
+                            reason="Propuesta pedagógica de actividades para el momento de desarrollo del proyecto.",
+                            action_required="Verificar secuencia y materiales requeridos.",
+                            evidence=list(act_2.evidence),
+                        )
+                        fields["cierre"] = InterpretedField(
+                            name="cierre",
+                            value="",
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_MISSING,
+                            reason="No se asignó actividad de cierre en la propuesta inicial de fases.",
+                            action_required="Definir dinámica de cierre o síntesis del proyecto.",
+                        )
+                    elif len(activities) >= 3:
+                        mid_acts = activities[1:-1]
+                        last_act = activities[-1]
+                        mid_text = "\n\n".join(a.description for a in mid_acts)
+                        mid_ev = [ev for a in mid_acts for ev in a.evidence]
+                        fields["desarrollo"] = InterpretedField(
+                            name="desarrollo",
+                            value=mid_text,
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_AMBIGUOUS,
+                            review=REVIEW_PENDING,
+                            reason="Propuesta pedagógica de actividades para el momento de desarrollo del proyecto.",
+                            action_required="Verificar secuencia y materiales requeridos.",
+                            evidence=mid_ev[:5],
+                        )
+                        fields["cierre"] = InterpretedField(
+                            name="cierre",
+                            value=last_act.description,
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_AMBIGUOUS,
+                            review=REVIEW_PENDING,
+                            reason="Propuesta pedagógica de actividad para el momento de cierre del proyecto.",
+                            action_required="Revisar dinámica de cierre y evaluación formativa.",
+                            evidence=list(last_act.evidence),
+                        )
+                    else:
+                        fields["desarrollo"] = InterpretedField(
+                            name="desarrollo",
+                            value="",
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_MISSING,
+                            reason="No se identificaron actividades suficientes para desarrollo en la propuesta inicial.",
+                            action_required="Redactar actividades de desarrollo.",
+                        )
+                        fields["cierre"] = InterpretedField(
+                            name="cierre",
+                            value="",
+                            origin=ORIGIN_PROPOSED,
+                            status=STATUS_MISSING,
+                            reason="No se identificaron actividades de cierre en la propuesta inicial.",
+                            action_required="Redactar actividad de cierre.",
+                        )
+                else:
+                    fields["inicio"] = InterpretedField(
+                        name="inicio",
+                        value="",
+                        origin=ORIGIN_PROPOSED,
+                        status=STATUS_MISSING,
+                        reason="La fuente no delimita sesiones ni un inicio de sesión.",
+                        action_required="Revisar la organización del proyecto antes de planear sesiones.",
+                    )
+                    fields["desarrollo"] = InterpretedField(
+                        name="desarrollo",
+                        value="",
+                        origin=ORIGIN_PROPOSED,
+                        status=STATUS_MISSING,
+                        reason="No se identificaron actividades para desarrollo.",
+                        action_required="Redactar actividades de desarrollo.",
+                    )
+                    fields["cierre"] = InterpretedField(
+                        name="cierre",
+                        value="",
+                        origin=ORIGIN_PROPOSED,
+                        status=STATUS_MISSING,
+                        reason="No se identificaron actividades de cierre.",
+                        action_required="Redactar actividad de cierre.",
+                    )
+
+                fields["duracion"] = InterpretedField(
+                    name="duracion",
+                    value="",
+                    origin=ORIGIN_PROPOSED,
+                    status=STATUS_MISSING,
+                    reason="La fuente organiza el trabajo por fases y no declara duración de clases en minutos ni horario.",
+                    action_required="Definir horario y duración de clases al acordar el calendario real con la docente.",
+                )
+
+                return [SessionPlan(
+                    session_id=f"p{project_start}_project_review",
+                    session_number=1,
+                    title="Proyecto sin sesiones explícitas",
+                    project_title=current_project,
+                    pages=project_pages,
+                    layout_fidelity="linearized_heuristics",
+                    layout_notes=(
+                        "La fuente organiza el trabajo por fases del proyecto y no declara sesiones. "
+                        "Esta unidad agrupa páginas para revisión docente; propone una organización inicial "
+                        "por momentos (inicio/desarrollo/cierre) sin fijar duración ni cantidad de sesiones."
+                    ),
+                    fields=fields,
+                    activities=activities,
+                    status=STATUS_AMBIGUOUS,
+                    review=REVIEW_PENDING,
+                )]
 
         sessions: list[SessionPlan] = []
         seen_session_ids: set[str] = set()

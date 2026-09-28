@@ -526,7 +526,7 @@
             Proyecto: {{ dossier.general_fields.proyecto.value|default:"Planeación semanal" }}
           </h2>
           <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.84rem; color: var(--color-muted);">
-            <span><strong>Sesiones:</strong> {{ dossier.sessions|length }} sesión{{ dossier.sessions|length|pluralize:"es" }}</span>
+            <span><strong>Unidades de planeación:</strong> {{ dossier.sessions|length }} unidad{{ dossier.sessions|length|pluralize:"es" }}</span>
             <span><strong>Páginas:</strong> {{ dossier.page_count }}</span>
             {% if dossier.general_fields.metodologia.value %}
               <span><strong>Metodología:</strong> {{ dossier.general_fields.metodologia.value }}</span>
@@ -536,6 +536,9 @@
             {% endif %}
             {% if dossier.general_fields.grado.value %}
               <span><strong>Grado:</strong> {{ dossier.general_fields.grado.value }}</span>
+            {% endif %}
+            {% if dossier.general_fields.duracion_proyecto.value %}
+              <span><strong>Duración sugerida:</strong> {{ dossier.general_fields.duracion_proyecto.value }}</span>
             {% endif %}
           </div>
 
@@ -571,7 +574,7 @@
               </summary>
               <div style="margin-top: 0.75rem;">
                 <p class="muted" style="margin-bottom: 0.75rem; font-size: 0.85rem;">
-                  Datos generales compartidos entre todas las sesiones del proyecto pedagógico.
+                  Datos generales compartidos del proyecto pedagógico.
                 </p>
 
                 {% if dossier.general_fields.proyecto %}
@@ -627,6 +630,14 @@
                     {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.grado field_id="grado" label="Grado Escolar" input_type="text" readonly=source_tampered job=job is_proxy=True %}
                   {% else %}
                     {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.grado field_id="grado" label="Grado Escolar" input_type="text" readonly=source_tampered job=job %}
+                  {% endif %}
+                {% endif %}
+
+                {% if dossier.general_fields.duracion_proyecto %}
+                  {% if active_item.field_name == 'duracion_proyecto' %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.duracion_proyecto field_id="duracion_proyecto" label="Duración Global Sugerida del Proyecto" input_type="text" readonly=source_tampered job=job is_proxy=True %}
+                  {% else %}
+                    {% include "curriculum/includes/_interpreted_field.html" with f=dossier.general_fields.duracion_proyecto field_id="duracion_proyecto" label="Duración Global Sugerida del Proyecto" input_type="text" readonly=source_tampered job=job %}
                   {% endif %}
                 {% endif %}
               </div>
@@ -1349,7 +1360,7 @@
                                     {% for ev in act.evidence %}
                                       <div style="font-size: 0.8rem; margin-bottom: 0.25rem;">
                                         {% if ev.page_number %}
-                                          <a href="{% url 'tutor_package_source_page' package.pk ev.page_number %}" class="evidence-link" target="_blank" rel="noopener">
+                                          <a href="{% url 'tutor-import-source-page' job.pk ev.page_number %}#page={{ ev.page_number }}" class="evidence-link" target="_blank" rel="noopener">
                                             📄 Pág. {{ ev.page_number }}
                                           </a>
                                         {% endif %}
