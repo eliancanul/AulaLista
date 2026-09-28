@@ -74,6 +74,6 @@ This pass writes four Markdown files: `docs/handoffs/supervisor-iteration-2090.m
 
 ## PR record (iteration-2090 checkpoint)
 
-- PENDING at write time — filled by the checkpoint push + fill-in commit below (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted.
+- DONE — commit `57aa7b4` (`docs(supervisor): iteration-2090 checkpoint synthesis, membership NO-sixth 39th with timestamp stability 16th, HOLD re-affirmed, decade 2081-2090 10-10`, 4 files, +102/−2, staged via explicit `git add` of the 4 checkpoint Markdown files only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `c60700c..57aa7b4` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted.
 
 (End of file)
