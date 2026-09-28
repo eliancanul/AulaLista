@@ -979,3 +979,73 @@ class TestTask6TeacherReviewUI:
         # 4. Touch targets >= 44px
         assert "min-height: 44px" in html or "min-block-size: 44px" in html
         assert "min-width: 44px" in html or "min-inline-size: 44px" in html
+
+    def test_t6_neutral_planning_units_label_and_project_review_unit(self):
+        """21. Neutral label 'Unidades de planeación' replaces 'Sesiones' in summary, preserving suggested duration."""
+        from test_t15_curriculum_import import make_minimal_pdf
+
+        client, user = tutor_teacher("t6-planning-units-phase")
+        pdf_bytes = make_minimal_pdf([
+            "Planeacion Didactica Educacion Primaria 2023-2024\n"
+            "Campo Lenguajes\n"
+            "Proyecto Comunitario del Agua\n"
+            "Tiempo de aplicacion: Dos semanas lectivas\n"
+            "DESARROLLO DEL PROYECTO\n"
+            "Fase #1. Planeacion\n"
+            "Actividad de lectura inicial sobre el agua."
+        ])
+
+        job, dossier = create_ready_job(user, pdf_bytes=pdf_bytes)
+        assert len(dossier.sessions) == 1
+        assert dossier.sessions[0].title == "Proyecto sin sesiones explícitas"
+
+        url = reverse("tutor-import-interpretation", args=[job.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+
+        # 1. Project summary card must display neutral label 'Unidades de planeación'
+        summary_card = soup.find("section", class_="project-summary-card")
+        assert summary_card is not None
+        summary_text = summary_card.get_text()
+
+        assert "Unidades de planeación:" in summary_text
+        assert "1 unidad" in summary_text
+
+        # 2. Count must NOT be displayed under 'Sesiones:' in the summary card
+        assert "Sesiones:" not in summary_text
+        assert "1 sesión" not in summary_text
+        assert "<strong>Sesiones:</strong>" not in str(summary_card)
+
+        # 3. Suggested global duration remains visible in the summary card
+        assert "Duración sugerida:" in summary_text
+        assert "Dos semanas lectivas" in summary_text
+
+        # 4. Shared data description does not claim nonexistent sessions
+        assert "Datos generales compartidos entre todas las sesiones" not in html
+        assert "Datos generales compartidos del proyecto pedagógico" in html
+
+        # 5. The synthetic project_review unit is rendered with its honest title
+        assert "Proyecto sin sesiones explícitas" in html
+
+        # 6. Verify that normal explicit sessions also render with neutral label and preserve normal session details
+        client_norm, user_norm = tutor_teacher("t6-planning-units-normal")
+        job_norm, dossier_norm = create_ready_job(user_norm)  # uses C01 with 5 explicit sessions
+        res_norm = client_norm.get(reverse("tutor-import-interpretation", args=[job_norm.pk]))
+        assert res_norm.status_code == 200
+
+        soup_norm = BeautifulSoup(res_norm.content.decode("utf-8"), "html.parser")
+        summary_norm = soup_norm.find("section", class_="project-summary-card")
+        assert summary_norm is not None
+        summary_norm_text = summary_norm.get_text()
+
+        # Shows units under neutral label
+        expected_units = f"{len(dossier_norm.sessions)} unidades"
+        assert "Unidades de planeación:" in summary_norm_text
+        assert expected_units in summary_norm_text
+        assert "<strong>Sesiones:</strong>" not in str(summary_norm)
+
+        # Normal explicit sessions are rendered as expected
+        assert "Sesión 1:" in res_norm.content.decode("utf-8")

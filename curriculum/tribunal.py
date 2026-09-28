@@ -237,10 +237,17 @@ class Tribunal:
         self.config = config
         self.adapter = adapter
 
-    def evaluate(self, claim: AtomicClaim, retrieval: RetrievalReceipt, hypothesis: str) -> TribunalReceipt:
+    def evaluate(
+        self,
+        claim: AtomicClaim,
+        retrieval: RetrievalReceipt,
+        hypothesis: str | None = None,
+    ) -> TribunalReceipt:
         if retrieval.claim_id != claim.claim_id:
             raise ValueError("El recibo de Atlas no corresponde a la afirmación")
-        if not hypothesis.strip():
+        if hypothesis is None:
+            hypothesis = build_claim_hypothesis(claim)
+        if not isinstance(hypothesis, str) or not hypothesis.strip():
             raise ValueError("La hipótesis explícita es obligatoria")
 
         start = time.perf_counter()
@@ -311,3 +318,44 @@ class Tribunal:
             transitions=tuple(history),
             error_type=error_type,
         )
+
+
+def build_claim_hypothesis(claim: AtomicClaim) -> str:
+    """Construye una hipótesis NLI tipada y explícita para una afirmación atómica (#126).
+
+    Invariantes arquitectónicas:
+    - La hipótesis hace explícita la afirmación a contrastar con evidencia documental,
+      sin presuponer veredicto semántico ni sustituir la autoridad docente.
+    - Separa estrictamente la presencia/identidad literal de una actividad (lo que el documento
+      propone textualmente) de la hipótesis de asignación a un rol, fase o momento pedagógico
+      (que permanece como inferencia sujeta a revisión docente).
+    """
+    pred = claim.predicate
+    val = str(claim.object_value).strip()
+
+    if pred == "objetivo":
+        return f"El documento plantea como objetivo o finalidad: {val}."
+    elif pred in ("duracion_proyecto", "temporalidad"):
+        return f"El proyecto sugiere una duración global de: {val}."
+    elif pred in ("primera_actividad", "actividad_inicial"):
+        return f"El documento propone como primera actividad: {val}."
+    elif pred in ("actividad", "texto_actividad", "descripcion_actividad"):
+        return f"El documento propone la actividad: {val}."
+    elif pred in ("inicio", "desarrollo", "cierre"):
+        return f"La asignación de la actividad al momento de {pred} es una propuesta pedagógica sujeta a revisión docente: {val}."
+    elif pred in ("rol_pedagogico", "rol", "fase", "fase_actividad", "momento"):
+        return f"La asignación de la actividad a la fase o rol pedagógico '{val}' es una inferencia sujeta a revisión docente."
+    elif pred == "pertenece_a_unidad_revision":
+        return f"La relación de la actividad con la unidad de revisión {val} es una propuesta pedagógica sujeta a validación docente."
+    elif pred == "pertenece_a_sesion":
+        return f"La actividad pertenece a la sesión {val}."
+    elif pred == "campo_formativo":
+        return f"El campo formativo del proyecto es {val}."
+    elif pred == "metodologia":
+        return f"La metodología del proyecto es {val}."
+    elif pred == "proyecto":
+        return f"El proyecto se titula {val}."
+    elif pred == "escenario":
+        return f"El escenario del proyecto es {val}."
+    else:
+        return f"El valor correspondiente a {pred} es {val}."

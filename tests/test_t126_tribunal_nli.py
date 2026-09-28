@@ -21,6 +21,7 @@ from curriculum.tribunal import (
     RunStatus,
     Tribunal,
     Verdict,
+    build_claim_hypothesis,
 )
 
 
@@ -251,3 +252,127 @@ def test_mismatched_claim_or_missing_hypothesis_is_rejected_before_adapter():
     with pytest.raises(ValueError, match="hipótesis"):
         tribunal.evaluate(claim, retrieval, "   ")
     assert fake.calls == []
+
+
+def test_build_claim_hypothesis_describes_document_activity_without_inferring_session_moment():
+    """Activity presence hypothesis describes what document proposes without inferring session moments."""
+    claim_first = AtomicClaim(
+        claim_id="c_act_1",
+        claim_type="field",
+        subject="project_review:p1",
+        predicate="primera_actividad",
+        object_value="Observar plantas en el huerto escolar",
+    )
+    hyp_first = build_claim_hypothesis(claim_first)
+    assert hyp_first == "El documento propone como primera actividad: Observar plantas en el huerto escolar."
+    # Invariant: Must NOT infer class moment assignment ('para el inicio') from activity presence
+    assert "para el inicio" not in hyp_first
+    assert "momento" not in hyp_first
+    assert "sesión" not in hyp_first
+
+    claim_explicit = AtomicClaim(
+        claim_id="c_act_exp",
+        claim_type="field",
+        subject="project_review:p1",
+        predicate="primera_actividad",
+        object_value="Escritura individual de ideas sobre arte",
+    )
+    assert build_claim_hypothesis(claim_explicit) == "El documento propone como primera actividad: Escritura individual de ideas sobre arte."
+
+    claim_general = AtomicClaim(
+        claim_id="c_act_gen",
+        claim_type="field",
+        subject="activity:act_02",
+        predicate="actividad",
+        object_value="Elaborar composta orgánica",
+    )
+    hyp_gen = build_claim_hypothesis(claim_general)
+    assert hyp_gen == "El documento propone la actividad: Elaborar composta orgánica."
+    assert "momento" not in hyp_gen
+
+
+def test_build_claim_hypothesis_role_and_phase_distinction():
+    """Role/phase hypotheses remain explicit pedagogical inferences subject to teacher review."""
+    # 1. Pedagogical moment role assignment
+    claim_role = AtomicClaim(
+        claim_id="c_role_1",
+        claim_type="field",
+        subject="project_review:p1",
+        predicate="inicio",
+        object_value="Observar plantas en el huerto escolar",
+    )
+    hyp_role = build_claim_hypothesis(claim_role)
+    assert "propuesta pedagógica sujeta a revisión docente" in hyp_role
+    assert "momento de inicio" in hyp_role
+    assert "Observar plantas en el huerto escolar" in hyp_role
+
+    # 2. Phase assignment
+    claim_phase = AtomicClaim(
+        claim_id="c_phase_1",
+        claim_type="field",
+        subject="activity:act_01",
+        predicate="rol_pedagogico",
+        object_value="Fase #1. Planeación",
+    )
+    hyp_phase = build_claim_hypothesis(claim_phase)
+    assert "inferencia sujeta a revisión docente" in hyp_phase
+    assert "Fase #1. Planeación" in hyp_phase
+
+    # 3. Synthetic unit relation
+    claim_unit_rel = AtomicClaim(
+        claim_id="c_rel_unit",
+        claim_type="relation",
+        subject="activity:act_01",
+        predicate="pertenece_a_unidad_revision",
+        object_value="project_review:p1",
+    )
+    hyp_unit_rel = build_claim_hypothesis(claim_unit_rel)
+    assert "propuesta pedagógica sujeta a validación docente" in hyp_unit_rel
+    assert "project_review:p1" in hyp_unit_rel
+
+
+def test_tribunal_evaluates_activity_presence_and_role_separately_in_shadow_mode():
+    """Tribunal evaluates activity presence and role hypotheses as separate receipts without claim mutation."""
+    text_sample = "Observar plantas en el huerto escolar"
+    claim_presence = AtomicClaim(
+        claim_id="c_pres",
+        claim_type="field",
+        subject="project_review:p1",
+        predicate="primera_actividad",
+        object_value=text_sample,
+        state=CLAIM_STATE_CANDIDATE,
+    )
+    claim_role = AtomicClaim(
+        claim_id="c_role",
+        claim_type="field",
+        subject="project_review:p1",
+        predicate="inicio",
+        object_value=text_sample,
+        state=CLAIM_STATE_CANDIDATE,
+    )
+
+    hyp_presence = build_claim_hypothesis(claim_presence)
+    hyp_role = build_claim_hypothesis(claim_role)
+
+    # Invariant: presence and role hypotheses are strictly distinct
+    assert hyp_presence != hyp_role
+    assert "propone como primera actividad" in hyp_presence
+    assert "propuesta pedagógica sujeta a revisión docente" in hyp_role
+
+    _, ret_presence = inputs(texts=(text_sample,))
+    ret_presence = replace(ret_presence, claim_id=claim_presence.claim_id)
+    _, ret_role = inputs(texts=(text_sample,))
+    ret_role = replace(ret_role, claim_id=claim_role.claim_id)
+
+    cfg = config()
+    tribunal_pres = Tribunal(cfg, FakeAdapter([score(entailment=6.0)]))
+    rec_pres = tribunal_pres.evaluate(claim_presence, ret_presence)
+    assert rec_pres.verdict == Verdict.SUPPORT
+    assert tribunal_pres.adapter.calls[0][0].hypothesis == hyp_presence
+    assert claim_presence.state == CLAIM_STATE_CANDIDATE  # Shadow mode invariant
+
+    tribunal_role = Tribunal(cfg, FakeAdapter([score(neutral=5.0)]))
+    rec_role = tribunal_role.evaluate(claim_role, ret_role)
+    assert rec_role.verdict == Verdict.INSUFFICIENT_EVIDENCE
+    assert tribunal_role.adapter.calls[0][0].hypothesis == hyp_role
+    assert claim_role.state == CLAIM_STATE_CANDIDATE  # Shadow mode invariant
