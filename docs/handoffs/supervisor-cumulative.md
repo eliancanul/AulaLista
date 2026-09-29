@@ -3923,3 +3923,5 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 ## Docs-only packaging outcome (2340 checkpoint)
 
 - Recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+- Follow-up PR-update record (2340 checkpoint): commit `7525a01`, push range `ca5da88..7525a01` to `supervisor/aulalista-docs`; PR #115 OPEN https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged).
