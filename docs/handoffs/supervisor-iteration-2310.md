@@ -59,6 +59,6 @@ Next supervisor pass (2311): open cycle-24 second decade, Phase 1 baseline slice
 
 ## PR record (iteration-2310 checkpoint)
 
-- PENDING at write time — commit hash + push range filled in the follow-up record below after push (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+- DONE — commit `7c70d10` (`docs: supervisor iteration 2310 checkpoint — cumulative deltas 2301-2310, prompt catalog, HOLD gate`, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `8658c60..7c70d10` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 (End of file - total 64 lines)
