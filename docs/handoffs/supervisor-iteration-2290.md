@@ -69,4 +69,4 @@ Checkpoint pass: cumulative deltas 2281–2290 + prompt-catalog 2290 row + HOLD 
 
 ## PR record (iteration-2290 checkpoint)
 
-- PENDING — filled in post-push: commit hash, push range, PR #115 state/URL.
+- DONE — commit `6e85710` (`docs: supervisor iteration 2290 checkpoint — cumulative deltas 2281-2290, prompt catalog, HOLD gate`, 4 files, +90/−1, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `3d31ede..6e85710` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (`updatedAt 2026-09-29T13:08:45Z` at immediate post-push query; base `main`, head `supervisor/aulalista-docs`, docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
