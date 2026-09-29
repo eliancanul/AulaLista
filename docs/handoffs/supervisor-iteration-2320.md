@@ -62,6 +62,6 @@ Next supervisor pass (2321): open cycle-24 third decade, Phase 1 baseline slice,
 
 ## PR record (iteration-2320 checkpoint)
 
-- DONE — commit `CHECKPOINT_SHA` (`docs: supervisor iteration 2320 checkpoint — cumulative deltas 2311-2320, prompt catalog, HOLD gate`, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `5b91e4d..CHECKPOINT_SHA` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
+- DONE — commit `b324f49` (`docs: supervisor iteration 2320 checkpoint — cumulative deltas 2311-2320, prompt catalog, HOLD gate`, 4 files, staged via explicit `git add` of `docs/handoffs/` Markdown only — never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit) pushed `5b91e4d..b324f49` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Prior untracked handoffs remain unpackaged working-tree files for a future checkpoint; nothing was discarded or reverted.
 
 (End of file - total 66 lines)
