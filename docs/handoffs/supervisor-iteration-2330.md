@@ -72,3 +72,5 @@
 ## Docs-only packaging outcome
 
 - Recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+- Follow-up PR-update record (2330 checkpoint): commit `aa294c9` (`docs: supervisor iteration 2330 checkpoint — cumulative deltas 2321-2330, prompt catalog, HOLD gate`), push range `4785f13..aa294c9` to `supervisor/aulalista-docs`, PR #115 OPEN `updated 2026-09-29T15:37:27Z` (moved since the `14:59:19Z` pre-push read by this checkpoint's push lineage, not code movement). Staged set was exactly the 4 docs files; no code staged or merged. This record written in the follow-up commit per checkpoint pattern.

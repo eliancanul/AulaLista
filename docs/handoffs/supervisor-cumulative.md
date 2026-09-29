@@ -3902,3 +3902,5 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 ## Docs-only packaging outcome (2330 checkpoint)
 
 - Recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+- Follow-up PR-update record (2330 checkpoint): commit `aa294c9`, push range `4785f13..aa294c9` to `supervisor/aulalista-docs`, PR #115 OPEN `updated 2026-09-29T15:37:27Z` (checkpoint-push lineage, not code movement). Staged set exactly the 4 docs files.
