@@ -153,7 +153,10 @@ def test_multipage_coverage_cannot_use_missing_or_invalid_support(mutation):
     elif mutation == "null_value":
         field.value.append(None)
     elif mutation == "bool_page":
-        field.evidence[-1].page_number = True
+        # Pass the raw wire value: SourceReference.to_dict() has legacy integer
+        # coercion, which would erase the malformed bool before verification.
+        dossier = dossier.to_dict()
+        dossier["general_fields"]["campos_formativos"]["evidence"][-1]["page_number"] = True
     elif mutation == "out_of_range":
         field.evidence[-1].page_number = 3
     elif mutation == "empty_excerpt":
@@ -174,6 +177,16 @@ def test_verifier_never_assembles_one_name_from_two_citations():
     field.evidence[0].excerpt = source[2][0]
     field.evidence[1].excerpt = source[2][1]
     assert all(i["status"] != "checked" for i in field_items(dossier, source))
+
+
+def test_bool_page_cannot_back_a_name_even_when_text_is_on_page_one():
+    dossier, source = dossier_and_source()
+    raw = dossier.to_dict()
+    field = raw["general_fields"]["campos_formativos"]
+    field["value"] = ["Lenguajes"]
+    field["evidence"] = [field["evidence"][0]]
+    field["evidence"][0]["page_number"] = True
+    assert all(i["status"] == "blocked" for i in field_items(raw, source))
 
 
 @pytest.mark.parametrize("origin,status", [("proposed", "supported"), ("extracted", "ambiguous")])
