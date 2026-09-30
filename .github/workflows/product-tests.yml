@@ -1,0 +1,39 @@
+name: Product tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13.5'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install hash-locked dependencies
+        run: python -m pip install --require-hashes -r requirements.lock
+      - name: Syntax, whitespace and Django checks
+        run: |
+          python -m compileall -q aulalista curriculum health scripts tests
+          git diff --check HEAD^ HEAD
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+      - name: Run full test suite
+        run: python -m pytest -q
