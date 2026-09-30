@@ -199,7 +199,19 @@ class TestMechanicalVerification:
         assert isinstance(report, VerificationReport)
         assert report.is_valid is True
         assert report.blocked_count == 0
-        assert (report.checked_count, report.needs_review_count, report.blocked_count, report.total_items) == (21, 30, 0, 51)
+        assert (report.checked_count, report.needs_review_count, report.blocked_count, report.total_items) == (21, 31, 0, 52)
+        # C01 omits the canonical project duration, which needs human review.
+        assert "duracion_proyecto" not in dossier.general_fields
+        duration_items = [
+            item for item in report.items
+            if item["target"] == "general.duracion_proyecto"
+        ]
+        assert len(duration_items) == 1
+        assert duration_items[0]["item_id"] == "gen_duracion_proyecto_missing"
+        assert duration_items[0]["scope"] == "general"
+        assert duration_items[0]["path"] == "general_fields/duracion_proyecto"
+        assert duration_items[0]["status"] == STATUS_NEEDS_TEACHER_REVIEW
+        assert duration_items[0]["details"] == {"field_name": "duracion_proyecto", "present": False}
         assert report.dossier_version == dossier.version
         assert report.source_sha256 == dossier.source_sha256
         assert report.schema_version == 1
