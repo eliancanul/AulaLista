@@ -24,6 +24,7 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError, PyPdfError
 
 from curriculum.verification import normalize_text_for_evidence_check
+from curriculum.vocabulary import CANONICAL_CAMPOS
 
 logger = logging.getLogger(__name__)
 
@@ -66,12 +67,50 @@ REVIEW_PENDING = "pending"
 REVIEW_CONFIRMED = "confirmed"
 REVIEW_CORRECTED = "corrected"
 
-CANONICAL_CAMPOS = [
-    "Lenguajes",
-    "Saberes y pensamiento científico",
-    "Ética, naturaleza y sociedades",
-    "De lo humano y lo comunitario",
-]
+def _normalized_page_with_source_spans(text: str) -> tuple[str, list[tuple[int, int, int, int]]]:
+    """Index normalized tokens while retaining their original physical spans.
+
+    Offsets in normalized Unicode cannot be used to slice the source: NFD,
+    ligatures and whitespace all change lengths. Token spans also preserve
+    surrounding punctuation in the exact excerpt. Internal punctuation remains
+    significant, using the same normalization as the mechanical verifier.
+    """
+    normalized_tokens = []
+    spans = []
+    cursor = 0
+    for token in re.finditer(r"[^\s\u00a0\u2000-\u200b]+", text):
+        normalized = normalize_text_for_evidence_check(token.group())
+        if not normalized:
+            continue
+        if normalized_tokens:
+            cursor += 1
+        spans.append((cursor, cursor + len(normalized), token.start(), token.end()))
+        normalized_tokens.append(normalized)
+        cursor += len(normalized)
+    return " ".join(normalized_tokens), spans
+
+
+def _canonical_campo_mentions(pages: list[str], sha256: str) -> dict[str, SourceReference]:
+    """First page-local literal mention per canonical name; never join pages."""
+    mentions = {}
+    for page_number, page in enumerate(pages, start=1):
+        normalized_page, spans = _normalized_page_with_source_spans(page)
+        for canonical in CANONICAL_CAMPOS:
+            if canonical in mentions:
+                continue
+            needle = normalize_text_for_evidence_check(canonical)
+            match = re.search(rf"(?<!\w){re.escape(needle)}(?!\w)", normalized_page)
+            if not match:
+                continue
+            covered = [span for span in spans if span[0] < match.end() and span[1] > match.start()]
+            excerpt = page[covered[0][2]:covered[-1][3]]
+            # Fail closed if a normalization edge case cannot be traced back.
+            if not re.search(rf"(?<!\w){re.escape(needle)}(?!\w)", normalize_text_for_evidence_check(excerpt)):
+                continue
+            mentions[canonical] = SourceReference(
+                document_sha256=sha256, page_number=page_number, excerpt=excerpt,
+            )
+    return mentions
 
 
 def _utc_iso_now() -> str:
@@ -2150,13 +2189,10 @@ class CurriculumSourceInterpreter:
                 action_required="Ingresar título del proyecto manualmente.",
             )
 
-        # 2. Campos formativos (Sol Item 8: deduplicación case-insensitive estricta a nombres canónicos)
-        norm_overview = re.sub(r"\s+", " ", overview_text)
-        found_canonical: list[str] = []
-        for canonical in CANONICAL_CAMPOS:
-            if re.search(rf"\b{re.escape(canonical)}\b", norm_overview, re.IGNORECASE):
-                if canonical not in found_canonical:
-                    found_canonical.append(canonical)
+        # 2. Canonical names with page-local, literal evidence. Orthographic
+        # normalization must not invent a quotation or stitch two pages together.
+        campo_mentions = _canonical_campo_mentions(overview_pages, sha256)
+        found_canonical = [name for name in CANONICAL_CAMPOS if name in campo_mentions]
 
         campos_match = re.search(
             r"Campo[s]?(?:\s+Formativo[s]?)?:?\s*([^\n\r]+?)(?=(?:\s+Temporalidad|\s+Ejes|\s+Contenido|\n|\Z))",
@@ -2167,6 +2203,7 @@ class CurriculumSourceInterpreter:
         is_warned = matched_page in page_warnings
 
         if found_canonical:
+            is_warned = any(campo_mentions[name].page_number in page_warnings for name in found_canonical)
             fields_dict["campos_formativos"] = InterpretedField(
                 name="campos_formativos",
                 value=found_canonical,
@@ -2174,14 +2211,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if is_warned else STATUS_SUPPORTED,
                 reason="Campos formativos oficiales identificados sin fragmentación sintáctica.",
                 action_required="Confirmar campos formativos aplicables.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=_find_page(c_name) or matched_page,
-                        excerpt=c_name,
-                    )
-                    for c_name in found_canonical
-                ],
+                evidence=[campo_mentions[name] for name in found_canonical],
             )
         elif campos_match:
             # Non-canonical match (e.g. table header column like 'Proyectos Eje y Libro' in C04)

@@ -35,6 +35,8 @@ from typing import Any
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError, PyPdfError
 
+from curriculum.vocabulary import CANONICAL_CAMPOS
+
 logger = logging.getLogger(__name__)
 
 VERIFICATION_SCHEMA_VERSION = 1
@@ -127,6 +129,46 @@ def _is_value_present(val: Any, target_text: str) -> bool:
         return joined in target_text
     norm_v = normalize_text_for_evidence_check(str(val or ""))
     return bool(norm_v and norm_v in target_text)
+
+
+def _contains_whole_literal(value: str, text: str) -> bool:
+    return bool(value and re.search(rf"(?<!\w){re.escape(value)}(?!\w)", text))
+
+
+def _campos_cited_coverage(
+    values: list[Any], evidence: list[Any], source_sha: str, normalized_pages: list[str],
+) -> bool | None:
+    """Cover each canonical name in a valid, page-local excerpt.
+
+    None preserves legacy handling for non-canonical lists. Empty/malformed
+    elements fail closed rather than silently disappearing from the denominator.
+    This checks textual support only, never whether a field applies pedagogically.
+    """
+    if not values or any(not isinstance(v, str) or not v.strip() for v in values):
+        return False
+    if any(v not in CANONICAL_CAMPOS for v in values):
+        return None
+    remaining = {normalize_text_for_evidence_check(v) for v in values}
+    for ev in evidence:
+        if isinstance(ev, dict):
+            page, sha, excerpt = ev.get("page_number"), ev.get("document_sha256"), ev.get("excerpt")
+        elif hasattr(ev, "page_number"):
+            page = getattr(ev, "page_number", None)
+            sha = getattr(ev, "document_sha256", "")
+            excerpt = getattr(ev, "excerpt", "")
+        else:
+            continue
+        if (
+            not isinstance(page, int) or isinstance(page, bool)
+            or not 1 <= page <= len(normalized_pages)
+            or str(sha or "").strip().lower() != source_sha.lower()
+        ):
+            continue
+        norm_excerpt = normalize_text_for_evidence_check(excerpt)
+        if not norm_excerpt or norm_excerpt not in normalized_pages[page - 1]:
+            continue
+        remaining = {v for v in remaining if not _contains_whole_literal(v, norm_excerpt)}
+    return not remaining
 
 
 @dataclass
@@ -890,6 +932,13 @@ def verify_curriculum_dossier(
                 )
             return
 
+        # Canonical field lists may have one literal citation per physical page.
+        # Every value must have valid cited support, not merely appear somewhere
+        # in the union of source pages. Other fields retain their existing rules.
+        campos_coverage = None
+        if scope == SCOPE_GENERAL and field_name == "campos_formativos" and isinstance(val, list):
+            campos_coverage = _campos_cited_coverage(val, ev_list, actual_sha256, norm_pages_text)
+
         # 6. Verify each evidence citation for extracted fields
         for ev_idx, ev in enumerate(ev_list):
             ev_item_id = f"{id_prefix}_ev_{ev_idx}"
@@ -1029,7 +1078,13 @@ def verify_curriculum_dossier(
             # E. Physical contiguous match check
             if norm_ex in norm_page:
                 # Check if the actual field VALUE is also present
-                if _is_value_present(val, norm_page):
+                value_present = _is_value_present(val, norm_page)
+                if campos_coverage is not None:
+                    value_present = campos_coverage and any(
+                        _contains_whole_literal(normalize_text_for_evidence_check(v), norm_ex)
+                        for v in val if isinstance(v, str)
+                    )
+                if value_present:
                     is_structurally_consistent = True
                     inconsistent_reason = ""
 
@@ -1106,7 +1161,12 @@ def verify_curriculum_dossier(
                             page_number=ev_page,
                             message=(
                                 f"Fuente de '{field_name}' localizada en página física {ev_page}, "
-                                f"pero el valor del campo no se encontró textualmente en la página."
+                                + (
+                                    "pero falta cobertura textual de todos los valores en citas válidas, "
+                                    "o esta cita no respalda ningún valor."
+                                    if campos_coverage is not None
+                                    else "pero el valor del campo no se encontró textualmente en la página."
+                                )
                             ),
                             excerpt=str(ev_excerpt or ""),
                             evidence_sha256=str(ev_sha or ""),

@@ -33,6 +33,11 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
+import sqlite3
+import subprocess
+import sys
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -957,41 +962,66 @@ class TestTask7ExplicitTeacherApproval:
         assert resp_b.status_code == 409
         assert CurriculumImportApproval.objects.filter(job=job_b).count() == 0
 
-    def test_t7_migrations_forward_back_fresh(self):
-        """19. Causal Luna test: Migrations 0040 and 0041 can be migrated backward to 0039 and forward to 0041 cleanly on isolated DB."""
-        import tempfile, shutil
-        from pathlib import Path
-        from django.core.management import call_command
+    def test_t7_migrations_forward_back_fresh(self, tmp_path):
+        """19. Migrations 0039–0042 round-trip on a fresh, isolated database."""
+        from django.db import connection
+        from django.db.migrations.recorder import MigrationRecorder
 
-        d = Path(tempfile.mkdtemp(prefix="aulalista_test_mig_"))
-        db = d / "test_mig.sqlite3"
-        media = d / "media"
+        db = tmp_path / "test_mig.sqlite3"
+        media = tmp_path / "media"
         media.mkdir()
+        assert not db.exists()
+        active_db_name = connection.settings_dict["NAME"]
+        assert db.resolve() != Path(active_db_name).resolve()
+        active_migrations = set(MigrationRecorder(connection).applied_migrations())
 
-        shutil.copy2("/Users/dojo/Documents/ChatGPT/AulaLista-repo/db.sqlite3", db)
+        # Django has already configured pytest's connection. Use a new process
+        # so these environment values take effect before settings are imported.
+        env = os.environ.copy()
+        env.update(AULALISTA_DB_PATH=str(db), AULALISTA_MEDIA_ROOT=str(media))
+        repo_root = Path(__file__).resolve().parents[1]
 
-        import os
-        old_db = os.environ.get("AULALISTA_DB_PATH")
-        old_media = os.environ.get("AULALISTA_MEDIA_ROOT")
+        for target in ("0042", "0041", "0040", "0039", "0042"):
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(repo_root / "manage.py"),
+                    "migrate", "curriculum", target,
+                    "--settings=aulalista.settings", "--noinput", "--verbosity=0",
+                ],
+                cwd=repo_root,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            assert result.returncode == 0, result.stdout + result.stderr
+            assert db.is_file()
+            with closing(sqlite3.connect(db)) as isolated_db:
+                applied = {
+                    row[0] for row in isolated_db.execute(
+                        "SELECT name FROM django_migrations WHERE app = 'curriculum'"
+                    )
+                }
+                columns = {
+                    row[1] for row in isolated_db.execute(
+                        "PRAGMA table_info(curriculum_curriculumimportapproval)"
+                    )
+                }
+                tables = {
+                    row[0] for row in isolated_db.execute(
+                        "SELECT name FROM sqlite_master WHERE type = 'table'"
+                    )
+                }
 
-        try:
-            os.environ.update(AULALISTA_DB_PATH=str(db), AULALISTA_MEDIA_ROOT=str(media))
-            # 1. Forward 0042
-            call_command("migrate", "curriculum", "0042", verbosity=0)
-            # 2. Backward 0041
-            call_command("migrate", "curriculum", "0041", verbosity=0)
-            # 3. Backward 0040
-            call_command("migrate", "curriculum", "0040", verbosity=0)
-            # 4. Backward 0039
-            call_command("migrate", "curriculum", "0039", verbosity=0)
-            # 5. Forward 0042 again
-            call_command("migrate", "curriculum", "0042", verbosity=0)
-        finally:
-            if old_db:
-                os.environ["AULALISTA_DB_PATH"] = old_db
-            if old_media:
-                os.environ["AULALISTA_MEDIA_ROOT"] = old_media
-            shutil.rmtree(d, ignore_errors=True)
+            assert max(applied).startswith(f"{target}_")
+            assert ("dossier_snapshot" in columns) == (target >= "0040")
+            assert ("pending_acknowledged" in columns) == (target >= "0040")
+            assert ("is_active" in columns) == (target <= "0040")
+            assert ("source_blob_id" in columns) == (target == "0042")
+            assert ("curriculum_curriculumsourceblob" in tables) == (target == "0042")
+            assert connection.settings_dict["NAME"] == active_db_name
+            assert set(MigrationRecorder(connection).applied_migrations()) == active_migrations
 
     def test_t7_b2_model_active_and_append_only(self):
         """20. B2 Verification: Approval has no mutable is_active DB column; is_active requires job READY, version+SHA match, valid canonical ready dossier; source missing => inactive; strict append-only."""
