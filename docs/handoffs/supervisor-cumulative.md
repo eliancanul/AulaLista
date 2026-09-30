@@ -3967,3 +3967,5 @@ Graph-based dependency mapping (fused #53/#98/#54 + #57 prerequisite + periphery
 ## Docs-only packaging outcome (2360 checkpoint)
 
 - Recorded below (commit hash / push range / PR #115 updated, or reason skipped).
+
+- Follow-up PR-update record (2360 checkpoint): commit `b7657a7` (`docs: supervisor iteration 2360 checkpoint — cumulative deltas 2351-2360, prompt catalog, HOLD gate`), push range `1677f84..b7657a7` to `supervisor/aulalista-docs`, PR #115 OPEN https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged — never merge/approve/close per loop rules). Staged set was exactly the 4 docs files; no code staged or merged.
