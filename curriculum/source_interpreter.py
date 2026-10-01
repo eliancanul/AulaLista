@@ -25,6 +25,7 @@ from pypdf.errors import PdfReadError, PyPdfError
 
 from curriculum.verification import normalize_text_for_evidence_check
 from curriculum.vocabulary import CANONICAL_CAMPOS
+from curriculum.overview_fields import extract_overview_spans
 
 logger = logging.getLogger(__name__)
 
@@ -2116,6 +2117,44 @@ class CurriculumSourceInterpreter:
         fields_dict: dict[str, InterpretedField] = {}
         overview_pages = pages_text[:3]
         overview_text = "\n".join(overview_pages)
+        overview_spans = extract_overview_spans(
+            overview_pages, has_later_pages=len(pages_text) > len(overview_pages),
+        )
+
+        def _explicit_field(name: str, action: str, *, preserve_lines: bool = False) -> InterpretedField:
+            span = overview_spans[name]
+            value = span.excerpt if preserve_lines else re.sub(r"\s+", " ", span.excerpt).strip()
+            uncertain = span.ambiguous
+            if name == "proyecto" and span.termination != "quoted_title":
+                uncertain = uncertain or bool(
+                    re.match(r"^[sS]\b|^[eE]je\b|^\W", value)
+                    or len(value) < 3
+                    or value.lower().startswith("eje seleccionado")
+                )
+            warned = span.page_number in page_warnings
+            if not value:
+                status, origin = STATUS_MISSING, ORIGIN_PROPOSED
+                reason = "La etiqueta explícita no tiene valor antes del siguiente límite estructural."
+            elif uncertain:
+                status, origin = STATUS_AMBIGUOUS, ORIGIN_PROPOSED
+                reason = (
+                    "Texto localizado en una sola página, pero el límite del campo requiere revisión; "
+                    "no se completó ni unió texto de otra página."
+                )
+            else:
+                status, origin = (STATUS_AMBIGUOUS if warned else STATUS_SUPPORTED), ORIGIN_EXTRACTED
+                reason = (
+                    f"Advertencia en página fuente {span.page_number}."
+                    if warned else "Campo explícito delimitado con evidencia literal de su página física."
+                )
+            return InterpretedField(
+                name=name, value=value, origin=origin, status=status,
+                reason=reason, action_required=action,
+                evidence=[SourceReference(
+                    document_sha256=sha256, page_number=span.page_number,
+                    excerpt=span.excerpt,
+                )] if value else [],
+            )
 
         def _find_page(needle_or_match: str) -> int:
             """Determine which 1-indexed physical page contains the matched text."""
@@ -2124,68 +2163,15 @@ class CurriculumSourceInterpreter:
                     return p_idx
             return 1
 
-        # 1. Proyecto (Sol Gate Final: word boundary to prevent matching 'Proyecto' inside 'Proyectos')
-        proj_match = re.search(
-            r"(?:^|\n)\s*(?:Nombre\s+del\s+)?Proyecto\b\s*:?\s*([^\n\r]+?)(?=(?:\s+Escenario|\s+Finalidad|\s+Propósito|\s+Ejes|\s+Temporalidad|\n|\Z))",
-            overview_text,
-            re.IGNORECASE,
-        )
-        if proj_match:
-            val = re.sub(r"\s+", " ", proj_match.group(1)).strip()
-            # Clean if accidentally matched a column header
-            val = re.sub(r"^(?:de\s+diagnóstico:?\s*)", "", val, flags=re.IGNORECASE).strip()
-            matched_page = _find_page(proj_match.group(0))
-            is_warned = matched_page in page_warnings
-
-            is_suspicious = bool(
-                re.match(r"^[sS]\b|^[eE]je\b|^\W", val)
-                or len(val) < 3
-                or val.lower().startswith("eje seleccionado")
+        # 1. Project names keep their physical source and uncertain continuations.
+        if "proyecto" in overview_spans:
+            fields_dict["proyecto"] = _explicit_field(
+                "proyecto", "Verificar o ingresar el nombre inequívoco del proyecto.",
             )
-
-            if is_suspicious or not val:
-                fields_dict["proyecto"] = InterpretedField(
-                    name="proyecto",
-                    value=val if val else "",
-                    origin=ORIGIN_PROPOSED,
-                    status=STATUS_AMBIGUOUS if val else STATUS_MISSING,
-                    reason="Mención ambigua de proyecto o maquetación no estándar en portada.",
-                    action_required="Verificar o ingresar el nombre inequívoco del proyecto.",
-                    evidence=[
-                        SourceReference(
-                            document_sha256=sha256,
-                            page_number=matched_page,
-                            excerpt=proj_match.group(0).strip()[:200],
-                        )
-                    ] if val else [],
-                )
-            else:
-                fields_dict["proyecto"] = InterpretedField(
-                    name="proyecto",
-                    value=val,
-                    origin=ORIGIN_EXTRACTED,
-                    status=STATUS_AMBIGUOUS if is_warned else STATUS_SUPPORTED,
-                    reason=(
-                        f"Advertencia en página fuente {matched_page}."
-                        if is_warned
-                        else "Nombre de proyecto identificado en el encabezado general."
-                    ),
-                    action_required="Verificar si coincide con la planeación de la semana.",
-                    evidence=[
-                        SourceReference(
-                            document_sha256=sha256,
-                            page_number=matched_page,
-                            excerpt=proj_match.group(0).strip()[:200],
-                        )
-                    ],
-                )
         else:
             fields_dict["proyecto"] = InterpretedField(
-                name="proyecto",
-                value="",
-                origin=ORIGIN_PROPOSED,
-                status=STATUS_MISSING,
-                reason="No se encontró mención explícita e inequívoca del título del proyecto en la portada.",
+                name="proyecto", value="", origin=ORIGIN_PROPOSED, status=STATUS_MISSING,
+                reason="No se encontró una etiqueta explícita e inequívoca del proyecto en la portada.",
                 action_required="Ingresar título del proyecto manualmente.",
             )
 
@@ -2245,65 +2231,23 @@ class CurriculumSourceInterpreter:
                 action_required="Seleccionar los campos formativos pertinentes.",
             )
 
-        # 3. Propósito para el alumno
-        prop_match = re.search(
-            r"Prop[oó]sito(?:\s+para\s+el\s+alumno)?:?\s*(.+?)(?=(?:\s{2,}|\n\s*)(?:Metodolog[ií]a|Escenario|Intenci[oó]n|Contenido|Ejes|Finalidad|Campos):?|\Z)",
-            overview_text,
-            re.DOTALL | re.IGNORECASE,
-        )
-        if prop_match:
-            clean_prop = re.sub(r"\s+", " ", prop_match.group(1)).strip()
-            matched_page = _find_page(prop_match.group(0))
-            is_warned = matched_page in page_warnings
-            fields_dict["proposito"] = InterpretedField(
-                name="proposito",
-                value=clean_prop,
-                origin=ORIGIN_EXTRACTED,
-                status=STATUS_AMBIGUOUS if is_warned else STATUS_SUPPORTED,
-                reason="Propósito de aprendizaje extraído de la planeación.",
-                action_required="Validar concordancia con PDA.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=matched_page,
-                        excerpt=clean_prop[:200],
-                    )
-                ],
+        # 3. Explicit purpose; mentions in prose do not create labelled fields.
+        if "proposito" in overview_spans:
+            fields_dict["proposito"] = _explicit_field(
+                "proposito", "Validar concordancia con PDA.",
             )
         else:
             fields_dict["proposito"] = InterpretedField(
-                name="proposito",
-                value="",
-                origin=ORIGIN_PROPOSED,
-                status=STATUS_MISSING,
+                name="proposito", value="", origin=ORIGIN_PROPOSED, status=STATUS_MISSING,
                 reason="No se localizó sección de propósito explícito.",
                 action_required="Redactar el propósito para el alumno.",
             )
 
-        # 4. Finalidad / Intención didáctica docente (Without arbitrary truncation)
-        fin_match = re.search(
-            r"(?:^|\n)\s*(?:Finalidad(?:\s+e\s+intenci[oó]n\s+did[aá]ctica\s+docente)?|Intenci[oó]n\s+did[aá]ctica\s+docente)\b\s*:?\s*([\s\S]+?)(?=(?:\n\s*(?:Ejes(?:\s+articuladores)?|Prop[oó]sito|Metodolog[ií]a|Escenario|Contenido[s]?|Temporalidad|Fase|SESI[OÓ]N)\b:?|\Z))",
-            overview_text,
-            re.IGNORECASE,
-        )
-        if fin_match:
-            clean_fin = fin_match.group(1).strip()
-            matched_page = _find_page(fin_match.group(0))
-            is_warned = matched_page in page_warnings
-            fields_dict["finalidad"] = InterpretedField(
-                name="finalidad",
-                value=clean_fin,
-                origin=ORIGIN_EXTRACTED,
-                status=STATUS_AMBIGUOUS if is_warned else STATUS_SUPPORTED,
-                reason="Finalidad e intención didáctica docente íntegra identificada en el documento.",
-                action_required="Revisar adecuación a la intención pedagógica.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=matched_page,
-                        excerpt=clean_fin[:200],
-                    )
-                ],
+        # 4. Explicit finality uses the same page-local boundaries. The implicit
+        # finality path below retains its separate inference/review contract.
+        if "finalidad" in overview_spans:
+            fields_dict["finalidad"] = _explicit_field(
+                "finalidad", "Revisar adecuación a la intención pedagógica.", preserve_lines=True,
             )
         else:
             # Candidate detection for implicit finalidad on overview page (physical page 1)
