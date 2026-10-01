@@ -65,6 +65,6 @@ Next supervisor pass (2651): Phase 1 baseline slice under the renewed 2651–265
 
 ## PR record (iteration-2650 checkpoint)
 
-- PENDING at write time — packaging step follows (docs-only commit + push updating PR #115 when safe; recorded here on completion).
+- DONE -- commit `5bb96a6` (`docs: supervisor iteration 2650 checkpoint -- cumulative deltas 2641-2650, prompt catalog, HOLD gate`, 4 files, +90/-1, staged via explicit `git add` of `docs/handoffs/` Markdown only -- never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit: IMPLEMENTATION-GATE.md + supervisor-cumulative.md + supervisor-iteration-2650.md + supervisor-prompt-catalog.md) pushed `c368b67..5bb96a6` to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it: https://github.com/eliancanul/AulaLista/pull/115 (docs-only, unmerged -- never merge/approve/close per loop rules). Pre-existing worktree `M` (incl. `aulalista/settings.py`, `curriculum/models.py`, `curriculum/views.py`, root docs) + `D health/templates/health/local_access.html` + large `??` backlog left untouched; nothing was discarded or reverted.
 
 (End of file)
