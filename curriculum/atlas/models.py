@@ -19,6 +19,7 @@ from curriculum.atlas.exceptions import (
     AtlasPermissionError,
     AtlasSecurityError,
 )
+from curriculum.atlas.hierarchy import HierarchyFilterMode
 from curriculum.atlas.text import make_fragment_id, tokenize_atlas_text
 
 
@@ -218,6 +219,8 @@ class RetrievalReceipt:
     execution_time_ms: float
     privacy_guarantee: str = PRIVACY_GUARANTEE_OFFLINE
     disclaimer: str = DISCLAIMER_RELEVANCE_NOT_TRUTH
+    hierarchy_filter: dict[str, str] = field(default_factory=dict)
+    hierarchy_filter_mode: HierarchyFilterMode = "prefer"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -234,6 +237,8 @@ class RetrievalReceipt:
             "execution_time_ms": round(self.execution_time_ms, 2),
             "privacy_guarantee": self.privacy_guarantee,
             "disclaimer": self.disclaimer,
+            "hierarchy_filter": dict(self.hierarchy_filter),
+            "hierarchy_filter_mode": self.hierarchy_filter_mode,
         }
 
 

@@ -17,7 +17,13 @@ from curriculum.atlas.constants import (
 )
 from curriculum.atlas.exceptions import (
     AtlasIndexNotReadyError,
+    AtlasRetrievalContractError,
     AtlasSecurityError,
+)
+from curriculum.atlas.hierarchy import (
+    HierarchyFilterMode,
+    matches_hierarchy,
+    validate_hierarchy_filter,
 )
 from curriculum.atlas.models import (
     AtlasDocumentFragment,
@@ -36,6 +42,27 @@ from curriculum.claims import (
     PREDICATE_METODOLOGIA,
     AtomicClaim,
 )
+
+
+def _assert_strict_hierarchy_contract(
+    candidates: list[EvidenceCandidate],
+    hierarchy_filter: dict[str, str] | None,
+    mode: HierarchyFilterMode,
+    stage: str,
+) -> None:
+    """Fail closed on incompatible extension output; never repair after top-k.
+
+    This check cannot recover compatible evidence omitted by a custom retriever.
+    Filtering before retrieval truncation remains the retriever's responsibility.
+    """
+    if mode != "strict":
+        return
+    for candidate in candidates:
+        if not matches_hierarchy(candidate.fragment.hierarchy, hierarchy_filter):
+            raise AtlasRetrievalContractError(
+                f"El {stage} incumple hierarchy_filter_mode='strict': "
+                f"fragmento '{candidate.fragment.fragment_id}' incompatible con la selección explícita."
+            )
 
 
 class AtlasIndex:
@@ -149,11 +176,14 @@ class AtlasIndex:
         top_k: int,
         hierarchy_filter: dict[str, str] | None,
         candidates: list[EvidenceCandidate],
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> str:
         context = json.dumps(
             {
                 "index_hash": self._metrics.index_hash,
                 "hierarchy_filter": hierarchy_filter or {},
+                # Preserve historical receipt IDs for the default preference mode.
+                **({"hierarchy_filter_mode": "strict"} if hierarchy_filter_mode == "strict" else {}),
                 "retriever": self.retriever.__class__.__name__,
                 "reranker": self.reranker.__class__.__name__,
                 "candidates": [
@@ -177,8 +207,16 @@ class AtlasIndex:
         query: str,
         top_k: int = 3,
         hierarchy_filter: dict[str, str] | None = None,
+        *,
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> RetrievalReceipt:
-        """Ejecuta una búsqueda de fragmentos relevantes generando un recibo formal."""
+        """Busca con preferencia histórica o restricción explícita de jerarquía.
+
+        strict exige todas las claves seleccionadas antes de top-k/reranking;
+        no completa resultados con fragmentos incompatibles. None/{} no impone
+        restricciones. El recibo registra selección y modo.
+        """
+        validate_hierarchy_filter(hierarchy_filter, hierarchy_filter_mode)
         if isinstance(top_k, bool) or not isinstance(top_k, int) or top_k < 1:
             raise ValueError("top_k debe ser un entero positivo.")
         if not self._is_ready:
@@ -191,6 +229,10 @@ class AtlasIndex:
             query=query,
             top_k=top_k * 2,  # Sobre-recuperar para permitir reranking efectivo
             hierarchy_filter=hierarchy_filter,
+            **({"hierarchy_filter_mode": "strict"} if hierarchy_filter_mode == "strict" else {}),
+        )
+        _assert_strict_hierarchy_contract(
+            raw_candidates, hierarchy_filter, hierarchy_filter_mode, "retriever"
         )
 
         reranked = self.reranker.rerank(
@@ -198,11 +240,16 @@ class AtlasIndex:
             candidates=raw_candidates,
             claim=None,
         )
+        _assert_strict_hierarchy_contract(
+            reranked, hierarchy_filter, hierarchy_filter_mode, "reranker"
+        )
 
         final_candidates = reranked[:top_k]
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-        receipt_id = self._make_receipt_id(query, None, top_k, hierarchy_filter, final_candidates)
+        receipt_id = self._make_receipt_id(
+            query, None, top_k, hierarchy_filter, final_candidates, hierarchy_filter_mode
+        )
         is_empty = len(final_candidates) == 0
 
         return RetrievalReceipt(
@@ -219,6 +266,8 @@ class AtlasIndex:
             execution_time_ms=elapsed_ms,
             privacy_guarantee=PRIVACY_GUARANTEE_OFFLINE,
             disclaimer=DISCLAIMER_RELEVANCE_NOT_TRUTH,
+            hierarchy_filter=dict(hierarchy_filter or {}),
+            hierarchy_filter_mode=hierarchy_filter_mode,
         )
 
     def retrieve_for_claim(
@@ -226,6 +275,8 @@ class AtlasIndex:
         claim: AtomicClaim,
         top_k: int = 3,
         hierarchy_filter: dict[str, str] | None = None,
+        *,
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> RetrievalReceipt:
         """Recupera fragmentos de evidencia para una afirmación atómica (#124).
 
@@ -233,7 +284,11 @@ class AtlasIndex:
         - NO modifica el estado (claim.state) de la afirmación: la relevancia no es verdad.
         - Construye la consulta deterministamente a partir del predicado, valor y extracto.
         - Ejecución puramente local: el documento docente jamás sale a la red.
+        - strict sólo restringe claves explícitas del llamador; la propia
+          afirmación no se convierte en un filtro obligatorio de contraevidencia.
+          prefer conserva las pistas de jerarquía derivadas del predicado.
         """
+        validate_hierarchy_filter(hierarchy_filter, hierarchy_filter_mode)
         if isinstance(top_k, bool) or not isinstance(top_k, int) or top_k < 1:
             raise ValueError("top_k debe ser un entero positivo.")
         if not self._is_ready:
@@ -251,17 +306,22 @@ class AtlasIndex:
 
         # Derivar filtro de jerarquía a partir de la afirmación si aplica
         effective_filter = dict(hierarchy_filter or {})
-        if claim.predicate == PREDICATE_CAMPO_FORMATIVO and "campo_formativo" not in effective_filter:
-            effective_filter["campo_formativo"] = str(claim.object_value)
-        elif claim.predicate == PREDICATE_ESCENARIO and "escenario" not in effective_filter:
-            effective_filter["escenario"] = str(claim.object_value)
-        elif claim.predicate == PREDICATE_METODOLOGIA and "metodologia" not in effective_filter:
-            effective_filter["metodologia"] = str(claim.object_value)
+        if hierarchy_filter_mode == "prefer":
+            if claim.predicate == PREDICATE_CAMPO_FORMATIVO and "campo_formativo" not in effective_filter:
+                effective_filter["campo_formativo"] = str(claim.object_value)
+            elif claim.predicate == PREDICATE_ESCENARIO and "escenario" not in effective_filter:
+                effective_filter["escenario"] = str(claim.object_value)
+            elif claim.predicate == PREDICATE_METODOLOGIA and "metodologia" not in effective_filter:
+                effective_filter["metodologia"] = str(claim.object_value)
 
         raw_candidates = self.retriever.retrieve(
             query=query,
             top_k=top_k * 2,
             hierarchy_filter=effective_filter,
+            **({"hierarchy_filter_mode": "strict"} if hierarchy_filter_mode == "strict" else {}),
+        )
+        _assert_strict_hierarchy_contract(
+            raw_candidates, effective_filter, hierarchy_filter_mode, "retriever"
         )
 
         reranked = self.reranker.rerank(
@@ -269,11 +329,16 @@ class AtlasIndex:
             candidates=raw_candidates,
             claim=claim,
         )
+        _assert_strict_hierarchy_contract(
+            reranked, effective_filter, hierarchy_filter_mode, "reranker"
+        )
 
         final_candidates = reranked[:top_k]
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-        receipt_id = self._make_receipt_id(query, claim.claim_id, top_k, effective_filter, final_candidates)
+        receipt_id = self._make_receipt_id(
+            query, claim.claim_id, top_k, effective_filter, final_candidates, hierarchy_filter_mode
+        )
         is_empty = len(final_candidates) == 0
 
         # INVARIANTE: El estado de la afirmación no cambia por el simple hecho de consultar
@@ -293,4 +358,6 @@ class AtlasIndex:
             execution_time_ms=elapsed_ms,
             privacy_guarantee=PRIVACY_GUARANTEE_OFFLINE,
             disclaimer=DISCLAIMER_RELEVANCE_NOT_TRUTH,
+            hierarchy_filter=dict(effective_filter),
+            hierarchy_filter_mode=hierarchy_filter_mode,
         )
