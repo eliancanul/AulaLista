@@ -214,6 +214,7 @@ def _map_activity_to_claims(
     session_subject: str,
     doc_sha: str = "",
     is_project_review: bool = False,
+    annex_numbers: dict[str, str] | None = None,
 ) -> list[AtomicClaim]:
     """Traduce una SessionActivity a afirmaciones de relación y estado de recursos.
 
@@ -297,9 +298,9 @@ def _map_activity_to_claims(
     # 2. Relaciones con Anexos requeridos
     annex_ids = getattr(activity, "annex_ids", []) or []
     for annex_id in annex_ids:
-        # Relationship-specific evidence must include the annex mention. Do
-        # not substitute the generic activity excerpt when this provenance is
-        # absent in a legacy/manual object; leave the relation a candidate.
+        # annex_ids records textual association, not an unconditional need.
+        # A legacy link without a target identity and contextual evidence does
+        # not license a requiere_anexo claim, even in candidate state.
         annex_refs = []
         annex_evidence = getattr(activity, "annex_evidence", {})
         raw_refs = annex_evidence.get(annex_id, []) if isinstance(annex_evidence, dict) else []
@@ -307,6 +308,11 @@ def _map_activity_to_claims(
             ref = evidence if isinstance(evidence, SourceReference) else SourceReference.from_dict(evidence) if isinstance(evidence, dict) else None
             if ref is not None and (not doc_sha or ref.document_sha256 == doc_sha):
                 annex_refs.append(ref)
+        from curriculum.annex_mentions import annex_requirement
+        number = (annex_numbers or {}).get(annex_id)
+        context = "\n".join(ref.excerpt for ref in annex_refs)
+        if number is None or annex_requirement(context, number) is not True:
+            continue
         cid_annex = make_claim_id(act_subject, PREDICATE_REQUIERE_ANEXO, annex_id, doc_sha)
         claims.append(
             AtomicClaim(
@@ -450,6 +456,8 @@ def compile_dossier_to_atomic_claims(dossier: ImportDossier) -> list[AtomicClaim
                     session_subject,
                     doc_sha,
                     is_project_review=is_phase_project_review,
+                    annex_numbers={ref.reference_id: str(ref.annex_number)
+                                   for ref in getattr(session, "annex_references", [])},
                 )
             )
 

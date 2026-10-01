@@ -1467,6 +1467,43 @@ def _build_annex_operational_item(
     elif priority_state == PRIORITY_PENDING_REVIEW:
         blocking_codes.append("PENDING_TEACHER_CONFIRMATION")
 
+    # A mentioned resource may be negated, conditional, or unresolved. Keep
+    # its physical status and human review visible without making it a
+    # conversion prerequisite. Legacy refs without context retain their review
+    # path; they still cannot become a positive requires claim.
+    from curriculum.annex_mentions import annex_requirement
+    contexts = [ev.excerpt for ev in ref.evidence
+                if getattr(ev, "role", "") == "annex_mention_context"
+                and (not source_sha or ev.document_sha256 == source_sha)]
+    necessity = annex_requirement("\n".join(contexts), ref.annex_number) if contexts else None
+    # Different activities can explicitly use and decline the same resource.
+    # A positive use in one activity still requires the resource for the session;
+    # conflicting statements within that one activity continue to abstain.
+    for activity in session.activities:
+        if ref.reference_id not in activity.annex_ids:
+            continue
+        activity_context = "\n".join(
+            ev.excerpt for ev in activity.annex_evidence.get(ref.reference_id, [])
+            if not source_sha or ev.document_sha256 == source_sha
+        )
+        if annex_requirement(activity_context, ref.annex_number) is True:
+            necessity = True
+            break
+    is_required = not contexts or necessity is True
+    if not is_required:
+        required_for = []
+        blocking_codes = []
+        blocks_action = ""
+        if priority_state == PRIORITY_REQUIRES_RESOLUTION:
+            priority_state = PRIORITY_PENDING_REVIEW
+        if op_state != "resolved" and ref.review != "postponed":
+            problem_summary = (
+                "La fuente no requiere usar este anexo; la mención se conserva para revisión."
+                if necessity is False else
+                "Necesidad del anexo sin determinar o condicionada; requiere revisión docente."
+            )
+            curr_act = problem_summary
+
     source_refs = [ev.to_dict() for ev in ref.evidence if getattr(ev, "page_number", None) == ref.confirmed_page]
     if not source_refs:
         source_refs = [{"page_number": p, "document_sha256": source_sha} for p in (ref.source_pages or ref.candidate_pages)]
@@ -1485,8 +1522,8 @@ def _build_annex_operational_item(
         priority_state=priority_state,
         problem_summary=problem_summary,
         blocks_action=blocks_action,
-        requiredness="annex_use",
-        is_required=True,
+        requiredness="annex_use" if is_required else "optional",
+        is_required=is_required,
         current_value=ref.confirmed_page,
         original_value=ref.candidate_pages[0] if ref.candidate_pages else None,
         operational_state=op_state,
@@ -3401,9 +3438,16 @@ class CurriculumSourceInterpreter:
                         if 1 <= page_number <= len(pages_text) and mention.text in pages_text[page_number - 1]:
                             mention_page = page_number
                             break
+                # The legacy fallback may concatenate multiple physical
+                # pages. Do not cite that aggregate as one page's context.
+                context = seg_text if page_segments or len(session_pages) <= 1 else ""
+                if pages_text and not (1 <= mention_page <= len(pages_text)
+                                       and context in pages_text[mention_page - 1]):
+                    context = ""
                 for number in mention.numbers:
                     detected_numbers.add(number)
-                    mentions.append({"number": number, "raw": mention.text, "page": mention_page})
+                    mentions.append({"number": number, "raw": mention.text, "page": mention_page,
+                                     "context": context})
 
         annex_references: list[AnnexReference] = []
         for num in sorted(detected_numbers, key=lambda x: (len(x), x)):
@@ -3430,6 +3474,14 @@ class CurriculumSourceInterpreter:
                         excerpt=rep_for_page,
                     )
                 )
+
+            # Keep literal context separately from the short mention. It is
+            # evidence for necessity review, never evidence of a physical sheet.
+            for page, context in dict.fromkeys((m["page"], m["context"]) for m in num_mentions if m["context"]):
+                evidence.append(SourceReference(
+                    document_sha256=sha256, page_number=page,
+                    excerpt=context, role="annex_mention_context",
+                ))
 
             # Evidence for candidate sheet(s): cites candidate page(s)
             if candidate_pages:
@@ -3517,7 +3569,7 @@ class CurriculumSourceInterpreter:
                     ref = SourceReference(document_sha256=sha256, page_number=seg_page, excerpt=fragment)
                     full_activity_refs[previous.activity_id].append(ref)
                     previous.evidence = list(full_activity_refs[previous.activity_id])
-                    numbers = {n for mention in iter_annex_mentions(fragment) for n in mention.numbers}
+                    numbers = {n for mention in iter_annex_mentions(previous.description) for n in mention.numbers}
                     for annex in annex_refs or []:
                         if annex.reference_id and annex.annex_number in numbers:
                             if annex.reference_id not in previous.annex_ids:

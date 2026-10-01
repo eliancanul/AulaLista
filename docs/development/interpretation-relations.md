@@ -153,3 +153,11 @@ labelled-activity/substeps fixture does not annotate the entire task. Its strict
 score is a contract test, not an absolute semantic truth or a fair unqualified
 ranking of rules against LLM interpretation. The primary fixture hashes and
 opportunity counts are unchanged.
+
+## Offline replay and bounded annex necessity
+
+See [recorded interpretation replay](interpretation-recorded-replay.md) for the
+detached v2 provenance contract, literal continuation repairs, independent v3
+explicit-annex scoring and the distinction between textual mentions and
+operational requirements. Historical development results above are not a new
+measurement of this incremental cut.

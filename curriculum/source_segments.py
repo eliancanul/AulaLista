@@ -396,6 +396,37 @@ def clean_page_prefix(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+
+def literal_page_prefix(text: str, *, previous_text: str = "") -> str:
+    """Trim only exterior boilerplate; keep original spacing inside evidence.
+
+    The legacy cleaner may inform admission, but its reconstructed lines cannot
+    serve as literal source text. In particular, preserve the first task's
+    indentation and blank lines inside wrapped activities.
+    """
+    boilerplate = re.compile(r"^(?:Planeación Didáctica|Semana \d+|Página \d+|Vo\.\s*Bo\.|Nivel:|Zona Escolar:|Sector:|Ciclo Escolar:|Nombre del Docente:|Grado:)", re.I)
+    quotes = _quote_stack(previous_text)
+    kept = []
+    for line in re.finditer(r"[^\r\n]*(?:\r\n|\n|\r|$)", text):
+        quoted = bool(quotes)
+        _advance_quotes(quotes, line.group())
+        if line.group().strip() and (quoted or not boilerplate.match(line.group().strip())):
+            kept.append(line)
+    if not kept:
+        return ""
+    end = kept[-1].start() + len(kept[-1].group().rstrip())
+    return text[kept[0].start():end]
+
+
+def _continuation_before_tail(text: str, *, previous_text: str = "") -> str:
+    """Keep one exact slice, without treating quoted labels as section cuts."""
+    tail = re.compile(r"(?:(?:\r?\n|\r)[^\S\r\n]*|[^\S\r\n]{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)", re.I)
+    for match in tail.finditer(text):
+        if not _quote_stack(previous_text + text[:match.start()]):
+            return text[:match.start()]
+    return text
+
+
 def is_structural_barrier(text: str) -> bool:
     if not text.strip():
         return True
@@ -470,10 +501,12 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
         prefix = next_page[:min(next_boundaries)] if next_boundaries else next_page
         if next_boundaries and min(next_boundaries) not in strong_boundaries.get(page_number + 1, set()):
             retain_unassigned(segment, page_number + 1, min(next_boundaries))
-        cleaned = clean_page_prefix(prefix)
-        cleaned = re.split(r"(?:\n|\s{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)", cleaned, maxsplit=1, flags=re.IGNORECASE)[0].strip()
+        previous_text = segment.page_segments[0][1]
+        literal = literal_page_prefix(prefix, previous_text=previous_text)
+        literal = _continuation_before_tail(literal, previous_text=previous_text)
+        cleaned = clean_page_prefix(literal)
         if cleaned and not is_structural_barrier(cleaned) and re.search(r"(?:^|\n|\b)(?:Inicio|Desarrollo|Cierre)\b", cleaned, re.IGNORECASE):
-            segment.page_segments.append((page_number + 1, cleaned))
+            segment.page_segments.append((page_number + 1, literal))
     return segments
 
 

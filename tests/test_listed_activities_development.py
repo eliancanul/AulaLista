@@ -130,3 +130,105 @@ def test_wrapped_activity_word_on_next_page_does_not_suppress_following_bullets(
              'actividad 1 que realizaron de tarea.\n-Comparar registros.\nCierre: Conversar.\n']
     activities = dossier_for(pages).sessions[0].activities
     assert [a.description for a in activities] == ['Revisar en equipo la\nactividad 1 que realizaron de tarea.', 'Comparar registros.']
+
+
+def test_admitted_continuation_preserves_blank_lines_in_literal_evidence():
+    from curriculum.claims import compile_dossier_to_atomic_claims
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Preparar registros.\n',
+             '-Observar las plantas\n\ny registrar sus rasgos en el anexo 1.\nCierre:\n-Compartir registros.\n']
+    dossier = dossier_for(pages)
+    activity = dossier.sessions[0].activities[1]
+    assert activity.description == 'Observar las plantas\n\ny registrar sus rasgos en el anexo 1.'
+    for claim in compile_dossier_to_atomic_claims(dossier):
+        if claim.predicate in {'pertenece_a_sesion', 'requiere_anexo'}:
+            assert all(e.excerpt in pages[e.page_number - 1] for e in claim.evidence)
+
+
+def test_admitted_continuation_keeps_nested_first_line_with_prior_activity():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Responder las siguientes preguntas:\n  -¿Qué observan?\n',
+             '  -¿Cómo cuidar las plantas?\nCierre:\n-Compartir respuestas.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert len(activities) == 2
+    assert activities[0].description == 'Responder las siguientes preguntas:\n  -¿Qué observan?\n  -¿Cómo cuidar las plantas?'
+    assert [e.page_number for e in activities[0].evidence] == [1, 2]
+    assert all(e.excerpt in pages[e.page_number - 1] for a in activities for e in a.evidence)
+
+
+def test_continuation_preserves_crlf_and_ignores_only_exterior_boilerplate():
+    pages = ['SESIÓN 1: Explorar\r\nInicio:\r\n-Preparar registros.\r\n',
+             'Planeación Didáctica\r\nPágina 2\r\n\r\n-Observar plantas\r\n\r\ny registrar el anexo 1.\r\nCierre:\r\n-Compartir.\r\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert len(activities) == 3
+    assert activities[1].description == 'Observar plantas\r\n\r\ny registrar el anexo 1.'
+    assert all(e.excerpt in pages[e.page_number - 1] for a in activities for e in a.evidence)
+
+
+def test_url_instruction_is_not_discarded_as_continuation_boilerplate():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Observar hojas.\n',
+             '-Consultar https://example.org/plantas y registrar tres ideas.\nCierre:\n-Compartir registros.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert len(activities) == 3
+    assert activities[1].description == 'Consultar https://example.org/plantas y registrar tres ideas.'
+    assert all(e.excerpt in pages[e.page_number - 1] for a in activities for e in a.evidence)
+
+
+def test_page_header_words_inside_an_open_instruction_quote_are_literal_content():
+    pages = ['SESIÓN 1: Leer\nInicio:\n-Leer el texto «\n',
+             'Página 2\nUn jardín abierto» y responder.\nCierre:\n-Comparar.\n']
+    activity = dossier_for(pages).sessions[0].activities[0]
+    assert activity.description == 'Leer el texto «\nPágina 2\nUn jardín abierto» y responder.'
+    assert all(e.excerpt in pages[e.page_number - 1] for e in activity.evidence)
+
+
+def test_blank_line_inside_unfinished_cross_page_instruction_is_preserved():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Observar las plantas y registrar\n',
+             'sus hojas\n\ny raíces en el anexo 1.\nCierre:\n-Compartir.\n']
+    activity = dossier_for(pages).sessions[0].activities[0]
+    assert activity.description == 'Observar las plantas y registrar\nsus hojas\n\ny raíces en el anexo 1.'
+    assert activity.annex_ids
+    assert all(e.excerpt in pages[e.page_number - 1] for e in activity.evidence)
+
+
+def test_cross_page_wrapped_colon_keeps_its_nested_substeps():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Responder las siguientes\n',
+             'preguntas guía:\n  -¿Qué observan?\n  -¿Qué pueden medir?\nCierre:\n-Comparar.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert len(activities) == 2
+    assert activities[0].description == 'Responder las siguientes\npreguntas guía:\n  -¿Qué observan?\n  -¿Qué pueden medir?'
+
+
+def test_quoted_tail_label_cannot_cut_an_instruction_continuation():
+    pages = ['SESIÓN 1: Leer\nInicio:\n-Leer el texto «\n',
+             'Una guía\nAspectos a evaluar\nson variados» y comentarlo.\nCierre:\n-Comparar.\n']
+    activity = dossier_for(pages).sessions[0].activities[0]
+    assert activity.description == 'Leer el texto «\nUna guía\nAspectos a evaluar\nson variados» y comentarlo.'
+
+
+def test_complete_continuation_does_not_absorb_a_separate_paragraph():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Observar las plantas y registrar\n',
+             'sus hojas.\n\nUna explicación separada.\nCierre:\n-Comparar.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert activities[0].description == 'Observar las plantas y registrar\nsus hojas.'
+
+
+@pytest.mark.parametrize('indent', ['', ' ', '\t', '  '])
+def test_indented_tail_section_cannot_borrow_a_later_moment_to_admit_the_page(indent):
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Observar.\n',
+             '-Continuar.\n' + indent + 'Aspectos a evaluar:\n-Lápices.\nCierre:\n-No corresponde.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert [a.description for a in activities] == ['Observar.']
+
+
+def test_detached_quote_cannot_continue_the_preceding_completed_task():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Preparar dibujos.\n«\n',
+             'Texto de ejemplo»\nCierre:\n-Compartir registros.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert [a.description for a in activities] == ['Preparar dibujos.', 'Compartir registros.']
+
+
+def test_blank_lines_between_continued_nested_steps_preserve_all_substeps():
+    pages = ['SESIÓN 1: Explorar\nInicio:\n-Preparar dibujos.\n',
+             '  -Subpaso 1.\n\n  -Subpaso 2.\nCierre:\n-Compartir registros.\n']
+    activities = dossier_for(pages).sessions[0].activities
+    assert activities[0].description == 'Preparar dibujos.\n  -Subpaso 1.\n\n  -Subpaso 2.'
+    assert len(activities) == 2
