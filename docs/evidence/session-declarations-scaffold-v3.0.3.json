@@ -1,0 +1,18 @@
+{
+  "repair_of": "946dec8bf5ebabdfeee79631964904ee4fb5875e",
+  "scope": "Synthetic development only; final reported UNIT SEPARATOR guard, no reference changes.",
+  "matcher_version": "session-declarations-matcher.v3.0.3",
+  "evaluator_version": "session-declarations-evaluation.v1.3.3",
+  "matcher_sha256": "ada45969eb576b7792fcb22b10b2220e87dbb58ac6356983adff60ebfcd9f8d3",
+  "evaluator_sha256": "393285dc7a472febecb3056f162eeecb91510f8c927db5d4e516e2e7c053a8ca",
+  "focused_tests": {
+    "passed": 884,
+    "seconds": 1.77,
+    "log_sha256": "01f6c76b56ee9b5272fa47e03052ff922578d145c64149da39a158ea3f1cad05"
+  },
+  "previous_evidence": "docs/evidence/session-declarations-scaffold-v3.0.2.json",
+  "previous_evidence_sha256": "08b8352ed4c220bf6c78f6ba7d88c171dfa3716f7262c8cf0377404d2f5c732a",
+  "all_four_historical_total_and_documents_unchanged": true,
+  "all_four_current_stratum_totals_unchanged": true,
+  "full_suite": "Pending review approval before execution"
+}

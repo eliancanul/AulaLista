@@ -1,0 +1,885 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "AI-authored synthetic regression after disclosed development patterns; frozen before matcher v2; not held-out or teacher gold",
+  "scope": {
+    "input": "unchanged synthetic extracted page strings",
+    "coverage": [
+      "numbered PDA labels with bounded local code prefixes",
+      "explicit child labels under combined heading"
+    ],
+    "exclusions": [
+      "SEP identity or alignment",
+      "cross-page inference by proximity"
+    ]
+  },
+  "documents": [
+    {
+      "id": "numbered_pda",
+      "pages": [
+        "SESIÓN 1: Explorar\nPDA2: Describe formas.\nPDA 003: Compara colores.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "numbered_pda-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 24,
+            "quote": "PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 25,
+            "end": 41,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "numbered_pda-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "PDA 003:"
+          },
+          "value": {
+            "page": 1,
+            "start": 51,
+            "end": 67,
+            "quote": "Compara colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "local_code_pda",
+      "pages": [
+        "SESIÓN 1: Explorar\nX7 PDA2: Describe formas.\nL12 PDA003: Compara colores.\nQ2 PDA0: Reconoce tamaños.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "local_code_pda-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 27,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 28,
+            "end": 44,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "local_code_pda-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 45,
+            "end": 56,
+            "quote": "L12 PDA003:"
+          },
+          "value": {
+            "page": 1,
+            "start": 57,
+            "end": 73,
+            "quote": "Compara colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "local_code_pda-d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 74,
+            "end": 82,
+            "quote": "Q2 PDA0:"
+          },
+          "value": {
+            "page": 1,
+            "start": 83,
+            "end": 100,
+            "quote": "Reconoce tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "repeated_local_code",
+      "pages": [
+        "SESIÓN 1: Explorar\nX7 PDA2: Describe formas.\nX7 PDA2: Describe formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "repeated_local_code-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 27,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 28,
+            "end": 44,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "repeated_local_code-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 45,
+            "end": 53,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 54,
+            "end": 70,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "coded_crlf",
+      "pages": [
+        "SESIÓN 1: Explorar\r\nX7\tPDA2:\tDescribe formas\r\ny compara colores.\r\nInicio:\r\n-Explorar figuras.\r\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "coded_crlf-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 20,
+            "end": 28,
+            "quote": "X7\tPDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 29,
+            "end": 64,
+            "quote": "Describe formas\r\ny compara colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "container_explicit_content",
+      "pages": [
+        "SESIÓN 1: Explorar\nContenidos/PDA: Contenido: Formas y colores.\nPDA: Describe formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "container_explicit_content-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 35,
+            "end": 45,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 46,
+            "end": 63,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "container_explicit_content-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 64,
+            "end": 68,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 69,
+            "end": 85,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "container_explicit_numbered_pda",
+      "pages": [
+        "SESIÓN 1: Explorar\nContenidos/PDA: X7 PDA2: Describe formas.\nContenido: Formas y colores.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "container_explicit_numbered_pda-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 35,
+            "end": 43,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 44,
+            "end": 60,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "container_explicit_numbered_pda-d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 61,
+            "end": 71,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 72,
+            "end": 89,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "container_crlf",
+      "pages": [
+        "SESIÓN 1: Explorar\r\n\tContenidos/PDA:\tContenidos:\r\nFormas y colores.\r\nPDA: Describe formas.\r\nInicio:\r\n-Explorar figuras.\r\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "container_crlf-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 37,
+            "end": 48,
+            "quote": "Contenidos:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 67,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "container_crlf-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 69,
+            "end": 73,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 74,
+            "end": 90,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "coded_two_sessions",
+      "pages": [
+        "SESIÓN 1: Explorar\nX7 PDA2: Describe formas.\nInicio:\n-Explorar figuras.\nSESIÓN 2: Comparar\nX7 PDA2: Describe formas.\nInicio:\n-Comparar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 72,
+            "end": 90,
+            "quote": "SESIÓN 2: Comparar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "coded_two_sessions-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 27,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 28,
+            "end": 44,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "coded_two_sessions-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 91,
+            "end": 99,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 100,
+            "end": 116,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "coded_project_no_inheritance",
+      "pages": [
+        "Proyecto: Figuras del patio\nCampo: Lenguajes\nX7 PDA2: Describe formas.\nSESIÓN 1: Explorar\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 27,
+            "quote": "Proyecto: Figuras del patio"
+          }
+        },
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 71,
+            "end": 89,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "coded_project_no_inheritance-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 45,
+            "end": 53,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 54,
+            "end": 70,
+            "quote": "Describe formas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "container_without_child",
+      "pages": [
+        "SESIÓN 1: Explorar\nContenidos/PDA: Describe formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "container_without_child-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 34,
+            "quote": "Contenidos/PDA:"
+          },
+          "reason": "combined_label"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "container_two_inline_values",
+      "pages": [
+        "SESIÓN 1: Explorar\nContenidos/PDA: Contenido: Formas. PDA: Describe formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "container_two_inline_values-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 34,
+            "quote": "Contenidos/PDA:"
+          },
+          "reason": "combined_label"
+        },
+        {
+          "id": "container_two_inline_values-c2",
+          "anchor": {
+            "page": 1,
+            "start": 35,
+            "end": 45,
+            "quote": "Contenido:"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "container_two_inline_values-c3",
+          "anchor": {
+            "page": 1,
+            "start": 54,
+            "end": 58,
+            "quote": "PDA:"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "coded_prose_mention",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Leer X7 PDA2: un ejemplo de rótulo.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "coded_prose_mention-c1",
+          "anchor": {
+            "page": 1,
+            "start": 33,
+            "end": 41,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "coded_nonaffirmative",
+      "pages": [
+        "SESIÓN 1: Explorar\nX7 PDA2: Se propone describir formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "coded_nonaffirmative-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 27,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "unknown_code_prefix",
+      "pages": [
+        "SESIÓN 1: Explorar\nABC PDA2: Describe formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "unknown_code_prefix-c1",
+          "anchor": {
+            "page": 1,
+            "start": 23,
+            "end": 28,
+            "quote": "PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "quoted_container",
+      "pages": [
+        "SESIÓN 1: Explorar\nEjemplo citado:\n«\nContenidos/PDA: Contenido: Formas.\nPDA: Describe formas.\n»\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "quoted_container-c1",
+          "anchor": {
+            "page": 1,
+            "start": 37,
+            "end": 52,
+            "quote": "Contenidos/PDA:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "quoted_container-c2",
+          "anchor": {
+            "page": 1,
+            "start": 53,
+            "end": 63,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "quoted_container-c3",
+          "anchor": {
+            "page": 1,
+            "start": 72,
+            "end": 76,
+            "quote": "PDA:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "coded_table",
+      "pages": [
+        "SESIÓN 1: Explorar\nCampo | X7 PDA2: | Contenido:\nLenguajes | Describe formas. | Formas.\nInicio:\n-Explorar figuras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "coded_table-c1",
+          "anchor": {
+            "page": 1,
+            "start": 27,
+            "end": 35,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "coded_table-c2",
+          "anchor": {
+            "page": 1,
+            "start": 38,
+            "end": 48,
+            "quote": "Contenido:"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "coded_truncated_window",
+      "pages": [
+        "SESIÓN 1: Explorar\nX7 PDA2: Formas y\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "coded_truncated_window-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 27,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "embedded_pda_token",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Leer la cadena XPDA2 en una tarjeta.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true
+    }
+  ]
+}
