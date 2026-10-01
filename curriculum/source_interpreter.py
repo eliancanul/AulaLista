@@ -28,7 +28,7 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.overview_fields import extract_overview_spans
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
-    clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_segments,
+    clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_scope,
 )
 
 logger = logging.getLogger(__name__)
@@ -2772,7 +2772,7 @@ class CurriculumSourceInterpreter:
                 None,
             )
             if project_start is not None:
-                phase_segments = phase_review_segments(pages_text, sha256, project_start)
+                phase_segments, unassigned_segments = phase_review_scope(pages_text, sha256, project_start)
                 project_pages = [number for number, _ in phase_segments]
 
                 activities: list[SessionActivity] = []
@@ -2944,6 +2944,15 @@ class CurriculumSourceInterpreter:
                 )
 
                 phase_context = phase_project_context(pages_text, sha256, project_start)
+                phase_notes = (
+                    "La fuente organiza el trabajo por fases del proyecto y no declara sesiones. "
+                    "Esta unidad agrupa páginas para revisión docente; propone una organización inicial "
+                    "por momentos (inicio/desarrollo/cierre) sin fijar duración ni cantidad de sesiones."
+                )
+                if unassigned_segments:
+                    phase_notes += "\n\nCorte de seguridad ante un límite de secuencia no resuelto; requiere revisión."
+                    for number, raw in unassigned_segments:
+                        phase_notes += f"\n\nTramo sin asignar, página física {number}:\n{raw}"
                 return [SessionPlan(
                     session_id=f"p{project_start}_project_review",
                     session_number=1,
@@ -2952,11 +2961,7 @@ class CurriculumSourceInterpreter:
                     project_context=phase_context,
                     pages=project_pages,
                     layout_fidelity="linearized_heuristics",
-                    layout_notes=(
-                        "La fuente organiza el trabajo por fases del proyecto y no declara sesiones. "
-                        "Esta unidad agrupa páginas para revisión docente; propone una organización inicial "
-                        "por momentos (inicio/desarrollo/cierre) sin fijar duración ni cantidad de sesiones."
-                    ),
+                    layout_notes=phase_notes,
                     fields=fields,
                     activities=activities,
                     status=STATUS_AMBIGUOUS,
@@ -2972,7 +2977,8 @@ class CurriculumSourceInterpreter:
                 else f"Sesión {segment.session_number}: {segment.title}".strip(" -:")
             )
             notes = (
-                "Extracción lineal vía pypdf con reconstrucción heurística y límites por ocurrencia de Proyecto/SESIÓN. "
+                "Extracción lineal vía pypdf con reconstrucción heurística y límites por ocurrencia de Proyecto/SESIÓN "
+                "o reinicio compuesto de planeación. "
                 "Disposición de columnas y tablas no garantizada estructuralmente."
             )
             if len(pages_spanned) > 1:
@@ -2996,7 +3002,7 @@ class CurriculumSourceInterpreter:
             )
             if segment.unassigned_segments:
                 reason = (
-                    "Corte de seguridad ante un encabezado de sesión no resuelto; "
+                    "Corte de seguridad ante un límite de secuencia no resuelto; "
                     "el contenido puede estar incompleto y requiere revisión. "
                     "El tramo literal sin asignar se conserva en las notas de segmentación."
                 )

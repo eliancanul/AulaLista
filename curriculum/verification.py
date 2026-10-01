@@ -38,7 +38,8 @@ from pypdf.errors import PdfReadError, PyPdfError
 from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
-    project_context_matches, phase_project_context, phase_review_segments, has_possible_session_structure,
+    project_context_matches, phase_project_context, phase_review_scope, has_possible_session_structure,
+    planning_boundary_positions,
 )
 
 logger = logging.getLogger(__name__)
@@ -588,6 +589,7 @@ def verify_curriculum_dossier(
     # first textual occurrence merely because it appears on the same page.
     source_segments = scan_session_segments(pages_text, actual_sha256)
     has_session_structure = bool(source_segments) or has_possible_session_structure(pages_text)
+    has_planning_structure = any(planning_boundary_positions(pages_text).values())
     page_session_segments: dict[int, dict[str, str]] = {}
     uncertain_session_ids: set[str] = set()
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
@@ -603,14 +605,17 @@ def verify_curriculum_dossier(
             # even if an anchor was removed or other sessions were omitted.
             page_session_segments.setdefault(page_number, {})[sid] = (
                 norm_pages_text[page_number - 1]
-                if not has_session_structure and 1 <= page_number <= len(pages_text) else ""
+                if not has_session_structure and not has_planning_structure and 1 <= page_number <= len(pages_text) else ""
             )
         if not has_session_structure and sid.endswith("_project_review"):
             physical_pages = session.get("pages", [])
             if isinstance(physical_pages, list) and physical_pages and type(physical_pages[0]) is int and 1 <= physical_pages[0] <= len(pages_text):
                 for page_number in declared_pages:
                     page_session_segments.setdefault(page_number, {})[sid] = ""
-                for page_number, text in phase_review_segments(pages_text, actual_sha256, physical_pages[0]):
+                phase_segments, unassigned = phase_review_scope(pages_text, actual_sha256, physical_pages[0])
+                if unassigned:
+                    uncertain_session_ids.add(sid)
+                for page_number, text in phase_segments:
                     page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
         if matched:
             if matched.unassigned_segments:
