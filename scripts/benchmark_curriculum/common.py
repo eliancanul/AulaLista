@@ -54,9 +54,13 @@ def canonical_output(raw):
     if isinstance(dossier, dict):
         for key in ('created_at', 'updated_at'):
             dossier.pop(key, None)
-        for entry in dossier.get('history', []):
-            if isinstance(entry, dict) and entry.get('action') == 'prepare':
-                entry.pop('timestamp', None)
+        history = dossier.get('history')
+        # Only the declared list schema has volatile history timestamps. Retain
+        # every unexpected type verbatim so canonicalization cannot hide defects.
+        if isinstance(history, list):
+            for entry in history:
+                if isinstance(entry, dict) and entry.get('action') == 'prepare':
+                    entry.pop('timestamp', None)
     return result
 
 def tree_manifest(root):

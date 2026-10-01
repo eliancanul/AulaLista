@@ -274,6 +274,99 @@ class PortabilityTests(unittest.TestCase):
         retained = self.runtime.workdir/'malformed'/'repeat_1'/'SYNTH'/'B0'/'raw.json'
         self.assertIn('duplicate', retained.read_text())
 
+    def fake_pipeline(self, row, histories=None):
+        source = read_source(row['path'], row['file_sha256'], row['page_count'])
+        histories = histories or {'B0': [], 'B2': [], 'B3': []}
+
+        def child(command, out, timeout, python):
+            out = Path(out)
+            if 'source' in command:
+                write_json(out/'source.json', source)
+            else:
+                raw = {'dossier': {'source_sha256': row['file_sha256'], 'version': 1,
+                                   'page_count': row['page_count'], 'general_fields': {},
+                                   'sessions': [], 'history': histories[out.name]},
+                       'claims': [], 'verification': {'items': []}}
+                write_json(out/'raw.json', raw)
+                write_json(out/'worker_status.json', {'status': 'completed'})
+            return {'returncode': 0, 'timeout': False, 'wall_seconds': 0.01}
+        return child
+
+    def test_unexpected_history_schema_keeps_full_run_and_denominators(self):
+        self.snapshots()
+        row = self.input_row()
+        histories = {'B0': None, 'B2': 7, 'B3': {'timestamp': 'keep'}}
+        with patch('scripts.benchmark_curriculum.runner.bounded', side_effect=self.fake_pipeline(row, histories)):
+            receipt = execute(self.config, [row], make_order([row]), 'history', 'preflight', self.runtime)
+        self.assertEqual(receipt['status'], 'completed')
+        self.assertTrue(receipt['evaluation_completed'])
+        self.assertEqual(receipt['scored_product_runs'], receipt['planned_product_runs'])
+        for repetition in (1, 2):
+            scores = read_json(self.runtime.workdir/'history'/f'scores_repeat_{repetition}.json')
+            self.assertEqual(len(scores), 3)
+            for result in scores:
+                self.assertEqual(result['metrics']['M1']['denominator'], 1)
+                directory = self.runtime.workdir/'history'/f'repeat_{repetition}'/'SYNTH'/result['version']
+                for filename in ('raw.json', 'canonical.json'):
+                    self.assertEqual(read_json(directory/filename)['dossier']['history'], histories[result['version']])
+
+    def test_instrumentation_error_closes_receipt_without_claiming_complete_cohort(self):
+        self.snapshots()
+        row = self.input_row()
+        with patch('scripts.benchmark_curriculum.runner.bounded', side_effect=self.fake_pipeline(row)):
+            with patch('scripts.benchmark_curriculum.runner.score', side_effect=RuntimeError('Synthetic scorer failure')):
+                with self.assertRaisesRegex(RuntimeError, 'Synthetic scorer failure'):
+                    execute(self.config, [row], make_order([row]), 'instrument-error', 'preflight', self.runtime)
+        out = self.runtime.workdir/'instrument-error'
+        receipt = read_json(out/'run_receipt.json')
+        self.assertEqual(receipt['status'], 'instrumentation_failure')
+        self.assertFalse(receipt['evaluation_completed'])
+        self.assertEqual(receipt['planned_document_count'], 1)
+        self.assertEqual(receipt['planned_product_runs'], 6)
+        self.assertEqual(receipt['product_runs'], 1)
+        self.assertEqual(receipt['scored_product_runs'], 0)
+        self.assertIn('finished_at_utc', receipt)
+        self.assertEqual(receipt['instrumentation_error']['type'], 'RuntimeError')
+        self.assertEqual(len(read_json(out/'input_manifest.json')), 1)
+        self.assertTrue((out/'repeat_1'/'SYNTH'/'B0'/'raw.json').is_file())
+        self.assertFalse((out/'aggregates_repeat_1.json').exists())
+
+    def test_relative_quarantine_names_rejected_before_pdf_read(self):
+        path, freeze = self.freeze()
+        manifest_path = self.runtime.workdir/'corpus_manifest.json'
+        row = read_json(manifest_path)[0]
+        pdf = Path(row.pop('path'))
+        (self.runtime.workdir/'quarantine').mkdir()
+        (self.runtime.workdir/'QUARANTINE-link.pdf').symlink_to(pdf)
+        for relative in ('quarantine/../synthetic.pdf', 'QUARANTINE-link.pdf'):
+            with self.subTest(relative=relative):
+                write_json(manifest_path, [{**row, 'relative_private_path': relative}])
+                freeze['artifacts']['corpus_manifest']['sha256'] = sha_file(manifest_path)
+                write_json(path, freeze)
+
+                def checked_hash(candidate):
+                    if Path(candidate).resolve() == pdf:
+                        self.fail('PDF read before quarantine validation')
+                    return sha_file(candidate)
+
+                with patch('scripts.benchmark_curriculum.setup_snapshots.environment_manifest', return_value={'synthetic': True}):
+                    with patch('scripts.benchmark_curriculum.runner.sha_file', side_effect=checked_hash):
+                        with self.assertRaisesRegex(ValueError, 'Quarantine'):
+                            load_freeze(path, self.runtime)
+
+    def test_eligible_relative_manifest_path_still_loads(self):
+        path, freeze = self.freeze()
+        manifest_path = self.runtime.workdir/'corpus_manifest.json'
+        row = read_json(manifest_path)[0]
+        pdf = Path(row.pop('path'))
+        row['relative_private_path'] = pdf.name
+        write_json(manifest_path, [row])
+        freeze['artifacts']['corpus_manifest']['sha256'] = sha_file(manifest_path)
+        write_json(path, freeze)
+        with patch('scripts.benchmark_curriculum.setup_snapshots.environment_manifest', return_value={'synthetic': True}):
+            _, _, rows, _, _ = load_freeze(path, self.runtime)
+        self.assertEqual(rows[0]['path'], str(pdf))
+
     def test_release_template_is_unready_and_never_overwritten(self):
         from scripts.benchmark_curriculum.build_release import build_release
         self.snapshots()

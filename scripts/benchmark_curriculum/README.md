@@ -137,7 +137,14 @@ Canonicalization removes only dossier.created_at, dossier.updated_at, and
 history[*].timestamp when action is exactly prepare. It does not normalize text,
 reorder arrays, change IDs, or erase nested fields. Both completion and equality
 are needed to establish deterministic reproduction; two identical failures do
-not establish it.
+not establish it. Malformed non-list `history` values are preserved verbatim.
+
+An instrumentation exception closes the receipt as `instrumentation_failure`
+(or preserves the dedicated source-reader/guard failure), with planned document
+and comparison counts, executed/scored counts, and `evaluation_completed: false`.
+Raw and partial artifacts remain available. No scores are fabricated for skipped
+comparisons, and a partial campaign cannot be presented as the complete cohort.
+A completed receipt is written only after final snapshot verification.
 
 ## Metric contract and limits
 

@@ -151,7 +151,9 @@ def load_freeze(path,runtime):
     if isinstance(rows,dict): rows=rows['documents']
     for row in rows:
         if 'path' not in row:
-            row['path']=str((paths['corpus_manifest'].parent/row['relative_private_path']).resolve())
+            # private_path inspects lexical and resolved names before normalization
+            # can erase a quarantine component or a prohibited symlink name.
+            row['path']=str(runtime.private_path(paths['corpus_manifest'].parent/row['relative_private_path']))
     validate_rows(rows,config,runtime)
     order=read_json(paths['run_order'])
     if order!=make_order(rows): raise ValueError('Run order differs from deterministic plan')
@@ -227,86 +229,104 @@ def execute(config,rows,order,out,mode,runtime,freeze=None,weak=None):
     if weak: write_json(out/'weak_reference_ai.json',weak)
     receipt={'started_at_utc':iso(),'mode':mode,'run_configuration_sha256':sha_file(out/'run_configuration.json'),
              'run_order_sha256':sha_file(out/'run_order.json'),'input_manifest_sha256':sha_file(out/'input_manifest.json'),
-             'ready_to_run_new_corpus':bool(freeze),'status':'running'}
+             'ready_to_run_new_corpus':bool(freeze),'status':'running',
+             'planned_document_count':len(rows),'planned_product_runs':len(order)*2,
+             'evaluation_completed':False}
     write_json(out/'run_receipt.json',receipt)
-    sources={}
-    # Independent reading occurs outside and before product subprocesses.
-    for row in rows:
-        dest=out/'sources'/row['document_id']; dest.mkdir(parents=True)
-        status=bounded(runtime.command('source','--pdf',row['path'],'--sha',row['file_sha256'],
-                        '--pages',str(row['page_count']),'--out',str(dest/'source.json'),
-                        '--memory',str(config['source_reader_memory_limit_bytes'])),dest,config['source_reader_timeout_seconds'],runtime.python)
-        write_json(dest/'status.json',status)
-        if status['returncode']!=0 or not (dest/'source.json').exists():
-            receipt.update(status='source_reader_failure_before_product_execution',finished_at_utc=iso())
-            write_json(out/'run_receipt.json',receipt)
-            raise RuntimeError('Independent source reader failed; run stopped, no selective source exclusion')
-        sources[row['document_id']]=read_json(dest/'source.json')
-    rows_by_id={r['document_id']:r for r in rows}; repetitions=[]; hashes={}; statuses=[]
-    for repetition in (1,2):
-        scores=[]; weak_scores=[]
-        for position,item in enumerate(order):
-            did,version=item['document_id'],item['version']; row=rows_by_id[did]
-            dest=out/f'repeat_{repetition}'/did/version; dest.mkdir(parents=True)
-            status=bounded(runtime.command('worker','--snapshot',str(runtime.snapshots/version),
-                            '--pdf',row['path'],'--expected-sha',row['file_sha256'],'--out',str(dest),
-                            '--timeout',str(config['timeout_seconds_per_document']),
-                            '--memory',str(config['memory_limit_bytes'])),dest,config['timeout_seconds_per_document'],runtime.python)
-            ws=read_json(dest/'worker_status.json') if (dest/'worker_status.json').exists() else {}
-            outcome='timeout' if status['timeout'] else ws.get('status','worker_crash')
-            if status['returncode']!=0 and outcome=='completed':
-                outcome='worker_crash'
-            status.update(outcome=outcome,document_id=did,version=version,repetition=repetition,position=position,
-                          worker=ws,source_sha256=row['file_sha256'])
-            write_json(dest/'run_status.json',status); statuses.append(status)
-            try:
-                raw=read_json(dest/'raw.json') if (dest/'raw.json').exists() else {}
-                if not isinstance(raw,dict):
-                    raise ValueError('Raw output root must be an object')
-            except (ValueError, UnicodeError) as exc:
-                # Retain malformed bytes and a failed document in every denominator.
-                raw={}
-                status['output_error']={'type':type(exc).__name__,'message':str(exc)}
-                if outcome not in ('offline_violation','write_boundary_violation','timeout'):
-                    outcome='malformed_output'
-                    status['outcome']=outcome
-                write_json(dest/'run_status.json',status)
-            canonical=canonical_output(raw)
-            write_json(dest/'canonical.json',canonical)
-            digest=sha_file(dest/'canonical.json'); hashes[(repetition,did,version)]=digest
-            write_json(dest/'output_hashes.json',{'raw_sha256':sha_file(dest/'raw.json') if (dest/'raw.json').exists() else None,
-                                                'canonical_sha256':digest,'volatile_paths':VOLATILE_PATHS})
-            scored=score(raw,sources[did],version,outcome,did,row['family_id'],row['split'])
-            write_json(dest/'metrics.json',scored); scores.append(scored)
-            if weak:
-                from scripts.benchmark_curriculum.weak_reference import evaluate
-                reference=next(r for r in weak['documents'] if r['document_id']==did)
-                w=evaluate(raw,reference,row['file_sha256'],outcome)
-                w.update(version=version,split=row['split'],family_id=row['family_id'])
-                write_json(dest/'weak_agreement.json',w); weak_scores.append(w)
-            if outcome in ('offline_violation','write_boundary_violation'):
-                receipt.update(status='aborted_forbidden_operation',finished_at_utc=iso())
+    statuses=[]
+    scored_runs=0
+    try:
+        sources={}
+        # Independent reading occurs outside and before product subprocesses.
+        for row in rows:
+            dest=out/'sources'/row['document_id']; dest.mkdir(parents=True)
+            status=bounded(runtime.command('source','--pdf',row['path'],'--sha',row['file_sha256'],
+                            '--pages',str(row['page_count']),'--out',str(dest/'source.json'),
+                            '--memory',str(config['source_reader_memory_limit_bytes'])),dest,config['source_reader_timeout_seconds'],runtime.python)
+            write_json(dest/'status.json',status)
+            if status['returncode']!=0 or not (dest/'source.json').exists():
+                receipt.update(status='source_reader_failure_before_product_execution',finished_at_utc=iso())
                 write_json(out/'run_receipt.json',receipt)
-                raise RuntimeError('Forbidden operation: entire run aborted, logs retained')
-        write_json(out/f'scores_repeat_{repetition}.json',scores)
-        write_json(out/f'aggregates_repeat_{repetition}.json',aggregate(scores))
-        write_json(out/f'paired_differences_repeat_{repetition}.json',paired_differences(scores))
-        if weak: write_json(out/f'weak_agreement_repeat_{repetition}.json',weak_scores)
-        repetitions.append(scores)
-    checks=[]
-    for item in order:
-        did,version=item['document_id'],item['version']
-        both=[s for s in statuses if s['document_id']==did and s['version']==version]
-        checks.append({**item,'canonical_hashes':[hashes[(r,did,version)] for r in (1,2)],
-                       'hashes_equal':hashes[(1,did,version)]==hashes[(2,did,version)],
-                       'both_completed':all(s['outcome']=='completed' for s in both)})
-    write_json(out/'reproducibility.json',{'volatile_paths':VOLATILE_PATHS,'checks':checks,
-                                         'reproducibility_established':all(c['hashes_equal'] and c['both_completed'] for c in checks)})
-    receipt.update(status='completed',finished_at_utc=iso(),product_runs=len(statuses),
-                   successful_runs=sum(s['outcome']=='completed' for s in statuses))
-    write_json(out/'run_receipt.json',receipt)
-    write_json(out/'resource_summary.json',{'max_wall_seconds':max(s['wall_seconds'] for s in statuses),
-                                           'max_rss_bytes':max(s.get('worker',{}).get('maxrss_bytes',0) for s in statuses),
-                                           'statuses':statuses})
-    verify_snapshots(runtime)
-    return receipt
+                raise RuntimeError('Independent source reader failed; run stopped, no selective source exclusion')
+            sources[row['document_id']]=read_json(dest/'source.json')
+        rows_by_id={r['document_id']:r for r in rows}; repetitions=[]; hashes={}
+        for repetition in (1,2):
+            scores=[]; weak_scores=[]
+            for position,item in enumerate(order):
+                did,version=item['document_id'],item['version']; row=rows_by_id[did]
+                dest=out/f'repeat_{repetition}'/did/version; dest.mkdir(parents=True)
+                status=bounded(runtime.command('worker','--snapshot',str(runtime.snapshots/version),
+                                '--pdf',row['path'],'--expected-sha',row['file_sha256'],'--out',str(dest),
+                                '--timeout',str(config['timeout_seconds_per_document']),
+                                '--memory',str(config['memory_limit_bytes'])),dest,config['timeout_seconds_per_document'],runtime.python)
+                ws=read_json(dest/'worker_status.json') if (dest/'worker_status.json').exists() else {}
+                outcome='timeout' if status['timeout'] else ws.get('status','worker_crash')
+                if status['returncode']!=0 and outcome=='completed':
+                    outcome='worker_crash'
+                status.update(outcome=outcome,document_id=did,version=version,repetition=repetition,position=position,
+                              worker=ws,source_sha256=row['file_sha256'])
+                write_json(dest/'run_status.json',status); statuses.append(status)
+                try:
+                    raw=read_json(dest/'raw.json') if (dest/'raw.json').exists() else {}
+                    if not isinstance(raw,dict):
+                        raise ValueError('Raw output root must be an object')
+                except (ValueError, UnicodeError) as exc:
+                    # Retain malformed bytes and a failed document in every denominator.
+                    raw={}
+                    status['output_error']={'type':type(exc).__name__,'message':str(exc)}
+                    if outcome not in ('offline_violation','write_boundary_violation','timeout'):
+                        outcome='malformed_output'
+                        status['outcome']=outcome
+                    write_json(dest/'run_status.json',status)
+                canonical=canonical_output(raw)
+                write_json(dest/'canonical.json',canonical)
+                digest=sha_file(dest/'canonical.json'); hashes[(repetition,did,version)]=digest
+                write_json(dest/'output_hashes.json',{'raw_sha256':sha_file(dest/'raw.json') if (dest/'raw.json').exists() else None,
+                                                    'canonical_sha256':digest,'volatile_paths':VOLATILE_PATHS})
+                scored=score(raw,sources[did],version,outcome,did,row['family_id'],row['split'])
+                write_json(dest/'metrics.json',scored); scores.append(scored)
+                scored_runs+=1
+                if weak:
+                    from scripts.benchmark_curriculum.weak_reference import evaluate
+                    reference=next(r for r in weak['documents'] if r['document_id']==did)
+                    w=evaluate(raw,reference,row['file_sha256'],outcome)
+                    w.update(version=version,split=row['split'],family_id=row['family_id'])
+                    write_json(dest/'weak_agreement.json',w); weak_scores.append(w)
+                if outcome in ('offline_violation','write_boundary_violation'):
+                    receipt.update(status='aborted_forbidden_operation',finished_at_utc=iso())
+                    write_json(out/'run_receipt.json',receipt)
+                    raise RuntimeError('Forbidden operation: entire run aborted, logs retained')
+            write_json(out/f'scores_repeat_{repetition}.json',scores)
+            write_json(out/f'aggregates_repeat_{repetition}.json',aggregate(scores))
+            write_json(out/f'paired_differences_repeat_{repetition}.json',paired_differences(scores))
+            if weak: write_json(out/f'weak_agreement_repeat_{repetition}.json',weak_scores)
+            repetitions.append(scores)
+        checks=[]
+        for item in order:
+            did,version=item['document_id'],item['version']
+            both=[s for s in statuses if s['document_id']==did and s['version']==version]
+            checks.append({**item,'canonical_hashes':[hashes[(r,did,version)] for r in (1,2)],
+                           'hashes_equal':hashes[(1,did,version)]==hashes[(2,did,version)],
+                           'both_completed':all(s['outcome']=='completed' for s in both)})
+        write_json(out/'reproducibility.json',{'volatile_paths':VOLATILE_PATHS,'checks':checks,
+                                             'reproducibility_established':all(c['hashes_equal'] and c['both_completed'] for c in checks)})
+        write_json(out/'resource_summary.json',{'max_wall_seconds':max(s['wall_seconds'] for s in statuses),
+                                               'max_rss_bytes':max(s.get('worker',{}).get('maxrss_bytes',0) for s in statuses),
+                                               'statuses':statuses})
+        verify_snapshots(runtime)
+        receipt.update(status='completed',finished_at_utc=iso(),product_runs=len(statuses),
+                       scored_product_runs=scored_runs,evaluation_completed=True,
+                       successful_runs=sum(s['outcome']=='completed' for s in statuses))
+        write_json(out/'run_receipt.json',receipt)
+        return receipt
+    except BaseException as exc:
+        # Never leave a partial evaluation claiming it is still running or complete.
+        # Preserve dedicated source/guard outcomes, the full input manifest, and all
+        # raw/partial files. Do not fabricate scores for unexecuted comparisons.
+        if receipt['status'] in ('running', 'completed'):
+            receipt['status']='instrumentation_failure'
+        receipt.update(finished_at_utc=iso(),evaluation_completed=False,
+                       product_runs=len(statuses),scored_product_runs=scored_runs,
+                       instrumentation_error={'type':type(exc).__name__,'message':str(exc)})
+        write_json(out/'run_receipt.json',receipt)
+        raise

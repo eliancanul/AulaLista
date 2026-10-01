@@ -140,6 +140,14 @@ class HarnessTests(unittest.TestCase):
         self.assertNotIn('created_at',canon['dossier'])
         self.assertEqual(canon['dossier']['general_fields']['proyecto']['created_at'],'keep')
         self.assertEqual(canon['dossier']['history'][1]['timestamp'],'keep')
+    def test_canonicalization_preserves_unexpected_history_schema(self):
+        for history in (None, 7, True, 'history', {'timestamp': 'keep'}):
+            value = {'dossier': {'history': history}}
+            original = copy.deepcopy(value)
+            with self.subTest(history=history):
+                self.assertEqual(canonical_output(value), original)
+                self.assertEqual(value, original)
+
     def test_adapter_preserves_values_and_types(self):
         value=raw(); value['dossier']['general_fields']['proyecto']['evidence']=[{**EV,'page_number':True}]
         before=copy.deepcopy(value); view=adapt(value,'B3')
