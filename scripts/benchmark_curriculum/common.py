@@ -16,8 +16,27 @@ COMMITS = {
 }
 C01_SHA = '33d7c2862a7d14127b2906518b26bc16f0f571f85d765dd6cd63325f52337648'
 C01_RELATIVE = 'output/pdf/prueba-issue-96-paginas-4-a-8.pdf'
-HARNESS_VERSION = '1.1.0-portable'
+HARNESS_VERSION = '1.2.0-portable'
 METRIC_CONTRACT_VERSION = '1.0.0'
+DEFAULT_PROFILE = 'b0-b2-b3'
+PROFILE_NAMES = (DEFAULT_PROFILE, 'b0-b3-b4')
+
+
+def comparison_identity(profile=DEFAULT_PROFILE):
+    """Two reviewed comparisons only; callers cannot supply commits or pairs."""
+    if not isinstance(profile, str) or profile not in PROFILE_NAMES:
+        raise ValueError('Unsupported comparison profile')
+    if profile == DEFAULT_PROFILE:
+        commits = dict(COMMITS)
+        pairs = [['B0', 'B3'], ['B2', 'B3']]
+    else:
+        commits = {'B0': COMMITS['B0'], 'B3': COMMITS['B3'],
+                   'B4': 'bf1ae21eae80ed38ef02179ea5724b7b0aa7b1c7'}
+        pairs = [['B0', 'B4'], ['B3', 'B4']]
+    return {'harness_version': HARNESS_VERSION, 'comparison_profile': profile,
+            'source_commits': commits, 'comparison_pairs': pairs}
+
+
 # Exact paths; no recursive removal by key name. History timestamp only for prepare.
 VOLATILE_PATHS = ['/dossier/created_at', '/dossier/updated_at', '/dossier/history/*/timestamp']
 
@@ -101,8 +120,10 @@ class Runtime:
     repo: Path
     workdir: Path
     python: Path = PYTHON
+    profile: str = DEFAULT_PROFILE
 
     def __post_init__(self):
+        comparison_identity(self.profile)
         # Preserve the venv executable path (resolving it would select base Python).
         object.__setattr__(self, 'repo', Path(self.repo).resolve())
         object.__setattr__(self, 'workdir', Path(self.workdir).resolve())
@@ -116,6 +137,15 @@ class Runtime:
         if not (self.repo/'.git').exists():
             raise ValueError('Explicit repo must be a Git checkout')
         reject_quarantine(self.workdir)
+
+    @property
+    def commits(self):
+        return comparison_identity(self.profile)['source_commits']
+
+    @property
+    def config_path(self):
+        return ROOT/('config.proposed.json' if self.profile == DEFAULT_PROFILE
+                     else 'config.b0-b3-b4.proposed.json')
 
     @property
     def snapshots(self):
@@ -133,7 +163,8 @@ class Runtime:
 
     def command(self, command, *args):
         # -P excludes cwd from imports; entrypoint explicitly adds only this code checkout.
-        return [str(self.python), '-P', str(ROOT/'entrypoint.py'), command, *map(str, args)]
+        return [str(self.python), '-P', str(ROOT/'entrypoint.py'), command,
+                '--profile', self.profile, *map(str, args)]
 
 
 def require_selected_python(runtime):

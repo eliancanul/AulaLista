@@ -7,7 +7,7 @@ separate output view, not added to dossier citation denominators.
 """
 from collections import Counter
 
-SUPPORTED_VERSIONS = ('B0','B2','B3')
+SUPPORTED_VERSIONS = ('B0','B2','B3','B4')
 EXCLUDED_DOSSIER_TREES = {'history','verification_report','original_value'}
 
 def nonempty(value):

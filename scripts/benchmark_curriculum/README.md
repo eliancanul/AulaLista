@@ -1,8 +1,9 @@
 # Portable prospective curriculum benchmark
 
-Issue [#143](https://github.com/eliancanul/AulaLista/issues/143). Version
-`1.1.0-portable` adapts the privately frozen harness after its pilot completed.
-**This adaptation was not the executable used for that pilot.** The M and W
+Issues [#143](https://github.com/eliancanul/AulaLista/issues/143) and
+[#147](https://github.com/eliancanul/AulaLista/issues/147). Version
+`1.2.0-portable` adds two closed comparison profiles to the portable harness.
+**This release was not the executable used for the original pilot.** The M and W
 scoring contract remains version 1.0.0; the product extractor is unchanged.
 The original private freeze, corpus and execution artifacts are not distributed.
 Portability changes include explicit paths, optional C01, POSIX resource reporting,
@@ -52,7 +53,7 @@ python -m scripts.benchmark_curriculum setup --repo . --workdir "$BENCH_WORKDIR"
 python -m scripts.benchmark_curriculum preflight --repo . --workdir "$BENCH_WORKDIR" --out preflight/synthetic
 ```
 
-Setup exports immutable Git archives for B0
+The default profile, `b0-b2-b3`, exports immutable Git archives for B0
 `2541faf04bda4dad1215a4673e3802567ca7c5c9`, B2
 `1aae48b93c2d83aec80c1248a38c24d5960a3d2a` and B3
 `a4dfe5cf9975d9e9b74a256aff718aec35f11f39`. It does not change refs or the
@@ -69,23 +70,62 @@ versioned C01 calibration PDF, checked against its known SHA. Fixture generation
 snapshot setup, release generation, references and run directories refuse to
 overwrite earlier artifacts. Use a fresh workdir for a second preflight.
 
+The explicitly selected `b0-b3-b4` profile compares the same B0 and B3 with B4
+`bf1ae21eae80ed38ef02179ea5724b7b0aa7b1c7`. Its paired reports are B0->B4 and
+B3->B4. No arbitrary commit, version list or pair is accepted. Each profile uses
+its own fresh workdir; include the same `--profile` on every command. Omitting
+it always selects `b0-b2-b3`, even when a workdir or freeze contains B4.
+
+```sh
+BENCH_WORKDIR=/private/path/to/new-b4-benchmark
+python -m scripts.benchmark_curriculum setup --repo . --workdir "$BENCH_WORKDIR" --profile b0-b3-b4
+python -m scripts.benchmark_curriculum preflight --repo . --workdir "$BENCH_WORKDIR" --profile b0-b3-b4 --out preflight/synthetic
+```
+
+Preflight and freeze-template choose the selected profile's proposed config:
+`config.proposed.json` for the default, `config.b0-b3-b4.proposed.json` for B4.
+Both proposals have identical resource limits and scoring settings. A coordinator
+may supply `--config` with smaller document/page caps for a closed cohort. An
+explicit config must match the chosen profile, fixed commits, pairs and order;
+config and freeze files cannot silently select or override the CLI profile.
+
 To prepare, but never automatically close, a new freeze:
 
 ```sh
-python -m scripts.benchmark_curriculum freeze-template --repo . --workdir "$BENCH_WORKDIR" --protocol /path/to/protocol.md --out release
+python -m scripts.benchmark_curriculum freeze-template --repo . --workdir "$BENCH_WORKDIR" --profile b0-b3-b4 --protocol /path/to/protocol.md --out release
 # A coordinator independently completes, reviews and hashes every required artifact.
-python -m scripts.benchmark_curriculum run --repo . --workdir "$BENCH_WORKDIR" --freeze release/freeze_record.closed.json --out runs/unique-name
+python -m scripts.benchmark_curriculum run --repo . --workdir "$BENCH_WORKDIR" --profile b0-b3-b4 --freeze release/freeze_record.closed.json --out runs/unique-name
 ```
+
+These commands continue the B4 example. For the default comparison, omit
+`--profile b0-b3-b4` and use the separately prepared B0/B2/B3 workdir.
 
 The generated template stays `ready_to_run: false`. The corpus run requires the
 portable release identity, exact code coverage, artifacts, source commits,
 environment, input bytes, explicit eligibility, and order. Existing private
-pilot freezes cannot silently identify this different executable.
+pilot freezes and version 1.1.0 portable freezes cannot identify this different
+executable. Reproduce old artifacts using their exact original release; never
+relabel them. This release requires newly generated snapshot manifests and a
+newly closed freeze even for the default comparison. Snapshot indexes must
+contain exactly the selected versions. Every snapshot manifest, index entry,
+environment manifest, freeze, release record, run configuration and run receipt
+identifies the selected profile. Mixed profile artifacts or extra snapshot
+directories are rejected. Worker subprocesses receive the profile explicitly
+and record it in their status; the independent source reader receives the same
+selection without changing its reading or scoring behavior.
+Every present worker status must match the complete release/profile/commits/pairs
+identity before its output is scored. A mismatch stops the campaign with a terminal
+`instrumentation_failure` receipt and preserves the worker's raw output and status.
+An absent status after a timeout or crash remains an ordinary failed product run
+in the existing metric denominators.
 
 The public test suite preserves the original 44 synthetic tests and adds coverage
 for relocated execution, clean subprocess environments, quarantined paths and
 symlinks, altered freezes/snapshots, no overwrite, malformed output and retained
-failure denominators. It never reruns the private pilot.
+failure denominators. Profile tests also cover fixed commits and pairs, CLI
+selection, unchanged limits, old/mismatched identities, mixed snapshots and
+configuration, and serial repetitions. Tests use only synthetic sources and
+do not rerun the private pilot.
 
 ## Execution contract
 
@@ -130,8 +170,9 @@ The product's measured max RSS and resource rusage are logged separately because
 rusage high-water can inherit the parent's pre-exec peak. Linux `/proc/self/status`
 VmHWM is used when available; other POSIX systems use rusage with platform-specific units.
 
-Document IDs sort lexicographically; version order rotates B0/B2/B3 by document
-index. The complete identical order is repeated once. Raw partial/final outputs,
+Document IDs sort lexicographically; version order rotates the selected profile
+(B0/B2/B3 by default, or B0/B3/B4) by document index. The complete identical order
+is repeated once, for two serial repetitions. Raw partial/final outputs,
 logs, start/end, resources, raw/canonical SHA and outcomes are retained.
 Canonicalization removes only dossier.created_at, dossier.updated_at, and
 history[*].timestamp when action is exactly prepare. It does not normalize text,
@@ -197,7 +238,8 @@ not estimate un-emitted opportunities or find omissions with the product scanner
 
 Every rate preserves numerator, denominator and unit. Zero denominator is null/N/A.
 Micro and macro document/family summaries retain evaluable denominators. Paired
-B0->B3 and B2->B3 reports preserve both denominators; conditional changes are not
+reports (B0->B3 and B2->B3 by default; B0->B4 and B3->B4 for `b0-b3-b4`)
+preserve both denominators; conditional changes are not
 interpreted as fixed-population risk reductions. Repetitions stay separate and
 never double the corpus sample size. R/X/new strata never pool. No composite score.
 

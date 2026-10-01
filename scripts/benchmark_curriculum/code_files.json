@@ -7,6 +7,7 @@
   "cli.py",
   "code_files.json",
   "common.py",
+  "config.b0-b3-b4.proposed.json",
   "config.proposed.json",
   "entrypoint.py",
   "fixtures.py",
@@ -18,6 +19,7 @@
   "setup_snapshots.py",
   "tests/test_harness.py",
   "tests/test_portability.py",
+  "tests/test_profiles.py",
   "tests/test_weak_reference.py",
   "weak_reference.py",
   "worker.py"

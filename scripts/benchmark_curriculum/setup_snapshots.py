@@ -37,7 +37,8 @@ def environment_manifest(runtime):
                 contents[str(file)]=sha_file(path)
         packages.append({'name':name,'version':version,'installed_files_sha256':sha_bytes(canonical_bytes(contents)),
                          'file_count':len(contents)})
-    return {'schema_version':'1.0.0','python_executable':str(runtime.python),'python_realpath':str(runtime.python.resolve()),
+    return {'schema_version':'1.0.0', **comparison_identity(runtime.profile),
+            'python_executable':str(runtime.python),'python_realpath':str(runtime.python.resolve()),
             'python_version':sys.version,'python_sha256':sha_file(runtime.python.resolve()),'platform':platform.platform(),
             'machine':platform.machine(),'lock_sha256':sha_file(lock),'package_pins':pins,
             'installed_packages':packages,'mismatches':mismatches,
@@ -54,20 +55,21 @@ def setup(runtime):
         raise ValueError('Refusing to overwrite snapshot setup; use a fresh private workdir')
     runtime.snapshots.mkdir()
     records = {}
-    for version, commit in COMMITS.items():
+    for version, commit in runtime.commits.items():
         path = runtime.snapshots/version
         archive = command(runtime, 'git', '-C', str(runtime.repo), 'archive', '--format=tar', commit)
         path.mkdir()
         with tarfile.open(fileobj=io.BytesIO(archive)) as tf:
             tf.extractall(path, filter='data')
         files = tree_manifest(path)
-        record = {'commit': commit,
+        record = {'commit': commit, 'harness_version': HARNESS_VERSION,
+                  'comparison_profile': runtime.profile,
                   'tree': command(runtime, 'git', '-C', str(runtime.repo), 'rev-parse', f'{commit}^{{tree}}').decode().strip(),
                   'git_archive_sha256': sha_bytes(archive), 'files': files,
                   'file_manifest_sha256': sha_bytes(canonical_bytes(files))}
         write_json(runtime.snapshots/f'{version}.manifest.json', record)
         records[version] = {k: v for k, v in record.items() if k != 'files'}
-    lock_hashes = {v: sha_file(runtime.snapshots/v/'requirements.lock') for v in COMMITS}
+    lock_hashes = {v: sha_file(runtime.snapshots/v/'requirements.lock') for v in runtime.commits}
     if len(set(lock_hashes.values())) != 1:
         raise ValueError('Locks differ; comparative algorithm-only run forbidden')
     runtime.private_path('requirements.lock').write_bytes((runtime.snapshots/'B3'/'requirements.lock').read_bytes())
@@ -76,4 +78,4 @@ def setup(runtime):
     write_json(runtime.private_path('environment_manifest.json'), env)
     if env['mismatches']:
         raise ValueError(f"Installed dependency mismatch: {env['mismatches']}")
-    return {'status': 'setup_completed', 'new_corpus_executed': False}
+    return {'status': 'setup_completed', **comparison_identity(runtime.profile), 'new_corpus_executed': False}
