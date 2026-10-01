@@ -178,13 +178,36 @@ fallback como para limitar sesiones ya emparejadas. Una comilla sin cerrar no
 puede ocultar un posible Proyecto, sesión o día. Los días de formato no resuelto
 sólo delimitan el modo sin encabezados numerados posibles; no crean unidades.
 Los límites débiles conservan siempre el tramo sin asignar y su incertidumbre.
-Cada sesión termina ante el siguiente Proyecto
-**o** sesión; la continuación heurística sólo puede tomar el prefijo de la página
+Desde #144, un reinicio sin título también puede proponer un corte: después de
+actividad previa deben aparecer, en la misma página y en este orden,
+`DATOS GENERALES`, `Campo(s) formativo(s)` con nombres conocidos distintos del
+último campo explícito e `INTENCIÓN DIDÁCTICA`. Son etiquetas al inicio de línea,
+no menciones sueltas; las señales no pueden cruzar otra actividad o Proyecto.
+La repetición del mismo campo (incluido un conjunto con orden/capitalización/
+acentos distintos) no corta una tabla. Tampoco bastan una palabra aislada,
+prosa, citas reconocidas o un campo vacío/desconocido. Esta regla estrecha no
+resuelve reinicios con el mismo campo, campos desconocidos, señales repartidas
+entre páginas ni formatos de tabla fuera de esas etiquetas; sigue requiriendo
+revisión de la fuente y no declara cobertura general de planeaciones.
+El corte usa la incertidumbre y las notas literales existentes, sin crear
+Proyecto ni sesión. Una sesión explícita posterior no hereda el Proyecto
+anterior al reinicio: conserva título vacío, contexto `missing` y motivo,
+hasta otro encabezado de Proyecto. Las unidades existentes de revisión por
+fases comparten el límite y conservan el tramo sin asignar cuando lo alcanzan.
+La auditoría vuelve a calcular el corte y su incertidumbre aun si se quitan las
+notas/anclas o se cambian los estados. Un reinicio reconocido tampoco habilita
+la comprobación legacy de toda la página sin una unidad delimitada.
+No cambian los esquemas, predicados, gates ni la autoridad humana. Las pruebas
+de `test_sequence_boundaries_development.py` son texto sintético de desarrollo
+derivado del patrón, no un holdout ni una evaluación humana. No se modifican ni
+reejecutan los documentos/resultados del piloto ni las métricas del benchmark.
+Cada sesión termina ante el siguiente Proyecto,
+sesión **o** reinicio reconocido; la continuación heurística sólo puede tomar el prefijo de la página
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos
 reutilizan las reglas de `overview_fields.py`; su proyección general conserva
 el primer campo del documento. Las fases no se convierten en clases: se conserva
 la primera unidad sintética de revisión existente y se corta antes de otro
-Proyecto; no se generan varias unidades para documentos con varios proyectos
+Proyecto o reinicio reconocido; no se generan varias unidades para documentos con varios proyectos
 organizados sólo por fases. La detección por días es un modo de documento,
 utilizado cuando no hay encabezados numerados posibles; no combina ambos modos.
 Formatos no resueltos y comillas incompletas pueden forzar abstención y tramos
