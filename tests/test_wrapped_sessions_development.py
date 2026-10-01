@@ -215,3 +215,30 @@ def test_human_decisions_follow_literal_occurrence_after_wrapped_recovery(old_sh
         assert [s.fields["inicio"].value for s in fresh.sessions] == ["Mirar semillas.", "Mirar piedras."]
         assert all(s.fields["inicio"].review == "pending" for s in fresh.sessions)
         assert any(d.get("before", {}).get("value") == "Consigna para piedras." for d in deltas)
+
+
+@pytest.mark.parametrize("separator", ["\x1c", "\x1d", "\x1e"])
+def test_other_python_line_separators_do_not_become_horizontal_space(separator):
+    page = f"SESIÓN\n{separator}2\nInicio: Observar semillas."
+    assert len(page.splitlines()) == 4
+    assert scan_session_segments([page], "synthetic-sha") == []
+
+
+def test_many_leading_zeros_do_not_overflow_number_conversion_or_rewrite_anchor():
+    digits = "0" * 4300 + "17"
+    page = f"SESIÓN\n{digits}\nInicio: Observar semillas."
+    segment, = scan_session_segments([page], "synthetic-sha")
+    assert segment.session_number == 17
+    assert digits in segment.header_anchor["excerpt"]
+
+
+def test_unconvertible_integer_keeps_literal_unassigned_scope_without_crashing():
+    tail = "SESIÓN\n" + "9" * 4301 + "\nInicio: Texto de ámbito incierto."
+    pages = ["Proyecto: Semillas\n" + session_text() + tail]
+    segment, = scan_session_segments(pages, source(pages)[1])
+    assert segment.session_number == 1
+    assert tail not in segment.page_segments[0][1]
+    assert segment.unassigned_segments == [(1, tail)]
+    dossier = dossier_for(pages)
+    assert len(dossier.sessions) == 1
+    assert dossier.sessions[0].status == "ambiguous"

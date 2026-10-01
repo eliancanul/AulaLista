@@ -200,3 +200,43 @@ def test_prepare_verify_roundtrip_and_explicit_review_keep_boundary_and_evidence
     assert reviewed.general_fields["proposito"].review == "confirmed"
     assert reviewed.general_fields["proyecto"].review == "pending"
     assert [e.to_dict() for e in reviewed.general_fields["proposito"].evidence] == original_evidence
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\v", "\f", "\x85", "\r", "\x1c", "\x1d", "\x1e", "\n"])
+def test_table_pair_requires_adjacent_physical_lines(separator):
+    raw = f"Observar el patio.\n{METHOD}\n{separator}{COLUMNS}\n{TABLE_BODY}"
+    field = _field(["Propósito: " + raw])
+    assert field.evidence[0].excerpt == raw
+    assert field.status == "ambiguous"
+
+
+@pytest.mark.parametrize("phase", [False, True])
+@pytest.mark.parametrize("columns", ["Campos formativos Contenidos PDA", "Campo formativo Contenido Proceso de desarrollo de aprendizajes"])
+def test_curricular_column_names_do_not_reset_the_known_campo(phase, columns):
+    from curriculum.source_segments import planning_boundary_positions, scan_session_segments, phase_review_scope
+    body = ("DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar semillas.\n" if phase else
+            "SESIÓN 1: Observar\nInicio: Observar semillas.\nCierre: Compartir registros.\n")
+    page = ("Proyecto: Semillas\nCampo formativo: Lenguajes\n" + body
+            + f"Propósito: Leer una ficha.\n{METHOD}\n{columns}\n{TABLE_BODY}\n"
+            + "DATOS GENERALES\nCampo formativo: Saberes y pensamiento científico\n"
+            + "Intención didáctica: Medir objetos.\n"
+            + ("Fase 1\nActividad 1: Medir piedras." if phase else
+               "SESIÓN 2: Medir\nInicio: Medir piedras.\nCierre: Comparar medidas."))
+    assert planning_boundary_positions([page]) == {1: [page.index("DATOS GENERALES")]}
+    if phase:
+        assigned, unassigned = phase_review_scope([page], "synthetic-sha", 1)
+        assert "Medir piedras" not in assigned[0][1]
+        assert unassigned[0][1].startswith("DATOS GENERALES")
+    else:
+        first, second = scan_session_segments([page], "synthetic-sha")
+        assert "DATOS GENERALES" not in first.page_segments[0][1]
+        assert first.unassigned_segments[0][1].startswith("DATOS GENERALES")
+        assert second.project_context["title_status"] == "missing"
+
+
+def test_unknown_explicit_campo_still_prevents_inferred_comparison_with_older_value():
+    from curriculum.source_segments import planning_boundary_positions
+    page = ("Campo formativo: Lenguajes\nSESIÓN 1: Observar\nInicio: Observar.\n"
+            "Campo formativo: Nombre desconocido\nDATOS GENERALES\n"
+            "Campo formativo: Saberes y pensamiento científico\nIntención didáctica: Medir.")
+    assert planning_boundary_positions([page]) == {1: []}
