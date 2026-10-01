@@ -23,7 +23,7 @@ from scripts.benchmark_curriculum.runner import (
 )
 
 
-class PortabilityTests(unittest.TestCase):
+class SyntheticHarnessFixture:
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -45,15 +45,16 @@ class PortabilityTests(unittest.TestCase):
 
     def snapshots(self):
         index = {}
-        for version, commit in COMMITS.items():
+        for version, commit in self.runtime.commits.items():
             dest = self.runtime.snapshots/version
             dest.mkdir(parents=True)
             (dest/'requirements.lock').write_text('# synthetic test lock\n')
             files = tree_manifest(dest)
             digest = sha_bytes(canonical_bytes(files))
-            record = {'commit': commit, 'files': files, 'file_manifest_sha256': digest}
+            record = {'commit': commit, 'files': files, 'file_manifest_sha256': digest,
+                      'harness_version': HARNESS_VERSION, 'comparison_profile': self.runtime.profile}
             write_json(self.runtime.snapshots/f'{version}.manifest.json', record)
-            index[version] = {'commit': commit, 'file_manifest_sha256': digest}
+            index[version] = {key: value for key, value in record.items() if key != 'files'}
         write_json(self.runtime.snapshots/'index.json', index)
         self.runtime.private_path('requirements.lock').write_text('# synthetic test lock\n')
 
@@ -65,7 +66,7 @@ class PortabilityTests(unittest.TestCase):
         values = {
             'protocol': {'synthetic': True}, 'candidate_registry': [], 'family_mapping': {},
             'split': {}, 'exposure_ledger': {}, 'panel': {}, 'task_applicability': {},
-            'corpus_manifest': [row], 'run_order': make_order([row]),
+            'corpus_manifest': [row], 'run_order': make_order([row], self.runtime.profile),
             'run_configuration': self.config, 'environment_manifest': {'synthetic': True},
             'harness_code_manifest': {name: sha_file(ROOT/name) for name in read_json(ROOT/'code_files.json')},
         }
@@ -81,7 +82,9 @@ class PortabilityTests(unittest.TestCase):
             artifacts[name] = {'path': str(path), 'sha256': sha_file(path)}
         value = {
             'harness_version': HARNESS_VERSION, 'ready_to_run': True,
-            'rights_pii_gate_passed': True, 'source_commits': COMMITS,
+            'rights_pii_gate_passed': True, 'source_commits': self.runtime.commits,
+            'comparison_profile': self.runtime.profile,
+            'comparison_pairs': self.config['comparison_pairs'],
             'new_corpus_product_tuning_permitted': False, 'phase': 'M_only',
             'freeze_timestamp_utc': '2000-01-01T00:00:00Z',
             'responsible_custodian': 'Synthetic test custodian',
@@ -94,6 +97,8 @@ class PortabilityTests(unittest.TestCase):
         write_json(path, value)
         return path, value
 
+
+class PortabilityTests(SyntheticHarnessFixture, unittest.TestCase):
     def test_workdir_cannot_be_inside_or_contain_checkout(self):
         for workdir in (self.repo, self.repo/'private', self.root):
             with self.subTest(workdir=workdir), self.assertRaisesRegex(ValueError, 'external'):
