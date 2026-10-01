@@ -185,7 +185,11 @@ actividad previa deben aparecer, en la misma página y en este orden,
 no menciones sueltas; las señales no pueden cruzar otra actividad o Proyecto.
 La repetición del mismo campo (incluido un conjunto con orden/capitalización/
 acentos distintos) no corta una tabla. Tampoco bastan una palabra aislada,
-prosa, citas reconocidas o un campo vacío/desconocido. Esta regla estrecha no
+prosa, citas balanceadas o un campo vacío/desconocido. Una comilla incompleta
+no puede ocultar el reinicio compuesto a la comprobación conservadora. Un
+Proyecto explícito nuevo reinicia el estado de actividad anterior: sus datos
+generales posteriores no anulan ese título por herencia de una sesión previa.
+Esta regla estrecha no
 resuelve reinicios con el mismo campo, campos desconocidos, señales repartidas
 entre páginas ni formatos de tabla fuera de esas etiquetas; sigue requiriendo
 revisión de la fuente y no declara cobertura general de planeaciones.
@@ -193,7 +197,8 @@ El corte usa la incertidumbre y las notas literales existentes, sin crear
 Proyecto ni sesión. Una sesión explícita posterior no hereda el Proyecto
 anterior al reinicio: conserva título vacío, contexto `missing` y motivo,
 hasta otro encabezado de Proyecto. Las unidades existentes de revisión por
-fases comparten el límite y conservan el tramo sin asignar cuando lo alcanzan.
+fases comparten el límite y conservan los tramos sin asignar de todas las páginas
+excluidas hasta el siguiente Proyecto (o fin de fuente), cuando alcanzan el corte.
 La auditoría vuelve a calcular el corte y su incertidumbre aun si se quitan las
 notas/anclas o se cambian los estados. Un reinicio reconocido tampoco habilita
 la comprobación legacy de toda la página sin una unidad delimitada.

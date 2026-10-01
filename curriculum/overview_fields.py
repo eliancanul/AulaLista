@@ -102,7 +102,7 @@ def _bare_metadata(label: str, page: str, start: int, end: int) -> bool:
     return False
 
 
-def _headers(page: str) -> tuple[list[tuple[str, int, int]], list[int]]:
+def _headers(page: str, *, include_quoted: bool = False) -> tuple[list[tuple[str, int, int]], list[int]]:
     headers = []
     candidates = []
     uncertain_positions = []
@@ -139,7 +139,7 @@ def _headers(page: str) -> tuple[list[tuple[str, int, int]], list[int]]:
             tail_end = page.find("\n", match.end())
             if tail_end < 0:
                 tail_end = len(page)
-        if quotes:
+        if quotes and not include_quoted:
             continue
         if not (at_line_start or tabular or inline_scenario):
             # A single space cannot distinguish a column from ordinary prose.

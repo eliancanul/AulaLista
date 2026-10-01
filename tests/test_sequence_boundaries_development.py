@@ -319,3 +319,49 @@ def test_development_boundary_notes_remain_visible_in_review_ui():
     assert "Comparar dos listones." in html
     assert s.pages == [1]  # Review notes do not confer session membership.
     assert "Ver página física 1" in html
+
+
+def test_unclosed_quote_cannot_hide_composite_restart_from_extraction_or_verifier():
+    pages = fixture_pages()
+    pages[1] = 'Una nota dice: “\n' + pages[1]
+    d = dossier_for(pages)
+    s = d.sessions[0]
+    assert s.pages == [1]
+    assert s.status == "ambiguous"
+    assert NEW_METADATA + NEXT_BODY in s.layout_notes
+    s.pages = [1, 2]
+    s.layout_notes = ""
+    f = s.fields["inicio"]
+    f.value = f.evidence[0].excerpt = "Comparar dos listones."
+    f.evidence[0].page_number = 2
+    f.origin, f.status = "extracted", "supported"
+    assert not checked_for(verify_curriculum_dossier(d, source(pages)), "session.p1_s1.inicio")
+
+
+def test_a_new_explicit_project_before_metadata_resets_restart_detection():
+    pages = fixture_pages()
+    pages[1] = "Proyecto: Medidas cercanas\n" + NEW_METADATA + "SESIÓN 2: Comparar\n" + NEXT_BODY
+    d = dossier_for(pages)
+    s = d.sessions[1]
+    assert s.project_context["anchor"] is not None
+    assert s.project_context["anchor"]["page_number"] == 2
+    assert s.project_context["anchor"]["text_start"] == 0
+    assert s.project_title.startswith("Medidas cercanas")
+    assert s.project_context["review"] == "pending"
+    assert not any(planning_boundary_positions(pages).values())
+
+
+def test_phase_reset_preserves_all_excluded_pages_up_to_the_next_project():
+    phase_body = "DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar una piedra.\n"
+    page_three = "Actividad 2: Conservar esta página completa.\n"
+    pages = [OLD_METADATA + "Proyecto: Objetos cercanos\n" + phase_body,
+             NEW_METADATA + "Actividad 1: Comparar dos listones.\n", page_three,
+             "Proyecto: Un título posterior\nActividad 1: Otra unidad.\n"]
+    d = dossier_for(pages)
+    s = d.sessions[0]
+    assert s.pages == [1]
+    assert pages[1] in s.layout_notes
+    assert page_three in s.layout_notes
+    assert "página física 3" in s.layout_notes
+    assert "Un título posterior" not in s.layout_notes
+    assert len(d.sessions) == 1

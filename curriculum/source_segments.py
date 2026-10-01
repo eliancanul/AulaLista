@@ -13,7 +13,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
-from curriculum.overview_fields import iter_overview_spans, _headers, _quote_stack
+from curriculum.overview_fields import iter_overview_spans, _headers, _quote_stack, _advance_quotes
 from curriculum.vocabulary import CANONICAL_CAMPOS
 
 ANCHOR_SCHEMA_VERSION = 1
@@ -72,12 +72,27 @@ def _normalized_campo_names(text: str) -> tuple[str, ...]:
     return tuple(sorted(names)) if names and not remaining.strip(" ,;/.\t") else ()
 
 
+def _closed_quote_ranges(page: str) -> list[tuple[int, int]]:
+    """Balanced prose quotes may suppress cues; an open quote cannot hide scope."""
+    ranges = []
+    stack: list[str] = []
+    begin = 0
+    for position, char in enumerate(page):
+        was_open = bool(stack)
+        _advance_quotes(stack, char)
+        if not was_open and stack:
+            begin = position
+        elif was_open and not stack:
+            ranges.append((begin, position + 1))
+    return ranges
+
+
 def planning_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
     """Safety cuts for a changed, untitled planning block; never new entities.
 
     Require prior activity plus three page-local structural cues in order:
     DATOS GENERALES, an explicit changed campo, and INTENCIÓN DIDÁCTICA.
-    A repeated table header with the same campo, isolated words, quoted text,
+    A repeated table header with the same campo, isolated words, balanced quotes,
     unknown campo values, or cues separated by an activity are not enough.
     This narrow development rule is not a general PDF/table reconstruction.
     """
@@ -85,12 +100,23 @@ def planning_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
     previous_campo: tuple[str, ...] = ()
     had_body = False
     for number, page in enumerate(pages, 1):
-        headers, _ = _headers(page)
-        data_starts = [m.start(1) for m in _GENERAL_DATA_RE.finditer(page) if not _quote_stack(page[:m.start()])]
-        body_starts = [m.start() for m in _BODY_LABEL_RE.finditer(page) if not _quote_stack(page[:m.start()])]
+        closed_quotes = _closed_quote_ranges(page)
+
+        def is_quoted(position):
+            return any(begin <= position < end for begin, end in closed_quotes)
+
+        # Ordinary overview/entity extraction still filters all quoted headers.
+        # A safety cut must also see through an incomplete quote, but preserves
+        # the balanced-quotation negative control instead of treating it as data.
+        headers, _ = _headers(page, include_quoted=True)
+        headers = [h for h in headers if not is_quoted(h[1])]
+        data_starts = [m.start(1) for m in _GENERAL_DATA_RE.finditer(page) if not is_quoted(m.start(1))]
+        body_starts = [m.start() for m in _BODY_LABEL_RE.finditer(page) if not is_quoted(m.start())]
         events = [(p, "data", ()) for p in data_starts] + [(p, "body", ()) for p in body_starts]
         for index, (kind, start, value_start) in enumerate(headers):
             label = page[start:value_start].strip()
+            if kind == "proyecto":
+                events.append((start, "project", ()))
             # Only line-start metadata qualifies; a tabular/prose mention is
             # insufficient to reset the sequence's inherited context.
             if page[page.rfind("\n", 0, start) + 1:start].strip():
@@ -102,12 +128,14 @@ def planning_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
                 events.append((start, "campo", _normalized_campo_names(page[value_start:end])))
             elif kind == "finalidad" and _INTENTION_LABEL_RE.fullmatch(label):
                 events.append((start, "intention", ()))
-            elif kind == "proyecto":
-                events.append((start, "project", ()))
         events.sort()
         for index, (start, kind, campo) in enumerate(events):
             if kind == "body":
                 had_body = True
+            elif kind == "project":
+                # Metadata belonging to a new explicit project must not erase
+                # its title using activity state inherited from an older one.
+                had_body = False
             elif kind == "campo":
                 previous_campo = campo
             elif kind == "data" and had_body and previous_campo:
@@ -423,9 +451,13 @@ def phase_review_scope(
             break
     unassigned = []
     if reached_limit and limit in planning:
-        number, start = limit
-        next_projects = [p["anchor"]["text_start"] for p in projects
-                         if p["anchor"]["page_number"] == number and p["anchor"]["text_start"] > start]
-        end = min(next_projects) if next_projects else len(pages[number - 1])
-        unassigned.append((number, pages[number - 1][start:end]))
+        next_projects = [(p["anchor"]["page_number"], p["anchor"]["text_start"]) for p in projects
+                         if (p["anchor"]["page_number"], p["anchor"]["text_start"]) > limit]
+        unassigned_end = min(next_projects) if next_projects else (len(pages) + 1, 0)
+        for number in range(limit[0], len(pages) + 1):
+            start = limit[1] if number == limit[0] else 0
+            if (number, start) >= unassigned_end:
+                break
+            end = unassigned_end[1] if number == unassigned_end[0] else len(pages[number - 1])
+            unassigned.append((number, pages[number - 1][start:end]))
     return result, unassigned
