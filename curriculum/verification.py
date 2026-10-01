@@ -36,6 +36,10 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError, PyPdfError
 
 from curriculum.vocabulary import CANONICAL_CAMPOS
+from curriculum.source_segments import (
+    scan_session_segments, match_session_segment, anchor_matches,
+    project_context_matches, phase_project_context, phase_review_segments, has_possible_session_structure,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -579,52 +583,70 @@ def verify_curriculum_dossier(
                     if isinstance(ep, int) and not isinstance(ep, bool) and norm_ex:
                         shared_citations.setdefault((ep, norm_ex), []).append((SCOPE_GENERAL, "general", fname, eidx))
 
+    # Source-derived boundaries are independent of dossier order/subsets, titles
+    # and declared offsets. A legacy repeated number is never matched to the
+    # first textual occurrence merely because it appears on the same page.
+    source_segments = scan_session_segments(pages_text, actual_sha256)
+    has_session_structure = bool(source_segments) or has_possible_session_structure(pages_text)
     page_session_segments: dict[int, dict[str, str]] = {}
-    for p, p_sessions in sessions_by_page.items():
-        page_idx = p - 1
-        if page_idx < 0 or page_idx >= len(norm_pages_text):
+    uncertain_session_ids: set[str] = set()
+    for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
+        if not isinstance(session, dict):
             continue
-        norm_page = norm_pages_text[page_idx]
-        if not norm_page:
+        sid = session.get("session_id")
+        if not isinstance(sid, str) or not sid:
             continue
-        if len(p_sessions) == 1:
-            s_id = getattr(p_sessions[0], "session_id", None) if not isinstance(p_sessions[0], dict) else p_sessions[0].get("session_id")
-            if s_id:
-                page_session_segments.setdefault(p, {})[str(s_id)] = norm_page
-            continue
+        matched = match_session_segment(session, source_segments)
+        declared_pages = session_declared_pages.get(sid, set())
+        for page_number in declared_pages:
+            # No broad page fallback when the source has session structure,
+            # even if an anchor was removed or other sessions were omitted.
+            page_session_segments.setdefault(page_number, {})[sid] = (
+                norm_pages_text[page_number - 1]
+                if not has_session_structure and 1 <= page_number <= len(pages_text) else ""
+            )
+        if not has_session_structure and sid.endswith("_project_review"):
+            physical_pages = session.get("pages", [])
+            if isinstance(physical_pages, list) and physical_pages and type(physical_pages[0]) is int and 1 <= physical_pages[0] <= len(pages_text):
+                for page_number in declared_pages:
+                    page_session_segments.setdefault(page_number, {})[sid] = ""
+                for page_number, text in phase_review_segments(pages_text, actual_sha256, physical_pages[0]):
+                    page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
+        if matched:
+            if matched.unassigned_segments:
+                uncertain_session_ids.add(sid)
+            for page_number, text in matched.page_segments:
+                page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
 
-        starts: list[tuple[int, str]] = []
-        for s in p_sessions:
-            s_id = getattr(s, "session_id", None) if not isinstance(s, dict) else s.get("session_id")
-            s_num = getattr(s, "session_number", None) if not isinstance(s, dict) else s.get("session_number")
-            s_title = getattr(s, "title", "") if not isinstance(s, dict) else s.get("title", "")
-            if not s_id:
+        for name in ("header_anchor", "project_context"):
+            supplied = session.get(name)
+            if supplied is None:  # Optional additive schema: legacy remains readable.
                 continue
-            pos = -1
-            if s_num is not None:
-                m = re.search(rf"\bsesion\s*{s_num}\b", norm_page)
-                if m:
-                    pos = m.start()
-            norm_title = normalize_text_for_evidence_check(s_title)
-            if norm_title and len(norm_title) >= 4:
-                title_pos = norm_page.find(norm_title)
-                if title_pos != -1:
-                    pos = title_pos if pos == -1 else min(pos, title_pos)
-            if pos != -1:
-                starts.append((pos, str(s_id)))
-
-        starts.sort(key=lambda x: x[0])
-        if len(starts) >= 2:
-            segments: dict[str, str] = {}
-            for i, (pos, s_id) in enumerate(starts):
-                next_pos = starts[i + 1][0] if i + 1 < len(starts) else len(norm_page)
-                segments[s_id] = norm_page[pos:next_pos]
-            page_session_segments[p] = segments
-        else:
-            for s in p_sessions:
-                s_id = getattr(s, "session_id", None) if not isinstance(s, dict) else s.get("session_id")
-                if s_id:
-                    page_session_segments.setdefault(p, {})[str(s_id)] = norm_page
+            expected = getattr(matched, name) if matched else None
+            if name == "project_context" and matched is None and sid.endswith("_project_review"):
+                pages = session.get("pages", [])
+                if isinstance(pages, list) and pages and type(pages[0]) is int and 1 <= pages[0] <= len(pages_text):
+                    expected = phase_project_context(pages_text, actual_sha256, pages[0])
+            valid = expected is not None and (
+                anchor_matches(supplied, expected) if name == "header_anchor"
+                else project_context_matches(supplied, expected)
+            )
+            if name == "project_context" and valid and session.get("project_title", "") != expected["title"]:
+                items.append(VerificationItem(
+                    item_id=f"sess_{s_index}_{sid}_project_title",
+                    path=f"sessions/{sid}/project_title", scope=SCOPE_SESSION,
+                    target=f"session.{sid}.project_title", status=STATUS_BLOCKED,
+                    message="El título visible del proyecto contradice su contexto físico recomputado.",
+                    details={"session_id": sid, "reason": "project_projection_mismatch"},
+                ))
+            if not valid:
+                items.append(VerificationItem(
+                    item_id=f"sess_{s_index}_{sid}_{name}",
+                    path=f"sessions/{sid}/{name}", scope=SCOPE_SESSION,
+                    target=f"session.{sid}.{name}", status=STATUS_BLOCKED,
+                    message="Ancla o contexto incompatible con los encabezados y límites recomputados desde la fuente física.",
+                    details={"session_id": sid, "reason": "source_anchor_mismatch", "metadata": name},
+                ))
 
     # Helper to check evidence list for a single field
     def _verify_field_evidence(
@@ -1085,8 +1107,11 @@ def verify_curriculum_dossier(
                         for v in val if isinstance(v, str)
                     )
                 if value_present:
-                    is_structurally_consistent = True
-                    inconsistent_reason = ""
+                    is_structurally_consistent = not (scope == SCOPE_SESSION and str(parent_id) in uncertain_session_ids)
+                    inconsistent_reason = (
+                        "Límite de sesión no resuelto: el corte de seguridad conserva un tramo sin asignar y requiere revisión docente."
+                        if not is_structurally_consistent else ""
+                    )
 
                     if scope == SCOPE_SESSION:
                         if ev_page in page_session_segments and str(parent_id) in page_session_segments[ev_page]:
@@ -1770,7 +1795,7 @@ def verify_curriculum_dossier(
 
                             if ev_page in page_session_segments and str(s_id) in page_session_segments[ev_page]:
                                 s_seg = page_session_segments[ev_page][str(s_id)]
-                                if norm_ex not in s_seg:
+                                if str(s_id) in uncertain_session_ids or norm_ex not in s_seg:
                                     items.append(
                                         VerificationItem(
                                             item_id=ev_item_id,

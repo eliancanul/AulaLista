@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
@@ -398,6 +399,11 @@ def compile_dossier_to_atomic_claims(dossier: ImportDossier) -> list[AtomicClaim
             sess_state = CLAIM_STATE_BACKED
         else:
             sess_state = CLAIM_STATE_CANDIDATE
+
+        if getattr(session, "project_context", None) is not None:
+            sess_metadata["project_context"] = copy.deepcopy(session.project_context)
+        if getattr(session, "header_anchor", None) is not None:
+            sess_metadata["header_anchor"] = copy.deepcopy(session.header_anchor)
 
         claims.append(
             AtomicClaim(
