@@ -1293,6 +1293,14 @@
                     </details>
                   {% endif %}
 
+                  {% if sess.status == 'ambiguous' %}
+                    <details class="segmentation-review" style="margin-bottom: 1rem;">
+                      <summary>Organización de la fuente pendiente de revisión</summary>
+                      <p style="white-space: pre-wrap;">{{ sess.layout_notes }}</p>
+                      <p>{% for page in sess.pages %}<a href="{% url 'tutor-import-source-page' job.pk page %}" target="_blank" rel="noopener">Ver página física {{ page }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+                    </details>
+                  {% endif %}
+
                   {% if sess.continues_on %}
                     <div class="continuation-banner" style="margin-bottom: 1rem;">
                       ℹ️ <strong>Continuación de la sesión:</strong> La secuencia didáctica continúa en la{{ sess.continues_on|length|pluralize:"s" }} página{{ sess.continues_on|length|pluralize:"s" }} {{ sess.continues_on|join:", " }}.

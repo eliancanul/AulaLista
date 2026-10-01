@@ -456,3 +456,51 @@ def test_postponed_annex_decision_is_snapshotted_when_not_reapplied(mutation):
     deltas = preserve_reextract_decisions(old, fresh, source(pages))
     assert fresh.sessions[0].annex_references[0].review == "pending"
     assert any(d["scope"] == "annex" and d["change_type"] == "decision_not_reapplied" and d["before"] == ref.to_dict() for d in deltas)
+
+
+def test_weak_prose_boundary_retains_literal_candidate_and_explicit_uncertainty():
+    tail = "SESIÓN 2 del cuento se menciona como ejemplo.\nPreguntar qué opinan del personaje."
+    pages = ["Proyecto: Senderos\n" + session_text(end="Leer el cuento.") + tail]
+    d = dossier_for(pages)
+    assert len(d.sessions) == 1
+    s = d.sessions[0]
+    assert s.status == "ambiguous"
+    assert s.fields["cierre"].status == "ambiguous"
+    assert s.fields["cierre"].origin == "proposed"
+    assert "no resuelto" in s.fields["cierre"].reason
+    assert tail in s.layout_notes
+    assert "página física 1" in s.layout_notes
+    report = verify_curriculum_dossier(d, source(pages))
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.cierre") for i in report.items)
+    # Removing the uncertainty cannot turn a weak boundary into verified scope.
+    s.fields["cierre"].status, s.fields["cierre"].origin = "supported", "extracted"
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.cierre") for i in verify_curriculum_dossier(d, source(pages)).items)
+
+
+def test_unclosed_quote_cannot_hide_session_structure_from_legacy_verifier():
+    from curriculum.source_interpreter import InterpretedField, SourceReference
+    pages = ['Leer "esta narración.\n' + paired_page()]
+    d = dossier_for(pages)
+    assert d.sessions == []
+    d.sessions = [SessionPlan(session_id="legacy-A", session_number=1, title="A", pages=[1], fields={
+        "inicio": InterpretedField(name="inicio", value="Explorar el jardín.", evidence=[SourceReference(d.source_sha256, 1, excerpt="Explorar el jardín.")]),
+    })]
+    report = verify_curriculum_dossier(d, source(pages))
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.legacy-A.inicio") for i in report.items)
+
+
+def test_weak_boundary_candidate_is_visible_on_the_review_surface():
+    from django.template.loader import render_to_string
+    from types import SimpleNamespace
+    tail = "SESIÓN 2 del cuento se menciona como ejemplo.\nPreguntar qué opinan del personaje."
+    d = dossier_for(["Proyecto: Senderos\n" + session_text(end="Leer el cuento.") + tail])
+    s = d.sessions[0]
+    d.selection = {"session_id": s.session_id, "session_number": 1}
+    html = render_to_string("curriculum/tutor_import_interpretation.html", {
+        "dossier": d, "selected_session": s, "active_session_id": s.session_id,
+        "active_session_number": 1, "job": SimpleNamespace(pk=1),
+    })
+    assert "Organización de la fuente pendiente de revisión" in html
+    assert "Tramo sin asignar, página física 1" in html
+    assert "Preguntar qué opinan del personaje." in html
+    assert "Ver página física 1" in html

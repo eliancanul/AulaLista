@@ -169,6 +169,12 @@ Contrato aditivo de `SessionPlan`, sin migración SQL ni cambio del staging v1:
 entre extracción y verificación. El whitespace horizontal Unicode se reconoce
 sin unir líneas. Un encabezado numerado de formato desconocido corta el alcance
 y deshabilita el fallback de página completa, sin inferir una sesión de la prosa.
+Ese límite débil no certifica un cierre completo: conserva el tramo literal sin
+asignar y su página en `layout_notes`, visibles en la revisión. Marca la sesión
+y sus campos no vacíos como ambiguos/propuestos. La auditoría recomputa también
+esa incertidumbre; quitar las notas o cambiar estados no vuelve `checked` ese
+alcance. Para deshabilitar el fallback, la detección conservadora no depende de
+comillas: una comilla sin cerrar no puede ocultar encabezados de otra sesión.
 Cada sesión termina ante el siguiente Proyecto
 **o** sesión; la continuación heurística sólo puede tomar el prefijo de la página
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos

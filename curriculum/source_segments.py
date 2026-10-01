@@ -35,7 +35,7 @@ _UNRESOLVED_SESSION_RE = re.compile(
 )
 
 
-def session_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
+def session_boundary_positions(pages: list[str], *, include_quoted: bool = False) -> dict[int, list[int]]:
     """Possible numbered headers cut scope, but unknown formats create no unit.
 
     The deliberately broader safety detector can see wrapped/unknown headings
@@ -43,7 +43,7 @@ def session_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
     infers a session from them or certifies whole-page membership.
     """
     return {
-        number: [m.start(1) for m in _UNRESOLVED_SESSION_RE.finditer(page) if not _quote_stack(page[:m.start()])]
+        number: [m.start(1) for m in _UNRESOLVED_SESSION_RE.finditer(page) if include_quoted or not _quote_stack(page[:m.start()])]
         for number, page in enumerate(pages, 1)
     }
 
@@ -134,6 +134,7 @@ class SessionSegment:
     header_anchor: dict[str, Any]
     project_context: dict[str, Any]
     page_segments: list[tuple[int, str]] = field(default_factory=list)
+    unassigned_segments: list[tuple[int, str]] = field(default_factory=list)
 
 
 def clean_page_prefix(text: str) -> str:
@@ -170,9 +171,11 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
     segments = []
     counts: dict[str, int] = {}
     boundaries = session_boundary_positions(pages)
+    strong_boundaries: dict[int, set[int]] = {}
     for project in projects:
         anchor = project["anchor"]
         boundaries.setdefault(anchor["page_number"], []).append(anchor["text_start"])
+        strong_boundaries.setdefault(anchor["page_number"], set()).add(anchor["text_start"])
     for page_number, page in enumerate(pages, 1):
         matches = headers[page_number - 1]
         for occurrence, m in enumerate(matches, 1):
@@ -190,6 +193,13 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
                 context_before(projects, page_number, start),
             ))
             boundaries.setdefault(page_number, []).append(start)
+            strong_boundaries.setdefault(page_number, set()).add(start)
+
+    def retain_unassigned(segment: SessionSegment, page_number: int, start: int) -> None:
+        next_strong = [p for p in strong_boundaries.get(page_number, set()) if p > start]
+        end = min(next_strong) if next_strong else len(pages[page_number - 1])
+        segment.unassigned_segments.append((page_number, pages[page_number - 1][start:end]))
+
     for segment in segments:
         anchor = segment.header_anchor
         page_number, start = anchor["page_number"], anchor["text_start"]
@@ -197,6 +207,8 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
         following = sorted(b for b in boundaries.get(page_number, []) if b > start)
         end = following[0] if following else len(page)
         segment.page_segments = [(page_number, page[start:end])]
+        if following and end not in strong_boundaries.get(page_number, set()):
+            retain_unassigned(segment, page_number, end)
         if following or page_number >= len(pages):
             continue
         # Preserve the existing immediate-next-page-only continuation contract.
@@ -204,6 +216,8 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
         next_boundaries = boundaries.get(page_number + 1, [])
         next_page = pages[page_number]
         prefix = next_page[:min(next_boundaries)] if next_boundaries else next_page
+        if next_boundaries and min(next_boundaries) not in strong_boundaries.get(page_number + 1, set()):
+            retain_unassigned(segment, page_number + 1, min(next_boundaries))
         cleaned = clean_page_prefix(prefix)
         cleaned = re.split(r"(?:\n|\s{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)", cleaned, maxsplit=1, flags=re.IGNORECASE)[0].strip()
         if cleaned and not is_structural_barrier(cleaned) and re.search(r"(?:^|\n|\b)(?:Inicio|Desarrollo|Cierre)\b", cleaned, re.IGNORECASE):

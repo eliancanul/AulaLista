@@ -587,8 +587,9 @@ def verify_curriculum_dossier(
     # and declared offsets. A legacy repeated number is never matched to the
     # first textual occurrence merely because it appears on the same page.
     source_segments = scan_session_segments(pages_text, actual_sha256)
-    has_session_structure = bool(source_segments) or any(session_boundary_positions(pages_text).values())
+    has_session_structure = bool(source_segments) or any(session_boundary_positions(pages_text, include_quoted=True).values())
     page_session_segments: dict[int, dict[str, str]] = {}
+    uncertain_session_ids: set[str] = set()
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
         if not isinstance(session, dict):
             continue
@@ -612,6 +613,8 @@ def verify_curriculum_dossier(
                 for page_number, text in phase_review_segments(pages_text, actual_sha256, physical_pages[0]):
                     page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
         if matched:
+            if matched.unassigned_segments:
+                uncertain_session_ids.add(sid)
             for page_number, text in matched.page_segments:
                 page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
 
@@ -1104,8 +1107,11 @@ def verify_curriculum_dossier(
                         for v in val if isinstance(v, str)
                     )
                 if value_present:
-                    is_structurally_consistent = True
-                    inconsistent_reason = ""
+                    is_structurally_consistent = not (scope == SCOPE_SESSION and str(parent_id) in uncertain_session_ids)
+                    inconsistent_reason = (
+                        "Límite de sesión no resuelto: el corte de seguridad conserva un tramo sin asignar y requiere revisión docente."
+                        if not is_structurally_consistent else ""
+                    )
 
                     if scope == SCOPE_SESSION:
                         if ev_page in page_session_segments and str(parent_id) in page_session_segments[ev_page]:
@@ -1789,7 +1795,7 @@ def verify_curriculum_dossier(
 
                             if ev_page in page_session_segments and str(s_id) in page_session_segments[ev_page]:
                                 s_seg = page_session_segments[ev_page][str(s_id)]
-                                if norm_ex not in s_seg:
+                                if str(s_id) in uncertain_session_ids or norm_ex not in s_seg:
                                     items.append(
                                         VerificationItem(
                                             item_id=ev_item_id,

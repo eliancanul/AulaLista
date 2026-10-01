@@ -2994,6 +2994,23 @@ class CurriculumSourceInterpreter:
                 pages_text=pages_text,
                 page_segments=segment.page_segments,
             )
+            if segment.unassigned_segments:
+                reason = (
+                    "Corte de seguridad ante un encabezado de sesión no resuelto; "
+                    "el contenido puede estar incompleto y requiere revisión. "
+                    "El tramo literal sin asignar se conserva en las notas de segmentación."
+                )
+                plan.status = STATUS_AMBIGUOUS
+                plan.layout_notes += "\n\n" + reason
+                for number, raw in segment.unassigned_segments:
+                    plan.layout_notes += f"\n\nTramo sin asignar, página física {number}:\n{raw}"
+                for field_obj in plan.fields.values():
+                    if not _is_empty_value(field_obj.value):
+                        field_obj.origin = ORIGIN_PROPOSED
+                        field_obj.status = STATUS_AMBIGUOUS
+                        field_obj.reason = reason
+                        field_obj.original_reason = reason
+                        field_obj.current_action = field_obj.action_required = derive_field_operational_state(field_obj)[1]
             plan.project_context = copy.deepcopy(segment.project_context)
             plan.header_anchor = copy.deepcopy(segment.header_anchor)
             sessions.append(plan)
@@ -3718,7 +3735,7 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
             change_type=change, reason=reason,
         ))
 
-    def merge_fields(previous, current, scope, sid, safe):
+    def merge_fields(previous, current, scope, sid, safe, source_uncertain=False):
         for name, previous_field in previous.items():
             if not isinstance(previous_field, InterpretedField) or not human_field(previous_field):
                 continue
@@ -3730,7 +3747,7 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
                 continue
             baseline = previous_field.original_value if previous_field.origin == ORIGIN_TEACHER_ENTERED else previous_field.value
             old_evidence = before["evidence"]
-            unchanged = extracted is not None and _values_are_semantically_equal(baseline, extracted.value) and old_evidence == extracted.to_dict()["evidence"]
+            unchanged = not source_uncertain and extracted is not None and _values_are_semantically_equal(baseline, extracted.value) and old_evidence == extracted.to_dict()["evidence"]
             if unchanged:
                 current[name] = copy.deepcopy(previous_field)
                 record(scope, sid, name, before, current[name].to_dict(), "retained_decision",
@@ -3773,7 +3790,7 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
                     and normalize_text_for_evidence_check(ev.excerpt) in bounded.get(ev.page_number, "")
                     for f in previous.fields.values() for ev in f.evidence
                 )
-        merge_fields(previous.fields, current.fields if current else None, "session", sid, safe)
+        merge_fields(previous.fields, current.fields if current else None, "session", sid, safe, bool(match and match.unassigned_segments))
         for ref in previous.annex_references:
             if ref.review not in (REVIEW_CONFIRMED, REVIEW_CORRECTED, "postponed") and ref.confirmed_page is None:
                 continue
