@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "harness_version": "1.1.0-portable",
+  "status": "proposal_pending_coordinator_freeze",
+  "timeout_seconds_per_document": 120,
+  "source_reader_timeout_seconds": 60,
+  "memory_limit_bytes": 1073741824,
+  "source_reader_memory_limit_bytes": 1073741824,
+  "max_input_bytes": 20971520,
+  "max_pages_per_pdf": 30,
+  "max_total_pages": 180,
+  "max_documents": 12,
+  "repetitions": 2,
+  "parallel_workers": 1,
+  "selection": null,
+  "job": null,
+  "generation": false,
+  "network": "process_local_audit_deny_socket_and_subprocess",
+  "seed": "AulaLista-prospectivo-2026-10-01-v1",
+  "document_order": "document_id_lexicographic",
+  "version_order": "rotate_B0_B2_B3_by_document_index",
+  "repeat_order": "identical_full_order",
+  "infrastructure_retries": 0,
+  "volatile_paths": [
+    "/dossier/created_at",
+    "/dossier/updated_at",
+    "/dossier/history/*/timestamp"
+  ],
+  "volatile_history_condition": "action == prepare",
+  "source_reader": "independent pypdf 6.1.3 PdfReader(strict=False), page.extract_text() default; no OCR"
+}

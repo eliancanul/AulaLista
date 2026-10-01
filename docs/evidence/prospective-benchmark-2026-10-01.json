@@ -1,0 +1,1649 @@
+{
+  "schema_version": "aulalista-public-aggregate-v1",
+  "experiment": "prospective-feasibility-3pdf-2026-10-01",
+  "scope": {
+    "documents": 3,
+    "physical_pages": 50,
+    "provisional_families": 3,
+    "country_curriculum": "Mexico primary/NEM",
+    "digital_text_sources": 3,
+    "source_classes": {
+      "D01": "teacher_training_portfolio",
+      "D02": "teacher_training_portfolio",
+      "D03": "government_instructional_project"
+    },
+    "full_holdout": false,
+    "human_reference": false,
+    "semantic_accuracy": null,
+    "historical20_overlap": "not_verifiable_missing_original_hashes",
+    "novelty": "Not used in the three recorded cloud development iterations; no claim about model pretraining or all historical development",
+    "public_source_bytes_or_annotations_included": false
+  },
+  "versions": {
+    "B0": "2541faf04bda4dad1215a4673e3802567ca7c5c9",
+    "B2": "1aae48b93c2d83aec80c1248a38c24d5960a3d2a",
+    "B3": "a4dfe5cf9975d9e9b74a256aff718aec35f11f39"
+  },
+  "provenance": {
+    "freeze_timestamp_utc": "2026-10-01T03:05:13.468823+00:00",
+    "run_started_utc": "2026-10-01T03:05:42.549672+00:00",
+    "run_finished_utc": "2026-10-01T03:06:02.539224+00:00",
+    "freeze_sha256": "ab3c05bfdd179429abbc5117aa463ad58246820a52ea279d33c0af9867028788",
+    "original_corpus_manifest_sha256": "04e5f88bfa7758e069962546895e5f03cf84a5ead1cf3a316335f029c658e1eb",
+    "original_weak_reference_sha256": "97ed8407d7f077d7e9d80bca7101111132bde608a4a10bed90892391cf0c7b3c",
+    "original_harness_code_manifest_sha256": "f474a204e1678588dd0e72657887565558e8858a4be4d686c7b7bb4b2eaac9a5",
+    "aggregate_repeat_1_sha256": "ec429d96b00b4b1f18a23acf19dfb1ec832cb23caa142cf687c672d8162297e5",
+    "aggregate_repeat_2_sha256": "ec429d96b00b4b1f18a23acf19dfb1ec832cb23caa142cf687c672d8162297e5",
+    "weak_repeat_1_sha256": "4d942948cc885a984f107c574a197ce12f0d2e4ba6caf351bf10c4916f333cc9",
+    "weak_repeat_2_sha256": "4d942948cc885a984f107c574a197ce12f0d2e4ba6caf351bf10c4916f333cc9",
+    "python": "3.13.5",
+    "pypdf": "6.1.3",
+    "repetitions": 2,
+    "product_runs": 18,
+    "successful_runs": 18,
+    "canonical_pairs_identical": 9,
+    "volatile_fields_excluded": [
+      "dossier.created_at",
+      "dossier.updated_at",
+      "timestamp of history entries with action=prepare"
+    ],
+    "portable_harness": "Later portability adaptation; not the executable used for this frozen run"
+  },
+  "metric_scopes": {
+    "M1": "Completed pipelines / included PDFs",
+    "M2": "Independent pypdf pages with nonempty text / physical pages; common to versions",
+    "M3_citations": "Literal-valid citations / all emitted dossier citations, including activities/annexes; not semantic correctness",
+    "M3_fields": "Nonempty InterpretedFields with at least one valid citation / nonempty InterpretedFields",
+    "M4": "Nonempty InterpretedFields with at least one citation and all citations valid / nonempty InterpretedFields",
+    "M5_anchors": "Mechanically valid native anchors / anchors emitted; no correctness of occurrence or relation inferred",
+    "M5_units": "Units with mechanically valid own header anchor / units emitted; does not validate logical session count",
+    "M6": "Strong InterpretedFields with missing/invalid evidence / strong InterpretedFields; raw supported OR audit checked",
+    "M7": "Documents with any invalid source identity/citation/anchor / included PDFs, accompanied by failures/no-output counts",
+    "W": "Normalized text agreement with two blinded AI references on four overview slots per document; unknowns retained; not human accuracy"
+  },
+  "aggregate_mechanical": [
+    {
+      "document_count": 3,
+      "documents_failed": 0,
+      "documents_no_output": 0,
+      "family_count": 3,
+      "metrics": {
+        "M1": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 3,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 1.0
+          }
+        },
+        "M2": {
+          "macro_document": 0.9523809523809524,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.9523809523809524,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 50,
+            "display_status": "evaluated",
+            "numerator": 49,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "physical_pages",
+            "value": 0.98
+          }
+        },
+        "M3_citations": {
+          "macro_document": 0.8472222222222222,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.8472222222222222,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 19,
+            "display_status": "evaluated",
+            "numerator": 15,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "dossier_citations",
+            "value": 0.7894736842105263
+          }
+        },
+        "M3_fields": {
+          "macro_document": 0.8968253968253969,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.8968253968253969,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 15,
+            "display_status": "evaluated",
+            "numerator": 13,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 0.8666666666666667
+          }
+        },
+        "M4": {
+          "macro_document": 0.8412698412698413,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.8412698412698413,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 15,
+            "display_status": "evaluated",
+            "numerator": 12,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 0.8
+          }
+        },
+        "M5_anchors": {
+          "macro_document": null,
+          "macro_document_evaluable_n": 0,
+          "macro_family": null,
+          "macro_family_evaluable_n": 0,
+          "micro": {
+            "denominator": 0,
+            "display_status": "N/A",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "anchors",
+            "value": null
+          }
+        },
+        "M5_units": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 1,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 1,
+          "micro": {
+            "denominator": 6,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "emitted_units",
+            "value": 0.0
+          }
+        },
+        "M6": {
+          "macro_document": 0.15873015873015872,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.15873015873015872,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 15,
+            "display_status": "evaluated",
+            "numerator": 3,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "strong_interpreted_fields",
+            "value": 0.2
+          }
+        },
+        "M7": {
+          "macro_document": 0.6666666666666666,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.6666666666666666,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 2,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 0.6666666666666666
+          }
+        }
+      },
+      "split": "feasibility_prospective",
+      "version": "B0"
+    },
+    {
+      "document_count": 3,
+      "documents_failed": 0,
+      "documents_no_output": 0,
+      "family_count": 3,
+      "metrics": {
+        "M1": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 3,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 1.0
+          }
+        },
+        "M2": {
+          "macro_document": 0.9523809523809524,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.9523809523809524,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 50,
+            "display_status": "evaluated",
+            "numerator": 49,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "physical_pages",
+            "value": 0.98
+          }
+        },
+        "M3_citations": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 19,
+            "display_status": "evaluated",
+            "numerator": 19,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "dossier_citations",
+            "value": 1.0
+          }
+        },
+        "M3_fields": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 15,
+            "display_status": "evaluated",
+            "numerator": 15,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 1.0
+          }
+        },
+        "M4": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 15,
+            "display_status": "evaluated",
+            "numerator": 15,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 1.0
+          }
+        },
+        "M5_anchors": {
+          "macro_document": null,
+          "macro_document_evaluable_n": 0,
+          "macro_family": null,
+          "macro_family_evaluable_n": 0,
+          "micro": {
+            "denominator": 0,
+            "display_status": "N/A",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "anchors",
+            "value": null
+          }
+        },
+        "M5_units": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 1,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 1,
+          "micro": {
+            "denominator": 6,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "emitted_units",
+            "value": 0.0
+          }
+        },
+        "M6": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 13,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "strong_interpreted_fields",
+            "value": 0.0
+          }
+        },
+        "M7": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 0.0
+          }
+        }
+      },
+      "split": "feasibility_prospective",
+      "version": "B2"
+    },
+    {
+      "document_count": 3,
+      "documents_failed": 0,
+      "documents_no_output": 0,
+      "family_count": 3,
+      "metrics": {
+        "M1": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 3,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 1.0
+          }
+        },
+        "M2": {
+          "macro_document": 0.9523809523809524,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.9523809523809524,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 50,
+            "display_status": "evaluated",
+            "numerator": 49,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "physical_pages",
+            "value": 0.98
+          }
+        },
+        "M3_citations": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 21,
+            "display_status": "evaluated",
+            "numerator": 21,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "dossier_citations",
+            "value": 1.0
+          }
+        },
+        "M3_fields": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 16,
+            "display_status": "evaluated",
+            "numerator": 16,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 1.0
+          }
+        },
+        "M4": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 16,
+            "display_status": "evaluated",
+            "numerator": 16,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "nonempty_interpreted_fields",
+            "value": 1.0
+          }
+        },
+        "M5_anchors": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 1,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 1,
+          "micro": {
+            "denominator": 6,
+            "display_status": "evaluated",
+            "numerator": 6,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "anchors",
+            "value": 1.0
+          }
+        },
+        "M5_units": {
+          "macro_document": 1.0,
+          "macro_document_evaluable_n": 1,
+          "macro_family": 1.0,
+          "macro_family_evaluable_n": 1,
+          "micro": {
+            "denominator": 6,
+            "display_status": "evaluated",
+            "numerator": 6,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "emitted_units",
+            "value": 1.0
+          }
+        },
+        "M6": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 13,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "strong_interpreted_fields",
+            "value": 0.0
+          }
+        },
+        "M7": {
+          "macro_document": 0.0,
+          "macro_document_evaluable_n": 3,
+          "macro_family": 0.0,
+          "macro_family_evaluable_n": 3,
+          "micro": {
+            "denominator": 3,
+            "display_status": "evaluated",
+            "numerator": 0,
+            "reference_status": "independent_mechanical_text_only",
+            "unit": "PDFs",
+            "value": 0.0
+          }
+        }
+      },
+      "split": "feasibility_prospective",
+      "version": "B3"
+    }
+  ],
+  "per_document": [
+    {
+      "document_id": "D01",
+      "pages": 7,
+      "version": "B0",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 0.8571428571428571
+        },
+        "M3_citations": {
+          "denominator": 9,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 0.6666666666666666
+        },
+        "M3_fields": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 5,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 0.8333333333333334
+        },
+        "M4": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 4,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 0.6666666666666666
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.3333333333333333
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 7,
+        "candidate_fields": 6,
+        "abstaining_emitted_field_slots": 1,
+        "units_emitted": 0,
+        "citations_emitted": 9,
+        "invalid_citations": 3,
+        "anchors_emitted": 0,
+        "strong_fields": 6,
+        "strong_invalid_fields": 2,
+        "claims_emitted": 7,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D01",
+      "pages": 7,
+      "version": "B2",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 0.8571428571428571
+        },
+        "M3_citations": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 8,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 5,
+          "display_status": "evaluated",
+          "numerator": 5,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 5,
+          "display_status": "evaluated",
+          "numerator": 5,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 4,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 7,
+        "candidate_fields": 5,
+        "abstaining_emitted_field_slots": 2,
+        "units_emitted": 0,
+        "citations_emitted": 8,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 4,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 7,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D01",
+      "pages": 7,
+      "version": "B3",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 0.8571428571428571
+        },
+        "M3_citations": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 8,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 5,
+          "display_status": "evaluated",
+          "numerator": 5,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 5,
+          "display_status": "evaluated",
+          "numerator": 5,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 4,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 7,
+        "candidate_fields": 5,
+        "abstaining_emitted_field_slots": 2,
+        "units_emitted": 0,
+        "citations_emitted": 8,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 4,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 7,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D02",
+      "pages": 18,
+      "version": "B2",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 18,
+          "display_status": "evaluated",
+          "numerator": 18,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 9,
+          "display_status": "evaluated",
+          "numerator": 9,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 8,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 8,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": 0.0
+        },
+        "M6": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 42,
+        "candidate_fields": 8,
+        "abstaining_emitted_field_slots": 34,
+        "units_emitted": 6,
+        "citations_emitted": 9,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 8,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 50,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D02",
+      "pages": 18,
+      "version": "B3",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 18,
+          "display_status": "evaluated",
+          "numerator": 18,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 11,
+          "display_status": "evaluated",
+          "numerator": 11,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 9,
+          "display_status": "evaluated",
+          "numerator": 9,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 9,
+          "display_status": "evaluated",
+          "numerator": 9,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": 1.0
+        },
+        "M5_units": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": 1.0
+        },
+        "M6": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 42,
+        "candidate_fields": 9,
+        "abstaining_emitted_field_slots": 33,
+        "units_emitted": 6,
+        "citations_emitted": 11,
+        "invalid_citations": 0,
+        "anchors_emitted": 6,
+        "strong_fields": 8,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 52,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D02",
+      "pages": 18,
+      "version": "B0",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 18,
+          "display_status": "evaluated",
+          "numerator": 18,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 8,
+          "display_status": "evaluated",
+          "numerator": 7,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 0.875
+        },
+        "M3_fields": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 0.8571428571428571
+        },
+        "M4": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 6,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 0.8571428571428571
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 6,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": 0.0
+        },
+        "M6": {
+          "denominator": 7,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.14285714285714285
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 42,
+        "candidate_fields": 7,
+        "abstaining_emitted_field_slots": 35,
+        "units_emitted": 6,
+        "citations_emitted": 8,
+        "invalid_citations": 1,
+        "anchors_emitted": 0,
+        "strong_fields": 7,
+        "strong_invalid_fields": 1,
+        "claims_emitted": 50,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D03",
+      "pages": 25,
+      "version": "B3",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 25,
+          "display_status": "evaluated",
+          "numerator": 25,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 6,
+        "candidate_fields": 2,
+        "abstaining_emitted_field_slots": 4,
+        "units_emitted": 0,
+        "citations_emitted": 2,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 1,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 6,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D03",
+      "pages": 25,
+      "version": "B0",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 25,
+          "display_status": "evaluated",
+          "numerator": 25,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 6,
+        "candidate_fields": 2,
+        "abstaining_emitted_field_slots": 4,
+        "units_emitted": 0,
+        "citations_emitted": 2,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 2,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 6,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    },
+    {
+      "document_id": "D03",
+      "pages": 25,
+      "version": "B2",
+      "outcome": "completed",
+      "metrics": {
+        "M1": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 1,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 1.0
+        },
+        "M2": {
+          "denominator": 25,
+          "display_status": "evaluated",
+          "numerator": 25,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "physical_pages",
+          "value": 1.0
+        },
+        "M3_citations": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "dossier_citations",
+          "value": 1.0
+        },
+        "M3_fields": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M4": {
+          "denominator": 2,
+          "display_status": "evaluated",
+          "numerator": 2,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "nonempty_interpreted_fields",
+          "value": 1.0
+        },
+        "M5_anchors": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "anchors",
+          "value": null
+        },
+        "M5_units": {
+          "denominator": 0,
+          "display_status": "N/A",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "emitted_units",
+          "value": null
+        },
+        "M6": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "strong_interpreted_fields",
+          "value": 0.0
+        },
+        "M7": {
+          "denominator": 1,
+          "display_status": "evaluated",
+          "numerator": 0,
+          "reference_status": "independent_mechanical_text_only",
+          "unit": "PDFs",
+          "value": 0.0
+        }
+      },
+      "counts": {
+        "fields_emitted": 6,
+        "candidate_fields": 2,
+        "abstaining_emitted_field_slots": 4,
+        "units_emitted": 0,
+        "citations_emitted": 2,
+        "invalid_citations": 0,
+        "anchors_emitted": 0,
+        "strong_fields": 1,
+        "strong_invalid_fields": 0,
+        "claims_emitted": 6,
+        "execution_failure": 0,
+        "no_dossier_output": 0,
+        "unassigned_segments_emitted": 0
+      }
+    }
+  ],
+  "aggregate_weak_ai": [
+    {
+      "version": "B0",
+      "counts": {
+        "A": 0,
+        "C": 2,
+        "N_neg": 2,
+        "N_not_applicable": 0,
+        "N_pos": 6,
+        "N_unknown": 4,
+        "W": 4,
+        "candidates_evaluable": 6,
+        "negative_with_candidate": 0,
+        "outside_applicability_with_candidate": 0,
+        "unknown_with_candidate": 0
+      },
+      "agreement_recovery": {
+        "numerator": 2,
+        "denominator": 6,
+        "percent": 33.333333333333336
+      },
+      "disagreement_on_present": {
+        "numerator": 4,
+        "denominator": 6,
+        "percent": 66.66666666666667
+      },
+      "abstention_on_present": {
+        "numerator": 0,
+        "denominator": 6,
+        "percent": 0.0
+      },
+      "response_coverage": {
+        "numerator": 6,
+        "denominator": 6,
+        "percent": 100.0
+      },
+      "evaluable_reference_coverage": {
+        "numerator": 8,
+        "denominator": 12,
+        "percent": 66.66666666666667
+      }
+    },
+    {
+      "version": "B2",
+      "counts": {
+        "A": 1,
+        "C": 3,
+        "N_neg": 2,
+        "N_not_applicable": 0,
+        "N_pos": 6,
+        "N_unknown": 4,
+        "W": 2,
+        "candidates_evaluable": 5,
+        "negative_with_candidate": 0,
+        "outside_applicability_with_candidate": 0,
+        "unknown_with_candidate": 1
+      },
+      "agreement_recovery": {
+        "numerator": 3,
+        "denominator": 6,
+        "percent": 50.0
+      },
+      "disagreement_on_present": {
+        "numerator": 2,
+        "denominator": 6,
+        "percent": 33.333333333333336
+      },
+      "abstention_on_present": {
+        "numerator": 1,
+        "denominator": 6,
+        "percent": 16.666666666666668
+      },
+      "response_coverage": {
+        "numerator": 5,
+        "denominator": 6,
+        "percent": 83.33333333333333
+      },
+      "evaluable_reference_coverage": {
+        "numerator": 8,
+        "denominator": 12,
+        "percent": 66.66666666666667
+      }
+    },
+    {
+      "version": "B3",
+      "counts": {
+        "A": 1,
+        "C": 3,
+        "N_neg": 2,
+        "N_not_applicable": 0,
+        "N_pos": 6,
+        "N_unknown": 4,
+        "W": 2,
+        "candidates_evaluable": 5,
+        "negative_with_candidate": 0,
+        "outside_applicability_with_candidate": 0,
+        "unknown_with_candidate": 1
+      },
+      "agreement_recovery": {
+        "numerator": 3,
+        "denominator": 6,
+        "percent": 50.0
+      },
+      "disagreement_on_present": {
+        "numerator": 2,
+        "denominator": 6,
+        "percent": 33.333333333333336
+      },
+      "abstention_on_present": {
+        "numerator": 1,
+        "denominator": 6,
+        "percent": 16.666666666666668
+      },
+      "response_coverage": {
+        "numerator": 5,
+        "denominator": 6,
+        "percent": 83.33333333333333
+      },
+      "evaluable_reference_coverage": {
+        "numerator": 8,
+        "denominator": 12,
+        "percent": 66.66666666666667
+      }
+    }
+  ],
+  "paired_weak_ai": [
+    {
+      "document_id": "D01",
+      "comparison": "B0->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "present",
+          "before": "W",
+          "after": "W"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "present",
+          "before": "W",
+          "after": "A"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "W",
+          "after": "W"
+        }
+      ]
+    },
+    {
+      "document_id": "D01",
+      "comparison": "B2->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "present",
+          "before": "W",
+          "after": "W"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "present",
+          "before": "A",
+          "after": "A"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "W",
+          "after": "W"
+        }
+      ]
+    },
+    {
+      "document_id": "D02",
+      "comparison": "B0->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "C",
+          "after": "C"
+        }
+      ]
+    },
+    {
+      "document_id": "D02",
+      "comparison": "B2->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "unknown",
+          "before": "unknown",
+          "after": "unknown"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "C",
+          "after": "C"
+        }
+      ]
+    },
+    {
+      "document_id": "D03",
+      "comparison": "B0->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "present",
+          "before": "W",
+          "after": "C"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "absent",
+          "before": "negative_abstention",
+          "after": "negative_abstention"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "absent",
+          "before": "negative_abstention",
+          "after": "negative_abstention"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "C",
+          "after": "C"
+        }
+      ]
+    },
+    {
+      "document_id": "D03",
+      "comparison": "B2->B3",
+      "slots": [
+        {
+          "field": "proyecto",
+          "reference_status": "present",
+          "before": "C",
+          "after": "C"
+        },
+        {
+          "field": "proposito",
+          "reference_status": "absent",
+          "before": "negative_abstention",
+          "after": "negative_abstention"
+        },
+        {
+          "field": "finalidad",
+          "reference_status": "absent",
+          "before": "negative_abstention",
+          "after": "negative_abstention"
+        },
+        {
+          "field": "campos_formativos",
+          "reference_status": "present",
+          "before": "C",
+          "after": "C"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Three PDFs and provisional families; no representative population claim",
+    "Citation rates have changing emitted denominators: 19, 19 and 21",
+    "Only 8/12 weak-reference overview slots evaluable: six present, two absent, four unknown",
+    "One positive weak-reference slot changes from disagreement to abstention; response coverage declines",
+    "Logical segmentation, occurrence membership, physical relations and pedagogical validity were not scored",
+    "All-source mechanical validity may coexist with content/scope errors",
+    "Historical20 corpus and source annotations unavailable; not included",
+    "Original sources, annotations and raw outputs remain private; exact independent replication needs authorized original inputs",
+    "No product tuning or source replacement after results; these observed cases are now exposed for future development"
+  ]
+}
