@@ -56,6 +56,10 @@ _CURRICULUM_COLUMNS_RE = re.compile(
     r"[ \t]+Contenidos?(?:[ \t]+(?:PDA|Procesos?[ \t]+de[ \t]+desarrollo"
     r"(?:[ \t]+de[ \t]+aprendizajes?)?))?[ \t\r]*", re.IGNORECASE,
 )
+_THREE_CURRICULUM_COLUMNS_RE = re.compile(
+    r"[ \t]+Contenidos?[ \t]+(?:PDA|Procesos?[ \t]+de[ \t]+desarrollo"
+    r"(?:[ \t]+de[ \t]+aprendizajes?)?)[ \t\r]*", re.IGNORECASE,
+)
 _NUMBERED_HEADER_RE = re.compile(r"[ \t]+#?\s*\d+(?=[ \t]*(?:[:.]|$))")
 _LEGACY_SCENARIO_RE = re.compile(
     r"\bEscenario\b(?:[ \t]*:|[ \t]+(?:Aula|Escolar|Comunitario)\.?[ \t]*$|[ \t]*$)", re.IGNORECASE,
@@ -100,6 +104,34 @@ def _bare_metadata(label: str, page: str, start: int, end: int) -> bool:
     if re.fullmatch(r"(?:Fase|Grado|SESI[OÓ]N)", label, re.IGNORECASE):
         return bool(_NUMBERED_HEADER_RE.match(page, start, end))
     return False
+
+
+def _corroborated_table_prefix(page: str, group: list[tuple]) -> bool:
+    """A closed method row followed by three columns can introduce table data.
+
+    This narrow text-layout cue is not general table reconstruction. All rows
+    before the last must be complete, with no prose between them; the final
+    method/column pair must occupy adjacent physical lines. Ordinary extraction
+    excludes quoted candidates; the safety scanner can request them separately.
+    """
+    if len(group) < 2:
+        return False
+    method, columns = group[-2:]
+    if not re.fullmatch(r"Metodolog[ií]a", page[method[1]:method[2]], re.IGNORECASE):
+        return False
+    if not _METHOD_RE.fullmatch(page, method[2], method[3]):
+        return False
+    if not re.fullmatch(r"Campos?(?:[ \t]+formativos?)?", page[columns[1]:columns[2]], re.IGNORECASE):
+        return False
+    if not _THREE_CURRICULUM_COLUMNS_RE.fullmatch(page, columns[2], columns[3]):
+        return False
+    if any("\n" in page[row[1]:row[3]] for row in (method, columns)):
+        return False
+    gap = page[method[3]:columns[1]]
+    if gap.count("\n") != 1 or gap.strip():
+        return False
+    return all(not page[row[3]:group[index + 1][1]].strip()
+               for index, row in enumerate(group[:-1]))
 
 
 def _headers(page: str, *, include_quoted: bool = False) -> tuple[list[tuple[str, int, int]], list[int]]:
@@ -185,10 +217,15 @@ def _headers(page: str, *, include_quoted: bool = False) -> tuple[list[tuple[str
             for position, row in enumerate(group)
         )
         objective_end_is_clear = True
-        if headers and headers[-1][0] in ("proposito", "finalidad"):
+        follows_objective = bool(headers and headers[-1][0] in ("proposito", "finalidad"))
+        if follows_objective:
             preceding_value = page[headers[-1][2]:group[0][1]].rstrip()
             objective_end_is_clear = bool(re.search(r'''[.!?]["»”']?$''', preceding_value))
-        if has_continuation or not objective_end_is_clear:
+        # Data after corroborated columns is not a continuation of the objective.
+        # Keep the old uncertainty rule for single rows, prose, incomplete
+        # objectives, and title fields.
+        table_prefix = follows_objective and _corroborated_table_prefix(page, group)
+        if (has_continuation and not table_prefix) or not objective_end_is_clear:
             uncertain_positions.extend(row[1] for row in group)
         else:
             headers.extend(row[:3] for row in group)
