@@ -13,7 +13,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from scripts.benchmark_curriculum.common import (
     ROOT, PYTHON, COMMITS, HARNESS_VERSION, Runtime, canonical_bytes,
-    child_env, read_json, sha_bytes, sha_file, tree_manifest, write_json,
+    child_env, comparison_identity, read_json, sha_bytes, sha_file, tree_manifest, write_json,
 )
 from scripts.benchmark_curriculum.fixtures import build, pdf_bytes
 from scripts.benchmark_curriculum.metrics import read_source
@@ -258,7 +258,7 @@ class PortabilityTests(SyntheticHarnessFixture, unittest.TestCase):
                 write_json(Path(out)/'source.json', source)
             else:
                 (Path(out)/'raw.json').write_text('{"duplicate": 1, "duplicate": 2}')
-                write_json(Path(out)/'worker_status.json', {'status': 'completed'})
+                write_json(Path(out)/'worker_status.json', {'status': 'completed', **comparison_identity(self.runtime.profile)})
             return {'returncode': 0, 'timeout': False, 'wall_seconds': 0.01}
 
         with patch('scripts.benchmark_curriculum.runner.bounded', side_effect=fake_child):
@@ -293,7 +293,7 @@ class PortabilityTests(SyntheticHarnessFixture, unittest.TestCase):
                                    'sessions': [], 'history': histories[out.name]},
                        'claims': [], 'verification': {'items': []}}
                 write_json(out/'raw.json', raw)
-                write_json(out/'worker_status.json', {'status': 'completed'})
+                write_json(out/'worker_status.json', {'status': 'completed', **comparison_identity(self.runtime.profile)})
             return {'returncode': 0, 'timeout': False, 'wall_seconds': 0.01}
         return child
 

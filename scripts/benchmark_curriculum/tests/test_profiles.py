@@ -12,8 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from scripts.benchmark_curriculum.adapter import adapt
 from scripts.benchmark_curriculum.build_release import build_release
 from scripts.benchmark_curriculum.common import (
-    ROOT, PYTHON, COMMITS, HARNESS_VERSION, Runtime, child_env, read_json, sha_file, write_json,
+    ROOT, PYTHON, COMMITS, HARNESS_VERSION, Runtime, child_env, comparison_identity, read_json, sha_file, write_json,
 )
+from scripts.benchmark_curriculum.metrics import score
 from scripts.benchmark_curriculum.runner import execute, load_freeze, make_order, validate_config, verify_snapshots
 from scripts.benchmark_curriculum.tests.test_portability import SyntheticHarnessFixture
 from scripts.benchmark_curriculum.tests import test_portability
@@ -274,6 +275,82 @@ class ProfileTests(SyntheticHarnessFixture, unittest.TestCase):
             pairs = read_json(self.runtime.workdir/'new-run'/f'paired_differences_repeat_{repeat}.json')
             self.assertEqual([pair['comparison'] for pair in pairs], ['B0->B4', 'B3->B4'])
             self.assertTrue(all(pair['metrics']['M1']['before']['denominator'] == 1 for pair in pairs))
+
+    def test_worker_identity_mismatch_aborts_before_scoring_and_retains_artifacts(self):
+        self.select_new()
+        self.snapshots()
+        row = self.input_row()
+        valid = {'status': 'completed', **comparison_identity(PROFILE)}
+        bad = [
+            {'status': 'completed', **comparison_identity('b0-b2-b3')},
+            {'status': 'completed'},
+            {**valid, 'source_commits': {**EXPECTED_COMMITS, 'B4': '0'*40}},
+            {**valid, 'comparison_pairs': [['B0', 'B3']]},
+            {**valid, 'harness_version': '1.1.0-portable'},
+            {}, [], None,
+        ]
+        for key in comparison_identity(PROFILE):
+            missing = copy.deepcopy(valid)
+            missing.pop(key)
+            bad.append(missing)
+        base_child = test_portability.PortabilityTests.fake_pipeline(
+            self, row, {version: [] for version in EXPECTED_COMMITS})
+        for i, worker_status in enumerate(bad):
+            with self.subTest(worker_status=worker_status):
+                def child(command, out, timeout, python):
+                    status = base_child(command, out, timeout, python)
+                    if 'worker' in command:
+                        write_json(Path(out)/'worker_status.json', worker_status)
+                    return status
+
+                with patch('scripts.benchmark_curriculum.runner.bounded', side_effect=child) as launched:
+                    with patch('scripts.benchmark_curriculum.runner.score', wraps=score) as scored:
+                        with self.assertRaisesRegex(ValueError, 'Worker identity'):
+                            execute(self.config, [row], make_order([row], PROFILE), f'mismatch-{i}',
+                                    'preflight', self.runtime)
+                self.assertEqual(launched.call_count, 2)
+                scored.assert_not_called()
+                out = self.runtime.workdir/f'mismatch-{i}'
+                receipt = read_json(out/'run_receipt.json')
+                self.assertEqual(receipt['status'], 'instrumentation_failure')
+                self.assertFalse(receipt['evaluation_completed'])
+                self.assertEqual(receipt['planned_product_runs'], 6)
+                self.assertEqual(receipt['product_runs'], 1)
+                self.assertEqual(receipt['scored_product_runs'], 0)
+                self.assertIn('finished_at_utc', receipt)
+                dest = out/'repeat_1'/'SYNTH'/'B0'
+                self.assertEqual(read_json(dest/'worker_status.json'), worker_status)
+                self.assertTrue((dest/'raw.json').is_file())
+                self.assertEqual(read_json(dest/'run_status.json')['outcome'], 'worker_identity_mismatch')
+                self.assertFalse((dest/'metrics.json').exists())
+                self.assertFalse((out/'aggregates_repeat_1.json').exists())
+
+    def test_missing_worker_status_stays_failed_product_with_original_denominators(self):
+        self.select_new()
+        self.snapshots()
+        row = self.input_row()
+        base_child = test_portability.PortabilityTests.fake_pipeline(
+            self, row, {version: [] for version in EXPECTED_COMMITS})
+
+        def child(command, out, timeout, python):
+            status = base_child(command, out, timeout, python)
+            if 'worker' in command:
+                (Path(out)/'worker_status.json').unlink()
+                (Path(out)/'raw.json').unlink()
+                status['returncode'] = 1
+            return status
+
+        with patch('scripts.benchmark_curriculum.runner.bounded', side_effect=child):
+            receipt = execute(self.config, [row], make_order([row], PROFILE), 'crash', 'preflight', self.runtime)
+        self.assertEqual(receipt['status'], 'completed')
+        self.assertEqual(receipt['successful_runs'], 0)
+        self.assertEqual(receipt['scored_product_runs'], 6)
+        for repeat in (1, 2):
+            for result in read_json(self.runtime.workdir/'crash'/f'scores_repeat_{repeat}.json'):
+                self.assertEqual(result['outcome'], 'worker_crash')
+                self.assertEqual(result['metrics']['M1']['numerator'], 0)
+                self.assertEqual(result['metrics']['M1']['denominator'], 1)
+                self.assertEqual(result['M8']['execution_failure'], 1)
 
 
 if __name__ == '__main__':

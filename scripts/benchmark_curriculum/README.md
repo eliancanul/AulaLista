@@ -113,6 +113,11 @@ identifies the selected profile. Mixed profile artifacts or extra snapshot
 directories are rejected. Worker subprocesses receive the profile explicitly
 and record it in their status; the independent source reader receives the same
 selection without changing its reading or scoring behavior.
+Every present worker status must match the complete release/profile/commits/pairs
+identity before its output is scored. A mismatch stops the campaign with a terminal
+`instrumentation_failure` receipt and preserves the worker's raw output and status.
+An absent status after a timeout or crash remains an ordinary failed product run
+in the existing metric denominators.
 
 The public test suite preserves the original 44 synthetic tests and adds coverage
 for relocated execution, clean subprocess environments, quarantined paths and

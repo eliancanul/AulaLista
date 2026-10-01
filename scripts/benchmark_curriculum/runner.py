@@ -286,13 +286,20 @@ def execute(config,rows,order,out,mode,runtime,freeze=None,weak=None):
                                 '--pdf',row['path'],'--expected-sha',row['file_sha256'],'--out',str(dest),
                                 '--timeout',str(config['timeout_seconds_per_document']),
                                 '--memory',str(config['memory_limit_bytes'])),dest,config['timeout_seconds_per_document'],runtime.python)
-                ws=read_json(dest/'worker_status.json') if (dest/'worker_status.json').exists() else {}
-                outcome='timeout' if status['timeout'] else ws.get('status','worker_crash')
+                worker_status_path=dest/'worker_status.json'
+                ws=read_json(worker_status_path) if worker_status_path.exists() else {}
+                identity_mismatch=worker_status_path.exists() and (
+                    not isinstance(ws,dict) or any(ws.get(key)!=value
+                    for key,value in comparison_identity(runtime.profile).items()))
+                outcome=('worker_identity_mismatch' if identity_mismatch else
+                         'timeout' if status['timeout'] else ws.get('status','worker_crash'))
                 if status['returncode']!=0 and outcome=='completed':
                     outcome='worker_crash'
                 status.update(outcome=outcome,document_id=did,version=version,repetition=repetition,position=position,
                               worker=ws,source_sha256=row['file_sha256'])
                 write_json(dest/'run_status.json',status); statuses.append(status)
+                if identity_mismatch:
+                    raise ValueError('Worker identity differs from selected comparison profile')
                 try:
                     raw=read_json(dest/'raw.json') if (dest/'raw.json').exists() else {}
                     if not isinstance(raw,dict):
