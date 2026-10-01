@@ -7,10 +7,11 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from scripts.benchmark_curriculum.common import write_json, sha_file
+from scripts.benchmark_curriculum.common import DEFAULT_PROFILE, comparison_identity, write_json, sha_file
 from scripts.benchmark_curriculum.offline_guard import install, OfflineViolation, WriteBoundaryViolation
 
-def main():
+def main(profile=DEFAULT_PROFILE):
+    identity = comparison_identity(profile)
     ap = argparse.ArgumentParser()
     ap.add_argument('--snapshot', required=True)
     ap.add_argument('--pdf', required=True)
@@ -24,7 +25,7 @@ def main():
     resource.setrlimit(resource.RLIMIT_CPU, (args.timeout,args.timeout+1))
     resource.setrlimit(resource.RLIMIT_FSIZE, (128*1024*1024,128*1024*1024))
     events = install(out)
-    status = {'status':'running','stages':{},'offline_events':events}
+    status = {'status':'running', **identity, 'stages':{},'offline_events':events}
     raw = {}
     stage = 'input'
     start = time.monotonic()

@@ -7,6 +7,7 @@
   "cli.py",
   "code_files.json",
   "common.py",
+  "config.b0-b3-b4.proposed.json",
   "config.proposed.json",
   "entrypoint.py",
   "fixtures.py",

@@ -1,8 +1,10 @@
 """Closed comparison profiles, with synthetic fixtures and no comparison history."""
 import copy
+import io
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 import unittest
 from unittest.mock import patch
 
@@ -12,9 +14,7 @@ from scripts.benchmark_curriculum.build_release import build_release
 from scripts.benchmark_curriculum.common import (
     ROOT, PYTHON, COMMITS, HARNESS_VERSION, Runtime, child_env, read_json, sha_file, write_json,
 )
-from scripts.benchmark_curriculum.runner import (
-    execute, load_freeze, make_order, paired_differences, validate_config, verify_snapshots,
-)
+from scripts.benchmark_curriculum.runner import execute, load_freeze, make_order, validate_config, verify_snapshots
 from scripts.benchmark_curriculum.tests.test_portability import SyntheticHarnessFixture
 from scripts.benchmark_curriculum.tests import test_portability
 
@@ -96,6 +96,79 @@ class ProfileTests(SyntheticHarnessFixture, unittest.TestCase):
             result = subprocess.run(args, cwd=self.runtime.workdir, env=child_env(self.runtime.workdir),
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 2)
+
+    def test_cli_selects_profile_configuration_without_inference_from_workdir(self):
+        from scripts.benchmark_curriculum.cli import main
+        for profile, filename in (('b0-b2-b3', 'config.proposed.json'), (PROFILE, 'config.b0-b3-b4.proposed.json')):
+            args = ['benchmark', 'freeze-template', '--repo', str(self.repo), '--workdir', str(self.runtime.workdir),
+                    '--protocol', str(self.runtime.workdir/'synthetic-protocol.txt'), '--out', 'release']
+            if profile == PROFILE:
+                args.extend(['--profile', profile])
+            with patch.object(sys, 'argv', args), patch('builtins.print'):
+                with patch('scripts.benchmark_curriculum.build_release.build_release', return_value={'status': 'test'}) as build:
+                    main()
+            runtime, _, _, config_path = build.call_args.args
+            self.assertEqual(runtime.profile, profile)
+            self.assertEqual(config_path, ROOT/filename)
+
+    def test_setup_exports_only_selected_commits_and_tags_every_snapshot(self):
+        from scripts.benchmark_curriculum.setup_snapshots import setup
+        self.select_new()
+        stream = io.BytesIO()
+        data = b'# synthetic lock\n'
+        with tarfile.open(fileobj=stream, mode='w') as archive:
+            entry = tarfile.TarInfo('requirements.lock')
+            entry.size = len(data)
+            archive.addfile(entry, io.BytesIO(data))
+        archived = []
+
+        def git(runtime, *args):
+            if 'archive' in args:
+                archived.append(args[-1])
+                return stream.getvalue()
+            return b'synthetic-tree\n'
+
+        with patch('scripts.benchmark_curriculum.setup_snapshots.command', side_effect=git):
+            with patch('scripts.benchmark_curriculum.setup_snapshots.environment_manifest', return_value={'mismatches': []}):
+                report = setup(self.runtime)
+        self.assertEqual(archived, list(EXPECTED_COMMITS.values()))
+        self.assertEqual(report['comparison_profile'], PROFILE)
+        verify_snapshots(self.runtime)
+        index = read_json(self.runtime.snapshots/'index.json')
+        for version in EXPECTED_COMMITS:
+            self.assertEqual(index[version]['comparison_profile'], PROFILE)
+            self.assertEqual(index[version]['harness_version'], HARNESS_VERSION)
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            setup(self.runtime)
+
+    def test_worker_receipt_preserves_explicit_profile_on_guard_failure(self):
+        self.select_new()
+        row = self.input_row()
+        snapshot = self.runtime.workdir/'fake snapshot'
+        package = snapshot/'curriculum'
+        package.mkdir(parents=True)
+        (package/'__init__.py').write_text('')
+        (package/'source_interpreter.py').write_text('import socket\nsocket.socket()\n')
+        out = self.runtime.workdir/'blocked'
+        out.mkdir()
+        command = self.runtime.command('worker', '--snapshot', snapshot, '--pdf', row['path'],
+                                      '--expected-sha', row['file_sha256'], '--out', out,
+                                      '--timeout', 10, '--memory', 1073741824)
+        completed = subprocess.run(command, cwd=out, env=child_env(out), capture_output=True, text=True)
+        self.assertEqual(completed.returncode, 72, completed.stderr)
+        status = read_json(out/'worker_status.json')
+        self.assertEqual(status['status'], 'offline_violation')
+        self.assertEqual(status['comparison_profile'], PROFILE)
+        self.assertEqual(status['source_commits'], EXPECTED_COMMITS)
+        self.assertEqual(status['comparison_pairs'], PAIRS)
+
+    def test_coordinator_can_reduce_caps_without_changing_time_or_memory_limits(self):
+        self.select_new()
+        smaller = {**self.config, 'max_documents': 3, 'max_total_pages': 90}
+        validate_config(smaller, PROFILE)
+        for key in ('timeout_seconds_per_document', 'source_reader_timeout_seconds',
+                    'memory_limit_bytes', 'source_reader_memory_limit_bytes'):
+            self.assertEqual(smaller[key], self.config[key])
 
     def test_b4_adapter_changes_only_version_label(self):
         raw = {'dossier': {'general_fields': {'purpose': {'value': ['A'], 'evidence': []}},

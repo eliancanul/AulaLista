@@ -29,11 +29,21 @@ def bounded(command,out,timeout,python=PYTHON):
 
 def verify_snapshots(runtime):
     index=read_json(runtime.snapshots/'index.json')
-    for version,commit in COMMITS.items():
+    if not isinstance(index,dict) or set(index)!=set(runtime.commits):
+        raise ValueError('Snapshot versions differ from selected comparison profile')
+    expected_entries={'index.json', *runtime.commits, *(v+'.manifest.json' for v in runtime.commits)}
+    if {path.name for path in runtime.snapshots.iterdir()}!=expected_entries:
+        raise ValueError('Snapshot entries differ from selected comparison profile')
+    for version,commit in runtime.commits.items():
         record=read_json(runtime.snapshots/f'{version}.manifest.json')
+        for artifact in (record,index[version]):
+            if (not isinstance(artifact,dict) or artifact.get('comparison_profile')!=runtime.profile
+                    or artifact.get('harness_version')!=HARNESS_VERSION):
+                raise ValueError('Snapshot profile or portable harness identity differs')
         if record['commit']!=commit or index[version]['commit']!=commit:
             raise ValueError('Snapshot commit differs from preregistered comparison')
-        if sha_bytes(canonical_bytes(record['files']))!=index[version]['file_manifest_sha256']:
+        if ({key:value for key,value in record.items() if key!='files'}!=index[version]
+                or sha_bytes(canonical_bytes(record['files']))!=record['file_manifest_sha256']):
             raise ValueError('Snapshot file manifest differs from index')
         if tree_manifest(runtime.snapshots/version)!=record['files']:
             raise ValueError(f'Snapshot bytes changed: {version}')
@@ -74,14 +84,22 @@ def validate_rows(rows,config,runtime,preflight=False):
         raise ValueError('Corpus budget exceeded')
     if not rows: raise ValueError('Empty corpus')
 
-def make_order(rows):
-    result=[]; versions=list(COMMITS)
+def make_order(rows,profile=DEFAULT_PROFILE):
+    result=[]; versions=list(comparison_identity(profile)['source_commits'])
     for i,row in enumerate(sorted(rows,key=lambda r:r['document_id'])):
         for version in versions[i%3:]+versions[:i%3]:
             result.append({'document_id':row['document_id'],'version':version})
     return result
 
-def validate_config(config):
+def validate_config(config,profile=DEFAULT_PROFILE):
+    identity=comparison_identity(profile)
+    for key,value in identity.items():
+        if config.get(key)!=value:
+            raise ValueError(f'Configuration {key} differs from selected comparison profile')
+    expected_order='rotate_'+'_'.join(identity['source_commits'])+'_by_document_index'
+    if (config.get('version_order')!=expected_order or config.get('document_order')!='document_id_lexicographic'
+            or config.get('repeat_order')!='identical_full_order'):
+        raise ValueError('Configuration order differs from selected comparison profile')
     for key in ('timeout_seconds_per_document','source_reader_timeout_seconds','memory_limit_bytes','source_reader_memory_limit_bytes',
                 'max_input_bytes','max_pages_per_pdf','max_total_pages','max_documents'):
         if type(config.get(key)) is not int or config[key]<=0: raise ValueError(f'Invalid {key}')
@@ -99,7 +117,11 @@ def load_freeze(path,runtime):
         raise ValueError('Freeze not ready or rights/PII gate incomplete')
     if freeze.get('harness_version')!=HARNESS_VERSION:
         raise ValueError('Freeze does not identify this portable harness release')
-    if freeze.get('source_commits')!=COMMITS or freeze.get('new_corpus_product_tuning_permitted') is not False:
+    if freeze.get('comparison_profile')!=runtime.profile:
+        raise ValueError('Freeze comparison profile differs from explicit selection')
+    if (freeze.get('source_commits')!=runtime.commits
+            or freeze.get('comparison_pairs')!=comparison_identity(runtime.profile)['comparison_pairs']
+            or freeze.get('new_corpus_product_tuning_permitted') is not False):
         raise ValueError('Frozen code/tuning constraint differs')
     if freeze.get('phase') not in ('M_only','M_plus_weak_reference_ai'):
         raise ValueError('Supported phases: M_only or M_plus_weak_reference_ai; never H accuracy')
@@ -141,10 +163,11 @@ def load_freeze(path,runtime):
         raise ValueError('Frozen code manifest does not cover the complete declared harness')
     if paths['snapshot_index'] != runtime.snapshots/'index.json':
         raise ValueError('Unexpected snapshot index path')
+    verify_snapshots(runtime)
     from scripts.benchmark_curriculum.setup_snapshots import environment_manifest
     actual=environment_manifest(runtime); frozen=read_json(paths['environment_manifest'])
     if actual!=frozen: raise ValueError('Python or installed environment drift')
-    config=read_json(paths['run_configuration']); validate_config(config)
+    config=read_json(paths['run_configuration']); validate_config(config,runtime.profile)
     if freeze.get('timeout_seconds_per_document')!=config['timeout_seconds_per_document'] or freeze.get('memory_limit_bytes')!=config['memory_limit_bytes']:
         raise ValueError('Freeze resource settings conflict')
     rows=read_json(paths['corpus_manifest'])
@@ -156,7 +179,7 @@ def load_freeze(path,runtime):
             row['path']=str(runtime.private_path(paths['corpus_manifest'].parent/row['relative_private_path']))
     validate_rows(rows,config,runtime)
     order=read_json(paths['run_order'])
-    if order!=make_order(rows): raise ValueError('Run order differs from deterministic plan')
+    if order!=make_order(rows,runtime.profile): raise ValueError('Run order differs from deterministic plan')
     weak = read_json(paths['weak_reference_ai']) if 'weak_reference_ai' in paths else None
     if weak is not None:
         if not isinstance(weak,dict): raise ValueError('Malformed weak reference')
@@ -195,10 +218,11 @@ def aggregate(scores):
         result.append(item)
     return result
 
-def paired_differences(scores):
+def paired_differences(scores,profile=DEFAULT_PROFILE):
+    pairs=comparison_identity(profile)['comparison_pairs']
     lookup={(r['document_id'],r['version']):r for r in scores}; results=[]
     for did in sorted({r['document_id'] for r in scores}):
-        for before,after in (('B0','B3'),('B2','B3')):
+        for before,after in pairs:
             a,b=lookup[(did,before)],lookup[(did,after)]
             differences={}
             for metric in a['metrics']:
@@ -220,14 +244,17 @@ def execute(config,rows,order,out,mode,runtime,freeze=None,weak=None):
     require_selected_python(runtime)
     out=runtime.private_path(out)
     if out.exists(): raise ValueError('Refusing to overwrite prior run; use a new run directory')
-    verify_snapshots(runtime); validate_config(config); validate_rows(rows,config,runtime,preflight=mode=='preflight')
-    if order!=make_order(rows): raise ValueError('Run order differs from deterministic plan')
+    verify_snapshots(runtime); validate_config(config,runtime.profile); validate_rows(rows,config,runtime,preflight=mode=='preflight')
+    if order!=make_order(rows,runtime.profile): raise ValueError('Run order differs from deterministic plan')
+    if freeze and any(freeze.get(key)!=value for key,value in comparison_identity(runtime.profile).items()):
+        raise ValueError('Freeze identity differs from selected comparison profile')
     out.mkdir(parents=True)
     write_json(out/'run_configuration.json',config); write_json(out/'input_manifest.json',rows)
     write_json(out/'run_order.json',order)
     if freeze: write_json(out/'freeze_record.json',freeze)
     if weak: write_json(out/'weak_reference_ai.json',weak)
-    receipt={'started_at_utc':iso(),'mode':mode,'run_configuration_sha256':sha_file(out/'run_configuration.json'),
+    receipt={**comparison_identity(runtime.profile),
+             'started_at_utc':iso(),'mode':mode,'run_configuration_sha256':sha_file(out/'run_configuration.json'),
              'run_order_sha256':sha_file(out/'run_order.json'),'input_manifest_sha256':sha_file(out/'input_manifest.json'),
              'ready_to_run_new_corpus':bool(freeze),'status':'running',
              'planned_document_count':len(rows),'planned_product_runs':len(order)*2,
@@ -298,7 +325,7 @@ def execute(config,rows,order,out,mode,runtime,freeze=None,weak=None):
                     raise RuntimeError('Forbidden operation: entire run aborted, logs retained')
             write_json(out/f'scores_repeat_{repetition}.json',scores)
             write_json(out/f'aggregates_repeat_{repetition}.json',aggregate(scores))
-            write_json(out/f'paired_differences_repeat_{repetition}.json',paired_differences(scores))
+            write_json(out/f'paired_differences_repeat_{repetition}.json',paired_differences(scores,runtime.profile))
             if weak: write_json(out/f'weak_agreement_repeat_{repetition}.json',weak_scores)
             repetitions.append(scores)
         checks=[]

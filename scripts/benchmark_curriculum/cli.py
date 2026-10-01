@@ -3,15 +3,20 @@ import argparse
 import sys
 from pathlib import Path
 
-from .common import ROOT, PYTHON, Runtime, read_json, write_json, sha_file
+from .common import DEFAULT_PROFILE, PROFILE_NAMES, PYTHON, Runtime, read_json, write_json, sha_file
 
 
 def main():
     # These two entry points are only launched by the runner in isolated processes.
     if len(sys.argv) > 1 and sys.argv[1] in ('worker', 'source'):
         command = sys.argv.pop(1)
+        selector = argparse.ArgumentParser(add_help=False)
+        selector.add_argument('--profile', choices=PROFILE_NAMES, default=DEFAULT_PROFILE)
+        selected, remaining = selector.parse_known_args(sys.argv[1:])
+        sys.argv[1:] = remaining
         if command == 'worker':
             from .worker import main as entry
+            raise SystemExit(entry(selected.profile))
         else:
             from .metrics import main as entry
         raise SystemExit(entry())
@@ -22,21 +27,23 @@ def main():
         p.add_argument('--repo', required=True, type=Path, help='Git checkout containing the fixed comparison commits')
         p.add_argument('--workdir', required=True, type=Path, help='Private directory outside the repository')
         p.add_argument('--python', type=Path, default=PYTHON, help='Worker interpreter; invoke this CLI with the same interpreter')
+        p.add_argument('--profile', choices=PROFILE_NAMES, default=DEFAULT_PROFILE,
+                       help='Closed comparison; default preserves B0/B2/B3')
         if command in ('preflight', 'run', 'combine', 'freeze-template'):
             p.add_argument('--out', required=True, help='New output path relative to workdir (or absolute within it)')
         if command == 'preflight':
             p.add_argument('--include-c01', action='store_true', help='Also use the exact already-versioned calibration PDF')
-            p.add_argument('--config', type=Path, default=ROOT/'config.proposed.json')
+            p.add_argument('--config', type=Path, help='Defaults to the selected profile proposal')
         elif command == 'run':
             p.add_argument('--freeze', required=True, help='Closed freeze record inside workdir')
         elif command == 'freeze-template':
             p.add_argument('--protocol', required=True, type=Path, help='Coordinator-owned protocol file')
-            p.add_argument('--config', type=Path, default=ROOT/'config.proposed.json')
+            p.add_argument('--config', type=Path, help='Defaults to the selected profile proposal')
         elif command == 'combine':
             p.add_argument('--a', required=True)
             p.add_argument('--b', required=True)
     args = parser.parse_args()
-    runtime = Runtime(args.repo, args.workdir, args.python)
+    runtime = Runtime(args.repo, args.workdir, args.python, args.profile)
     if args.command == 'setup':
         from .setup_snapshots import setup
         result = setup(runtime)
@@ -46,14 +53,14 @@ def main():
         out = runtime.private_path(args.out)
         if out.exists():
             raise ValueError('Refusing to overwrite prior run; use a new run directory')
-        config = read_json(args.config)
-        validate_config(config)
+        config = read_json(args.config or runtime.config_path)
+        validate_config(config, runtime.profile)
         verify_snapshots(runtime)
         rows = build(runtime, include_c01=args.include_c01)
-        result = execute(config, rows, make_order(rows), out, 'preflight', runtime)
+        result = execute(config, rows, make_order(rows, runtime.profile), out, 'preflight', runtime)
     elif args.command == 'freeze-template':
         from .build_release import build_release
-        result = build_release(runtime, args.out, args.protocol, args.config)
+        result = build_release(runtime, args.out, args.protocol, args.config or runtime.config_path)
     elif args.command == 'run':
         from .runner import execute, load_freeze
         freeze, config, rows, order, weak = load_freeze(args.freeze, runtime)
