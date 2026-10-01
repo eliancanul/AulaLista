@@ -39,6 +39,27 @@ _SESSION_RE = re.compile(
     rf"(?={_H}*(?:[:.]|\r?$)){_H}*(?:[:.]{_H}*([^\n\r\u2028\u2029]*))?)",
     re.IGNORECASE | re.MULTILINE,
 )
+# Additional format admission is intentionally independent of the legacy regex.
+# A same-line labelled date plus a following labelled moment corroborates a
+# planning unit; a prose mention/date/number alone never creates one. Date text
+# is kept literal; this does not infer a calendar date, duration or curriculum.
+_DATED_SESSION_RE = re.compile(
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
+    rf"{_WRAPPED_H}+(0*[1-9][0-9]*){_WRAPPED_H}+Fecha{_WRAPPED_H}*:{_WRAPPED_H}*"
+    rf"(?:(?:{_DAYS}){_WRAPPED_H}+)?(?:0?[1-9]|[12][0-9]|3[01])"
+    rf"(?={_WRAPPED_H}|[/.-]|\r?$)[^\n\r\u2028\u2029]*())",
+    re.IGNORECASE | re.MULTILINE,
+)
+_PARTIAL_DATED_SESSION_RE = re.compile(
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
+    rf"{_WRAPPED_H}+(0*[1-9][0-9]*){_WRAPPED_H}+Fecha{_WRAPPED_H}*:{_WRAPPED_H}*"
+    rf"(?:{_DAYS})(?={_WRAPPED_H}*(?:Tema\b|Tiempo\b|Organizaci[oó]n\b|\r?$))[^\n\r\u2028\u2029]*())",
+    re.IGNORECASE | re.MULTILINE,
+)
+_MOMENT_LABEL_RE = re.compile(
+    rf"^{_H}*(?:Inicio|Desarrollo|Cierre){_H}*(?::|\r?$)",
+    re.IGNORECASE | re.MULTILINE,
+)
 _DAY_RE = re.compile(
     rf"^{_H}*(({_DAYS})(?:{_H}*:{_H}*[^\n\r]+|{_H}*\r?$)"
     rf"(?:\n{_H}*\d+{_H}+de{_H}+[^\n\r]+)?)", re.IGNORECASE | re.MULTILINE,
@@ -243,7 +264,56 @@ def missing_project_context() -> dict[str, Any]:
 
 
 def _session_headers(pages: list[str]):
-    numbered = [[m for m in _SESSION_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]
+    numbered = []
+    for page_index, page in enumerate(pages):
+        matches = list(_SESSION_RE.finditer(page))
+        cuts = sorted({m.start(1) for pattern in (_UNRESOLVED_SESSION_RE, _WEAK_PROJECT_RE, _GENERAL_DATA_RE)
+                       for m in pattern.finditer(page)})
+        for candidate in [*_DATED_SESSION_RE.finditer(page), *_PARTIAL_DATED_SESSION_RE.finditer(page)]:
+            end = next((pos for pos in cuts if pos > candidate.start(1)), len(page))
+            # Require corroboration in this physical block, never borrow a
+            # moment from the following session/project or a quoted example.
+            corroborated = any(not _quote_stack(page[:moment.start()])
+                               for moment in _MOMENT_LABEL_RE.finditer(page, candidate.end(1), end))
+            if candidate.re is _PARTIAL_DATED_SESSION_RE:
+                # A weekday without a day number stays a partial date, never
+                # filled in. Its header needs richer planning corroboration.
+                block = page[candidate.end(1):end]
+                metadata = {label.casefold().replace("ó", "o") for label in re.findall(
+                    r"(?im)^[ \t]*(Campo|Contenidos/PDA|Tiempo|Organizaci[oó]n)[ \t]*:", block)}
+                corroborated = corroborated and len(metadata) >= 2 and bool(re.search(
+                    r"(?im)^[ \t]*Descripci[oó]n de actividades[ \t]*:", block))
+            if not corroborated and candidate.re is _DATED_SESSION_RE and end == len(page) and page_index + 1 < len(pages):
+                # Narrow footer continuation: at least two distinct labelled
+                # planning metadata fields and an explicit activity-section
+                # label followed by a moment on the immediate next-page prefix.
+                # Date/index mentions cannot borrow arbitrary following prose.
+                metadata = {label.casefold().replace("ó", "o") for label in re.findall(
+                    r"(?im)^[ \t]*(Campo|Contenidos/PDA|Tiempo|Organizaci[oó]n)[ \t]*:",
+                    page[candidate.end(1):end],
+                )}
+                following = pages[page_index + 1]
+                next_cuts = [m.start(1) for pattern in (_UNRESOLVED_SESSION_RE, _WEAK_PROJECT_RE, _GENERAL_DATA_RE)
+                             for m in pattern.finditer(following)]
+                prefix = following[:min(next_cuts)] if next_cuts else following
+                section = re.search(r"(?im)^[ \t]*Descripci[oó]n de actividades[ \t]*:[ \t]*$", prefix)
+                if len(metadata) >= 2 and section:
+                    corroborated = any(not _quote_stack(page + "\n" + prefix[:moment.start()])
+                                       for moment in _MOMENT_LABEL_RE.finditer(prefix, section.end()))
+                elif re.search(r"\bTiempo[ \t]*:", candidate.group(1), re.I):
+                    # Some planning tables split immediately after the dated
+                    # header. Require both phase and purpose labels before the
+                    # first next-page moment, never just an unrelated Inicio.
+                    for moment in _MOMENT_LABEL_RE.finditer(prefix):
+                        before = prefix[:moment.start()]
+                        if (re.search(r"(?im)^[ \t]*Fase[ \t]*:", before)
+                                and re.search(r"(?im)^[ \t]*Prop[oó]sito[ \t]*:", before)
+                                and not _quote_stack(page + "\n" + before)):
+                            corroborated = True
+                            break
+            if corroborated:
+                matches.append(candidate)
+        numbered.append(sorted((m for m in matches if not _quote_stack(page[:m.start()])), key=lambda m: m.start(1)))
     if any(numbered) or any(session_boundary_positions(pages).values()):
         return True, numbered
     return False, [[m for m in _DAY_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]
@@ -326,6 +396,37 @@ def clean_page_prefix(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+
+def literal_page_prefix(text: str, *, previous_text: str = "") -> str:
+    """Trim only exterior boilerplate; keep original spacing inside evidence.
+
+    The legacy cleaner may inform admission, but its reconstructed lines cannot
+    serve as literal source text. In particular, preserve the first task's
+    indentation and blank lines inside wrapped activities.
+    """
+    boilerplate = re.compile(r"^(?:Planeación Didáctica|Semana \d+|Página \d+|Vo\.\s*Bo\.|Nivel:|Zona Escolar:|Sector:|Ciclo Escolar:|Nombre del Docente:|Grado:)", re.I)
+    quotes = _quote_stack(previous_text)
+    kept = []
+    for line in re.finditer(r"[^\r\n]*(?:\r\n|\n|\r|$)", text):
+        quoted = bool(quotes)
+        _advance_quotes(quotes, line.group())
+        if line.group().strip() and (quoted or not boilerplate.match(line.group().strip())):
+            kept.append(line)
+    if not kept:
+        return ""
+    end = kept[-1].start() + len(kept[-1].group().rstrip())
+    return text[kept[0].start():end]
+
+
+def _continuation_before_tail(text: str, *, previous_text: str = "") -> str:
+    """Keep one exact slice, without treating quoted labels as section cuts."""
+    tail = re.compile(r"(?:(?:\r?\n|\r)[^\S\r\n]*|[^\S\r\n]{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)", re.I)
+    for match in tail.finditer(text):
+        if not _quote_stack(previous_text + text[:match.start()]):
+            return text[:match.start()]
+    return text
+
+
 def is_structural_barrier(text: str) -> bool:
     if not text.strip():
         return True
@@ -400,10 +501,12 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
         prefix = next_page[:min(next_boundaries)] if next_boundaries else next_page
         if next_boundaries and min(next_boundaries) not in strong_boundaries.get(page_number + 1, set()):
             retain_unassigned(segment, page_number + 1, min(next_boundaries))
-        cleaned = clean_page_prefix(prefix)
-        cleaned = re.split(r"(?:\n|\s{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)", cleaned, maxsplit=1, flags=re.IGNORECASE)[0].strip()
+        previous_text = segment.page_segments[0][1]
+        literal = literal_page_prefix(prefix, previous_text=previous_text)
+        literal = _continuation_before_tail(literal, previous_text=previous_text)
+        cleaned = clean_page_prefix(literal)
         if cleaned and not is_structural_barrier(cleaned) and re.search(r"(?:^|\n|\b)(?:Inicio|Desarrollo|Cierre)\b", cleaned, re.IGNORECASE):
-            segment.page_segments.append((page_number + 1, cleaned))
+            segment.page_segments.append((page_number + 1, literal))
     return segments
 
 
