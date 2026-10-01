@@ -8,6 +8,11 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 
+from curriculum.atlas.hierarchy import (
+    HierarchyFilterMode,
+    matches_hierarchy,
+    validate_hierarchy_filter,
+)
 from curriculum.atlas.models import AtlasDocumentFragment, EvidenceCandidate
 from curriculum.atlas.text import (
     make_candidate_id,
@@ -29,8 +34,15 @@ class BaseRetriever(ABC):
         query: str,
         top_k: int = 3,
         hierarchy_filter: dict[str, str] | None = None,
+        *,
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> list[EvidenceCandidate]:
-        """Recupera los top_k fragmentos más relevantes para la consulta dada."""
+        """Recupera top-k; strict exige cada clave seleccionada antes de truncar.
+
+        prefer conserva el ranking histórico de cada implementación. Los
+        recuperadores personalizados deben implementar strict explícitamente;
+        no es válido ignorarlo ni filtrar sólo después de seleccionar top-k.
+        """
 
 
 class BM25AtlasRetriever(BaseRetriever):
@@ -87,7 +99,10 @@ class BM25AtlasRetriever(BaseRetriever):
         query: str,
         top_k: int = 3,
         hierarchy_filter: dict[str, str] | None = None,
+        *,
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> list[EvidenceCandidate]:
+        validate_hierarchy_filter(hierarchy_filter, hierarchy_filter_mode)
         q_tokens = tokenize_atlas_text(query)
         if not q_tokens or not self._fragments:
             return []
@@ -119,10 +134,12 @@ class BM25AtlasRetriever(BaseRetriever):
         if not doc_scores:
             return []
 
-        # Aplicar filtro o boost de jerarquía si se especifica
+        # Excluir incompatibles antes de ordenar/truncar; prefer sólo bonifica.
         scored_candidates: list[tuple[float, AtlasDocumentFragment, list[str]]] = []
         for frag_id, base_score in doc_scores.items():
             frag = self._fragments[frag_id]
+            if hierarchy_filter_mode == "strict" and not matches_hierarchy(frag.hierarchy, hierarchy_filter):
+                continue
             reasons = list(doc_reasons.get(frag_id, []))
             multiplier = 1.0
 
@@ -173,7 +190,10 @@ class ExactMatchAtlasRetriever(BaseRetriever):
         query: str,
         top_k: int = 3,
         hierarchy_filter: dict[str, str] | None = None,
+        *,
+        hierarchy_filter_mode: HierarchyFilterMode = "prefer",
     ) -> list[EvidenceCandidate]:
+        validate_hierarchy_filter(hierarchy_filter, hierarchy_filter_mode)
         q_norm = normalize_atlas_text(query)
         if not q_norm or not self._fragments:
             return []
@@ -182,6 +202,8 @@ class ExactMatchAtlasRetriever(BaseRetriever):
         scored: list[tuple[float, AtlasDocumentFragment, list[str]]] = []
 
         for frag in self._fragments.values():
+            if hierarchy_filter_mode == "strict" and not matches_hierarchy(frag.hierarchy, hierarchy_filter):
+                continue
             frag_norm = normalize_atlas_text(frag.text)
             reasons: list[str] = []
             score = 0.0
