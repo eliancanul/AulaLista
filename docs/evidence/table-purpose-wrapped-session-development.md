@@ -5,8 +5,9 @@ Base: `e7c2105373ed381e39ef871105af7b92f9bf89ec`.
 
 Este cambio corrige el límite del propósito ante un patrón tabular corroborado
 y reconoce una forma inequívoca de encabezado de sesión partido. **La sexta
-sesión del documento expuesto sigue pendiente:** una comilla editorial anterior
-está sin cerrar y no se elimina la protección de citas para recuperar ese caso.
+sesión del documento expuesto sigue pendiente:** se detecta una apertura de
+comillas sin cierre anterior al encabezado y no se elimina la protección de
+citas para recuperar ese caso.
 No se resolvieron automáticamente los dos defectos originales.
 
 ## Reglas y límites
@@ -15,8 +16,11 @@ El recorte nuevo sólo se aplica a propósito/finalidad con cierre de oración,
 ante una fila completa de metodología conocida y, en la línea física adyacente,
 una cabecera completa de Campo(s), Contenido(s) y PDA/Proceso(s) de desarrollo.
 El cuerpo de esa tabla no se incorpora al objetivo. Se conservan el fragmento
-literal y la revisión pendiente. Prosa intermedia, citas, columnas incompletas,
-una sola pista o un objetivo sin cierre conservan el candidato para revisión.
+literal y la revisión pendiente. Cuando hay continuación posterior, una sola
+pista o columnas incompletas no habilitan este recorte nuevo: se conserva el
+candidato para revisión. Se mantienen los cortes previos ante una fila completa
+sin continuación. Prosa intermedia, citas o un objetivo sin cierre tampoco
+habilitan la regla nueva.
 No se amplía la regla para títulos ni se reconstruyen celdas geométricamente.
 Una transcripción no entrecomillada con esa misma forma sigue siendo
 indistinguible en texto plano.
@@ -29,8 +33,8 @@ separadores dentro de esa forma siguen sin crear sesión. No se unen páginas.
 La gramática legacy de los demás encabezados y sus cortes se conserva.
 
 Una comilla sin cerrar puede corresponder a una errata o a una cita multilínea
-auténtica. El documento conocido presenta una errata visible en una celda
-anterior; eso no proporciona al parser textual una frontera verificable de
+auténtica. En el documento conocido se detecta esa apertura sin cierre antes del
+encabezado; eso no proporciona al parser textual una frontera verificable de
 celda. El tramo detectado permanece sin asignar para revisión. La recuperación
 automática de esa sesión requiere evidencia estructural adicional; se reserva
 para investigación separada, con contrato y fallback explícitos.

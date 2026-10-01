@@ -233,9 +233,11 @@ corroborada: metodología con valor completo reconocido, seguida en la línea
 física adyacente por Campo(s), Contenido(s) y PDA/Proceso(s) de desarrollo. No
 puede haber prosa entre las pistas. El cuerpo posterior de esa tabla no vuelve
 a incorporarse al objetivo. Se preservan los cortes literales y la revisión
-pendiente; una captura advertida sigue ambigua. Una sola pista, columnas
-incompletas, citas o un objetivo sin cierre conservan el candidato completo
-para revisión. Esta heurística de texto no reconstruye tablas geométricamente
+pendiente; una captura advertida sigue ambigua. Cuando hay continuación
+posterior, una sola pista o columnas incompletas no habilitan este recorte
+nuevo: se conserva el candidato para revisión. Se mantienen los cortes previos
+ante una fila completa sin continuación. Las citas y los objetivos sin cierre
+no habilitan la nueva regla. Esta heurística de texto no reconstruye tablas geométricamente
 ni distingue una transcripción no entrecomillada con exactamente la misma forma.
 No se amplía el recorte de títulos ni el esquema del dossier.
 Las fases no se convierten en clases: se conserva
