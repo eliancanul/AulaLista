@@ -692,7 +692,7 @@ def test_structured_scope_is_lossless_and_report_does_not_alias_inputs(reference
     outputs = {d['id']: prediction(d) for d in reference['documents']}
     original_outputs = deepcopy(outputs)
     report = evaluator.evaluate(reference, lambda doc: outputs[doc['id']])
-    assert report['evaluator_version'] == 'session-declarations-evaluation.v1.2.1'
+    assert report['evaluator_version'] == 'session-declarations-evaluation.v1.3.3'
     assert report['scope'] == original['scope']
     assert json.loads(json.dumps(report, ensure_ascii=False))['scope'] == original['scope']
     assert reference == original

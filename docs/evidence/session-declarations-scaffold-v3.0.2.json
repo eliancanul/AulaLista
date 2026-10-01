@@ -1,0 +1,629 @@
+{
+  "scope": "Synthetic development only; no private references or held-out/teacher validation. Fixed strata remain separate.",
+  "contract_freeze": "abd65a49a5ffd146b9143aada9b639ab58a812a7",
+  "matcher_version": "session-declarations-matcher.v3.0.2",
+  "evaluator_version": "session-declarations-evaluation.v1.3.2",
+  "matcher_sha256": "e539358f921b20816fbb68b83036701a6ac1908b2e0f2252a5c13640ae91099f",
+  "evaluator_sha256": "80b58382ce09f6571b004663014643c8a743bd5dd3e00d9ee5f6503f24ebc06f",
+  "reference_sha256": "3b83730070b9e04859a39af78065dbf70399bdfb3a6d5edbbc3a8941d71f3b09",
+  "supplement_sha256": "f5136feae92c5c186845f2b080113a3a36f1aa2d1e20a2c8ebfa6b3bdd6cbc0d",
+  "scope_contract": {
+    "version": "session-declarations-scaffold-supplement.v1",
+    "base_reference": {
+      "path": "tests/fixtures/interpretation/session_declarations_scaffold_v1.json",
+      "sha256": "3b83730070b9e04859a39af78065dbf70399bdfb3a6d5edbbc3a8941d71f3b09"
+    },
+    "candidate_requirements": 17,
+    "basis_counts": {
+      "same_page_explicit": 7,
+      "structural_scaffold_proposal": 8,
+      "explicit_continuation": 2
+    }
+  },
+  "scaffold_total": {
+    "literal_declarations": {
+      "expected": 28,
+      "correct": 28,
+      "incorrect": 0,
+      "omitted": 0,
+      "extras": 0,
+      "duplicates": 0,
+      "emitted_typed_values": 28,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unit_assignment": {
+      "expected": 28,
+      "correct": 28,
+      "incorrect": 0,
+      "omitted": 0,
+      "expected_anchored": 19,
+      "anchor_span_exact": 19,
+      "recall": 1.0
+    },
+    "known_unit_assignment": {
+      "expected": 19,
+      "correct": 19,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "unresolved_unit_abstentions": {
+      "expected": 9,
+      "correct": 9,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "joint_detection_unit": {
+      "expected": 28,
+      "correct": 28,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "session_candidates": {
+      "expected": 17,
+      "correct": 17,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "recall": 1.0
+    },
+    "scope_abstentions": {
+      "expected": 11,
+      "correct": 11,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "strict_session_claims": {
+      "expected": 17,
+      "correct": 17,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "emitted_claim_records": 17,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "strict_session_claim_diagnostics": {
+      "wrong_emitted_claim_records": 0,
+      "response_abstention_opportunities": 0
+    },
+    "challenges": {
+      "expected": 12,
+      "explicit_abstentions": 12,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    },
+    "challenge_opportunities_v1_2": {
+      "expected": 12,
+      "candidate_or_claim": 0,
+      "no_claim_safe": 12,
+      "no_claim_unknown": 0,
+      "explicit_abstention": 12,
+      "silence": 0,
+      "label_span_mismatch": 0,
+      "multiplicity": 0,
+      "malformed_record": 0,
+      "invalid_provenance": 0
+    },
+    "challenge_records_v1_2": {
+      "emitted_records": 12,
+      "candidate_or_claim_records": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0,
+      "explicit_abstention_records": 12,
+      "exact_label_records": 12,
+      "label_span_mismatch_records": 0,
+      "duplicate_id_records": 0
+    },
+    "negative_documents": {
+      "expected": 8,
+      "false_candidate_emissions": 0,
+      "explicit_abstentions": 8,
+      "clean_silence": 0,
+      "invalid_or_extra_emissions": 0,
+      "false_candidate_records": 0
+    },
+    "output": {
+      "documents": 25,
+      "invalid_outputs": 0,
+      "emitted_records": 40,
+      "invalid_unit_assignments": 0,
+      "invalid_records": 0,
+      "extras": 0,
+      "duplicate_record_ids": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0
+    },
+    "legacy_challenges_v1_1": {
+      "expected": 12,
+      "explicit_abstentions": 12,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    }
+  },
+  "supplement_total": {
+    "literal_declarations": {
+      "expected": 5,
+      "correct": 5,
+      "incorrect": 0,
+      "omitted": 0,
+      "extras": 0,
+      "duplicates": 0,
+      "emitted_typed_values": 5,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unit_assignment": {
+      "expected": 5,
+      "correct": 5,
+      "incorrect": 0,
+      "omitted": 0,
+      "expected_anchored": 0,
+      "anchor_span_exact": 0,
+      "recall": 1.0
+    },
+    "known_unit_assignment": {
+      "expected": 0,
+      "correct": 0,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": null
+    },
+    "unresolved_unit_abstentions": {
+      "expected": 5,
+      "correct": 5,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "joint_detection_unit": {
+      "expected": 5,
+      "correct": 5,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "session_candidates": {
+      "expected": 0,
+      "correct": 0,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "recall": null
+    },
+    "scope_abstentions": {
+      "expected": 5,
+      "correct": 5,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "strict_session_claims": {
+      "expected": 0,
+      "correct": 0,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "emitted_claim_records": 0,
+      "recall": null,
+      "precision": null
+    },
+    "strict_session_claim_diagnostics": {
+      "wrong_emitted_claim_records": 0,
+      "response_abstention_opportunities": 0
+    },
+    "challenges": {
+      "expected": 0,
+      "explicit_abstentions": 0,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    },
+    "challenge_opportunities_v1_2": {
+      "expected": 0,
+      "candidate_or_claim": 0,
+      "no_claim_safe": 0,
+      "no_claim_unknown": 0,
+      "explicit_abstention": 0,
+      "silence": 0,
+      "label_span_mismatch": 0,
+      "multiplicity": 0,
+      "malformed_record": 0,
+      "invalid_provenance": 0
+    },
+    "challenge_records_v1_2": {
+      "emitted_records": 0,
+      "candidate_or_claim_records": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0,
+      "explicit_abstention_records": 0,
+      "exact_label_records": 0,
+      "label_span_mismatch_records": 0,
+      "duplicate_id_records": 0
+    },
+    "negative_documents": {
+      "expected": 0,
+      "false_candidate_emissions": 0,
+      "explicit_abstentions": 0,
+      "clean_silence": 0,
+      "invalid_or_extra_emissions": 0,
+      "false_candidate_records": 0
+    },
+    "output": {
+      "documents": 5,
+      "invalid_outputs": 0,
+      "emitted_records": 5,
+      "invalid_unit_assignments": 0,
+      "invalid_records": 0,
+      "extras": 0,
+      "duplicate_record_ids": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0
+    },
+    "legacy_challenges_v1_1": {
+      "expected": 0,
+      "explicit_abstentions": 0,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    }
+  },
+  "previous_strata_current_totals": {
+    "primary": {
+      "literal_declarations": {
+        "expected": 45,
+        "correct": 45,
+        "incorrect": 0,
+        "omitted": 0,
+        "extras": 0,
+        "duplicates": 0,
+        "emitted_typed_values": 45,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "unit_assignment": {
+        "expected": 45,
+        "correct": 45,
+        "incorrect": 0,
+        "omitted": 0,
+        "expected_anchored": 41,
+        "anchor_span_exact": 41,
+        "recall": 1.0
+      },
+      "known_unit_assignment": {
+        "expected": 41,
+        "correct": 41,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "unresolved_unit_abstentions": {
+        "expected": 4,
+        "correct": 4,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "joint_detection_unit": {
+        "expected": 45,
+        "correct": 45,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "session_candidates": {
+        "expected": 36,
+        "correct": 36,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "recall": 1.0
+      },
+      "scope_abstentions": {
+        "expected": 9,
+        "correct": 9,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "strict_session_claims": {
+        "expected": 36,
+        "correct": 36,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 36,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "strict_session_claim_diagnostics": {
+        "wrong_emitted_claim_records": 0,
+        "response_abstention_opportunities": 0
+      },
+      "challenges": {
+        "expected": 22,
+        "explicit_abstentions": 22,
+        "silence_no_claim": 0,
+        "wrong_candidates": 0,
+        "duplicates": 0,
+        "invalid_records": 0
+      },
+      "challenge_opportunities_v1_2": {
+        "expected": 22,
+        "candidate_or_claim": 0,
+        "no_claim_safe": 22,
+        "no_claim_unknown": 0,
+        "explicit_abstention": 22,
+        "silence": 0,
+        "label_span_mismatch": 0,
+        "multiplicity": 0,
+        "malformed_record": 0,
+        "invalid_provenance": 0
+      },
+      "challenge_records_v1_2": {
+        "emitted_records": 22,
+        "candidate_or_claim_records": 0,
+        "malformed_records": 0,
+        "invalid_provenance_records": 0,
+        "explicit_abstention_records": 22,
+        "exact_label_records": 22,
+        "label_span_mismatch_records": 0,
+        "duplicate_id_records": 0
+      },
+      "negative_documents": {
+        "expected": 15,
+        "false_candidate_emissions": 0,
+        "explicit_abstentions": 13,
+        "clean_silence": 2,
+        "invalid_or_extra_emissions": 0,
+        "false_candidate_records": 0
+      },
+      "output": {
+        "documents": 36,
+        "invalid_outputs": 0,
+        "emitted_records": 67,
+        "invalid_unit_assignments": 0,
+        "invalid_records": 0,
+        "extras": 0,
+        "duplicate_record_ids": 0,
+        "malformed_records": 0,
+        "invalid_provenance_records": 0
+      },
+      "legacy_challenges_v1_1": {
+        "expected": 22,
+        "explicit_abstentions": 22,
+        "silence_no_claim": 0,
+        "wrong_candidates": 0,
+        "duplicates": 0,
+        "invalid_records": 0
+      }
+    },
+    "labels": {
+      "literal_declarations": {
+        "expected": 17,
+        "correct": 17,
+        "incorrect": 0,
+        "omitted": 0,
+        "extras": 0,
+        "duplicates": 0,
+        "emitted_typed_values": 17,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "unit_assignment": {
+        "expected": 17,
+        "correct": 17,
+        "incorrect": 0,
+        "omitted": 0,
+        "expected_anchored": 17,
+        "anchor_span_exact": 17,
+        "recall": 1.0
+      },
+      "known_unit_assignment": {
+        "expected": 17,
+        "correct": 17,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "unresolved_unit_abstentions": {
+        "expected": 0,
+        "correct": 0,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": null
+      },
+      "joint_detection_unit": {
+        "expected": 17,
+        "correct": 17,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "session_candidates": {
+        "expected": 16,
+        "correct": 16,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "recall": 1.0
+      },
+      "scope_abstentions": {
+        "expected": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "omitted": 0,
+        "recall": 1.0
+      },
+      "strict_session_claims": {
+        "expected": 16,
+        "correct": 16,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 16,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "strict_session_claim_diagnostics": {
+        "wrong_emitted_claim_records": 0,
+        "response_abstention_opportunities": 0
+      },
+      "challenges": {
+        "expected": 13,
+        "explicit_abstentions": 13,
+        "silence_no_claim": 0,
+        "wrong_candidates": 0,
+        "duplicates": 0,
+        "invalid_records": 0
+      },
+      "challenge_opportunities_v1_2": {
+        "expected": 13,
+        "candidate_or_claim": 0,
+        "no_claim_safe": 13,
+        "no_claim_unknown": 0,
+        "explicit_abstention": 13,
+        "silence": 0,
+        "label_span_mismatch": 0,
+        "multiplicity": 0,
+        "malformed_record": 0,
+        "invalid_provenance": 0
+      },
+      "challenge_records_v1_2": {
+        "emitted_records": 13,
+        "candidate_or_claim_records": 0,
+        "malformed_records": 0,
+        "invalid_provenance_records": 0,
+        "explicit_abstention_records": 13,
+        "exact_label_records": 13,
+        "label_span_mismatch_records": 0,
+        "duplicate_id_records": 0
+      },
+      "negative_documents": {
+        "expected": 9,
+        "false_candidate_emissions": 0,
+        "explicit_abstentions": 8,
+        "clean_silence": 1,
+        "invalid_or_extra_emissions": 0,
+        "false_candidate_records": 0
+      },
+      "output": {
+        "documents": 18,
+        "invalid_outputs": 0,
+        "emitted_records": 30,
+        "invalid_unit_assignments": 0,
+        "invalid_records": 0,
+        "extras": 0,
+        "duplicate_record_ids": 0,
+        "malformed_records": 0,
+        "invalid_provenance_records": 0
+      },
+      "legacy_challenges_v1_1": {
+        "expected": 13,
+        "explicit_abstentions": 13,
+        "silence_no_claim": 0,
+        "wrong_candidates": 0,
+        "duplicates": 0,
+        "invalid_records": 0
+      }
+    }
+  },
+  "historical_replay": [
+    {
+      "matcher_commit": "bfa5146",
+      "stratum": "primary",
+      "outputs_sha256": "ab02eaccdb035155d4e159153778917a765adc74392090c32b405fdad370a96d",
+      "reference_sha256": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5",
+      "total_and_documents_identical": true,
+      "strict_session_claims": {
+        "expected": 36,
+        "correct": 36,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 36,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "matcher_commit": "bfa5146",
+      "stratum": "labels",
+      "outputs_sha256": "1bd3af871b6334079a04eeb044b314f4592832864a0671e63bd7b59df3531742",
+      "reference_sha256": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "total_and_documents_identical": true,
+      "strict_session_claims": {
+        "expected": 16,
+        "correct": 3,
+        "incorrect": 3,
+        "omitted": 10,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 3,
+        "recall": 0.1875,
+        "precision": 1.0
+      }
+    },
+    {
+      "matcher_commit": "8093752",
+      "stratum": "primary",
+      "outputs_sha256": "f648ed8f1d6f3b71afc189dcc53fe05a00462147f11ef160ea1b7304f3774671",
+      "reference_sha256": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5",
+      "total_and_documents_identical": true,
+      "strict_session_claims": {
+        "expected": 36,
+        "correct": 36,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 36,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "matcher_commit": "8093752",
+      "stratum": "labels",
+      "outputs_sha256": "e24e2c6e7dd2af51d36dcce623fb9b8be1afc907a7feb0f6ce14647b9484c389",
+      "reference_sha256": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "total_and_documents_identical": true,
+      "strict_session_claims": {
+        "expected": 16,
+        "correct": 16,
+        "incorrect": 0,
+        "omitted": 0,
+        "explicit_abstentions": 0,
+        "emitted_claim_records": 16,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    }
+  ],
+  "limits": [
+    "No SEP identity/alignment or pedagogical authority.",
+    "needs_human_review and null confidence remain mandatory.",
+    "No production/UI/schema/provider changes, APIs or publication."
+  ],
+  "repair_of": "f0c8b3fa3fca163411745013cd34f0aaa45df6ce",
+  "focused_tests": {
+    "passed": 878,
+    "seconds": 1.84,
+    "log_sha256": "ce6e6191d69035e9d7c108891403f8837283920586f744f5e99da3e61d60c8e0"
+  },
+  "review_repairs": [
+    "Document-prefix quote state entering structural scaffold",
+    "Unicode-horizontal indentation of activity bullet lines",
+    "Inline structural cues inside typed declaration values in structural route"
+  ],
+  "historical_and_current_stratum_metrics_unchanged": true,
+  "predecessor_suite": "f0c8b3f suite was interrupted on request due to review findings; not a passing result"
+}

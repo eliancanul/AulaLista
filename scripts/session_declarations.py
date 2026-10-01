@@ -25,7 +25,7 @@ from curriculum.source_segments import (
 )
 
 VERSION = 'session-declarations.v1'
-MATCHER_VERSION = 'session-declarations-matcher.v2.0.1'
+MATCHER_VERSION = 'session-declarations-matcher.v3.0.3'
 PREDICATES = {'contenido': 'contenido_declarado', 'pda': 'pda_declarado'}
 MAX_CHARACTERS = 2_000_000
 MAX_RECORDS = 2_000
@@ -65,6 +65,15 @@ UNSPECIFIED = re.compile(r'^(?:N/?A|N\.A\.?|Ningun[oa]?|Ning[uú]n|Sin\s+(?:defi
 SENTENCE_END = re.compile(r'[.!?][»”"\)\]]*$')
 DANGLING_END = re.compile(r'(?:\b(?:y|e|o|u|de|del|para|con|en|a)|[,;:–—-])\s*$', re.I)
 BULLET = re.compile(r'^(?:[-•*]|[0-9]+[.)])\s*\S')
+MARKER_PREFIX = re.compile(rf'{HORIZONTAL}*-{HORIZONTAL}*')
+PLANNING_META = re.compile(
+    rf'^(?:Fecha|Tiempo|Duraci[oó]n|Tema{HORIZONTAL}+de{HORIZONTAL}+la{HORIZONTAL}+sesi[oó]n|'
+    rf'Organizaci[oó]n|Campos?){HORIZONTAL}*:{HORIZONTAL}*(.*)$', re.I)
+MOMENT = re.compile(rf'^{HORIZONTAL}*(Inicio|Desarrollo|Cierre){HORIZONTAL}*(?::|$)', re.I)
+SCAFFOLD_ACTIVITY = re.compile(rf'^(?:[-+•*◦]|[0-9]+[.)]){HORIZONTAL}*\S')
+SCAFFOLD_INLINE_CUT = re.compile(
+    rf'\b(?:(?:Inicio|Desarrollo|Cierre|(?:Nombre{HORIZONTAL}+del{HORIZONTAL}+)?Proyecto){HORIZONTAL}*:'
+    rf'|DATOS{HORIZONTAL}+GENERALES\b|SESI[OÓ]N{HORIZONTAL}*[0-9]+\b)', re.I)
 
 
 def snapshot_hash(pages):
@@ -122,6 +131,11 @@ def _boundary(line):
     text = line.strip()
     if not text:
         return False
+    if text.startswith('-'):
+        marked = text[1:].lstrip()
+        typed = LABEL.match(marked)
+        if typed and typed.group().endswith(':') or PLANNING_META.match(marked):
+            return True
     label = LABEL.match(text)
     standalone_label = label and (text[label.end():].strip() == '' or label.group().endswith(':'))
     return bool(standalone_label or HEADING.match(text) or GENERIC_HEADING.fullmatch(text)
@@ -132,9 +146,15 @@ def _unit_data(pages, source):
     units = []
     for segment in scan_session_segments(pages, source):
         a = segment.header_anchor
+        admitted = []
+        for number, literal in segment.page_segments:
+            page = pages[number - 1]
+            if literal and page.count(literal) == 1:
+                start = page.index(literal)
+                admitted.append((number, start, start + len(literal)))
         units.append({'id': 'session:' + segment.session_id, 'kind': 'session',
                       'anchor': _ref(pages, source, a['page_number'], a['text_start'], a['text_end'], 'unit_anchor'),
-                      '_number': segment.session_number})
+                      '_number': segment.session_number, '_admitted': admitted})
     for project in project_occurrences(pages, source):
         a = project['anchor']
         # A missing or ambiguous project title does not define a resolved unit.
@@ -150,37 +170,164 @@ def _unit_data(pages, source):
     return units, barriers
 
 
-def _scope(pages, source, number, start, units, barriers):
+def _scaffold_quotes_balanced(text):
+    """Local strict pairs: an orphan closer is not a balanced quotation."""
+    stack = []
+    closing = {'»': '«', '”': '“'}
+    for char in text:
+        if char == '"':
+            if stack and stack[-1] == char:
+                stack.pop()
+            else:
+                stack.append(char)
+        elif char in ('«', '“'):
+            stack.append(char)
+        elif char in closing:
+            if not stack or stack.pop() != closing[char]:
+                return False
+    return not stack
+
+
+def _complete_planning_value(value):
+    return (bool(value.strip()) and not DANGLING_END.search(value)
+            and _scaffold_quotes_balanced(value)
+            and not SCAFFOLD_INLINE_CUT.search(value))
+
+
+def _planning_structure(text, *, declarations):
+    """Source-only bounded metadata rows; never discover scope from gold spans."""
+    active = None
+    for _, _, line in _lines(text):
+        if VERTICAL.search(line) or '\x1f' in line:
+            return False
+        text_line = line.strip()
+        if not text_line:
+            continue
+        if text_line.startswith('-'):
+            text_line = text_line[1:].lstrip()
+        meta = PLANNING_META.fullmatch(text_line)
+        mentions = list(LABEL.finditer(text_line)) if declarations else []
+        child = _explicit_container_child(text_line, mentions, []) if mentions else None
+        label = next((m for m in mentions if m.start() == (child or 0)), None)
+        typed = (label and label.group().endswith(':') and not COMBINED_ONLY.fullmatch(label['label'])
+                 and (len([m for m in mentions if m.group().endswith(':')]) == 1 or child is not None)
+                 and '|' not in text_line)
+        if meta or typed:
+            if active is not None and not _complete_planning_value(active):
+                return False
+            if meta:
+                if not _complete_planning_value(meta[1]):
+                    return False
+                active = None
+            else:
+                active = text_line[label.end():].strip()
+            continue
+        # A new sentence after a complete block is loose prose, not metadata.
+        if (active is None or SENTENCE_END.search(active) or SCAFFOLD_ACTIVITY.match(line.strip())
+                or ':' in text_line or text_line.isupper() or _boundary(text_line)):
+            return False
+        active += '\n' + text_line
+    return active is None or _complete_planning_value(active)
+
+
+def _prior_scaffold(pages, number, units, barriers):
+    if number < 2:
+        return None
+    previous = [u for u in units if u['anchor']['page_number'] == number - 1]
+    sessions = [u for u in previous if u['kind'] == 'session']
+    if len(sessions) != 1:
+        return None
+    unit = sessions[0]
+    start, end = (unit['anchor']['region'][key] for key in ('start', 'end'))
+    header = unit['anchor']['excerpt']
+    identifier = re.search(rf'\bSESI[OÓ]N{HORIZONTAL}*[0-9]+\b', header, re.I)
+    if not identifier or '\x1f' in header or SCAFFOLD_INLINE_CUT.search(header[identifier.end():]):
+        return None
+    if any(u['anchor']['region']['start'] > start for u in previous):
+        return None
+    if any(b > start for b in barriers[number - 1]):
+        return None
+    preceding = ''.join(pages[:number - 2]) + pages[number - 2][:end]
+    if (not _scaffold_quotes_balanced(preceding)
+            or not _planning_structure(pages[number - 2][end:], declarations=False)):
+        return None
+    return unit
+
+
+def _first_moment(page):
+    return next(((begin, match[1].casefold()) for begin, _, line in _lines(page)
+                 if (match := MOMENT.match(line))), None)
+
+
+def _structural_scope(pages, source, number, start, value_end, units, barriers):
+    unit = _prior_scaffold(pages, number, units, barriers)
+    first = _first_moment(pages[number - 1])
+    if not unit or not first or first[1] != 'inicio' or value_end is None:
+        return None, [], None
+    prefix_end = first[0]
+    if (not start < value_end <= prefix_end or any(b < prefix_end for b in barriers[number])
+            or not _planning_structure(pages[number - 1][:prefix_end], declarations=True)
+            or not any(p == number and begin <= start < value_end <= end
+                       for p, begin, end in unit['_admitted'])):
+        return None, [], None
+    proof = [
+        _ref(pages, source, number - 1, unit['anchor']['region']['start'], len(pages[number - 2]), 'unit_scaffold_tail'),
+        _ref(pages, source, number, 0, prefix_end, 'unit_scaffold_prefix'),
+    ]
+    return {k: v for k, v in unit.items() if not k.startswith('_')}, proof, 'structural_scaffold_proposal'
+
+
+def _marker_allowed(pages, number, start, units):
+    same_page = [u for u in units if u['anchor']['page_number'] == number and u['anchor']['region']['end'] <= start]
+    if same_page:
+        current = max(same_page, key=lambda u: u['anchor']['region']['start'])
+        if current['kind'] != 'session':
+            return False
+        begin = current['anchor']['region']['end']
+    else:
+        begin = 0
+        first = next((line for line in _lines(pages[number - 1]) if line[2].strip()), None)
+        if first and CONTINUATION.fullmatch(first[2].strip()):
+            begin = first[1]
+    return _planning_structure(pages[number - 1][begin:start], declarations=True)
+
+
+def _scope(pages, source, number, start, units, barriers, *, value_end=None):
     same_page = [u for u in units if u['anchor']['page_number'] == number and u['anchor']['region']['end'] <= start]
     if same_page:
         current = max(same_page, key=lambda u: u['anchor']['region']['start'])
         if any(current['anchor']['region']['start'] < b <= start for b in barriers[number]):
-            return None, None
-        return {k: v for k, v in current.items() if not k.startswith('_')}, None
+            return None, [], None
+        return {k: v for k, v in current.items() if not k.startswith('_')}, [], 'same_page_explicit'
     if number == 1:
-        return None, None
+        return None, [], None
     first = next((line for line in _lines(pages[number - 1]) if line[2].strip()), None)
     continuation = CONTINUATION.fullmatch(first[2].strip()) if first else None
     if not continuation or first[1] > start or any(b < start for b in barriers[number]):
-        return None, None
+        return _structural_scope(pages, source, number, start, value_end, units, barriers)
     previous = [u for u in units if u['anchor']['page_number'] == number - 1]
     matching = [u for u in previous if u['kind'] == 'session' and u['_number'] == int(continuation[1])]
     if len(matching) != 1:
-        return None, None
+        return None, [], None
     current = matching[0]
     if any(u['anchor']['region']['start'] > current['anchor']['region']['start'] for u in previous):
-        return None, None
+        return None, [], None
     if any(b > current['anchor']['region']['start'] for b in barriers[number - 1]):
-        return None, None
+        return None, [], None
     begin = first[0] + len(first[2]) - len(first[2].lstrip())
     proof = _ref(pages, source, number, begin, first[0] + len(first[2].rstrip()), 'unit_continuation')
-    return {k: v for k, v in current.items() if not k.startswith('_')}, proof
+    return {k: v for k, v in current.items() if not k.startswith('_')}, [proof], 'explicit_continuation'
 
 
-def _value_span(page, lines, line_index, label_end):
+def _value_span(page, lines, line_index, label_end, *, closed_block=False):
     end = len(page)
     for begin, _, line in lines[line_index + 1:]:
         if _boundary(line):
+            end = begin
+            break
+        # Only a new scaffold context may retain a completed literal block
+        # before loose prose. That prose still vetoes structural scope.
+        if closed_block and SENTENCE_END.search(page[label_end:begin].rstrip()) and line.strip():
             end = begin
             break
     raw = page[label_end:end]
@@ -230,7 +377,8 @@ def extract_declarations(pages, *, source_doc_sha256):
             mentions = list(LABEL.finditer(line))
             child_start = _explicit_container_child(line, mentions, quotes)
             row_is_table = ('|' in line or index in tabular or
-                            child_start is None and len(mentions) > 1 and (line[:mentions[0].start()].strip() == '' and
+                            child_start is None and len(mentions) > 1 and ((line[:mentions[0].start()].strip() == ''
+                                                  or MARKER_PREFIX.fullmatch(line[:mentions[0].start()])) and
                                                   sum(m.group().endswith(':') for m in mentions) > 1
                                                   or re.match(r'^\s*Campos?\b', line, re.I)))
             for mention in mentions:
@@ -244,6 +392,9 @@ def extract_declarations(pages, *, source_doc_sha256):
                 label = _ref(pages, source_doc_sha256, number, start, end, 'label')
                 raw_kind = mention['label']
                 kind = 'pda' if re.fullmatch(PDA, raw_kind, re.I) else 'contenido'
+                marker = (MARKER_PREFIX.fullmatch(line[:mention.start()])
+                          and mention.group().endswith(':') and not VERTICAL.search(mention.group())
+                          and _marker_allowed(pages, number, begin, units))
                 value, reason = None, None
                 if prefix_quotes:
                     reason = 'quoted'
@@ -253,22 +404,28 @@ def extract_declarations(pages, *, source_doc_sha256):
                     reason = 'table_ambiguous'
                 elif (re.fullmatch(NUMBERED_PDA, raw_kind, re.I)
                       and (VERTICAL.search(mention.group())
-                           or child_start is None and not HORIZONTAL_ONLY.fullmatch(line[:mention.start()]))):
+                           or child_start is None and not marker and not HORIZONTAL_ONLY.fullmatch(line[:mention.start()]))):
                     reason = 'label_mention'
-                elif line[:mention.start()].strip() and mention.start() != child_start:
+                elif line[:mention.start()].strip() and mention.start() != child_start and not marker:
                     reason = 'label_mention'
                 elif not mention.group().endswith(':') and line[mention.end():].strip():
                     reason = 'nonaffirmative' if NONAFFIRMATIVE.match(line[mention.end():].strip(' :')) else 'label_mention'
                 else:
-                    value, reason = _value_span(page, lines, index, end)
-                unit, continuation = _scope(pages, source_doc_sha256, number, start, units, barriers)
+                    scaffold_prior = _prior_scaffold(pages, number, units, barriers)
+                    first_moment = _first_moment(page)
+                    closed_block = bool(scaffold_prior and first_moment and first_moment[1] == 'inicio'
+                                        and not any(u['anchor']['page_number'] == number
+                                                    and u['anchor']['region']['end'] <= start for u in units))
+                    value, reason = _value_span(page, lines, index, end, closed_block=closed_block)
+                unit, scope_proofs, scope_basis = _scope(
+                    pages, source_doc_sha256, number, start, units, barriers,
+                    value_end=value[1] if value else None)
                 evidence = [label]
                 if value:
                     evidence.append(_ref(pages, source_doc_sha256, number, *value, 'value'))
                     consumed_until = value[1]
                     reason = 'unresolved_scope' if unit is None else 'project_scope' if unit['kind'] == 'project' else 'explicit_session'
-                if continuation:
-                    evidence.append(continuation)
+                evidence.extend(scope_proofs)
                 decision = 'candidate' if reason == 'explicit_session' else 'abstained'
                 identity = [VERSION, source_doc_sha256, extraction, number, start, end, kind]
                 record_id = hashlib.sha256(json.dumps(identity, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()[:16]
@@ -284,6 +441,7 @@ def extract_declarations(pages, *, source_doc_sha256):
                         extraction_method='detached_literal_declarations', extraction_version=MATCHER_VERSION,
                         state='needs_human_review', confidence=None, evidence=refs,
                         metadata={'basis': 'explicit', 'contract_version': VERSION, 'matcher_version': MATCHER_VERSION,
+                                  'unit_scope_basis': scope_basis,
                                   'extraction_sha256': extraction,
                                   'validation': 'literal_declaration_not_SEP_alignment'},
                     ).to_dict()
@@ -296,7 +454,7 @@ def extract_declarations(pages, *, source_doc_sha256):
             'records': records,
             'limits': ['Matcher implementation: ' + MATCHER_VERSION,
                        'Extracted text only; no PDF/OCR or table reconstruction.',
-                       'Page-local values; cross-page scope only with explicit immediate continuation.',
+                       'Page-local values; cross-page scope needs named continuation or a bounded structural proposal.',
                        'Candidates pending human review; no SEP alignment or pedagogical approval.',
                        'Bounded textual grammar; ambiguous or unrecognized discourse may be omitted or abstained.']}
 

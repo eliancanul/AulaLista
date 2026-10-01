@@ -1,0 +1,1289 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "AI-authored synthetic development regression from disclosed patterns; frozen before marker/scaffold implementation; not held-out or teacher gold",
+  "scope": {
+    "input": "Entirely synthetic, manually authored original page strings and literal spans",
+    "development_base": "420334b",
+    "coverage": [
+      "Leading hyphen as indentation before a complete typed colon label, before the first Inicio/Desarrollo/Cierre",
+      "Complete local codes retained in labels; attached/spaced markers, CRLF and repeated physical blocks",
+      "Unique explicit session scaffold on the immediately previous page with empty or complete metadata-only tail",
+      "Only complete metadata/declarations before the first moment on the current page; values remain page-local",
+      "Prose, examples, missing colons, activity bullets, developed sessions, incomplete tails and prefixes, scope resets, multiple parents, open quotes and intermediate pages",
+      "New current session/project identity and explicit continuation of a developed session as existing-rule controls"
+    ],
+    "metadata_fields": [
+      "Fecha",
+      "Tiempo",
+      "Duración",
+      "Tema de la sesión",
+      "Organización",
+      "Campo",
+      "Campos"
+    ],
+    "exclusions": [
+      "Private material",
+      "Final reserve or holdout material",
+      "Product scanner or matcher outputs",
+      "API or network calls",
+      "SEP identity or alignment",
+      "Pedagogical or teacher validation",
+      "PDF/OCR evaluation",
+      "New field predicates",
+      "Cross-page value reconstruction"
+    ],
+    "adjudication": "Decisions and spans authored independently; no matcher, evaluator, scanner or product outputs used to choose gold"
+  },
+  "documents": [
+    {
+      "id": "marker_attached_pair",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n-Contenido: Formas de las tarjetas.\n-X7 PDA2: Describe formas de tarjetas.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "marker_attached_pair-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 27,
+            "end": 37,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 38,
+            "end": 61,
+            "quote": "Formas de las tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "marker_attached_pair-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 63,
+            "end": 71,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 72,
+            "end": 100,
+            "quote": "Describe formas de tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "marker_spaced_crlf_repeated",
+      "pages": [
+        "SESIÓN 1: Explorar formas\r\n  - Contenidos curriculares:\tFormas y tamaños.\r\n\t- X7\tPDA2:\tDescribe formas\r\ny compara tamaños.\r\n  - X7\tPDA2:\tDescribe formas\r\ny compara tamaños.\r\nInicio:\r\n-Ordenar tarjetas.\r\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "marker_spaced_crlf_repeated-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 31,
+            "end": 55,
+            "quote": "Contenidos curriculares:"
+          },
+          "value": {
+            "page": 1,
+            "start": 56,
+            "end": 73,
+            "quote": "Formas y tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "marker_spaced_crlf_repeated-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 78,
+            "end": 86,
+            "quote": "X7\tPDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 87,
+            "end": 122,
+            "quote": "Describe formas\r\ny compara tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "marker_spaced_crlf_repeated-d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 128,
+            "end": 136,
+            "quote": "X7\tPDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 137,
+            "end": 172,
+            "quote": "Describe formas\r\ny compara tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "marker_prose_mention",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n-Leer X7 PDA2: Describe formas, como ejemplo de una etiqueta.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_prose_mention-c1",
+          "anchor": {
+            "page": 1,
+            "start": 32,
+            "end": 40,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "marker_quoted_example",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nEjemplo citado:\n«\n-Contenido: Formas de tarjetas.\n-X7 PDA2: Describe formas de tarjetas.\n»\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_quoted_example-c1",
+          "anchor": {
+            "page": 1,
+            "start": 45,
+            "end": 55,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "marker_quoted_example-c2",
+          "anchor": {
+            "page": 1,
+            "start": 77,
+            "end": 85,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "marker_unquoted_example",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nEjemplo:\n-X7 PDA2: Describe formas de tarjetas.\nFin del ejemplo.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_unquoted_example-c1",
+          "anchor": {
+            "page": 1,
+            "start": 36,
+            "end": 44,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "marker_missing_colon",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n-X7 PDA2\nDescribe formas de tarjetas.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_missing_colon-c1",
+          "anchor": {
+            "page": 1,
+            "start": 27,
+            "end": 34,
+            "quote": "X7 PDA2"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "marker_after_inicio",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nInicio:\n-X7 PDA2: Copiar la etiqueta de una tarjeta.\nDesarrollo:\n-Contenido: Escribir el título de una tarjeta.\nCierre:\n-Compartir tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_after_inicio-c1",
+          "anchor": {
+            "page": 1,
+            "start": 35,
+            "end": 43,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "marker_after_inicio-c2",
+          "anchor": {
+            "page": 1,
+            "start": 92,
+            "end": 102,
+            "quote": "Contenido:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "scaffold_empty_tail",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n\n",
+        "Contenido: Formas de las tarjetas.\nPDA: Describe formas de tarjetas.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_empty_tail-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 11,
+            "end": 34,
+            "quote": "Formas de las tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "scaffold_empty_tail-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 35,
+            "end": 39,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 40,
+            "end": 68,
+            "quote": "Describe formas de tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_complete_metadata",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nFecha: 2026-01-12\nTiempo: 40 minutos\nTema de la sesión: Formas de tarjetas\nOrganización: Equipos\nCampo: Saberes y pensamiento científico\n",
+        "Contenido: Formas y tamaños.\nPDA: Compara tamaños de tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_complete_metadata-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 11,
+            "end": 28,
+            "quote": "Formas y tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "scaffold_complete_metadata-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 29,
+            "end": 33,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 34,
+            "end": 62,
+            "quote": "Compara tamaños de tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_bullet_metadata",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n-Fecha: 2026-01-13\n- Duración: 45 minutos\n  - Tema de la sesión: Tarjetas de colores\n-Organización: Parejas\n- Campos: Lenguajes\n",
+        "- Tiempo: 45 minutos\n- Campo: Lenguajes\nContenido: Descripción de colores.\nPDA: Describe colores de tarjetas.\nInicio:\n-Comparar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_bullet_metadata-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 40,
+            "end": 50,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 51,
+            "end": 74,
+            "quote": "Descripción de colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "scaffold_bullet_metadata-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 75,
+            "end": 79,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 80,
+            "end": 109,
+            "quote": "Describe colores de tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_crlf_metadata",
+      "pages": [
+        "SESIÓN 1: Explorar formas\r\nDuración: 35 minutos\r\nCampos: Lenguajes\r\n",
+        "Fecha: 2026-01-14\r\nTema de la sesión: Tarjetas pequeñas\r\n- Contenidos:\tDescripción de tarjetas pequeñas.\r\n-X7 PDA2:\tDescribe tarjetas\r\ny compara sus tamaños.\r\nInicio:\r\n-Observar tarjetas.\r\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_crlf_metadata-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 59,
+            "end": 70,
+            "quote": "Contenidos:"
+          },
+          "value": {
+            "page": 2,
+            "start": 71,
+            "end": 104,
+            "quote": "Descripción de tarjetas pequeñas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "scaffold_crlf_metadata-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 107,
+            "end": 115,
+            "quote": "X7 PDA2:"
+          },
+          "value": {
+            "page": 2,
+            "start": 116,
+            "end": 157,
+            "quote": "Describe tarjetas\r\ny compara sus tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_developed_session",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nInicio:\n-Observar tarjetas.\nDesarrollo:\n-Ordenar tarjetas.\nCierre:\n-Compartir el orden.\n",
+        "Contenido: Descripción de colores.\nPDA: Describe colores de tarjetas.\nInicio:\n-Comparar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_developed_session-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 11,
+            "end": 34,
+            "quote": "Descripción de colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "scaffold_developed_session-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 35,
+            "end": 39,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 40,
+            "end": 69,
+            "quote": "Describe colores de tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_prior_activity_without_moment",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nFecha: 2026-01-15\n-Comparar dos tarjetas.\n",
+        "PDA: Describe diferencias entre tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_prior_activity_without_moment-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 4,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 5,
+            "end": 41,
+            "quote": "Describe diferencias entre tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_truncated_value",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nContenido: Formas y\n",
+        "colores.\nPDA: Describe colores de tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_truncated_value-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 9,
+            "end": 13,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 14,
+            "end": 43,
+            "quote": "Describe colores de tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "scaffold_truncated_value-c1",
+          "anchor": {
+            "page": 1,
+            "start": 26,
+            "end": 36,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_new_session",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nFecha: 2026-01-16\n",
+        "SESIÓN 2: Comparar colores\nContenido: Colores de tarjetas.\nPDA: Compara colores de tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 26,
+            "quote": "SESIÓN 2: Comparar colores"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_new_session-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 27,
+            "end": 37,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 38,
+            "end": 58,
+            "quote": "Colores de tarjetas."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "scaffold_new_session-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 59,
+            "end": 63,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 64,
+            "end": 92,
+            "quote": "Compara colores de tarjetas."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_new_project",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nTiempo: 40 minutos\n",
+        "Proyecto: Colección de tarjetas\nContenido: Descripción de tarjetas.\nPDA: Describe tarjetas de colores.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        },
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 31,
+            "quote": "Proyecto: Colección de tarjetas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_new_project-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 32,
+            "end": 42,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 43,
+            "end": 67,
+            "quote": "Descripción de tarjetas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "scaffold_new_project-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 68,
+            "end": 72,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 73,
+            "end": 102,
+            "quote": "Describe tarjetas de colores."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_reset",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nOrganización: Parejas\n",
+        "DATOS GENERALES\nPDA: Describe tarjetas de colores.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_reset-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 16,
+            "end": 20,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 21,
+            "end": 50,
+            "quote": "Describe tarjetas de colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_two_prior_headers",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nSESIÓN 2: Comparar colores\n",
+        "PDA: Compara colores de tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 26,
+            "end": 52,
+            "quote": "SESIÓN 2: Comparar colores"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_two_prior_headers-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 4,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 5,
+            "end": 33,
+            "quote": "Compara colores de tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_loose_prefix",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n",
+        "Las tarjetas forman parte de una colección.\nPDA: Describe tarjetas de colores.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_loose_prefix-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 44,
+            "end": 48,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 49,
+            "end": 78,
+            "quote": "Describe tarjetas de colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_open_quote",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nEjemplo citado:\n«\n",
+        "-Contenido: Formas de tarjetas.\n-X7 PDA2: Describe formas de tarjetas.\n»\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "scaffold_open_quote-c1",
+          "anchor": {
+            "page": 2,
+            "start": 1,
+            "end": 11,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "scaffold_open_quote-c2",
+          "anchor": {
+            "page": 2,
+            "start": 33,
+            "end": 41,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "scaffold_intermediate_page",
+      "pages": [
+        "SESIÓN 1: Explorar formas\n",
+        "\n",
+        "PDA: Describe formas de tarjetas.\nInicio:\n-Observar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_intermediate_page-d1",
+          "kind": "pda",
+          "label": {
+            "page": 3,
+            "start": 0,
+            "end": 4,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 3,
+            "start": 5,
+            "end": 33,
+            "quote": "Describe formas de tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "explicit_continuation_after_developed",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nInicio:\n-Observar tarjetas.\nDesarrollo:\n-Comparar tarjetas.\n",
+        "Continuación de la sesión 1\nContenido: Descripción de tamaños.\nPDA: Compara tamaños de tarjetas.\nCierre:\n-Compartir tamaños.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "explicit_continuation_after_developed-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 28,
+            "end": 38,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 39,
+            "end": 62,
+            "quote": "Descripción de tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "explicit_continuation_after_developed-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 63,
+            "end": 67,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 68,
+            "end": 96,
+            "quote": "Compara tamaños de tarjetas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "scaffold_current_activity_prefix",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nDuración: 30 minutos\n",
+        "-Comparar tarjetas pequeñas.\nPDA: Describe tamaños de tarjetas.\nInicio:\n-Ordenar tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "scaffold_current_activity_prefix-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 29,
+            "end": 33,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 34,
+            "end": 63,
+            "quote": "Describe tamaños de tarjetas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "marker_after_desarrollo",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nDesarrollo:\n- X7 PDA2: Copiar la etiqueta de una tarjeta.\nCierre:\n-Compartir tarjetas.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_after_desarrollo-c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "marker_after_cierre",
+      "pages": [
+        "SESIÓN 1: Explorar formas\nCierre:\n-X7 PDA2: Leer la etiqueta de una tarjeta.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "SESIÓN 1: Explorar formas"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "marker_after_cierre-c1",
+          "anchor": {
+            "page": 1,
+            "start": 35,
+            "end": 43,
+            "quote": "X7 PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    }
+  ]
+}

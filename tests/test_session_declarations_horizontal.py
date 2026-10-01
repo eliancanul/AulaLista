@@ -91,7 +91,8 @@ def test_canonical_newline_child_remains_an_independent_declaration(separator):
     assert records[1]['evidence'][0]['excerpt'] == 'Contenido:'
 
 
-def test_patch_does_not_expand_numbered_labels_to_activity_bullets():
-    records = extract('-X7 PDA2: Describe formas.')
+def test_numbered_labels_in_activity_bullets_still_abstain():
+    # v3 separately admits a formatting marker in pre-moment metadata only.
+    records = extract('Inicio:\n-X7 PDA2: Describe formas.')
     assert records
     assert all(r['decision'] == 'abstained' and r['claim'] is None for r in records)
