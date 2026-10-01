@@ -28,7 +28,7 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.overview_fields import extract_overview_spans
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
-    clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_scope,
+    clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_scope, first_phase_review_page,
 )
 
 logger = logging.getLogger(__name__)
@@ -2765,12 +2765,7 @@ class CurriculumSourceInterpreter:
         # one explicitly ambiguous review unit for the project; do not infer a
         # number of lessons or turn methodological phases into sessions.
         if not source_segments:
-            project_start = next(
-                (i for i, text in enumerate(pages_text, start=1)
-                 if re.search(r"(?:^|\n)\s*DESARROLLO\s+DEL\s+PROYECTO\b", text, re.IGNORECASE)
-                 and re.search(r"(?:^|\n)\s*Fase\s*#?\s*1\b", text, re.IGNORECASE)),
-                None,
-            )
+            project_start = first_phase_review_page(pages_text)
             if project_start is not None:
                 phase_segments, unassigned_segments = phase_review_scope(pages_text, sha256, project_start)
                 project_pages = [number for number, _ in phase_segments]

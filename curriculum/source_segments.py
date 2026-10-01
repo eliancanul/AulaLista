@@ -402,6 +402,16 @@ def match_session_segment(session: dict[str, Any], segments: list[SessionSegment
     return candidates[0] if len(candidates) == 1 else None
 
 
+def first_phase_review_page(pages: list[str]) -> int | None:
+    """The single phase-review unit admitted by the existing source detector."""
+    return next(
+        (number for number, text in enumerate(pages, 1)
+         if re.search(r"(?:^|\n)\s*DESARROLLO\s+DEL\s+PROYECTO\b", text, re.IGNORECASE)
+         and re.search(r"(?:^|\n)\s*Fase\s*#?\s*1\b", text, re.IGNORECASE)),
+        None,
+    )
+
+
 def phase_project_context(pages: list[str], sha: str, first_page: int) -> dict[str, Any]:
     page = pages[first_page - 1]
     start = re.search(rf"(?im)^{_H}*DESARROLLO\s+DEL\s+PROYECTO\b", page)

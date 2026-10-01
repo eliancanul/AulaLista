@@ -39,7 +39,7 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
     project_context_matches, phase_project_context, phase_review_scope, has_possible_session_structure,
-    planning_boundary_positions,
+    planning_boundary_positions, first_phase_review_page,
 )
 
 logger = logging.getLogger(__name__)
@@ -590,6 +590,7 @@ def verify_curriculum_dossier(
     source_segments = scan_session_segments(pages_text, actual_sha256)
     has_session_structure = bool(source_segments) or has_possible_session_structure(pages_text)
     has_planning_structure = any(planning_boundary_positions(pages_text).values())
+    source_phase_start = None if has_session_structure else first_phase_review_page(pages_text)
     page_session_segments: dict[int, dict[str, str]] = {}
     uncertain_session_ids: set[str] = set()
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
@@ -607,12 +608,18 @@ def verify_curriculum_dossier(
                 norm_pages_text[page_number - 1]
                 if not has_session_structure and not has_planning_structure and 1 <= page_number <= len(pages_text) else ""
             )
+        matched_phase_start = None
         if not has_session_structure and sid.endswith("_project_review"):
             physical_pages = session.get("pages", [])
-            if isinstance(physical_pages, list) and physical_pages and type(physical_pages[0]) is int and 1 <= physical_pages[0] <= len(pages_text):
-                for page_number in declared_pages:
-                    page_session_segments.setdefault(page_number, {})[sid] = ""
-                phase_segments, unassigned = phase_review_scope(pages_text, actual_sha256, physical_pages[0])
+            for page_number in declared_pages:
+                page_session_segments.setdefault(page_number, {})[sid] = ""
+            # The extractor admits only the first phase unit from the source.
+            # Declared pages/IDs cannot relocate it to a later planning block.
+            canonical_id_matches = not re.fullmatch(r"p\d+_project_review", sid) or sid == f"p{source_phase_start}_project_review"
+            if (source_phase_start is not None and isinstance(physical_pages, list) and physical_pages
+                    and type(physical_pages[0]) is int and physical_pages[0] == source_phase_start and canonical_id_matches):
+                matched_phase_start = source_phase_start
+                phase_segments, unassigned = phase_review_scope(pages_text, actual_sha256, source_phase_start)
                 if unassigned:
                     uncertain_session_ids.add(sid)
                 for page_number, text in phase_segments:
@@ -628,10 +635,8 @@ def verify_curriculum_dossier(
             if supplied is None:  # Optional additive schema: legacy remains readable.
                 continue
             expected = getattr(matched, name) if matched else None
-            if name == "project_context" and matched is None and sid.endswith("_project_review"):
-                pages = session.get("pages", [])
-                if isinstance(pages, list) and pages and type(pages[0]) is int and 1 <= pages[0] <= len(pages_text):
-                    expected = phase_project_context(pages_text, actual_sha256, pages[0])
+            if name == "project_context" and matched is None and matched_phase_start is not None:
+                expected = phase_project_context(pages_text, actual_sha256, matched_phase_start)
             valid = expected is not None and (
                 anchor_matches(supplied, expected) if name == "header_anchor"
                 else project_context_matches(supplied, expected)

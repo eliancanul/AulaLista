@@ -381,3 +381,31 @@ def test_phase_notes_preserve_existing_annex_and_product_stops(barrier, retain_b
     assert pages[1] in s.layout_notes
     assert (barrier in s.layout_notes) is retain_barrier_page
     assert pages[3] not in s.layout_notes
+
+
+@pytest.mark.parametrize("sid", ["p1_project_review", "p2_project_review", "legacy_project_review"])
+def test_phase_verifier_cannot_relocate_the_source_unit_using_declared_pages(sid):
+    phase_a = "DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar una piedra.\n"
+    phase_b = "DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Comparar dos listones.\n"
+    pages = [OLD_METADATA + "Proyecto: Objetos cercanos\n" + phase_a, NEW_METADATA + phase_b]
+    d = dossier_for(pages)
+    assert len(d.sessions) == 1
+    s = d.sessions[0]
+    s.session_id, s.pages = sid, [2]
+    s.project_context = s.header_anchor = None
+    s.layout_notes, s.status = "", "supported"
+    f = s.fields["inicio"]
+    f.value, f.origin, f.status = "Comparar dos listones.", "extracted", "supported"
+    f.evidence = [SourceReference(d.source_sha256, 2, excerpt="Comparar dos listones.")]
+    assert not checked_for(verify_curriculum_dossier(d, source(pages)), f"session.{sid}.inicio")
+
+
+def test_unique_legacy_phase_unit_still_verifies_with_its_true_source_page():
+    pages = [OLD_METADATA + "Proyecto: Objetos cercanos\nDESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar una piedra.\n"]
+    d = dossier_for(pages)
+    s = d.sessions[0]
+    s.session_id = "legacy_project_review"
+    s.project_context = s.header_anchor = None
+    f = s.fields["inicio"]
+    f.origin, f.status = "extracted", "supported"
+    assert checked_for(verify_curriculum_dossier(d, source(pages)), "session.legacy_project_review.inicio")

@@ -204,6 +204,10 @@ unidad ni su superficie de revisión a páginas posteriores a esos stops.
 La auditoría vuelve a calcular el corte y su incertidumbre aun si se quitan las
 notas/anclas o se cambian los estados. Un reinicio reconocido tampoco habilita
 la comprobación legacy de toda la página sin una unidad delimitada.
+La unidad por fases se recomputa desde la primera página admitida por el
+detector de la fuente; cambiar `pages[0]` o el ID canónico no permite trasladarla
+a un bloque posterior. Un ID legacy puede resolver esa misma unidad, sin
+habilitar otra a partir de páginas declaradas por el dossier.
 No cambian los esquemas, predicados, gates ni la autoridad humana. Las pruebas
 de `test_sequence_boundaries_development.py` son texto sintético de desarrollo
 derivado del patrón, no un holdout ni una evaluación humana. No se modifican ni
