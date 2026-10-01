@@ -17,6 +17,7 @@
   "runner.py",
   "setup_snapshots.py",
   "tests/test_harness.py",
+  "tests/test_portability.py",
   "tests/test_weak_reference.py",
   "weak_reference.py",
   "worker.py"
