@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import copy
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
-from curriculum.overview_fields import iter_overview_spans, _quote_stack
+from curriculum.overview_fields import iter_overview_spans, _headers, _quote_stack, _advance_quotes
+from curriculum.vocabulary import CANONICAL_CAMPOS
 
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
@@ -39,6 +41,117 @@ _WEAK_PROJECT_RE = re.compile(
     rf"^{_H}*((?:Nombre{_H}+del{_H}+)?Proyecto(?:{_H}+de{_H}+diagn[oó]stico)?)"
     rf"(?={_H}*(?::|\r?$))", re.IGNORECASE | re.MULTILINE,
 )
+_GENERAL_DATA_RE = re.compile(
+    rf"^{_H}*(DATOS{_H}+GENERALES){_H}*:?[ \t\r]*$", re.IGNORECASE | re.MULTILINE,
+)
+_CAMPO_LABEL_RE = re.compile(r"Campos?\s+formativos?\s*:?[ \t\r]*$", re.IGNORECASE)
+_INTENTION_LABEL_RE = re.compile(
+    r"(?:Finalidad\s+e\s+)?Intenci[oó]n\s+did[aá]ctica(?:\s+docente)?\s*:?[ \t\r]*$", re.IGNORECASE,
+)
+_BODY_LABEL_RE = re.compile(
+    rf"^{_H}*(?:{_SESSION_WORD}\b|(?:{_DAYS})(?={_H}*(?::|\r?$))|"
+    rf"(?:Inicio|Desarrollo|Cierre|Actividad|Fase)(?={_H}*(?::|\d|\r?$))|DESARROLLO{_H}+DEL{_H}+PROYECTO\b)",
+    re.IGNORECASE | re.MULTILINE,
+)
+_PHASE_ANNEX_RE = re.compile(r"(?im)^[ \t]*ANEXOS?\b")
+_PHASE_END_RE = re.compile(r"(?im)^[ \t]*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b")
+
+
+def _normalized_campo_names(text: str) -> tuple[str, ...]:
+    """Accept only complete known labels, never a prose mention of a campo."""
+    def normalize(value):
+        return re.sub(r"\s+", " ", "".join(
+            c for c in unicodedata.normalize("NFD", value.casefold()) if unicodedata.category(c) != "Mn"
+        )).strip()
+
+    remaining = normalize(text)
+    names = []
+    for name in CANONICAL_CAMPOS:
+        normalized = normalize(name)
+        if normalized in remaining:
+            names.append(normalized)
+            remaining = remaining.replace(normalized, "")
+    return tuple(sorted(names)) if names and not remaining.strip(" ,;/.\t") else ()
+
+
+def _closed_quote_ranges(page: str) -> list[tuple[int, int]]:
+    """Balanced prose quotes may suppress cues; an open quote cannot hide scope."""
+    ranges = []
+    stack: list[str] = []
+    begin = 0
+    for position, char in enumerate(page):
+        was_open = bool(stack)
+        _advance_quotes(stack, char)
+        if not was_open and stack:
+            begin = position
+        elif was_open and not stack:
+            ranges.append((begin, position + 1))
+    return ranges
+
+
+def planning_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
+    """Safety cuts for a changed, untitled planning block; never new entities.
+
+    Require prior activity plus three page-local structural cues in order:
+    DATOS GENERALES, an explicit changed campo, and INTENCIÓN DIDÁCTICA.
+    A repeated table header with the same campo, isolated words, balanced quotes,
+    unknown campo values, or cues separated by an activity are not enough.
+    This narrow development rule is not a general PDF/table reconstruction.
+    """
+    result = {number: [] for number in range(1, len(pages) + 1)}
+    previous_campo: tuple[str, ...] = ()
+    had_body = False
+    for number, page in enumerate(pages, 1):
+        closed_quotes = _closed_quote_ranges(page)
+
+        def is_quoted(position):
+            return any(begin <= position < end for begin, end in closed_quotes)
+
+        # Ordinary overview/entity extraction still filters all quoted headers.
+        # A safety cut must also see through an incomplete quote, but preserves
+        # the balanced-quotation negative control instead of treating it as data.
+        headers, _ = _headers(page, include_quoted=True)
+        headers = [h for h in headers if not is_quoted(h[1])]
+        data_starts = [m.start(1) for m in _GENERAL_DATA_RE.finditer(page) if not is_quoted(m.start(1))]
+        body_starts = [m.start() for m in _BODY_LABEL_RE.finditer(page) if not is_quoted(m.start())]
+        events = [(p, "data", ()) for p in data_starts] + [(p, "body", ()) for p in body_starts]
+        for index, (kind, start, value_start) in enumerate(headers):
+            label = page[start:value_start].strip()
+            if kind == "proyecto":
+                events.append((start, "project", ()))
+            # Only line-start metadata qualifies; a tabular/prose mention is
+            # insufficient to reset the sequence's inherited context.
+            if page[page.rfind("\n", 0, start) + 1:start].strip():
+                continue
+            if _CAMPO_LABEL_RE.fullmatch(label):
+                stops = [headers[index + 1][1]] if index + 1 < len(headers) else []
+                stops.extend(p for p in data_starts + body_starts if p > start)
+                end = min(stops) if stops else len(page)
+                events.append((start, "campo", _normalized_campo_names(page[value_start:end])))
+            elif kind == "finalidad" and _INTENTION_LABEL_RE.fullmatch(label):
+                events.append((start, "intention", ()))
+        events.sort()
+        for index, (start, kind, campo) in enumerate(events):
+            if kind == "body":
+                had_body = True
+            elif kind == "project":
+                # Metadata belonging to a new explicit project must not erase
+                # its title using activity state inherited from an older one.
+                had_body = False
+            elif kind == "campo":
+                previous_campo = campo
+            elif kind == "data" and had_body and previous_campo:
+                candidate_campo = ()
+                for _, next_kind, next_campo in events[index + 1:]:
+                    if next_kind in ("data", "body", "project"):
+                        break
+                    if next_kind == "campo":
+                        candidate_campo = next_campo
+                    elif next_kind == "intention":
+                        if candidate_campo and candidate_campo != previous_campo:
+                            result[number].append(start)
+                        break
+    return result
 
 
 def session_boundary_positions(pages: list[str], *, include_quoted: bool = False) -> dict[int, list[int]]:
@@ -69,8 +182,10 @@ def safety_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
     are no possible numbered headers, matching the existing day-only mode.
     """
     result = session_boundary_positions(pages, include_quoted=True)
+    planning = planning_boundary_positions(pages)
     day_only = not any(result.values())
     for number, page in enumerate(pages, 1):
+        result[number].extend(planning[number])
         result[number].extend(m.start(1) for m in _WEAK_PROJECT_RE.finditer(page))
         if day_only:
             result[number].extend(m.start(1) for m in _WEAK_DAY_RE.finditer(page))
@@ -150,8 +265,21 @@ def project_occurrences(pages: list[str], sha: str) -> list[dict[str, Any]]:
     return result
 
 
-def context_before(projects: list[dict[str, Any]], page_number: int, text_start: int) -> dict[str, Any]:
+def context_before(
+    projects: list[dict[str, Any]], page_number: int, text_start: int,
+    planning_boundaries: dict[int, list[int]] | None = None,
+) -> dict[str, Any]:
     preceding = [p for p in projects if (p["anchor"]["page_number"], p["anchor"]["text_start"]) < (page_number, text_start)]
+    resets = [(number, pos) for number, positions in (planning_boundaries or {}).items()
+              for pos in positions if (number, pos) < (page_number, text_start)]
+    if resets and (not preceding or max(resets) > (preceding[-1]["anchor"]["page_number"], preceding[-1]["anchor"]["text_start"])):
+        context = missing_project_context()
+        context["reason"] = (
+            "Un reinicio de datos generales con cambio de campo formativo e intención didáctica "
+            "interrumpe el contexto anterior; no hay un encabezado de proyecto posterior al corte. "
+            "El límite propuesto requiere revisión; no se infiere otro proyecto."
+        )
+        return context
     return copy.deepcopy(preceding[-1] if preceding else missing_project_context())
 
 
@@ -196,6 +324,7 @@ def is_structural_barrier(text: str) -> bool:
 
 def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
     projects = project_occurrences(pages, sha)
+    planning = planning_boundary_positions(pages)
     # A quoted session label is prose, even when its line begins with SESIÓN.
     use_numbered, headers = _session_headers(pages)
     segments = []
@@ -220,7 +349,7 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
             segments.append(SessionSegment(
                 sid, number, title or f"Sesión {number}", day,
                 text_anchor(page, sha, page_number, occurrence, start, end, "session" if use_numbered else "day"),
-                context_before(projects, page_number, start),
+                context_before(projects, page_number, start, planning),
             ))
             boundaries.setdefault(page_number, []).append(start)
             strong_boundaries.setdefault(page_number, set()).add(start)
@@ -273,10 +402,20 @@ def match_session_segment(session: dict[str, Any], segments: list[SessionSegment
     return candidates[0] if len(candidates) == 1 else None
 
 
+def first_phase_review_page(pages: list[str]) -> int | None:
+    """The single phase-review unit admitted by the existing source detector."""
+    return next(
+        (number for number, text in enumerate(pages, 1)
+         if re.search(r"(?:^|\n)\s*DESARROLLO\s+DEL\s+PROYECTO\b", text, re.IGNORECASE)
+         and re.search(r"(?:^|\n)\s*Fase\s*#?\s*1\b", text, re.IGNORECASE)),
+        None,
+    )
+
+
 def phase_project_context(pages: list[str], sha: str, first_page: int) -> dict[str, Any]:
     page = pages[first_page - 1]
     start = re.search(rf"(?im)^{_H}*DESARROLLO\s+DEL\s+PROYECTO\b", page)
-    return context_before(project_occurrences(pages, sha), first_page, start.start() if start else 0)
+    return context_before(project_occurrences(pages, sha), first_page, start.start() if start else 0, planning_boundary_positions(pages))
 
 
 def project_context_matches(value: Any, expected: dict[str, Any]) -> bool:
@@ -287,24 +426,57 @@ def project_context_matches(value: Any, expected: dict[str, Any]) -> bool:
 
 
 def phase_review_segments(pages: list[str], sha: str, first_page: int) -> list[tuple[int, str]]:
-    """Bound the existing synthetic phase-review unit at the next project."""
+    """Bound the existing phase-review unit at the next project/planning reset."""
+    return phase_review_scope(pages, sha, first_page)[0]
+
+
+def phase_review_scope(
+    pages: list[str], sha: str, first_page: int,
+) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
+    """Return phase text and a literal unassigned planning reset for review."""
     first = re.search(rf"(?im)^{_H}*DESARROLLO\s+DEL\s+PROYECTO\b", pages[first_page - 1])
     if not first:
-        return []
+        return [], []
     begin = (first_page, first.start())
     projects = project_occurrences(pages, sha)
     later = [(p["anchor"]["page_number"], p["anchor"]["text_start"]) for p in projects if (p["anchor"]["page_number"], p["anchor"]["text_start"]) > begin]
+    planning = [(number, pos) for number, positions in planning_boundary_positions(pages).items()
+                for pos in positions if (number, pos) > begin]
+    later.extend(planning)
     limit = min(later) if later else (len(pages) + 1, 0)
     result = []
+    reached_limit = False
     for number in range(first_page, len(pages) + 1):
         text = pages[number - 1]
         if number > limit[0] or (number == limit[0] and limit[1] == 0):
+            reached_limit = True
             break
-        if number > first_page and re.search(r"(?im)^[ \t]*ANEXOS?\b", text):
+        if number > first_page and _PHASE_ANNEX_RE.search(text):
             break
         start = begin[1] if number == first_page else 0
         end = limit[1] if number == limit[0] else len(text)
         result.append((number, text[start:end]))
-        if number == limit[0] or re.search(r"(?im)^[ \t]*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b", text):
+        if number == limit[0]:
+            reached_limit = True
             break
-    return result
+        if _PHASE_END_RE.search(text):
+            break
+    unassigned = []
+    if reached_limit and limit in planning:
+        next_projects = [(p["anchor"]["page_number"], p["anchor"]["text_start"]) for p in projects
+                         if (p["anchor"]["page_number"], p["anchor"]["text_start"]) > limit]
+        unassigned_end = min(next_projects) if next_projects else (len(pages) + 1, 0)
+        for number in range(limit[0], len(pages) + 1):
+            text = pages[number - 1]
+            # Preserve only text removed by this reset, respecting the phase
+            # unit's pre-existing annex/product stops on these source pages.
+            if number > first_page and _PHASE_ANNEX_RE.search(text):
+                break
+            start = limit[1] if number == limit[0] else 0
+            if (number, start) >= unassigned_end:
+                break
+            end = unassigned_end[1] if number == unassigned_end[0] else len(text)
+            unassigned.append((number, text[start:end]))
+            if _PHASE_END_RE.search(text):
+                break
+    return result, unassigned
