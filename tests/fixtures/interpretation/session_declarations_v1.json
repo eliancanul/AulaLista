@@ -1,0 +1,1924 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "AI-authored synthetic development reference frozen before matcher; not teacher gold",
+  "scope": "Page-local literal labelled declaration blocks, physical session/project identity, separate abstention challenges. No SEP alignment, PDF/OCR evaluation, or production activation.",
+  "documents": [
+    {
+      "id": "simple_pair",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Descripción de objetos.\nPDA: Describe objetos de su entorno.\nInicio:\n-Observar una hoja.\nCierre:\n-Compartir descripciones.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "simple_pair-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 30,
+            "end": 53,
+            "quote": "Descripción de objetos."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "simple_pair-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 54,
+            "end": 58,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 59,
+            "end": 90,
+            "quote": "Describe objetos de su entorno."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "plural_multiline",
+      "pages": [
+        "SESIÓN 1: Explorar\nContenidos:\n- Descripción de objetos.\n- Comparación de tamaños.\nPDAs:\nDescribe objetos y\ncompara sus características.\nInicio:\n-Observar piedras.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "plural_multiline-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 30,
+            "quote": "Contenidos:"
+          },
+          "value": {
+            "page": 1,
+            "start": 31,
+            "end": 82,
+            "quote": "- Descripción de objetos.\n- Comparación de tamaños."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "plural_multiline-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 83,
+            "end": 88,
+            "quote": "PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 89,
+            "end": 136,
+            "quote": "Describe objetos y\ncompara sus características."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "crlf_long_labels",
+      "pages": [
+        "SESIÓN 1: Escribir\r\nContenidos curriculares: Escritura de nombres\r\ny palabras cercanas.\r\nProcesos de Desarrollo de Aprendizaje (PDA):\r\nEscribe su nombre\r\ny reconoce sus letras.\r\nInicio:\r\n-Escribir.\r\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Escribir"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "crlf_long_labels-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 20,
+            "end": 44,
+            "quote": "Contenidos curriculares:"
+          },
+          "value": {
+            "page": 1,
+            "start": 45,
+            "end": 87,
+            "quote": "Escritura de nombres\r\ny palabras cercanas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "crlf_long_labels-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 89,
+            "end": 133,
+            "quote": "Procesos de Desarrollo de Aprendizaje (PDA):"
+          },
+          "value": {
+            "page": 1,
+            "start": 135,
+            "end": 176,
+            "quote": "Escribe su nombre\r\ny reconoce sus letras."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "repeated_same_session",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Formas y colores.\nPDA: Describe colores.\nContenido: Formas y colores.\nPDA: Describe colores.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "repeated_same_session-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 30,
+            "end": 47,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "repeated_same_session-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 48,
+            "end": 52,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 53,
+            "end": 70,
+            "quote": "Describe colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "repeated_same_session-d3",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 71,
+            "end": 81,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 82,
+            "end": 99,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "repeated_same_session-d4",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 100,
+            "end": 104,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 105,
+            "end": 122,
+            "quote": "Describe colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "two_sessions",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Formas.\nPDA: Describe formas.\nInicio:\n-Observar.\nSESIÓN 2: Comparar\nContenido: Tamaños.\nPDA: Compara tamaños.\nInicio:\n-Comparar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 79,
+            "end": 97,
+            "quote": "SESIÓN 2: Comparar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "two_sessions-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 30,
+            "end": 37,
+            "quote": "Formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_sessions-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 38,
+            "end": 42,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 43,
+            "end": 59,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_sessions-d3",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 98,
+            "end": 108,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 109,
+            "end": 117,
+            "quote": "Tamaños."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_sessions-d4",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 118,
+            "end": 122,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 123,
+            "end": 139,
+            "quote": "Compara tamaños."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "identical_session_headers",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: Describe formas.\nInicio:\n-Observar.\nSESIÓN 1: Observar\nPDA: Describe formas.\nInicio:\n-Comparar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 60,
+            "end": 78,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "identical_session_headers-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 24,
+            "end": 40,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "identical_session_headers-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 79,
+            "end": 83,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 84,
+            "end": 100,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "project_no_inheritance",
+      "pages": [
+        "Proyecto: Nuestro entorno\nContenido: Descripción de objetos.\nPDA: Describe objetos de su entorno.\nSESIÓN 1: Observar\nInicio:\n-Observar una hoja.\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "Proyecto: Nuestro entorno"
+          }
+        },
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 98,
+            "end": 116,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "project_no_inheritance-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 26,
+            "end": 36,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 37,
+            "end": 60,
+            "quote": "Descripción de objetos."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "project_no_inheritance-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 61,
+            "end": 65,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 66,
+            "end": 97,
+            "quote": "Describe objetos de su entorno."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "project_then_session_override",
+      "pages": [
+        "Proyecto: Entorno\nContenido: Nombres.\nSESIÓN 1: Observar\nContenido: Formas.\nPDA: Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 17,
+            "quote": "Proyecto: Entorno"
+          }
+        },
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 38,
+            "end": 56,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "project_then_session_override-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 18,
+            "end": 28,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 29,
+            "end": 37,
+            "quote": "Nombres."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "project_then_session_override-d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 57,
+            "end": 67,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 68,
+            "end": 75,
+            "quote": "Formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "project_then_session_override-d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 76,
+            "end": 80,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 81,
+            "end": 97,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "new_project_boundary",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: Describe formas.\nInicio:\n-Observar.\nProyecto: Otro\nPDA: Describe colores.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        },
+        {
+          "id": "p2",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 60,
+            "end": 74,
+            "quote": "Proyecto: Otro"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "new_project_boundary-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 24,
+            "end": 40,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "new_project_boundary-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 75,
+            "end": 79,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 80,
+            "end": 97,
+            "quote": "Describe colores."
+          },
+          "unit_id": "p2",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "no_unit",
+      "pages": [
+        "Contenido: Formas y colores.\nPDA: Describe colores.\nInicio:\n-Observar.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "no_unit-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 11,
+            "end": 28,
+            "quote": "Formas y colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "no_unit-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 29,
+            "end": 33,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 34,
+            "end": 51,
+            "quote": "Describe colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "bare_and_long_plural",
+      "pages": [
+        "SESIÓN 1: Observar\nContenidos\nFormas y colores.\nProcesos de desarrollo de aprendizajes\nDescribe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "bare_and_long_plural-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenidos"
+          },
+          "value": {
+            "page": 1,
+            "start": 30,
+            "end": 47,
+            "quote": "Formas y colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "bare_and_long_plural-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 48,
+            "end": 86,
+            "quote": "Procesos de desarrollo de aprendizajes"
+          },
+          "value": {
+            "page": 1,
+            "start": 87,
+            "end": 103,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "singular_long_label",
+      "pages": [
+        "SESIÓN 1: Observar\nProceso de desarrollo de aprendizaje: Describe formas.\nContenido curricular: Formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "singular_long_label-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 56,
+            "quote": "Proceso de desarrollo de aprendizaje:"
+          },
+          "value": {
+            "page": 1,
+            "start": 57,
+            "end": 73,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "singular_long_label-d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 74,
+            "end": 95,
+            "quote": "Contenido curricular:"
+          },
+          "value": {
+            "page": 1,
+            "start": 96,
+            "end": 103,
+            "quote": "Formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "negation_inside_learning_text",
+      "pages": [
+        "SESIÓN 1: Dialogar\nPDA: Explica por qué no se desperdicia el agua.\nContenido: Cuidado del agua.\nInicio:\n-Dialogar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Dialogar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "negation_inside_learning_text-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 24,
+            "end": 66,
+            "quote": "Explica por qué no se desperdicia el agua."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "negation_inside_learning_text-d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 67,
+            "end": 77,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 78,
+            "end": 95,
+            "quote": "Cuidado del agua."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "closed_quote_inside_value",
+      "pages": [
+        "SESIÓN 1: Leer\nPDA: Lee el cuento «El árbol»\ny describe al personaje.\nInicio:\n-Leer.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 14,
+            "quote": "SESIÓN 1: Leer"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "closed_quote_inside_value-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 15,
+            "end": 19,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 20,
+            "end": 69,
+            "quote": "Lee el cuento «El árbol»\ny describe al personaje."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "physical_second_page",
+      "pages": [
+        "Proyecto: Entorno\nContenido: Formas.\n",
+        "SESIÓN 1: Observar\nPDA: Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 17,
+            "quote": "Proyecto: Entorno"
+          }
+        },
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "physical_second_page-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 18,
+            "end": 28,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 29,
+            "end": 36,
+            "quote": "Formas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "physical_second_page-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 24,
+            "end": 40,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "two_values_multiple_sessions",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Formas.\nContenido: Colores.\nInicio:\n-Observar.\nSESIÓN 2: Describir\nPDA: Describe formas.\nPDA: Describe colores.\nInicio:\n-Describir.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        },
+        {
+          "id": "s2",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 77,
+            "end": 96,
+            "quote": "SESIÓN 2: Describir"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "two_values_multiple_sessions-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 30,
+            "end": 37,
+            "quote": "Formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_values_multiple_sessions-d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 38,
+            "end": 48,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 49,
+            "end": 57,
+            "quote": "Colores."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_values_multiple_sessions-d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 97,
+            "end": 101,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 102,
+            "end": 118,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "two_values_multiple_sessions-d4",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 119,
+            "end": 123,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 124,
+            "end": 141,
+            "quote": "Describe colores."
+          },
+          "unit_id": "s2",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "unicode_literals",
+      "pages": [
+        "SESIÓN 1: Describir\nContenido: Características de árboles 🌳.\nPDA: Compara el tamaño —sin medir— de dos árboles.\nInicio:\n-Comparar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 19,
+            "quote": "SESIÓN 1: Describir"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "unicode_literals-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 20,
+            "end": 30,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 31,
+            "end": 60,
+            "quote": "Características de árboles 🌳."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "unicode_literals-d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 61,
+            "end": 65,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 66,
+            "end": 111,
+            "quote": "Compara el tamaño —sin medir— de dos árboles."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "combined",
+      "pages": [
+        "SESIÓN 1: Observar\nContenidos/PDA: Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "combined-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 34,
+            "quote": "Contenidos/PDA:"
+          },
+          "reason": "combined_label"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "shared_table",
+      "pages": [
+        "SESIÓN 1: Observar\nCampo | Contenidos | PDA\nLenguajes | Formas. | Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "shared_table-c1",
+          "anchor": {
+            "page": 1,
+            "start": 27,
+            "end": 37,
+            "quote": "Contenidos"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "shared_table-c2",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 43,
+            "quote": "PDA"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "stacked_table",
+      "pages": [
+        "SESIÓN 1: Observar\nCampos formativos\nContenidos\nProcesos de desarrollo de aprendizajes\nLenguajes\nFormas.\nDescribe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "stacked_table-c1",
+          "anchor": {
+            "page": 1,
+            "start": 37,
+            "end": 47,
+            "quote": "Contenidos"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "stacked_table-c2",
+          "anchor": {
+            "page": 1,
+            "start": 48,
+            "end": 86,
+            "quote": "Procesos de desarrollo de aprendizajes"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "negated_declaration",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: No se trabajará «Describe formas».\nContenido: No aplica.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "negated_declaration-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "reason": "negated"
+        },
+        {
+          "id": "negated_declaration-c2",
+          "anchor": {
+            "page": 1,
+            "start": 59,
+            "end": 69,
+            "quote": "Contenido:"
+          },
+          "reason": "negated"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "mere_label_mentions",
+      "pages": [
+        "SESIÓN 1: Observar\nInicio:\n-Leer el rótulo PDA y copiar la palabra Contenido.\nCierre:\n-Compartir.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "mere_label_mentions-c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 46,
+            "quote": "PDA"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "mere_label_mentions-c2",
+          "anchor": {
+            "page": 1,
+            "start": 67,
+            "end": 76,
+            "quote": "Contenido"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "quoted_example",
+      "pages": [
+        "SESIÓN 1: Leer\nEjemplo citado:\n«\nContenido: Formas.\nPDA: Describe formas.\n»\nInicio:\n-Leer.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 14,
+            "quote": "SESIÓN 1: Leer"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "quoted_example-c1",
+          "anchor": {
+            "page": 1,
+            "start": 33,
+            "end": 43,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "quoted_example-c2",
+          "anchor": {
+            "page": 1,
+            "start": 52,
+            "end": 56,
+            "quote": "PDA:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "unterminated_quote",
+      "pages": [
+        "SESIÓN 1: Leer\nEjemplo:\n«\nPDA: Describe formas.\nInicio:\n-Leer.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 14,
+            "quote": "SESIÓN 1: Leer"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "unterminated_quote-c1",
+          "anchor": {
+            "page": 1,
+            "start": 26,
+            "end": 30,
+            "quote": "PDA:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "conditional",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: Si sobra tiempo, trabajar «Describe formas».\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "conditional-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "reason": "conditional"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "empty_labels",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido:\nPDA:\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "empty_labels-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "reason": "empty_value"
+        },
+        {
+          "id": "empty_labels-c2",
+          "anchor": {
+            "page": 1,
+            "start": 30,
+            "end": 34,
+            "quote": "PDA:"
+          },
+          "reason": "empty_value"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "quoted_label_same_line",
+      "pages": [
+        "SESIÓN 1: Leer\n«PDA: Describe formas.»\nInicio:\n-Leer.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 14,
+            "quote": "SESIÓN 1: Leer"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "quoted_label_same_line-c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 20,
+            "quote": "PDA:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "metadata_reset",
+      "pages": [
+        "SESIÓN 1: Observar\nInicio:\n-Observar.\nDATOS GENERALES\nPDA: Describe colores.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "metadata_reset-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 54,
+            "end": 58,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 59,
+            "end": 76,
+            "quote": "Describe colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "two_labels_same_line",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Formas. PDA: Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "two_labels_same_line-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "two_labels_same_line-c2",
+          "anchor": {
+            "page": 1,
+            "start": 38,
+            "end": 42,
+            "quote": "PDA:"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "missing_labels",
+      "pages": [
+        "SESIÓN 1: Observar\nTema: Formas y colores.\nObjetivo: Describir objetos.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true
+    },
+    {
+      "id": "empty_document",
+      "pages": [
+        "Sin planeación disponible.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true
+    },
+    {
+      "id": "unbounded_prose",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: Describe formas.\nDespués, preparar los materiales del aula.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "unbounded_prose-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true
+    },
+    {
+      "id": "unknown_subheading",
+      "pages": [
+        "SESIÓN 1: Observar\nPDA: Describe formas.\nObservaciones particulares:\nTexto administrativo.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "unknown_subheading-d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 19,
+            "end": 23,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 24,
+            "end": 40,
+            "quote": "Describe formas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "cross_page_not_joined",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Formas y\n",
+        "colores.\nPDA: Describe colores.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "cross_page_not_joined-d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 9,
+            "end": 13,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 14,
+            "end": 31,
+            "quote": "Describe colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "cross_page_not_joined-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false
+    },
+    {
+      "id": "explicit_page_continuation",
+      "pages": [
+        "SESIÓN 1: Observar\nInicio:\n-Observar una hoja.\n",
+        "Continuación de la sesión 1\nContenido: Descripción de hojas.\nPDA: Describe hojas de su entorno.\nCierre:\n-Compartir.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "explicit_page_continuation-d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 28,
+            "end": 38,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 2,
+            "start": 39,
+            "end": 60,
+            "quote": "Descripción de hojas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "explicit_page_continuation-d2",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 61,
+            "end": 65,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 66,
+            "end": 95,
+            "quote": "Describe hojas de su entorno."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false
+    },
+    {
+      "id": "suggested_not_adopted",
+      "pages": [
+        "SESIÓN 1: Observar\nContenido: Se sugiere abordar formas.\nPDA: Propuesta pendiente de adoptar: Describe formas.\nInicio:\n-Observar.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Observar"
+          }
+        }
+      ],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "suggested_not_adopted-c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "suggested_not_adopted-c2",
+          "anchor": {
+            "page": 1,
+            "start": 57,
+            "end": 61,
+            "quote": "PDA:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true
+    }
+  ]
+}

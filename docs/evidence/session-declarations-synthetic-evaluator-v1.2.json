@@ -1,0 +1,5893 @@
+{
+  "evaluator_version": "session-declarations-evaluation.v1.2",
+  "reference_kind": "AI-authored synthetic development reference frozen before matcher; not teacher gold",
+  "scope": "Page-local literal labelled declaration blocks, physical session/project identity, separate abstention challenges. No SEP alignment, PDF/OCR evaluation, or production activation.",
+  "total": {
+    "literal_declarations": {
+      "expected": 45,
+      "correct": 45,
+      "incorrect": 0,
+      "omitted": 0,
+      "extras": 0,
+      "duplicates": 0,
+      "emitted_typed_values": 45,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unit_assignment": {
+      "expected": 45,
+      "correct": 45,
+      "incorrect": 0,
+      "omitted": 0,
+      "expected_anchored": 41,
+      "anchor_span_exact": 41,
+      "recall": 1.0
+    },
+    "known_unit_assignment": {
+      "expected": 41,
+      "correct": 41,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "unresolved_unit_abstentions": {
+      "expected": 4,
+      "correct": 4,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "joint_detection_unit": {
+      "expected": 45,
+      "correct": 45,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "session_candidates": {
+      "expected": 36,
+      "correct": 36,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "recall": 1.0
+    },
+    "scope_abstentions": {
+      "expected": 9,
+      "correct": 9,
+      "incorrect": 0,
+      "omitted": 0,
+      "recall": 1.0
+    },
+    "strict_session_claims": {
+      "expected": 36,
+      "correct": 36,
+      "incorrect": 0,
+      "omitted": 0,
+      "explicit_abstentions": 0,
+      "emitted_claim_records": 36,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "challenges": {
+      "expected": 22,
+      "explicit_abstentions": 22,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    },
+    "challenge_opportunities_v1_2": {
+      "expected": 22,
+      "candidate_or_claim": 0,
+      "no_claim_safe": 22,
+      "no_claim_unknown": 0,
+      "explicit_abstention": 22,
+      "silence": 0,
+      "label_span_mismatch": 0,
+      "multiplicity": 0,
+      "malformed_record": 0,
+      "invalid_provenance": 0
+    },
+    "challenge_records_v1_2": {
+      "emitted_records": 22,
+      "candidate_or_claim_records": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0,
+      "explicit_abstention_records": 22,
+      "exact_label_records": 22,
+      "label_span_mismatch_records": 0,
+      "duplicate_id_records": 0
+    },
+    "negative_documents": {
+      "expected": 15,
+      "false_candidate_emissions": 0,
+      "explicit_abstentions": 13,
+      "clean_silence": 2,
+      "invalid_or_extra_emissions": 0,
+      "false_candidate_records": 0
+    },
+    "output": {
+      "documents": 36,
+      "invalid_outputs": 0,
+      "emitted_records": 67,
+      "invalid_unit_assignments": 0,
+      "invalid_records": 0,
+      "extras": 0,
+      "duplicate_record_ids": 0,
+      "malformed_records": 0,
+      "invalid_provenance_records": 0
+    },
+    "legacy_challenges_v1_1": {
+      "expected": 22,
+      "explicit_abstentions": 22,
+      "silence_no_claim": 0,
+      "wrong_candidates": 0,
+      "duplicates": 0,
+      "invalid_records": 0
+    }
+  },
+  "documents": [
+    {
+      "id": "simple_pair",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "simple_pair-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "simple_pair-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "plural_multiline",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "plural_multiline-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "plural_multiline-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "crlf_long_labels",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "crlf_long_labels-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "crlf_long_labels-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "repeated_same_session",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 4,
+          "anchor_span_exact": 4,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 4,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "repeated_same_session-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "repeated_same_session-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        },
+        {
+          "id": "repeated_same_session-d3",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            2
+          ]
+        },
+        {
+          "id": "repeated_same_session-d4",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            3
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "two_sessions",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 4,
+          "anchor_span_exact": 4,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 4,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "two_sessions-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "two_sessions-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        },
+        {
+          "id": "two_sessions-d3",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            2
+          ]
+        },
+        {
+          "id": "two_sessions-d4",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            3
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "identical_session_headers",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "identical_session_headers-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "identical_session_headers-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "project_no_inheritance",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "project_no_inheritance-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "project_no_inheritance-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "project_then_session_override",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 3,
+          "correct": 3,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 3,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 3,
+          "correct": 3,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 3,
+          "anchor_span_exact": 3,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 3,
+          "correct": 3,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 3,
+          "correct": 3,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 3,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "project_then_session_override-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "project_then_session_override-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        },
+        {
+          "id": "project_then_session_override-d3",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            2
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "new_project_boundary",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "new_project_boundary-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "new_project_boundary-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "no_unit",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "no_unit-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "no_unit-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "bare_and_long_plural",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "bare_and_long_plural-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "bare_and_long_plural-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "singular_long_label",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "singular_long_label-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "singular_long_label-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "negation_inside_learning_text",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "negation_inside_learning_text-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "negation_inside_learning_text-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "closed_quote_inside_value",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 1,
+          "anchor_span_exact": 1,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "closed_quote_inside_value-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "physical_second_page",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "physical_second_page-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "physical_second_page-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "two_values_multiple_sessions",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 4,
+          "anchor_span_exact": 4,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 4,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 4,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "two_values_multiple_sessions-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "two_values_multiple_sessions-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        },
+        {
+          "id": "two_values_multiple_sessions-d3",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            2
+          ]
+        },
+        {
+          "id": "two_values_multiple_sessions-d4",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            3
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "unicode_literals",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "unicode_literals-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "unicode_literals-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "combined",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "combined-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "combined-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shared_table",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "shared_table-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "shared_table-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "shared_table-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "shared_table-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stacked_table",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "stacked_table-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "stacked_table-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "stacked_table-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "stacked_table-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negated_declaration",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "negated_declaration-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "negated_declaration-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "negated_declaration-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "negated_declaration-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mere_label_mentions",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "mere_label_mentions-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "mere_label_mentions-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "mere_label_mentions-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "mere_label_mentions-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quoted_example",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "quoted_example-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "quoted_example-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "quoted_example-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "quoted_example-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unterminated_quote",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "unterminated_quote-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "unterminated_quote-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conditional",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "conditional-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "conditional-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empty_labels",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "empty_labels-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "empty_labels-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "empty_labels-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "empty_labels-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quoted_label_same_line",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "quoted_label_same_line-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "quoted_label_same_line-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "metadata_reset",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "joint_detection_unit": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "metadata_reset-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "two_labels_same_line",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "two_labels_same_line-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "two_labels_same_line-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "two_labels_same_line-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "two_labels_same_line-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "missing_labels",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 1,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 0,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "empty_document",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 1,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 0,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "unbounded_prose",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "unbounded_prose-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "unbounded_prose-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unknown_subheading",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 1,
+          "anchor_span_exact": 1,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 1,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "unknown_subheading-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "cross_page_not_joined",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 1,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "joint_detection_unit": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 1,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 1,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 1,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 1,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 1,
+          "exact_label_records": 1,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 1,
+          "explicit_abstentions": 1,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "cross_page_not_joined-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        },
+        {
+          "id": "cross_page_not_joined-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "cross_page_not_joined-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explicit_page_continuation",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 2,
+          "anchor_span_exact": 2,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 2,
+          "correct": 2,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 2,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "challenges": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 0,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 0,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 0,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 0,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 0,
+          "exact_label_records": 0,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 0,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 0,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 0,
+          "explicit_abstentions": 0,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "explicit_page_continuation-d1",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "explicit_page_continuation-d2",
+          "outcome": "exact",
+          "unit_correct": true,
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": []
+    },
+    {
+      "id": "suggested_not_adopted",
+      "metrics": {
+        "literal_declarations": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 0,
+          "recall": null,
+          "precision": null
+        },
+        "unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 0,
+          "anchor_span_exact": 0,
+          "recall": null
+        },
+        "known_unit_assignment": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "session_candidates": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": null
+        },
+        "scope_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "strict_session_claims": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 0,
+          "recall": null,
+          "precision": null
+        },
+        "challenges": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 2,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 2,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 2,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 2,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 2,
+          "exact_label_records": 2,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 1,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 1,
+          "clean_silence": 0,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 1,
+          "invalid_outputs": 0,
+          "emitted_records": 2,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 2,
+          "explicit_abstentions": 2,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      },
+      "output_errors": [],
+      "record_errors": [],
+      "unit_errors": [],
+      "malformed_record_errors": [],
+      "extra_record_indexes": [],
+      "opportunities": [
+        {
+          "id": "suggested_not_adopted-c1",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "suggested_not_adopted-c2",
+          "outcome": "explicit_abstentions",
+          "record_indexes": [
+            1
+          ]
+        }
+      ],
+      "challenge_diagnostics_v1_2": [
+        {
+          "id": "suggested_not_adopted-c1",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            0
+          ]
+        },
+        {
+          "id": "suggested_not_adopted-c2",
+          "safety": "no_claim_safe",
+          "explicit_abstention": true,
+          "silence": false,
+          "label_span_mismatch": false,
+          "multiplicity": false,
+          "malformed_record": false,
+          "invalid_provenance": false,
+          "unknown_unlocalized": false,
+          "record_indexes": [
+            1
+          ]
+        }
+      ]
+    }
+  ],
+  "definitions": {
+    "denominators": "Fixed authored opportunities, separately aggregated; negative documents never enter positive recall.",
+    "literal_detection": "Exact type, physical label and complete literal value; no normalization, excerpt or partial-span credit.",
+    "unit_assignment": "Combined scope-decision summary only. Positive physical assignment is known_unit_assignment; unresolved_unit_abstentions reports correctly retained null scopes separately. Exact anchor spans reported separately.",
+    "known_unit_assignment": "Physical session/project identity under the pre-output v1.1 prefix amendment, over fixed known-unit opportunities only; independent of literal correctness.",
+    "unresolved_unit_abstentions": "Explicitly abstained unresolved null scope over fixed unresolved-unit opportunities; never counted as positive physical assignment.",
+    "decisions": "Require valid exact literal detection and coherent unit identities/continuation; wrong but self-consistent parent assignments are reported separately.",
+    "strict_session_claims": "Fixed positive denominator: declarations with expected_decision=candidate. Correct requires one valid candidate, exact literal detection and correct physical unit, including continuation and identity bijection. Precision denominator is ALL emitted records with decision=candidate OR claim!=null, including extras, duplicates and malformed records. Abstention and silence never earn positive recall.",
+    "legacy_challenges_v1_1": "Unchanged v1.1 strict challenge outcomes; challenges is a compatibility alias. Legacy invalid_records includes label-span mismatch and output errors, and is not a malformed-record count.",
+    "challenge_opportunities_v1_2": "Fixed challenge opportunities. candidate_or_claim, no_claim_safe and no_claim_unknown partition that denominator. Any overlapping candidate or non-null claim defeats safety, even if malformed. Output/provenance errors, malformed records or unlocalizable possible claims make no-claim unknown. Other fields are overlapping diagnostics, not recall: valid explicit abstention can have a larger literal label span or multiplicity; reliable silence is separate.",
+    "challenge_records_v1_2": "Distinct records overlapping any challenge, counted once even when spanning several opportunities. malformed_records means individual record-contract errors only; duplicate IDs, multiplicity and gold label-span mismatch are separate. Explicit abstention records require valid output and record shape/provenance, regardless of gold span equality or multiplicity.",
+    "malformed_records": "output.malformed_records and malformed_record_errors exclude duplicate IDs and output-level errors; legacy output.invalid_records and record_errors remain unchanged. invalid_provenance_records diagnoses invalid supplied source bindings/spans, independently of gold label-span equality.",
+    "unit_errors": "ID-to-physical-unit bijection and cross-page continuation errors withhold unit/joint/candidate credit without erasing exact literal detection.",
+    "duplicates": "Additional attempts at the same unique overlapping label invalidate the opportunity; unalignable records remain extras.",
+    "extras": "output.extras counts every unalignable record; literal_declarations.extras counts their typed-value records. Challenge emissions remain in typed-value precision denominator.",
+    "negative_documents": "Exclusive document outcomes: false candidate, invalid/extra emission, explicit abstention, or clean silence.",
+    "source_binding": "SHA256 of canonical UTF-8 JSON original page strings; extracted-text snapshot, not PDF-byte provenance."
+  },
+  "limits": [
+    "Supplied development reference: see reference_kind and scope; not teacher validation or global reliability.",
+    "No SEP catalogue identity, curricular alignment, pedagogical truth or publication authority.",
+    "No OCR/PDF extraction, real API calls, cost or latency measured."
+  ],
+  "reference_sha256": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5",
+  "saved_outputs_sha256": "ab02eaccdb035155d4e159153778917a765adc74392090c32b405fdad370a96d",
+  "matcher_commit": "bfa5146b94e11c5f9979caa83561f6979f1e50ea",
+  "comparison": {
+    "baseline_evaluator_version": "session-declarations-evaluation.v1.1",
+    "same_saved_outputs": true,
+    "all_legacy_metric_fields_identical": true
+  }
+}

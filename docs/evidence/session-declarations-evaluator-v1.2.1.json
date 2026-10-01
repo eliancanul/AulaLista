@@ -1,0 +1,297 @@
+{
+  "evaluator_version": "session-declarations-evaluation.v1.2.1",
+  "matcher_commit": "338c204a51d3a0c3ca1f62fbef294cb8ab8f9259",
+  "baseline_scorer_commit": "0c1bfd776cccf054c91cd5e82855535ff0020de0",
+  "same_saved_outputs": true,
+  "strata": [
+    {
+      "id": "primary",
+      "reference_sha256": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5",
+      "reference_kind": "AI-authored synthetic development reference frozen before matcher; not teacher gold",
+      "scope": "Page-local literal labelled declaration blocks, physical session/project identity, separate abstention challenges. No SEP alignment, PDF/OCR evaluation, or production activation.",
+      "saved_outputs_sha256": "b5a8c6336cc9a6c4588f07131af87691d454f65cbfc16a73a4c719914660ec21",
+      "all_preexisting_valid_output_metric_fields_unchanged": true,
+      "total": {
+        "literal_declarations": {
+          "expected": 45,
+          "correct": 45,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 45,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 45,
+          "correct": 45,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 41,
+          "anchor_span_exact": 41,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 41,
+          "correct": 41,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 4,
+          "correct": 4,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "joint_detection_unit": {
+          "expected": 45,
+          "correct": 45,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 36,
+          "correct": 36,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 9,
+          "correct": 9,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 36,
+          "correct": 36,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 36,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "strict_session_claim_diagnostics": {
+          "wrong_emitted_claim_records": 0,
+          "response_abstention_opportunities": 0
+        },
+        "challenges": {
+          "expected": 22,
+          "explicit_abstentions": 22,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 22,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 22,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 22,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 22,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 22,
+          "exact_label_records": 22,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 15,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 13,
+          "clean_silence": 2,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 36,
+          "invalid_outputs": 0,
+          "emitted_records": 67,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 22,
+          "explicit_abstentions": 22,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      }
+    },
+    {
+      "id": "new_labels",
+      "reference_sha256": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "reference_kind": "AI-authored synthetic regression after disclosed development patterns; frozen before matcher v2; not held-out or teacher gold",
+      "scope": {
+        "input": "unchanged synthetic extracted page strings",
+        "coverage": [
+          "numbered PDA labels with bounded local code prefixes",
+          "explicit child labels under combined heading"
+        ],
+        "exclusions": [
+          "SEP identity or alignment",
+          "cross-page inference by proximity"
+        ]
+      },
+      "saved_outputs_sha256": "2aa4bcd55345877ffa059e8110f7f0530dec78d687e4fb3ffcaf23d8e3f4e95e",
+      "all_preexisting_valid_output_metric_fields_unchanged": true,
+      "total": {
+        "literal_declarations": {
+          "expected": 17,
+          "correct": 17,
+          "incorrect": 0,
+          "omitted": 0,
+          "extras": 0,
+          "duplicates": 0,
+          "emitted_typed_values": 17,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "unit_assignment": {
+          "expected": 17,
+          "correct": 17,
+          "incorrect": 0,
+          "omitted": 0,
+          "expected_anchored": 17,
+          "anchor_span_exact": 17,
+          "recall": 1.0
+        },
+        "known_unit_assignment": {
+          "expected": 17,
+          "correct": 17,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "unresolved_unit_abstentions": {
+          "expected": 0,
+          "correct": 0,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": null
+        },
+        "joint_detection_unit": {
+          "expected": 17,
+          "correct": 17,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "session_candidates": {
+          "expected": 16,
+          "correct": 16,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "recall": 1.0
+        },
+        "scope_abstentions": {
+          "expected": 1,
+          "correct": 1,
+          "incorrect": 0,
+          "omitted": 0,
+          "recall": 1.0
+        },
+        "strict_session_claims": {
+          "expected": 16,
+          "correct": 16,
+          "incorrect": 0,
+          "omitted": 0,
+          "explicit_abstentions": 0,
+          "emitted_claim_records": 16,
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        "strict_session_claim_diagnostics": {
+          "wrong_emitted_claim_records": 0,
+          "response_abstention_opportunities": 0
+        },
+        "challenges": {
+          "expected": 13,
+          "explicit_abstentions": 13,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        },
+        "challenge_opportunities_v1_2": {
+          "expected": 13,
+          "candidate_or_claim": 0,
+          "no_claim_safe": 13,
+          "no_claim_unknown": 0,
+          "explicit_abstention": 13,
+          "silence": 0,
+          "label_span_mismatch": 0,
+          "multiplicity": 0,
+          "malformed_record": 0,
+          "invalid_provenance": 0
+        },
+        "challenge_records_v1_2": {
+          "emitted_records": 13,
+          "candidate_or_claim_records": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0,
+          "explicit_abstention_records": 13,
+          "exact_label_records": 13,
+          "label_span_mismatch_records": 0,
+          "duplicate_id_records": 0
+        },
+        "negative_documents": {
+          "expected": 9,
+          "false_candidate_emissions": 0,
+          "explicit_abstentions": 8,
+          "clean_silence": 1,
+          "invalid_or_extra_emissions": 0,
+          "false_candidate_records": 0
+        },
+        "output": {
+          "documents": 18,
+          "invalid_outputs": 0,
+          "emitted_records": 30,
+          "invalid_unit_assignments": 0,
+          "invalid_records": 0,
+          "extras": 0,
+          "duplicate_record_ids": 0,
+          "malformed_records": 0,
+          "invalid_provenance_records": 0
+        },
+        "legacy_challenges_v1_1": {
+          "expected": 13,
+          "explicit_abstentions": 13,
+          "silence_no_claim": 0,
+          "wrong_candidates": 0,
+          "duplicates": 0,
+          "invalid_records": 0
+        }
+      }
+    }
+  ],
+  "adversarial_repair": "Contradictory record/claim locators can no longer yield safe challenge silence; explicit candidate overlap or unknown scope is retained.",
+  "limits": [
+    "Synthetic development only, no curricular accuracy claim.",
+    "incorrect strict opportunities are not false emitted claims; diagnostics are non-additive."
+  ]
+}
