@@ -126,6 +126,19 @@ def test_quoted_wrapped_header_remains_only_a_conservative_cut(close_quote):
     assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.inicio") for i in items)
 
 
+def test_unclosed_inline_reference_cannot_be_distinguished_from_a_multiline_quote():
+    page = ("Proyecto: Semillas\nSESIÓN 1: Observar\nInicio: Mirar semillas.\n"
+            "Desarrollo: Revisar la ficha «Muestras del patio.\nCierre: Compartir registros.\n"
+            "SESIÓN\n2\nInicio: Medir piedras.\nCierre: Guardar piedras.")
+    unit, = dossier_for([page]).sessions
+    assert unit.session_number == 1
+    assert unit.status == "ambiguous" and unit.review == "pending"
+    assert "Medir piedras" not in unit.fields["cierre"].value
+    assert "Medir piedras" in unit.layout_notes
+    # Text alone cannot tell whether the opening quote is a source error or
+    # intentional. The unresolved source remains visible without a new entity.
+
+
 def test_mixed_inline_and_wrapped_repetitions_keep_occurrences_and_scope():
     pages = [
         "Proyecto: Semillas\nSESIÓN\n01\nInicio: Mirar semillas.\nCierre: Dibujar semillas.\n"
