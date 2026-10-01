@@ -167,7 +167,18 @@ Contrato aditivo de `SessionPlan`, sin migración SQL ni cambio del staging v1:
 
 `source_segments.py` recorre los encabezados en orden físico y comparte límites
 entre extracción y verificación. El whitespace horizontal Unicode se reconoce
-sin unir líneas. Un encabezado numerado de formato desconocido corta el alcance
+sin unir líneas en el formato ordinario. Desde #149 se admite además una forma
+partida estricta, dentro de una sola página: etiqueta completa de sesión,
+exactamente un salto LF/CRLF, entero positivo aislado (admite ceros iniciales),
+y otro LF/CRLF seguido inmediatamente de `Inicio`, `Desarrollo` o `Cierre` como
+etiqueta independiente o con dos puntos. El ancla conserva el fragmento literal
+con su salto y offsets originales; no reescribe la fuente ni une páginas.
+Números con títulos/puntuación, listas, fechas, líneas intermedias y separadores
+U+2028/U+2029 no habilitan esta forma. Las comillas siguen excluyendo entidades,
+sin desactivar los cortes de seguridad. Si recuperar una ocurrencia cambia los
+IDs de ocurrencias repetidas, una decisión docente anterior no puede trasladarse
+por coincidencia del número: se conserva para revisión cuando su ancla no casa.
+Un encabezado numerado de formato desconocido corta el alcance
 y deshabilita el fallback de página completa, sin inferir una sesión de la prosa.
 Ese límite débil no certifica un cierre completo: conserva el tramo literal sin
 asignar y su página en `layout_notes`, visibles en la revisión. Marca la sesión
@@ -216,7 +227,18 @@ Cada sesión termina ante el siguiente Proyecto,
 sesión **o** reinicio reconocido; la continuación heurística sólo puede tomar el prefijo de la página
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos
 reutilizan las reglas de `overview_fields.py`; su proyección general conserva
-el primer campo del documento. Las fases no se convierten en clases: se conserva
+el primer campo del documento. Desde #149, sólo para propósito/finalidad, una
+oración terminada en puntuación puede delimitarse antes de una pareja de filas
+corroborada: metodología con valor completo reconocido, seguida en la línea
+física adyacente por Campo(s), Contenido(s) y PDA/Proceso(s) de desarrollo. No
+puede haber prosa entre las pistas. El cuerpo posterior de esa tabla no vuelve
+a incorporarse al objetivo. Se preservan los cortes literales y la revisión
+pendiente; una captura advertida sigue ambigua. Una sola pista, columnas
+incompletas, citas o un objetivo sin cierre conservan el candidato completo
+para revisión. Esta heurística de texto no reconstruye tablas geométricamente
+ni distingue una transcripción no entrecomillada con exactamente la misma forma.
+No se amplía el recorte de títulos ni el esquema del dossier.
+Las fases no se convierten en clases: se conserva
 la primera unidad sintética de revisión existente y se corta antes de otro
 Proyecto o reinicio reconocido; no se generan varias unidades para documentos con varios proyectos
 organizados sólo por fases. La detección por días es un modo de documento,
