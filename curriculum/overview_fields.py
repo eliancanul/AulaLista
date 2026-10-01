@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
+from collections.abc import Iterator
 
 from curriculum.vocabulary import CANONICAL_CAMPOS
 
@@ -68,6 +69,10 @@ class OverviewFieldSpan:
     excerpt: str
     ambiguous: bool
     termination: str
+    text_start: int = 0
+    value_start: int = 0
+    text_end: int = 0
+    occurrence: int = 1
 
 
 def _advance_quotes(stack: list[str], text: str) -> None:
@@ -191,17 +196,24 @@ def _headers(page: str) -> tuple[list[tuple[str, int, int]], list[int]]:
     return headers, uncertain_positions
 
 
-def extract_overview_spans(pages: list[str], *, has_later_pages: bool = False) -> dict[str, OverviewFieldSpan]:
-    """Return the first explicit span per field, retaining incomplete candidates.
+def iter_overview_spans(
+    pages: list[str], *, has_later_pages: bool = False,
+    extra_boundaries: dict[int, list[int]] | None = None,
+) -> Iterator[OverviewFieldSpan]:
+    """Yield every explicit occurrence in physical order, including empty labels.
 
     All excerpts are contiguous slices of one physical page. We do not silently
     infer that an unlabeled line on the next page continues a field.
     """
-    result = {}
     for page_index, page in enumerate(pages):
+        occurrences: dict[str, int] = {}
         headers, uncertain_positions = _headers(page)
+        if extra_boundaries:
+            positions = {start for _, start, _ in headers}
+            headers.extend(("barrier", start, start) for start in extra_boundaries.get(page_index + 1, []) if start not in positions)
+            headers.sort(key=lambda h: h[1])
         for index, (name, start, value_start) in enumerate(headers):
-            if name == "barrier" or name in result:
+            if name == "barrier":
                 continue
             next_start = headers[index + 1][1] if index + 1 < len(headers) else len(page)
             source_slice = page[value_start:next_start]
@@ -237,5 +249,16 @@ def extract_overview_spans(pages: list[str], *, has_later_pages: bool = False) -
                 ambiguous = ambiguous or "\n" in raw or bool(re.search(
                     r"\b(?:de|del|la|el|los|las|y|e|o|u|para|con|por|en|a|un|una|unos|unas)$", raw, re.IGNORECASE,
                 ))
-            result[name] = OverviewFieldSpan(name, page_index + 1, raw, ambiguous, termination)
+            occurrences[name] = occurrences.get(name, 0) + 1
+            yield OverviewFieldSpan(
+                name, page_index + 1, raw, ambiguous, termination,
+                start, raw_start, raw_start + len(raw), occurrences[name],
+            )
+
+
+def extract_overview_spans(pages: list[str], *, has_later_pages: bool = False) -> dict[str, OverviewFieldSpan]:
+    """Compatibility projection: only the first explicit occurrence per field."""
+    result = {}
+    for span in iter_overview_spans(pages, has_later_pages=has_later_pages):
+        result.setdefault(span.name, span)
     return result

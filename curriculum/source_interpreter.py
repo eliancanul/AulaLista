@@ -26,6 +26,10 @@ from pypdf.errors import PdfReadError, PyPdfError
 from curriculum.verification import normalize_text_for_evidence_check
 from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.overview_fields import extract_overview_spans
+from curriculum.source_segments import (
+    scan_session_segments, match_session_segment, anchor_matches,
+    clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_segments,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -853,6 +857,10 @@ class SessionPlan:
     activities: list[SessionActivity] = field(default_factory=list)
     status: str = STATUS_SUPPORTED
     review: str = REVIEW_PENDING
+    # Optional additive metadata. Preserve malformed inputs verbatim so the
+    # source verifier can reject them, rather than coercing bool/strings to ints.
+    project_context: dict[str, Any] | None = None
+    header_anchor: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         _ensure_session_annex_ids(self.session_id, self.annex_references)
@@ -861,6 +869,8 @@ class SessionPlan:
             "session_number": self.session_number,
             "title": self.title,
             "project_title": self.project_title,
+            "project_context": copy.deepcopy(self.project_context),
+            "header_anchor": copy.deepcopy(self.header_anchor),
             "day_of_week": self.day_of_week,
             "pages": list(self.pages),
             "continues_on": list(self.continues_on),
@@ -901,6 +911,8 @@ class SessionPlan:
             session_number=s_num,
             title=str(data.get("title", "")),
             project_title=str(data.get("project_title", "")),
+            project_context=copy.deepcopy(data.get("project_context")),
+            header_anchor=copy.deepcopy(data.get("header_anchor")),
             day_of_week=str(data.get("day_of_week", "")),
             pages=p_list,
             continues_on=[int(p) for p in data.get("continues_on", [])],
@@ -1597,7 +1609,7 @@ def derive_operational_queue(
 
     # 2. Sessions (fields and annexes)
     for s_idx, session in enumerate(dossier.sessions):
-        s_proj = session.project_title or proj_title
+        s_proj = session.project_title  # Missing local context must not inherit the global title.
         for f_idx, f_name in enumerate(SESSION_FIELD_DISPLAY_ORDER):
             if f_name in session.fields:
                 s_field = session.fields[f_name]
@@ -2747,75 +2759,12 @@ class CurriculumSourceInterpreter:
         page_warnings: dict[int, str],
     ) -> list[SessionPlan]:
         """Detect individual sessions across documents with honest provenance and layouts."""
-        session_header_pattern = re.compile(
-            r"(?:^|\n)\s*((?:(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes)\s*[-–—]?\s*)?SESI[OÓ]N\s*(\d+)\s*(?::\s*([^\n\r]+))?)",
-            re.IGNORECASE,
-        )
-        day_only_pattern = re.compile(
-            r"(?:^|\n)\s*(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes)\b(?:\s*\n\s*\d+\s+de\s+[a-z]+)?",
-            re.IGNORECASE,
-        )
-
-        # Strict project title banner: word boundary and avoid mid-sentence matches
-        project_banner_pattern = re.compile(
-            r"(?:^|\n)\s*PROYECTO(?:\s+de\s+diagn[oó]stico)?:?\s+([^\n\r]+)",
-            re.IGNORECASE,
-        )
-
-        current_project = ""
-        all_matches: list[dict[str, Any]] = []
-
-        has_numbered_sessions = any(
-            session_header_pattern.search(text) for text in pages_text
-        )
-
-        for p_idx, text in enumerate(pages_text, start=1):
-            proj_match = project_banner_pattern.search(text)
-            if proj_match:
-                candidate_title = proj_match.group(1).strip()
-                # Sol Item 9: Filter out accidental mid-sentence or bullet matches
-                if not candidate_title.startswith(("Comunitarios", "o P1", "o P2", "•")):
-                    current_project = re.sub(
-                        r"\s+", " ",
-                        re.split(r"\s+Escenario\b", candidate_title, maxsplit=1, flags=re.IGNORECASE)[0],
-                    ).strip()
-
-            if has_numbered_sessions:
-                for m in session_header_pattern.finditer(text):
-                    raw_header = m.group(1).strip()
-                    day_part = m.group(2) or ""
-                    s_num = int(m.group(3))
-                    raw_title = m.group(4) or ""
-                    title = re.sub(r"\s*Recursos:?.*$", "", raw_title, flags=re.IGNORECASE).strip()
-                    day_str = day_part.capitalize() if day_part else ""
-                    all_matches.append({
-                        "page": p_idx,
-                        "start": m.start(),
-                        "end": m.end(),
-                        "session_number": s_num,
-                        "raw_header": raw_header,
-                        "title": title or f"Sesión {s_num}",
-                        "day_of_week": day_str,
-                        "project_title": current_project,
-                    })
-            else:
-                for d_idx, m in enumerate(day_only_pattern.finditer(text), start=1):
-                    day_str = m.group(1).capitalize()
-                    all_matches.append({
-                        "page": p_idx,
-                        "start": m.start(),
-                        "end": m.end(),
-                        "session_number": d_idx,
-                        "raw_header": m.group(0).strip(),
-                        "title": day_str,
-                        "day_of_week": day_str,
-                        "project_title": current_project,
-                    })
+        source_segments = scan_session_segments(pages_text, sha256)
 
         # Some project plans have phases but no lesson/session divisions. Keep
         # one explicitly ambiguous review unit for the project; do not infer a
         # number of lessons or turn methodological phases into sessions.
-        if not all_matches:
+        if not source_segments:
             project_start = next(
                 (i for i, text in enumerate(pages_text, start=1)
                  if re.search(r"(?:^|\n)\s*DESARROLLO\s+DEL\s+PROYECTO\b", text, re.IGNORECASE)
@@ -2823,14 +2772,8 @@ class CurriculumSourceInterpreter:
                 None,
             )
             if project_start is not None:
-                project_pages = []
-                for page_num in range(project_start, len(pages_text) + 1):
-                    page_text = pages_text[page_num - 1]
-                    if page_num > project_start and re.search(r"(?:^|\n)\s*ANEXOS?\b", page_text, re.IGNORECASE):
-                        break
-                    project_pages.append(page_num)
-                    if re.search(r"(?:^|\n)\s*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b", page_text, re.IGNORECASE):
-                        break
+                phase_segments = phase_review_segments(pages_text, sha256, project_start)
+                project_pages = [number for number, _ in phase_segments]
 
                 activities: list[SessionActivity] = []
                 act_pattern = re.compile(
@@ -2840,8 +2783,7 @@ class CurriculumSourceInterpreter:
                     re.IGNORECASE,
                 )
                 order = 0
-                for p_num in project_pages:
-                    p_text = pages_text[p_num - 1]
+                for p_num, p_text in phase_segments:
                     boundary = re.search(
                         r"(?im)^\s*(?:Recursos|Materiales|Evaluaci[oó]n|Productos(?:\s+y\s+evidencias)?|Implicaciones|Anexos?)\b",
                         p_text,
@@ -3001,11 +2943,13 @@ class CurriculumSourceInterpreter:
                     action_required="Definir horario y duración de clases al acordar el calendario real con la docente.",
                 )
 
+                phase_context = phase_project_context(pages_text, sha256, project_start)
                 return [SessionPlan(
                     session_id=f"p{project_start}_project_review",
                     session_number=1,
                     title="Proyecto sin sesiones explícitas",
-                    project_title=current_project,
+                    project_title=phase_context["title"],
+                    project_context=phase_context,
                     pages=project_pages,
                     layout_fidelity="linearized_heuristics",
                     layout_notes=(
@@ -3020,173 +2964,48 @@ class CurriculumSourceInterpreter:
                 )]
 
         sessions: list[SessionPlan] = []
-        seen_session_ids: set[str] = set()
-        for i, match in enumerate(all_matches):
-            p_idx = match["page"]
-            text = pages_text[p_idx - 1]
-            start_pos = match["start"]
-
-            next_on_same_page = [
-                m for m in all_matches[i + 1 :] if m["page"] == p_idx
-            ]
-            end_pos = next_on_same_page[0]["start"] if next_on_same_page else len(text)
-            block_text = text[start_pos:end_pos]
-
-            pages_spanned = [p_idx]
-            page_segments: list[tuple[int, str]] = [(p_idx, block_text)]
-            continues_on: list[int] = []
-            fidelity = "linearized_heuristics"
+        for segment in source_segments:
+            pages_spanned = [p for p, _ in segment.page_segments]
+            display_title = (
+                f"{segment.day_of_week} - Sesión {segment.session_number}: {segment.title}".strip(" -:")
+                if segment.day_of_week
+                else f"Sesión {segment.session_number}: {segment.title}".strip(" -:")
+            )
             notes = (
-                "Extracción lineal vía pypdf con reconstrucción heurística de momentos. "
+                "Extracción lineal vía pypdf con reconstrucción heurística y límites por ocurrencia de Proyecto/SESIÓN. "
                 "Disposición de columnas y tablas no garantizada estructuralmente."
             )
-
-            # Multi-page continuation detection based on structural page boundaries
-            if not next_on_same_page:
-                if (i + 1) < len(all_matches):
-                    next_match = all_matches[i + 1]
-                    next_p = next_match["page"]
-                    # Rule: A session can ONLY continue on the immediate next physical page
-                    if next_p == p_idx + 1:
-                        next_text = pages_text[next_p - 1]
-                        prefix_text = next_text[: next_match["start"]]
-                        cleaned_prefix = cls._clean_page_prefix(prefix_text)
-                        if cleaned_prefix and not cls._is_structural_barrier(cleaned_prefix):
-                            # Check for pedagogical moment or substantial continuation
-                            has_moment = bool(
-                                re.search(
-                                    r"(?:^|\n|\b)(?:Inicio|Desarrollo|Cierre)\b",
-                                    cleaned_prefix,
-                                    re.IGNORECASE,
-                                )
-                            )
-                            if has_moment:
-                                block_text = f"{block_text}\n{cleaned_prefix}"
-                                pages_spanned.append(next_p)
-                                page_segments.append((next_p, cleaned_prefix))
-                                continues_on.append(next_p)
-                                notes = (
-                                    f"Continuación estructural entre páginas {p_idx} y {next_p} detectada y ensamblada. "
-                                    "Reconstrucción heurística fundamentada en encabezados de momento."
-                                )
-                elif p_idx < len(pages_text):
-                    # Last session in document check (e.g. C03 Sesión 10 continuing to next page)
-                    next_p = p_idx + 1
-                    next_text = pages_text[next_p - 1]
-                    cleaned_next = cls._clean_page_prefix(next_text)
-                    if cleaned_next:
-                        sub_parts = re.split(
-                            r"(?:\n|\s{2,})(?:Producto\s+del\s+proyecto|Evidencias\s+de\s+aprendizaje|Aspectos\s+a\s+evaluar|Adecuaciones\s+curriculares|Vo\.\s*Bo\.)",
-                            cleaned_next,
-                            flags=re.IGNORECASE,
-                        )
-                        candidate_chunk = sub_parts[0].strip()
-                        if candidate_chunk and not cls._is_structural_barrier(candidate_chunk):
-                            has_moment = bool(
-                                re.search(
-                                    r"(?:^|\n|\b)(?:Inicio|Desarrollo|Cierre)\b",
-                                    candidate_chunk,
-                                    re.IGNORECASE,
-                                )
-                            )
-                            if has_moment:
-                                block_text = f"{block_text}\n{candidate_chunk}"
-                                pages_spanned.append(next_p)
-                                page_segments.append((next_p, candidate_chunk))
-                                continues_on.append(next_p)
-                                notes = (
-                                    f"Continuación de cierre de sesión en página {next_p} detectada y ensamblada."
-                                )
-
-            base_id = f"p{p_idx}_s{match['session_number']}"
-            if base_id not in seen_session_ids:
-                session_id = base_id
-            else:
-                occ = 2
-                while f"{base_id}_{occ}" in seen_session_ids:
-                    occ += 1
-                session_id = f"{base_id}_{occ}"
-            seen_session_ids.add(session_id)
-
-            display_title = (
-                f"{match['day_of_week']} - Sesión {match['session_number']}: {match['title']}".strip(" -:")
-                if match["day_of_week"]
-                else f"Sesión {match['session_number']}: {match['title']}".strip(" -:")
-            )
-
+            if len(pages_spanned) > 1:
+                notes += f" Continuación estructural en página {pages_spanned[1]} detectada por encabezados de momento."
             plan = cls._parse_session_block(
-                session_id=session_id,
-                session_number=match["session_number"],
+                session_id=segment.session_id,
+                session_number=segment.session_number,
                 title=display_title,
-                project_title=match["project_title"],
-                day_of_week=match["day_of_week"],
+                project_title=segment.project_context["title"],
+                day_of_week=segment.day_of_week,
                 pages=pages_spanned,
-                continues_on=continues_on,
-                layout_fidelity=fidelity,
+                continues_on=pages_spanned[1:],
+                layout_fidelity="linearized_heuristics",
                 layout_notes=notes,
-                block_text=block_text,
+                block_text="\n".join(text for _, text in segment.page_segments),
                 sha256=sha256,
                 annex_candidates=annex_candidates,
                 page_warnings=page_warnings,
                 pages_text=pages_text,
-                page_segments=page_segments,
+                page_segments=segment.page_segments,
             )
+            plan.project_context = copy.deepcopy(segment.project_context)
+            plan.header_anchor = copy.deepcopy(segment.header_anchor)
             sessions.append(plan)
-
         return sessions
 
     @classmethod
     def _is_structural_barrier(cls, text: str) -> bool:
-        """Check if candidate continuation text is a structural barrier (rubric, project cover/overview, annex, footer)."""
-        if not text or not text.strip():
-            return True
-        norm_text = re.sub(r"\s+", " ", text).strip().lower()
-        # Rubrics / evaluation criteria matrices
-        if re.search(
-            r"\b(?:r[uú]brica(?: de evaluaci[oó]n)?|escala estimativa|lista de cotejo|matriz de valoraci[oó]n|criterios de evaluaci[oó]n)\b",
-            norm_text,
-        ):
-            return True
-        # Project cover / overview / activities section banner
-        if re.search(
-            r"\b(?:desarrollo de actividades|proyecto(?: de diagn[oó]stico)?:|prop[oó]sito:|metodolog[ií]a:|campos formativos:)\b",
-            norm_text,
-        ):
-            return True
-        # Standalone annex banner (e.g. 'ANEXO 1', 'ANEXOS', etc.)
-        if re.search(r"(?:^|\n)\s*anexos?(?:\s*\d+|:|\s*$)", norm_text):
-            return True
-        # Signatures / institutional footers
-        if re.search(
-            r"\b(?:vo\.\s*bo\.|directora? escolar|docente frente a grupo|firma del docente)\b",
-            norm_text,
-        ):
-            return True
-        return False
+        return is_structural_barrier(text)
 
     @classmethod
     def _clean_page_prefix(cls, text: str) -> str:
-        """Strip running document headers, URLs, and institutional footers."""
-        lines = text.splitlines()
-        content_lines = []
-        for line in lines:
-            s = line.strip()
-            if not s:
-                continue
-            if re.match(r"^Planeación Didáctica", s, re.IGNORECASE):
-                continue
-            if re.search(r"https?://\S+", s) and len(s) < 140 and "elaborar" not in s.lower() and "material" not in s.lower():
-                continue
-            if re.match(r"^Semana \d+", s, re.IGNORECASE):
-                continue
-            if re.match(r"^(?:Nivel:|Zona Escolar:|Sector:|Ciclo Escolar:|Nombre del Docente:|Grado:)", s, re.IGNORECASE):
-                continue
-            if re.match(r"^Página \d+", s, re.IGNORECASE):
-                continue
-            if re.match(r"^Vo\.\s*Bo\.", s, re.IGNORECASE):
-                continue
-            content_lines.append(line)
-        return "\n".join(content_lines).strip()
+        return clean_page_prefix(text)
 
     @classmethod
     def _parse_session_block(
@@ -3872,6 +3691,104 @@ def _session_content_fingerprint(s: SessionPlan) -> str:
         parts.append(f"annex:{r.annex_number}:{r.raw_mention}")
     content_repr = "|".join(parts)
     return hashlib.sha256(content_repr.encode("utf-8")).hexdigest()[:16]
+
+
+def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier, pdf_source: Any) -> list[dict[str, Any]]:
+    """Reapply human work only inside a proven, unchanged source occurrence.
+
+    Raw extraction changes and these decision snapshots are retained separately
+    in reextract history. No title joins, no cross-SHA transfers, and no new
+    extracted value inherits a confirmation from a different baseline.
+    """
+    if old is None:
+        return []
+    from curriculum.verification import read_physical_pdf_source
+
+    _, source_sha, pages = read_physical_pdf_source(pdf_source)
+    same_source = old.source_sha256 == fresh.source_sha256 == source_sha
+    segments = scan_session_segments(pages, source_sha)
+    deltas = []
+
+    def human_field(f: InterpretedField) -> bool:
+        return f.origin == ORIGIN_TEACHER_ENTERED or f.review in (REVIEW_CONFIRMED, REVIEW_CORRECTED)
+
+    def record(scope, sid, name, before, after, change, reason):
+        deltas.append(_make_history_delta(
+            scope=scope, session_id=sid, field=name, before=before, after=after,
+            change_type=change, reason=reason,
+        ))
+
+    def merge_fields(previous, current, scope, sid, safe):
+        for name, previous_field in previous.items():
+            if not isinstance(previous_field, InterpretedField) or not human_field(previous_field):
+                continue
+            extracted = current.get(name) if current is not None else None
+            before = previous_field.to_dict()
+            if not safe:
+                record(scope, sid, name, before, extracted.to_dict() if extracted else None,
+                       "decision_not_reapplied", "Decisión conservada en historial; fuente u ocurrencia sin correspondencia unívoca.")
+                continue
+            baseline = previous_field.original_value if previous_field.origin == ORIGIN_TEACHER_ENTERED else previous_field.value
+            old_evidence = before["evidence"]
+            unchanged = extracted is not None and _values_are_semantically_equal(baseline, extracted.value) and old_evidence == extracted.to_dict()["evidence"]
+            if unchanged:
+                current[name] = copy.deepcopy(previous_field)
+                record(scope, sid, name, before, current[name].to_dict(), "retained_decision",
+                       "Decisión humana preservada en la misma fuente y ocurrencia; extracción de base sin cambios.")
+            elif previous_field.origin == ORIGIN_TEACHER_ENTERED:
+                # Retain the author's value/provenance, never bless a newly
+                # segmented interpretation on the strength of an old decision.
+                retained = copy.deepcopy(previous_field)
+                retained.review = REVIEW_PENDING
+                retained.reason = "La reextracción cambió la base de esta decisión docente; se conserva su valor y procedencia y requiere revisión."
+                retained.current_action = retained.action_required = derive_field_operational_state(retained)[1]
+                current[name] = retained
+                record(scope, sid, name, before, retained.to_dict(), "decision_requires_review", retained.reason)
+            else:
+                if extracted:
+                    extracted.review = REVIEW_PENDING
+                    extracted.reason += " La confirmación anterior se conserva en historial y no se aplica al contenido cambiado por reextracción."
+                    extracted.current_action = extracted.action_required = derive_field_operational_state(extracted)[1]
+                record(scope, sid, name, before, extracted.to_dict() if extracted else None,
+                       "decision_requires_review", "La nueva extracción no hereda la confirmación de un valor distinto.")
+
+    merge_fields(old.general_fields, fresh.general_fields, "general", None, same_source)
+    old_ids = [s.session_id for s in old.sessions]
+    new_ids = [s.session_id for s in fresh.sessions]
+    for previous in old.sessions:
+        sid = previous.session_id
+        current = next((s for s in fresh.sessions if s.session_id == sid), None)
+        match = match_session_segment(previous.to_dict(), segments)
+        safe = bool(same_source and current and old_ids.count(sid) == new_ids.count(sid) == 1 and match)
+        if safe and previous.header_anchor is not None:
+            safe = anchor_matches(previous.header_anchor, match.header_anchor) and anchor_matches(current.header_anchor, match.header_anchor)
+        elif safe:
+            # Legacy canonical IDs by themselves do not disambiguate repeated
+            # numbers; there must be only one source occurrence on this page.
+            safe = len([s for s in segments if s.session_number == previous.session_number and s.header_anchor["page_number"] == previous.pages[0]]) == 1
+            if safe:
+                bounded = {p: normalize_text_for_evidence_check(text) for p, text in match.page_segments}
+                safe = all(
+                    isinstance(ev, SourceReference) and ev.document_sha256 == source_sha
+                    and normalize_text_for_evidence_check(ev.excerpt) in bounded.get(ev.page_number, "")
+                    for f in previous.fields.values() for ev in f.evidence
+                )
+        merge_fields(previous.fields, current.fields if current else None, "session", sid, safe)
+        for ref in previous.annex_references:
+            if ref.review not in (REVIEW_CONFIRMED, REVIEW_CORRECTED) and ref.confirmed_page is None:
+                continue
+            candidates = [r for r in current.annex_references if r.reference_id == ref.reference_id] if current else []
+            same_reference = len(candidates) == 1 and ref.raw_mention == candidates[0].raw_mention and ref.source_pages == candidates[0].source_pages
+            old_ev = [e.to_dict() for e in ref.evidence if isinstance(e, SourceReference) and e.role != "teacher_selected_source_page"]
+            if safe and same_reference and old_ev == [e.to_dict() for e in candidates[0].evidence]:
+                current.annex_references[current.annex_references.index(candidates[0])] = copy.deepcopy(ref)
+                record("annex", sid, ref.reference_id, ref.to_dict(), ref.to_dict(), "retained_decision", "Asociación humana conservada para la misma referencia física.")
+            else:
+                record("annex", sid, ref.reference_id, ref.to_dict(), candidates[0].to_dict() if len(candidates) == 1 else None,
+                       "decision_not_reapplied", "Asociación previa conservada en historial; no se traslada a otra ocurrencia.")
+        if current:
+            _recompute_session_review(current)
+    return deltas
 
 
 def compute_reextract_diff(old_d: ImportDossier | None, new_d: ImportDossier) -> list[dict[str, Any]]:
