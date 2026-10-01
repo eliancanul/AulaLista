@@ -242,3 +242,41 @@ def test_unconvertible_integer_keeps_literal_unassigned_scope_without_crashing()
     dossier = dossier_for(pages)
     assert len(dossier.sessions) == 1
     assert dossier.sessions[0].status == "ambiguous"
+
+
+@pytest.mark.parametrize("prefix", ["\x1c", "\x1d", "\x1e"])
+@pytest.mark.parametrize("kind", ["session", "day", "quoted_project", "planning_reset", "phase"])
+def test_strict_wrapping_does_not_remove_legacy_entities_or_safety_cuts(prefix, kind):
+    from curriculum.source_segments import planning_boundary_positions
+    if kind == "phase":
+        page = ("Proyecto: Semillas\n" + prefix
+                + "DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar semillas.")
+        unit, = dossier_for([page]).sessions
+        assert unit.pages == [1]
+        assert any("Observar semillas" in activity.description for activity in unit.activities)
+        return
+    first = "Proyecto: Semillas\n" + session_text()
+    if kind == "session":
+        tail = prefix + "SESIÓN 2: Medir\nInicio: Medir piedras.\nCierre: Guardar piedras."
+        segments = scan_session_segments([first + tail], "synthetic-sha")
+        assert [s.session_number for s in segments] == [1, 2]
+    elif kind == "day":
+        first = "Proyecto: Semillas\nLunes\nInicio: Mirar semillas.\nCierre: Dibujar.\n"
+        tail = prefix + "Martes\nInicio: Medir piedras.\nCierre: Guardar piedras."
+        segments = scan_session_segments([first + tail], "synthetic-sha")
+        assert [s.day_of_week for s in segments] == ["Lunes", "Martes"]
+    elif kind == "quoted_project":
+        first += 'Leer la cita "\n'
+        tail = prefix + 'Proyecto: Otro bloque\nInicio: Medir piedras.\nCierre: Guardar."'
+        segments = scan_session_segments([first + tail], "synthetic-sha")
+        assert len(segments) == 1
+        assert "Medir piedras" in segments[0].unassigned_segments[0][1]
+    else:
+        first = "Campo formativo: Lenguajes\n" + first
+        tail = (prefix + "DATOS GENERALES\nCampo formativo: Saberes y pensamiento científico\n"
+                "Intención didáctica: Medir piedras.")
+        page = first + tail
+        assert planning_boundary_positions([page]) == {1: [page.index("DATOS GENERALES")]}
+        segments = scan_session_segments([page], "synthetic-sha")
+        assert "Medir piedras" in segments[0].unassigned_segments[0][1]
+    assert "Medir piedras" not in segments[0].page_segments[0][1]
