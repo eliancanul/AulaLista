@@ -365,3 +365,19 @@ def test_phase_reset_preserves_all_excluded_pages_up_to_the_next_project():
     assert "página física 3" in s.layout_notes
     assert "Un título posterior" not in s.layout_notes
     assert len(d.sessions) == 1
+
+
+@pytest.mark.parametrize("barrier,retain_barrier_page", [
+    ("ANEXOS\nFicha externa a la unidad.\n", False),
+    ("Productos y evidencias de aprendizaje\nDibujo final.\n", True),
+])
+def test_phase_notes_preserve_existing_annex_and_product_stops(barrier, retain_barrier_page):
+    phase_body = "DESARROLLO DEL PROYECTO\nFase 1\nActividad 1: Observar una piedra.\n"
+    pages = [OLD_METADATA + "Proyecto: Objetos cercanos\n" + phase_body,
+             NEW_METADATA + "Actividad 1: Comparar dos listones.\n", barrier,
+             "Texto posterior que no pertenecía a la unidad.\n"]
+    s = dossier_for(pages).sessions[0]
+    assert s.pages == [1]
+    assert pages[1] in s.layout_notes
+    assert (barrier in s.layout_notes) is retain_barrier_page
+    assert pages[3] not in s.layout_notes

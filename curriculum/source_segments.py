@@ -53,6 +53,8 @@ _BODY_LABEL_RE = re.compile(
     rf"(?:Inicio|Desarrollo|Cierre|Actividad|Fase)(?={_H}*(?::|\d|\r?$))|DESARROLLO{_H}+DEL{_H}+PROYECTO\b)",
     re.IGNORECASE | re.MULTILINE,
 )
+_PHASE_ANNEX_RE = re.compile(r"(?im)^[ \t]*ANEXOS?\b")
+_PHASE_END_RE = re.compile(r"(?im)^[ \t]*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b")
 
 
 def _normalized_campo_names(text: str) -> tuple[str, ...]:
@@ -439,7 +441,7 @@ def phase_review_scope(
         if number > limit[0] or (number == limit[0] and limit[1] == 0):
             reached_limit = True
             break
-        if number > first_page and re.search(r"(?im)^[ \t]*ANEXOS?\b", text):
+        if number > first_page and _PHASE_ANNEX_RE.search(text):
             break
         start = begin[1] if number == first_page else 0
         end = limit[1] if number == limit[0] else len(text)
@@ -447,7 +449,7 @@ def phase_review_scope(
         if number == limit[0]:
             reached_limit = True
             break
-        if re.search(r"(?im)^[ \t]*Productos\s+y\s+evidencias\s+de\s+aprendizaje\b", text):
+        if _PHASE_END_RE.search(text):
             break
     unassigned = []
     if reached_limit and limit in planning:
@@ -455,9 +457,16 @@ def phase_review_scope(
                          if (p["anchor"]["page_number"], p["anchor"]["text_start"]) > limit]
         unassigned_end = min(next_projects) if next_projects else (len(pages) + 1, 0)
         for number in range(limit[0], len(pages) + 1):
+            text = pages[number - 1]
+            # Preserve only text removed by this reset, respecting the phase
+            # unit's pre-existing annex/product stops on these source pages.
+            if number > first_page and _PHASE_ANNEX_RE.search(text):
+                break
             start = limit[1] if number == limit[0] else 0
             if (number, start) >= unassigned_end:
                 break
-            end = unassigned_end[1] if number == unassigned_end[0] else len(pages[number - 1])
-            unassigned.append((number, pages[number - 1][start:end]))
+            end = unassigned_end[1] if number == unassigned_end[0] else len(text)
+            unassigned.append((number, text[start:end]))
+            if _PHASE_END_RE.search(text):
+                break
     return result, unassigned

@@ -197,8 +197,10 @@ El corte usa la incertidumbre y las notas literales existentes, sin crear
 Proyecto ni sesión. Una sesión explícita posterior no hereda el Proyecto
 anterior al reinicio: conserva título vacío, contexto `missing` y motivo,
 hasta otro encabezado de Proyecto. Las unidades existentes de revisión por
-fases comparten el límite y conservan los tramos sin asignar de todas las páginas
-excluidas hasta el siguiente Proyecto (o fin de fuente), cuando alcanzan el corte.
+fases comparten el límite y conservan los tramos sin asignar de las páginas que
+el corte excluyó de la unidad anterior: hasta el siguiente Proyecto, fin de
+fuente o sus stops previos de Anexos/Productos y evidencias. No se amplía la
+unidad ni su superficie de revisión a páginas posteriores a esos stops.
 La auditoría vuelve a calcular el corte y su incertidumbre aun si se quitan las
 notas/anclas o se cambian los estados. Un reinicio reconocido tampoco habilita
 la comprobación legacy de toda la página sin una unidad delimitada.
