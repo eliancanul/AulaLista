@@ -24,6 +24,10 @@ abstenciones quedan explícitos en historial. Contrato en `docs/DATABASE.md`.
 - TDD inicial: 23 fallos y 5 pases antes de implementar los nuevos contratos
 - TDD de preservación: 7 fallos antes de añadir la fusión segura
 - TDD de días/fases: 3 fallos antes de compartir sus límites físicos
+- QA independiente: 12 negativos fallaron antes de reparar whitespace horizontal
+  Unicode, abstención ante formatos no resueltos y proyección contradictoria
+- Aplazamientos: 3 controles de campo fallaron antes de incluir `postponed`; cobertura de la acción
+  real de cola en campo general, sesión y anexo, y snapshots de abstención
 - Casos authored sintéticos: proyectos y sesiones repetidos/idénticos,
   homónimos, sesión antes de Proyecto, títulos vacíos/multilínea, prosa,
   cambios de contexto y continuación entre páginas, días, fases, citas

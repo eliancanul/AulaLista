@@ -38,7 +38,7 @@ from pypdf.errors import PdfReadError, PyPdfError
 from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
-    project_context_matches, phase_project_context, phase_review_segments,
+    project_context_matches, phase_project_context, phase_review_segments, session_boundary_positions,
 )
 
 logger = logging.getLogger(__name__)
@@ -587,6 +587,7 @@ def verify_curriculum_dossier(
     # and declared offsets. A legacy repeated number is never matched to the
     # first textual occurrence merely because it appears on the same page.
     source_segments = scan_session_segments(pages_text, actual_sha256)
+    has_session_structure = bool(source_segments) or any(session_boundary_positions(pages_text).values())
     page_session_segments: dict[int, dict[str, str]] = {}
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
         if not isinstance(session, dict):
@@ -601,9 +602,9 @@ def verify_curriculum_dossier(
             # even if an anchor was removed or other sessions were omitted.
             page_session_segments.setdefault(page_number, {})[sid] = (
                 norm_pages_text[page_number - 1]
-                if not source_segments and 1 <= page_number <= len(pages_text) else ""
+                if not has_session_structure and 1 <= page_number <= len(pages_text) else ""
             )
-        if not source_segments and sid.endswith("_project_review"):
+        if not has_session_structure and sid.endswith("_project_review"):
             physical_pages = session.get("pages", [])
             if isinstance(physical_pages, list) and physical_pages and type(physical_pages[0]) is int and 1 <= physical_pages[0] <= len(pages_text):
                 for page_number in declared_pages:
@@ -627,6 +628,14 @@ def verify_curriculum_dossier(
                 anchor_matches(supplied, expected) if name == "header_anchor"
                 else project_context_matches(supplied, expected)
             )
+            if name == "project_context" and valid and session.get("project_title", "") != expected["title"]:
+                items.append(VerificationItem(
+                    item_id=f"sess_{s_index}_{sid}_project_title",
+                    path=f"sessions/{sid}/project_title", scope=SCOPE_SESSION,
+                    target=f"session.{sid}.project_title", status=STATUS_BLOCKED,
+                    message="El título visible del proyecto contradice su contexto físico recomputado.",
+                    details={"session_id": sid, "reason": "project_projection_mismatch"},
+                ))
             if not valid:
                 items.append(VerificationItem(
                     item_id=f"sess_{s_index}_{sid}_{name}",

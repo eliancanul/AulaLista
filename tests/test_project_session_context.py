@@ -346,3 +346,113 @@ def test_identical_project_anchor_cannot_be_transplanted_between_occurrences():
     d.sessions[0].project_context = copy.deepcopy(d.sessions[1].project_context)
     report = verify_curriculum_dossier(d, source(pages))
     assert any(i["status"] == "blocked" and i["target"] == "session.p1_s1.project_context" for i in report.items)
+
+
+@pytest.mark.parametrize("space", ["\u00a0", "\u2009", "\u202f", "\u3000"])
+def test_unicode_horizontal_space_preserves_source_offsets_and_sessions(space):
+    pages = [paired_page().replace("SESIÓN 1", f"{space}SESIÓN{space}1")]
+    d = dossier_for(pages)
+    assert len(d.sessions) == 2
+    assert [s.project_title for s in d.sessions] == ["Senderos del río", "Guardianes del jardín"]
+    for s in d.sessions:
+        a = s.header_anchor
+        assert a["excerpt"] == pages[0][a["text_start"]:a["text_end"]]
+    d.sessions[0].fields["inicio"] = copy.deepcopy(d.sessions[1].fields["inicio"])
+    d.sessions[0].header_anchor = d.sessions[0].project_context = None
+    d.sessions = d.sessions[:1]
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.inicio") for i in verify_curriculum_dossier(d, source(pages)).items)
+
+
+@pytest.mark.parametrize("heading", ["SESIÓN 01: Observar", "SESIÓN 1.", "SESIÓN 1. Observar"])
+def test_unambiguous_legacy_numbered_headings_are_still_detected(heading):
+    page = "Proyecto: Senderos\n" + session_text().replace("SESIÓN 1: Observar", heading)
+    d = dossier_for([page])
+    assert len(d.sessions) == 1
+    assert d.sessions[0].session_id == "p1_s1"
+    assert d.sessions[0].project_title == "Senderos"
+
+
+@pytest.mark.parametrize("heading", ["SESIÓN 1 Observar", "SESIÓN 2 del cuento se menciona como ejemplo.", "SESIÓN\n1: Observar", "SESIÓN\u20281: Observar"])
+def test_unresolved_session_like_text_never_reopens_legacy_page_fallback(heading):
+    from curriculum.source_interpreter import InterpretedField, SourceReference
+    page = f"Proyecto: Primero\n{heading}\nInicio: Mirar plantas.\nProyecto: Segundo\n{heading}\nInicio: Medir piedras."
+    d = dossier_for([page])
+    assert d.sessions == []  # Abstain from treating unknown formatting/prose as a lesson.
+    d.sessions = [SessionPlan(session_id="legacy-A", session_number=1, title="A", pages=[1], fields={
+        "inicio": InterpretedField(name="inicio", value="Medir piedras.", evidence=[SourceReference(d.source_sha256, 1, excerpt="Medir piedras.")]),
+    })]
+    report = verify_curriculum_dossier(d, source([page]))
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.legacy-A.inicio") for i in report.items)
+    assert any(i["status"] == "needs_teacher_review" and i["target"].startswith("session.legacy-A.inicio") for i in report.items)
+
+
+def test_project_title_projection_cannot_contradict_present_context():
+    pages = [paired_page()]
+    d = dossier_for(pages)
+    d.sessions[0].project_title = "Título que no corresponde"
+    report = verify_curriculum_dossier(d, source(pages))
+    assert any(i["status"] == "blocked" and i["target"] == "session.p1_s1.project_title" for i in report.items)
+    d.sessions[0].project_context = None
+    legacy = verify_curriculum_dossier(d, source(pages))
+    assert not any(i["status"] == "blocked" and i["target"] == "session.p1_s1.project_title" for i in legacy.items)
+
+
+def test_legacy_corrected_value_with_empty_history_is_retained_as_a_snapshot_when_unmatched():
+    from curriculum.source_interpreter import preserve_reextract_decisions
+    pages = [paired_page(same=True)]
+    old = dossier_for(pages)
+    old.history = []
+    f = old.sessions[0].fields["inicio"]
+    f.value, f.origin, f.review = "Decisión legacy sin historial.", "teacher_entered", "corrected"
+    old.sessions[0].header_anchor = old.sessions[0].project_context = None
+    fresh = dossier_for(pages)
+    deltas = preserve_reextract_decisions(old, fresh, source(pages))
+    entry = next(d for d in deltas if d["change_type"] == "decision_not_reapplied")
+    assert entry["before"] == f.to_dict()
+    assert entry["session_id"] == "p1_s1"
+    assert all(s.fields["inicio"].value == "Mirar el paisaje." for s in fresh.sessions)
+
+
+@pytest.mark.parametrize("mutation", ["sha", "base"])
+def test_postponed_decision_is_not_silently_reapplied_to_changed_source_or_value(mutation):
+    from curriculum.source_interpreter import preserve_reextract_decisions, resolve
+    pages = ["Proyecto: Senderos\n" + session_text()]
+    old = resolve(dossier_for(pages), {"session_id": "p1_s1", "reviews": {"inicio": "postponed"}}, actor="Docente")
+    if mutation == "sha":
+        old.source_sha256 = "foreign-sha"
+    else:
+        old.sessions[0].fields["inicio"].value = "Texto antes del cambio de extracción."
+    fresh = dossier_for(pages)
+    deltas = preserve_reextract_decisions(old, fresh, source(pages))
+    assert fresh.sessions[0].fields["inicio"].review == "pending"
+    assert any(d["before"]["review"] == "postponed" and d["change_type"] in ("decision_not_reapplied", "decision_requires_review") for d in deltas)
+
+
+def test_known_session_stops_at_unresolved_next_heading_without_inventing_a_session():
+    pages = ["Proyecto: Senderos\n" + session_text() + "SESIÓN 2 Observar\nInicio: Texto ajeno.\nCierre: Otra sesión."]
+    d = dossier_for(pages)
+    assert len(d.sessions) == 1
+    assert "Otra sesión" not in d.sessions[0].fields["cierre"].value
+    d.sessions[0].fields["inicio"].value = "Texto ajeno."
+    d.sessions[0].fields["inicio"].evidence[0].excerpt = "Texto ajeno."
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.inicio") for i in verify_curriculum_dossier(d, source(pages)).items)
+
+
+@pytest.mark.parametrize("mutation", ["sha", "reference"])
+def test_postponed_annex_decision_is_snapshotted_when_not_reapplied(mutation):
+    from curriculum.source_interpreter import preserve_reextract_decisions, resolve
+    pages = ["Proyecto: Senderos\n" + session_text(start="Resolver anexo 1 del cuadernillo."), "ANEXO 1\nFicha de plantas."]
+    old = dossier_for(pages)
+    ref = old.sessions[0].annex_references[0]
+    old = resolve(old, {"session_id": "p1_s1", "reviews": {ref.reference_id: "postponed"}}, actor="Docente")
+    ref = old.sessions[0].annex_references[0]
+    assert ref.review == "postponed"
+    old.history = []
+    if mutation == "sha":
+        old.source_sha256 = "foreign-sha"
+    else:
+        ref.raw_mention = "Otra mención previa"
+    fresh = dossier_for(pages)
+    deltas = preserve_reextract_decisions(old, fresh, source(pages))
+    assert fresh.sessions[0].annex_references[0].review == "pending"
+    assert any(d["scope"] == "annex" and d["change_type"] == "decision_not_reapplied" and d["before"] == ref.to_dict() for d in deltas)

@@ -17,14 +17,35 @@ from curriculum.overview_fields import iter_overview_spans, _quote_stack
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
 _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
+# Horizontal Unicode whitespace, deliberately excluding every line separator.
+_H = r"[^\S\r\n\v\f\x85\u2028\u2029]"
+_SESSION_WORD = r"SESI[OÓ]\u0301?N"
 _SESSION_RE = re.compile(
-    rf"^[ \t]*((?:({_DAYS})[ \t]*[-–—]?[ \t]*)?SESI[OÓ]N[ \t]*([1-9]\d*)"
-    r"(?=[ \t]*(?::|\r?$))[ \t]*(?::[ \t]*([^\n\r]+))?)", re.IGNORECASE | re.MULTILINE,
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}{_H}*(0*[1-9][0-9]*)"
+    rf"(?={_H}*(?:[:.]|\r?$)){_H}*(?:[:.]{_H}*([^\n\r\u2028\u2029]*))?)",
+    re.IGNORECASE | re.MULTILINE,
 )
 _DAY_RE = re.compile(
-    rf"^[ \t]*(({_DAYS})(?:[ \t]*:[ \t]*[^\n\r]+|[ \t]*\r?$)"
-    r"(?:\n[ \t]*\d+[ \t]+de[ \t]+[^\n\r]+)?)", re.IGNORECASE | re.MULTILINE,
+    rf"^{_H}*(({_DAYS})(?:{_H}*:{_H}*[^\n\r]+|{_H}*\r?$)"
+    rf"(?:\n{_H}*\d+{_H}+de{_H}+[^\n\r]+)?)", re.IGNORECASE | re.MULTILINE,
 )
+_UNRESOLVED_SESSION_RE = re.compile(
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}\s*[0-9]+\b)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def session_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
+    """Possible numbered headers cut scope, but unknown formats create no unit.
+
+    The deliberately broader safety detector can see wrapped/unknown headings
+    or prose such as 'SESIÓN 2 del cuento'. It only abstains/cuts; it never
+    infers a session from them or certifies whole-page membership.
+    """
+    return {
+        number: [m.start(1) for m in _UNRESOLVED_SESSION_RE.finditer(page) if not _quote_stack(page[:m.start()])]
+        for number, page in enumerate(pages, 1)
+    }
 
 
 def text_anchor(page: str, sha: str, page_number: int, occurrence: int, start: int, end: int, kind: str) -> dict[str, Any]:
@@ -62,7 +83,7 @@ def missing_project_context() -> dict[str, Any]:
 
 def _session_headers(pages: list[str]):
     numbered = [[m for m in _SESSION_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]
-    if any(numbered):
+    if any(numbered) or any(session_boundary_positions(pages).values()):
         return True, numbered
     return False, [[m for m in _DAY_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]
 
@@ -70,7 +91,9 @@ def _session_headers(pages: list[str]):
 def project_occurrences(pages: list[str], sha: str) -> list[dict[str, Any]]:
     result = []
     _, headers = _session_headers(pages)
-    extra = {number: [m.start(1) for m in matches] for number, matches in enumerate(headers, 1)}
+    extra = session_boundary_positions(pages)
+    for number, matches in enumerate(headers, 1):
+        extra[number] = sorted(set(extra[number] + [m.start(1) for m in matches]))
     for span in iter_overview_spans(pages, extra_boundaries=extra):
         if span.name != "proyecto":
             continue
@@ -146,7 +169,7 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
     use_numbered, headers = _session_headers(pages)
     segments = []
     counts: dict[str, int] = {}
-    boundaries: dict[int, list[int]] = {}
+    boundaries = session_boundary_positions(pages)
     for project in projects:
         anchor = project["anchor"]
         boundaries.setdefault(anchor["page_number"], []).append(anchor["text_start"])
@@ -208,7 +231,7 @@ def match_session_segment(session: dict[str, Any], segments: list[SessionSegment
 
 def phase_project_context(pages: list[str], sha: str, first_page: int) -> dict[str, Any]:
     page = pages[first_page - 1]
-    start = re.search(r"(?im)^[ \t]*DESARROLLO\s+DEL\s+PROYECTO\b", page)
+    start = re.search(rf"(?im)^{_H}*DESARROLLO\s+DEL\s+PROYECTO\b", page)
     return context_before(project_occurrences(pages, sha), first_page, start.start() if start else 0)
 
 
@@ -221,7 +244,7 @@ def project_context_matches(value: Any, expected: dict[str, Any]) -> bool:
 
 def phase_review_segments(pages: list[str], sha: str, first_page: int) -> list[tuple[int, str]]:
     """Bound the existing synthetic phase-review unit at the next project."""
-    first = re.search(r"(?im)^[ \t]*DESARROLLO\s+DEL\s+PROYECTO\b", pages[first_page - 1])
+    first = re.search(rf"(?im)^{_H}*DESARROLLO\s+DEL\s+PROYECTO\b", pages[first_page - 1])
     if not first:
         return []
     begin = (first_page, first.start())

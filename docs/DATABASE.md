@@ -166,7 +166,10 @@ Contrato aditivo de `SessionPlan`, sin migración SQL ni cambio del staging v1:
   ni booleanos ni cadenas, incluso numéricas, constituyen anclas válidas.
 
 `source_segments.py` recorre los encabezados en orden físico y comparte límites
-entre extracción y verificación. Cada sesión termina ante el siguiente Proyecto
+entre extracción y verificación. El whitespace horizontal Unicode se reconoce
+sin unir líneas. Un encabezado numerado de formato desconocido corta el alcance
+y deshabilita el fallback de página completa, sin inferir una sesión de la prosa.
+Cada sesión termina ante el siguiente Proyecto
 **o** sesión; la continuación heurística sólo puede tomar el prefijo de la página
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos
 reutilizan las reglas de `overview_fields.py`; su proyección general conserva
@@ -175,7 +178,8 @@ la unidad sintética de revisión existente y se corta antes de otro Proyecto.
 
 La verificación vuelve a leer la fuente y a calcular las ocurrencias. No confía
 en offsets, fragmentos, título, orden del dossier ni subconjuntos declarados.
-Anclas/contextos presentes y manipulados son contradicción mecánica (`blocked`).
+Anclas/contextos presentes y manipulados, o una proyección `project_title` que
+contradice ese contexto, son contradicción mecánica (`blocked`).
 La ausencia de metadata legacy no bloquea por sí misma: se resuelve el ID físico
 existente o una coincidencia única de número/página. Si hay estructura de sesiones
 pero la identidad no es inequívoca, no se usa toda la página como segmento;
@@ -199,12 +203,14 @@ si coinciden SHA y ocurrencia física inequívoca, sin joins por título. Un anc
 completa se contrasta con la fuente; legacy sin ancla exige número/página únicos
 y evidencias contenidas en ese segmento. No se trasladan decisiones entre SHA,
 anclas cambiadas ni homónimos ambiguos. La decisión que no puede reaplicarse
-queda en historial con `decision_not_reapplied`.
+queda en historial con `decision_not_reapplied`, incluido un snapshot completo
+del valor/procedencia anterior aunque el historial legacy estuviera vacío.
 
 La misma base extraída conserva valor, revisión, procedencia y evidencia de la
-corrección/confirmación (`retained_decision`). Si la segmentación cambia, un valor
+corrección/confirmación/aplazamiento (`retained_decision`). Si la segmentación cambia, un valor
 corregido se conserva como autoría docente pero vuelve a `pending` con motivo;
-una confirmación no se aplica al nuevo valor (`decision_requires_review`). Los
+una confirmación o aplazamiento no se aplica al nuevo valor
+(`decision_requires_review`). Los
 anexos requieren además la misma referencia, mención, páginas y evidencia.
 El historial registra tanto el delta de extracción como la decisión de retener
 o abstenerse; las aprobaciones editoriales siguen invalidándose al reextraer.

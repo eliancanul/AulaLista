@@ -3710,7 +3710,7 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
     deltas = []
 
     def human_field(f: InterpretedField) -> bool:
-        return f.origin == ORIGIN_TEACHER_ENTERED or f.review in (REVIEW_CONFIRMED, REVIEW_CORRECTED)
+        return f.origin == ORIGIN_TEACHER_ENTERED or f.review in (REVIEW_CONFIRMED, REVIEW_CORRECTED, "postponed")
 
     def record(scope, sid, name, before, after, change, reason):
         deltas.append(_make_history_delta(
@@ -3747,10 +3747,10 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
             else:
                 if extracted:
                     extracted.review = REVIEW_PENDING
-                    extracted.reason += " La confirmación anterior se conserva en historial y no se aplica al contenido cambiado por reextracción."
+                    extracted.reason += " La decisión anterior se conserva en historial y no se aplica al contenido cambiado por reextracción."
                     extracted.current_action = extracted.action_required = derive_field_operational_state(extracted)[1]
                 record(scope, sid, name, before, extracted.to_dict() if extracted else None,
-                       "decision_requires_review", "La nueva extracción no hereda la confirmación de un valor distinto.")
+                       "decision_requires_review", "La nueva extracción no hereda la confirmación o el aplazamiento de un valor distinto.")
 
     merge_fields(old.general_fields, fresh.general_fields, "general", None, same_source)
     old_ids = [s.session_id for s in old.sessions]
@@ -3775,7 +3775,7 @@ def preserve_reextract_decisions(old: ImportDossier | None, fresh: ImportDossier
                 )
         merge_fields(previous.fields, current.fields if current else None, "session", sid, safe)
         for ref in previous.annex_references:
-            if ref.review not in (REVIEW_CONFIRMED, REVIEW_CORRECTED) and ref.confirmed_page is None:
+            if ref.review not in (REVIEW_CONFIRMED, REVIEW_CORRECTED, "postponed") and ref.confirmed_page is None:
                 continue
             candidates = [r for r in current.annex_references if r.reference_id == ref.reference_id] if current else []
             same_reference = len(candidates) == 1 and ref.raw_mention == candidates[0].raw_mention and ref.source_pages == candidates[0].source_pages

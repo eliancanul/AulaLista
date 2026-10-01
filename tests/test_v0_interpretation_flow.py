@@ -2267,3 +2267,33 @@ def test_reextract_keeps_session_correction_and_selected_id_on_same_source():
     assert fresh.selection["session_id"] == previous.selection["session_id"]
     assert fresh.history[:-1] == previous.history
     assert job.error_message == ""
+
+
+@pytest.mark.parametrize("scope", ["general", "session", "annex"])
+def test_reextract_preserves_real_postpone_queue_action(scope):
+    from curriculum.source_interpreter import derive_operational_queue
+    client = tutor_client(f"postpone-reextract-{scope}-141")
+    job = _upload_c01_job(client)
+    url = reverse("tutor-import-interpretation", args=[job.pk])
+    assert client.get(url).status_code == 200
+    job.refresh_from_db()
+    dossier = job.get_interpretation_dossier()
+    targets = [i for i in derive_operational_queue(dossier).items if i.scope == scope and (scope == "general" or i.session_id == "p2_s1")]
+    target = next((i for i in targets if i.field_name in ("proyecto", "inicio")), targets[0])
+    response = client.post(url, {
+        "action": "postpone_queue_item", "expected_version": str(dossier.version),
+        "scope": "general" if scope == "general" else target.session_id, "item_id": target.item_id,
+    })
+    assert response.status_code == 200
+    job.refresh_from_db()
+    postponed = job.get_interpretation_dossier()
+    item = next(i for i in derive_operational_queue(postponed).items if i.item_id == target.item_id)
+    assert item.priority_state == "postponed"
+    response = client.post(url, {"action": "reextract", "expected_version": str(postponed.version)})
+    assert response.status_code == 200
+    job.refresh_from_db()
+    fresh = job.get_interpretation_dossier()
+    item = next(i for i in derive_operational_queue(fresh).items if i.item_id == target.item_id)
+    assert item.priority_state == "postponed"
+    assert any(d.get("change_type") == "retained_decision" and d["before"]["review"] == "postponed" for d in fresh.history[-1]["deltas"])
+    assert job.error_message == ""

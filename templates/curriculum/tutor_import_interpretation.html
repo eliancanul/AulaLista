@@ -1681,8 +1681,8 @@
                           <p>Referencia previa: {{ delta.before.raw_mention }} · Página elegida: {{ delta.before.confirmed_page|default:'Sin asociación' }}</p>
                         {% else %}
                           <p>Valor docente previo: {{ delta.before.value|default:'Vacío' }}</p>
-                          <p>Revisión previa: {{ delta.before.review }} · Origen: {{ delta.before.origin }}</p>
                         {% endif %}
+                        <p>Revisión previa: {{ delta.before.review }}{% if delta.before.origin %} · Origen: {{ delta.before.origin }}{% endif %}</p>
                       </details>
                     {% endif %}
                   {% endfor %}
