@@ -21,15 +21,17 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
 _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
-# Horizontal Unicode whitespace, deliberately excluding every line separator.
-_H = r"[^\S\r\n\v\f\x85\x1c-\x1e\u2028\u2029]"
+# Preserve the legacy spacing class for existing entities and safety cuts.
+# Only the newly admitted wrapped form uses the stricter physical-line class.
+_H = r"[^\S\r\n\v\f\x85\u2028\u2029]"
+_WRAPPED_H = r"[^\S\r\n\v\f\x85\x1c-\x1e\u2028\u2029]"
 _SESSION_WORD = r"SESI[OÓ]\u0301?N"
 # Only a standalone positive number followed immediately by a labelled moment
 # corroborates this wrapped form. Keep unknown titles, lists, dates and other
 # line separators as safety cuts, without creating a session from them.
 _WRAPPED_SESSION_SEPARATOR = (
-    rf"{_H}*\r?\n(?={_H}*0*[1-9][0-9]*{_H}*\r?\n"
-    rf"{_H}*(?:Inicio|Desarrollo|Cierre)(?={_H}*(?::|\r?$))){_H}*"
+    rf"{_WRAPPED_H}*\r?\n(?={_WRAPPED_H}*0*[1-9][0-9]*{_WRAPPED_H}*\r?\n"
+    rf"{_WRAPPED_H}*(?:Inicio|Desarrollo|Cierre)(?={_WRAPPED_H}*(?::|\r?$))){_WRAPPED_H}*"
 )
 _SESSION_RE = re.compile(
     rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
