@@ -297,6 +297,16 @@ def _map_activity_to_claims(
     # 2. Relaciones con Anexos requeridos
     annex_ids = getattr(activity, "annex_ids", []) or []
     for annex_id in annex_ids:
+        # Relationship-specific evidence must include the annex mention. Do
+        # not substitute the generic activity excerpt when this provenance is
+        # absent in a legacy/manual object; leave the relation a candidate.
+        annex_refs = []
+        annex_evidence = getattr(activity, "annex_evidence", {})
+        raw_refs = annex_evidence.get(annex_id, []) if isinstance(annex_evidence, dict) else []
+        for evidence in raw_refs if isinstance(raw_refs, list) else []:
+            ref = evidence if isinstance(evidence, SourceReference) else SourceReference.from_dict(evidence) if isinstance(evidence, dict) else None
+            if ref is not None and (not doc_sha or ref.document_sha256 == doc_sha):
+                annex_refs.append(ref)
         cid_annex = make_claim_id(act_subject, PREDICATE_REQUIERE_ANEXO, annex_id, doc_sha)
         claims.append(
             AtomicClaim(
@@ -306,10 +316,10 @@ def _map_activity_to_claims(
                 predicate=PREDICATE_REQUIERE_ANEXO,
                 object_value=annex_id,
                 source_doc_sha256=doc_sha,
-                page_number=act_page,
+                page_number=annex_refs[0].page_number if annex_refs else act_page,
                 extraction_method="source_interpreter_v0",
                 state=CLAIM_STATE_CANDIDATE,
-                evidence=act_evidence_refs,
+                evidence=annex_refs,
             )
         )
 

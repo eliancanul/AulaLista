@@ -39,6 +39,27 @@ _SESSION_RE = re.compile(
     rf"(?={_H}*(?:[:.]|\r?$)){_H}*(?:[:.]{_H}*([^\n\r\u2028\u2029]*))?)",
     re.IGNORECASE | re.MULTILINE,
 )
+# Additional format admission is intentionally independent of the legacy regex.
+# A same-line labelled date plus a following labelled moment corroborates a
+# planning unit; a prose mention/date/number alone never creates one. Date text
+# is kept literal; this does not infer a calendar date, duration or curriculum.
+_DATED_SESSION_RE = re.compile(
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
+    rf"{_WRAPPED_H}+(0*[1-9][0-9]*){_WRAPPED_H}+Fecha{_WRAPPED_H}*:{_WRAPPED_H}*"
+    rf"(?:(?:{_DAYS}){_WRAPPED_H}+)?(?:0?[1-9]|[12][0-9]|3[01])"
+    rf"(?={_WRAPPED_H}|[/.-]|\r?$)[^\n\r\u2028\u2029]*())",
+    re.IGNORECASE | re.MULTILINE,
+)
+_PARTIAL_DATED_SESSION_RE = re.compile(
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
+    rf"{_WRAPPED_H}+(0*[1-9][0-9]*){_WRAPPED_H}+Fecha{_WRAPPED_H}*:{_WRAPPED_H}*"
+    rf"(?:{_DAYS})(?={_WRAPPED_H}*(?:Tema\b|Tiempo\b|Organizaci[oó]n\b|\r?$))[^\n\r\u2028\u2029]*())",
+    re.IGNORECASE | re.MULTILINE,
+)
+_MOMENT_LABEL_RE = re.compile(
+    rf"^{_H}*(?:Inicio|Desarrollo|Cierre){_H}*(?::|\r?$)",
+    re.IGNORECASE | re.MULTILINE,
+)
 _DAY_RE = re.compile(
     rf"^{_H}*(({_DAYS})(?:{_H}*:{_H}*[^\n\r]+|{_H}*\r?$)"
     rf"(?:\n{_H}*\d+{_H}+de{_H}+[^\n\r]+)?)", re.IGNORECASE | re.MULTILINE,
@@ -243,7 +264,56 @@ def missing_project_context() -> dict[str, Any]:
 
 
 def _session_headers(pages: list[str]):
-    numbered = [[m for m in _SESSION_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]
+    numbered = []
+    for page_index, page in enumerate(pages):
+        matches = list(_SESSION_RE.finditer(page))
+        cuts = sorted({m.start(1) for pattern in (_UNRESOLVED_SESSION_RE, _WEAK_PROJECT_RE, _GENERAL_DATA_RE)
+                       for m in pattern.finditer(page)})
+        for candidate in [*_DATED_SESSION_RE.finditer(page), *_PARTIAL_DATED_SESSION_RE.finditer(page)]:
+            end = next((pos for pos in cuts if pos > candidate.start(1)), len(page))
+            # Require corroboration in this physical block, never borrow a
+            # moment from the following session/project or a quoted example.
+            corroborated = any(not _quote_stack(page[:moment.start()])
+                               for moment in _MOMENT_LABEL_RE.finditer(page, candidate.end(1), end))
+            if candidate.re is _PARTIAL_DATED_SESSION_RE:
+                # A weekday without a day number stays a partial date, never
+                # filled in. Its header needs richer planning corroboration.
+                block = page[candidate.end(1):end]
+                metadata = {label.casefold().replace("ó", "o") for label in re.findall(
+                    r"(?im)^[ \t]*(Campo|Contenidos/PDA|Tiempo|Organizaci[oó]n)[ \t]*:", block)}
+                corroborated = corroborated and len(metadata) >= 2 and bool(re.search(
+                    r"(?im)^[ \t]*Descripci[oó]n de actividades[ \t]*:", block))
+            if not corroborated and candidate.re is _DATED_SESSION_RE and end == len(page) and page_index + 1 < len(pages):
+                # Narrow footer continuation: at least two distinct labelled
+                # planning metadata fields and an explicit activity-section
+                # label followed by a moment on the immediate next-page prefix.
+                # Date/index mentions cannot borrow arbitrary following prose.
+                metadata = {label.casefold().replace("ó", "o") for label in re.findall(
+                    r"(?im)^[ \t]*(Campo|Contenidos/PDA|Tiempo|Organizaci[oó]n)[ \t]*:",
+                    page[candidate.end(1):end],
+                )}
+                following = pages[page_index + 1]
+                next_cuts = [m.start(1) for pattern in (_UNRESOLVED_SESSION_RE, _WEAK_PROJECT_RE, _GENERAL_DATA_RE)
+                             for m in pattern.finditer(following)]
+                prefix = following[:min(next_cuts)] if next_cuts else following
+                section = re.search(r"(?im)^[ \t]*Descripci[oó]n de actividades[ \t]*:[ \t]*$", prefix)
+                if len(metadata) >= 2 and section:
+                    corroborated = any(not _quote_stack(page + "\n" + prefix[:moment.start()])
+                                       for moment in _MOMENT_LABEL_RE.finditer(prefix, section.end()))
+                elif re.search(r"\bTiempo[ \t]*:", candidate.group(1), re.I):
+                    # Some planning tables split immediately after the dated
+                    # header. Require both phase and purpose labels before the
+                    # first next-page moment, never just an unrelated Inicio.
+                    for moment in _MOMENT_LABEL_RE.finditer(prefix):
+                        before = prefix[:moment.start()]
+                        if (re.search(r"(?im)^[ \t]*Fase[ \t]*:", before)
+                                and re.search(r"(?im)^[ \t]*Prop[oó]sito[ \t]*:", before)
+                                and not _quote_stack(page + "\n" + before)):
+                            corroborated = True
+                            break
+            if corroborated:
+                matches.append(candidate)
+        numbered.append(sorted((m for m in matches if not _quote_stack(page[:m.start()])), key=lambda m: m.start(1)))
     if any(numbered) or any(session_boundary_positions(pages).values()):
         return True, numbered
     return False, [[m for m in _DAY_RE.finditer(page) if not _quote_stack(page[:m.start()])] for page in pages]

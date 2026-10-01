@@ -1,0 +1,311 @@
+{
+  "version": "activity-session-development.v1",
+  "reference_kind": "AI-authored synthetic structural reference; not teacher gold",
+  "scope": "All explicit numbered activities in complete synthetic pages; negatives included. Existing pertenece_a_sesion only.",
+  "documents": [
+    {
+      "id": "standard",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio: Observar.\nActividad 1: Clasificar hojas.\nCierre: Comparar.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "standard-r1",
+          "activity": {
+            "page": 1,
+            "start": 37,
+            "end": 67,
+            "quote": "Actividad 1: Clasificar hojas."
+          },
+          "session_id": "s1"
+        }
+      ]
+    },
+    {
+      "id": "date_inline",
+      "pages": [
+        "Sesión 1 Fecha: Lunes 21 Tiempo: 40 minutos Organización: Equipo\nInicio: Explorar.\nActividad 1: Dibujar semillas.\nCierre: Compartir.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 64,
+            "quote": "Sesión 1 Fecha: Lunes 21 Tiempo: 40 minutos Organización: Equipo"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "date_inline-r1",
+          "activity": {
+            "page": 1,
+            "start": 83,
+            "end": 113,
+            "quote": "Actividad 1: Dibujar semillas."
+          },
+          "session_id": "s1"
+        }
+      ]
+    },
+    {
+      "id": "two_dated_sessions",
+      "pages": [
+        "Sesión 1 FECHA: Lunes 21 Tiempo: Jornada.\nInicio: Observar.\nActividad 1: Medir agua.\nCierre: Registrar.\nSesión 2 Fecha: Martes 22 Tiempo: 40 minutos\nInicio: Preparar.\nActividad 1: Comparar piedras.\nCierre: Ordenar.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 41,
+            "quote": "Sesión 1 FECHA: Lunes 21 Tiempo: Jornada."
+          }
+        },
+        {
+          "id": "s2",
+          "anchor": {
+            "page": 1,
+            "start": 104,
+            "end": 148,
+            "quote": "Sesión 2 Fecha: Martes 22 Tiempo: 40 minutos"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "two_dated_sessions-r1",
+          "activity": {
+            "page": 1,
+            "start": 60,
+            "end": 84,
+            "quote": "Actividad 1: Medir agua."
+          },
+          "session_id": "s1"
+        },
+        {
+          "id": "two_dated_sessions-r2",
+          "activity": {
+            "page": 1,
+            "start": 167,
+            "end": 197,
+            "quote": "Actividad 1: Comparar piedras."
+          },
+          "session_id": "s2"
+        }
+      ]
+    },
+    {
+      "id": "continued",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio: Observar.\nActividad 1: Dibujar hojas.\n",
+        "Desarrollo: Continuar.\nActividad 2: Medir tallos.\nCierre: Compartir.\nSESIÓN 2: Cuidar\nInicio: Preparar.\nActividad 1: Ordenar macetas.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        },
+        {
+          "id": "s2",
+          "anchor": {
+            "page": 2,
+            "start": 69,
+            "end": 85,
+            "quote": "SESIÓN 2: Cuidar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "continued-r1",
+          "activity": {
+            "page": 1,
+            "start": 37,
+            "end": 64,
+            "quote": "Actividad 1: Dibujar hojas."
+          },
+          "session_id": "s1"
+        },
+        {
+          "id": "continued-r2",
+          "activity": {
+            "page": 2,
+            "start": 23,
+            "end": 49,
+            "quote": "Actividad 2: Medir tallos."
+          },
+          "session_id": "s1"
+        },
+        {
+          "id": "continued-r3",
+          "activity": {
+            "page": 2,
+            "start": 104,
+            "end": 133,
+            "quote": "Actividad 1: Ordenar macetas."
+          },
+          "session_id": "s2"
+        }
+      ]
+    },
+    {
+      "id": "same_number_different_projects",
+      "pages": [
+        "Proyecto: Patio\nSESIÓN 1: Explorar\nInicio: Observar.\nActividad 1: Dibujar árboles.\nProyecto: Río\nSESIÓN 1: Investigar\nInicio: Preparar.\nActividad 1: Dibujar peces.\n"
+      ],
+      "sessions": [
+        {
+          "id": "patio",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 34,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        },
+        {
+          "id": "rio",
+          "anchor": {
+            "page": 1,
+            "start": 97,
+            "end": 117,
+            "quote": "SESIÓN 1: Investigar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "same_number_different_projects-r1",
+          "activity": {
+            "page": 1,
+            "start": 53,
+            "end": 82,
+            "quote": "Actividad 1: Dibujar árboles."
+          },
+          "session_id": "patio"
+        },
+        {
+          "id": "same_number_different_projects-r2",
+          "activity": {
+            "page": 1,
+            "start": 136,
+            "end": 163,
+            "quote": "Actividad 1: Dibujar peces."
+          },
+          "session_id": "rio"
+        }
+      ]
+    },
+    {
+      "id": "narrative_not_session",
+      "pages": [
+        "Sesión 2 del cuento señala el final.\nActividad 1: Texto narrativo sin sesión demostrada.\n"
+      ],
+      "sessions": [],
+      "relations": []
+    },
+    {
+      "id": "quoted_not_session",
+      "pages": [
+        "Texto citado:\n«Sesión 1 Fecha: Lunes 21\nInicio: Una historia.\nActividad 1: La narradora observa.\n»\n"
+      ],
+      "sessions": [],
+      "relations": []
+    },
+    {
+      "id": "date_label_without_value",
+      "pages": [
+        "Sesión 1 Fecha:\nInicio: Observar.\nActividad 1: Texto sin fecha corroborada.\n"
+      ],
+      "sessions": [],
+      "relations": []
+    },
+    {
+      "id": "date_no_moment",
+      "pages": [
+        "Sesión 1 Fecha: Lunes 21\nLa sesión figura dentro de un índice.\nActividad 1: Una mención.\n"
+      ],
+      "sessions": [],
+      "relations": []
+    },
+    {
+      "id": "dated_continuation",
+      "pages": [
+        "Sesión 1 Fecha: Lunes 21\nInicio: Observar.\nActividad 1: Leer una ficha.\n",
+        "Desarrollo: Seguir.\nActividad 2: Elaborar un registro.\nCierre: Comparar.\nSesión 2 Fecha: Martes 22\nInicio: Preparar.\nActividad 1: Revisar registros.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 24,
+            "quote": "Sesión 1 Fecha: Lunes 21"
+          }
+        },
+        {
+          "id": "s2",
+          "anchor": {
+            "page": 2,
+            "start": 73,
+            "end": 98,
+            "quote": "Sesión 2 Fecha: Martes 22"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "dated_continuation-r1",
+          "activity": {
+            "page": 1,
+            "start": 43,
+            "end": 71,
+            "quote": "Actividad 1: Leer una ficha."
+          },
+          "session_id": "s1"
+        },
+        {
+          "id": "dated_continuation-r2",
+          "activity": {
+            "page": 2,
+            "start": 20,
+            "end": 54,
+            "quote": "Actividad 2: Elaborar un registro."
+          },
+          "session_id": "s1"
+        },
+        {
+          "id": "dated_continuation-r3",
+          "activity": {
+            "page": 2,
+            "start": 117,
+            "end": 148,
+            "quote": "Actividad 1: Revisar registros."
+          },
+          "session_id": "s2"
+        }
+      ]
+    }
+  ]
+}
