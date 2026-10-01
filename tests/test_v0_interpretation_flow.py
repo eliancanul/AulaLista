@@ -1306,7 +1306,11 @@ def test_f3_reextract_records_structured_diff_in_history():
     assert reextract_entry is not None
     assert "deltas" in reextract_entry
     assert len(reextract_entry["deltas"]) >= 1
-    # Check that 'proyecto' changed from "Título Modificado Docente" back to the newly extracted value
+    # Raw extraction delta remains auditable, but #141 preserves the teacher's
+    # corrected value and records a separate retention decision.
+    assert dossier_v3.general_fields["proyecto"].value == "Título Modificado Docente"
+    assert dossier_v3.general_fields["proyecto"].review == "corrected"
+    assert any(d.get("change_type") == "retained_decision" and d.get("field") == "proyecto" for d in reextract_entry["deltas"])
     proj_delta = next((d for d in reextract_entry["deltas"] if d.get("field") == "proyecto"), None)
     assert proj_delta is not None
     assert proj_delta["scope"] == "general"
@@ -2221,3 +2225,45 @@ def test_f7_residual_general_scope_label_rendered():
     html = resp.content.decode("utf-8")
     assert "Alcance: Datos generales del documento" in html
     assert "Alcance: Sesión" not in html
+
+
+def test_project_context_source_and_uncertainty_are_reviewable_without_new_action():
+    client = tutor_client("project-context-141")
+    job = _upload_c01_job(client)
+    response = client.get(reverse("tutor-import-interpretation", args=[job.pk]))
+    assert response.status_code == 200
+    html = response.content.decode("utf-8")
+    assert "Contexto de proyecto propuesto · pendiente de revisión" in html
+    assert "no confirma pertenencia curricular" in html
+    assert "Ancla de texto extraído v1; no son coordenadas del PDF" in html
+    assert reverse("tutor-import-source-page", args=[job.pk, 1]) in html
+    job.refresh_from_db()
+    dossier = job.get_interpretation_dossier()
+    assert dossier.sessions[0].project_context["review"] == "pending"
+    assert "project_context" not in dossier.sessions[0].fields
+
+
+def test_reextract_keeps_session_correction_and_selected_id_on_same_source():
+    client = tutor_client("reextract-context-141")
+    job = _upload_c01_job(client)
+    url = reverse("tutor-import-interpretation", args=[job.pk])
+    assert client.get(url).status_code == 200
+    response = client.post(url, {
+        "action": "save_corrections", "expected_version": "1",
+        "session_id": "p2_s2", "session_number": "2", "inicio": "Inicio escrito por la docente.",
+    })
+    assert response.status_code == 200
+    job.refresh_from_db()
+    previous = job.get_interpretation_dossier()
+    assert previous.get_session("p2_s2").fields["inicio"].value == "Inicio escrito por la docente."
+    response = client.post(url, {"action": "reextract", "expected_version": str(previous.version)})
+    assert response.status_code == 200
+    job.refresh_from_db()
+    fresh = job.get_interpretation_dossier()
+    html = response.content.decode("utf-8")
+    assert "Decisión humana preservada" in html
+    assert "Valor docente previo: Inicio escrito por la docente." in html
+    assert fresh.get_session("p2_s2").fields["inicio"].to_dict() == previous.get_session("p2_s2").fields["inicio"].to_dict()
+    assert fresh.selection["session_id"] == previous.selection["session_id"]
+    assert fresh.history[:-1] == previous.history
+    assert job.error_message == ""

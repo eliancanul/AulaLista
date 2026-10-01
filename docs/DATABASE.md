@@ -136,3 +136,75 @@ attempts, errors[], ok}` + entradas sintéticas de fallo de worker con
   (contrato actual de propose_activities*).
 - Los prompts viven en `curriculum/prompts/*.md`; editarlos no requiere
   reiniciar el server.
+
+## Contexto físico de proyecto en `interpretation_dossier` (#141, 2026-10-01)
+
+Contrato aditivo de `SessionPlan`, sin migración SQL ni cambio del staging v1:
+
+- `project_title` sigue siendo una etiqueta de presentación, nunca identidad ni
+  prueba de pertenencia. No se rellena con el título general si falta contexto
+  local. `session_id` conserva `p{página}_s{número}` y sufijo de ocurrencia para
+  números repetidos; seleccionar y corregir siguen operando por ID.
+- `header_anchor` es opcional (`null` en dossiers legacy y unidades por fases).
+  Su esquema v1 contiene `schema_version`, `kind` (`session` o `day`),
+  `document_sha256`, `page_number` físico 1-indexado, `occurrence` 1-indexada
+  entre los encabezados de sesión de esa página, `text_start`, `text_end` y
+  `excerpt`. Los offsets son caracteres Python sobre el texto extraído por
+  pypdf, intervalo `[start,end)`, **no coordenadas ni regiones del PDF**.
+- `project_context` también es opcional. Esquema v1: `schema_version`,
+  `project_id` (SHA + página + ocurrencia, no título), `title`, `title_status`,
+  `origin`, `status`, `review`, `reason` y `anchor`. El ancla usa el mismo
+  esquema con `kind=project` y ocurrencia de Proyecto dentro de la página.
+  `title_status` distingue título explícito, ambiguo y ausente. La asociación
+  por proximidad conserva `origin=proposed`, `review=pending` y
+  `status=ambiguous` (o `missing`); no afirma pertenencia curricular.
+  Sin encabezado anterior, `project_id`/`anchor` son `null`, el título está
+  vacío y el motivo queda visible. Un Proyecto vacío sustituye el contexto
+  anterior y corta la sesión; no lo oculta con un fallback global.
+- La serialización conserva los valores de estas metadata sin coerción. La
+  auditoría exige enteros JSON reales en versión, página, ocurrencia y offsets:
+  ni booleanos ni cadenas, incluso numéricas, constituyen anclas válidas.
+
+`source_segments.py` recorre los encabezados en orden físico y comparte límites
+entre extracción y verificación. Cada sesión termina ante el siguiente Proyecto
+**o** sesión; la continuación heurística sólo puede tomar el prefijo de la página
+inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos
+reutilizan las reglas de `overview_fields.py`; su proyección general conserva
+el primer campo del documento. Las fases no se convierten en clases: se conserva
+la unidad sintética de revisión existente y se corta antes de otro Proyecto.
+
+La verificación vuelve a leer la fuente y a calcular las ocurrencias. No confía
+en offsets, fragmentos, título, orden del dossier ni subconjuntos declarados.
+Anclas/contextos presentes y manipulados son contradicción mecánica (`blocked`).
+La ausencia de metadata legacy no bloquea por sí misma: se resuelve el ID físico
+existente o una coincidencia única de número/página. Si hay estructura de sesiones
+pero la identidad no es inequívoca, no se usa toda la página como segmento;
+las citas trasladadas requieren revisión. Un documento legacy sin encabezados de
+sesión conserva la comprobación textual de página, sin afirmar una nueva
+pertenencia estructural.
+
+El contexto y su ancla viajan sólo en metadata de la afirmación `es_entidad`.
+No se añaden tipos, predicados, claims ni `pertenece_a_proyecto`, y metadata no
+entra en el hash del claim. Corregir un valor mal segmentado sí puede cambiar el
+ID de ese claim de valor. No se añade `project_context` a campos obligatorios,
+ni se alteran tribunal, aprobación, publicación, activación o progreso humano.
+La UI expone motivo, incertidumbre, fragmento y enlace a página física sin una
+acción nueva de confirmación ni un gate adicional.
+
+### Reextracción y decisiones humanas
+
+El flujo anterior sustituía los valores del dossier y sólo conservaba historial
+y selección. Desde #141, antes de guardar se preservan decisiones únicamente
+si coinciden SHA y ocurrencia física inequívoca, sin joins por título. Un ancla
+completa se contrasta con la fuente; legacy sin ancla exige número/página únicos
+y evidencias contenidas en ese segmento. No se trasladan decisiones entre SHA,
+anclas cambiadas ni homónimos ambiguos. La decisión que no puede reaplicarse
+queda en historial con `decision_not_reapplied`.
+
+La misma base extraída conserva valor, revisión, procedencia y evidencia de la
+corrección/confirmación (`retained_decision`). Si la segmentación cambia, un valor
+corregido se conserva como autoría docente pero vuelve a `pending` con motivo;
+una confirmación no se aplica al nuevo valor (`decision_requires_review`). Los
+anexos requieren además la misma referencia, mención, páginas y evidencia.
+El historial registra tanto el delta de extracción como la decisión de retener
+o abstenerse; las aprobaciones editoriales siguen invalidándose al reextraer.

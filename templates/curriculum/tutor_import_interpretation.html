@@ -1274,6 +1274,25 @@
                     </div>
                   </div>
 
+                  {% if sess.project_context %}
+                    <details class="project-context-review" style="margin-bottom: 1rem;">
+                      <summary>Contexto de proyecto propuesto · pendiente de revisión</summary>
+                      <p>{{ sess.project_context.reason }}</p>
+                      {% if sess.project_context.anchor %}
+                        <p>Encabezado de proyecto, ocurrencia {{ sess.project_context.anchor.occurrence }},
+                          <a href="{% url 'tutor-import-source-page' job.pk sess.project_context.anchor.page_number %}" target="_blank" rel="noopener">página física {{ sess.project_context.anchor.page_number }}</a>
+                          · Estado del título: {{ sess.project_context.title_status }}</p>
+                        <p style="white-space: pre-wrap;">{{ sess.project_context.anchor.excerpt }}</p>
+                      {% else %}
+                        <p>Sin encabezado de proyecto anterior localizado.</p>
+                      {% endif %}
+                      {% if sess.header_anchor %}
+                        <p>Encabezado de sesión, ocurrencia {{ sess.header_anchor.occurrence }}, página física {{ sess.header_anchor.page_number }}.
+                          Ancla de texto extraído v{{ sess.header_anchor.schema_version }}; no son coordenadas del PDF.</p>
+                      {% endif %}
+                    </details>
+                  {% endif %}
+
                   {% if sess.continues_on %}
                     <div class="continuation-banner" style="margin-bottom: 1rem;">
                       ℹ️ <strong>Continuación de la sesión:</strong> La secuencia didáctica continúa en la{{ sess.continues_on|length|pluralize:"s" }} página{{ sess.continues_on|length|pluralize:"s" }} {{ sess.continues_on|join:", " }}.
@@ -1653,6 +1672,20 @@
                     <strong>Versión {{ h.version }}</strong> · <span style="color: var(--color-muted);">{{ h.timestamp }}</span> — <em>{{ h.actor|default:"Sistema" }}</em>
                   </div>
                   <div style="margin-top: 0.25rem;">{{ h.summary }}</div>
+                  {% for delta in h.deltas %}
+                    {% if delta.change_type == 'decision_not_reapplied' or delta.change_type == 'decision_requires_review' or delta.change_type == 'retained_decision' %}
+                      <details class="reextract-decision" style="margin-top: 0.5rem;">
+                        <summary>Decisión docente en {{ delta.field }}{% if delta.session_id %} · {{ delta.session_id }}{% endif %}</summary>
+                        <p>{{ delta.reason }}</p>
+                        {% if delta.scope == 'annex' %}
+                          <p>Referencia previa: {{ delta.before.raw_mention }} · Página elegida: {{ delta.before.confirmed_page|default:'Sin asociación' }}</p>
+                        {% else %}
+                          <p>Valor docente previo: {{ delta.before.value|default:'Vacío' }}</p>
+                          <p>Revisión previa: {{ delta.before.review }} · Origen: {{ delta.before.origin }}</p>
+                        {% endif %}
+                      </details>
+                    {% endif %}
+                  {% endfor %}
                   {% if h.changes %}
                     <ul style="margin: 0.25rem 0; padding-left: 1.25rem; font-size: 0.88rem; color: #334155;">
                       {% for ch in h.changes %}

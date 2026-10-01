@@ -4170,6 +4170,7 @@ def tutor_import_interpretation(request, job_id):
         _find_single_annex_ref,
         _utc_iso_now,
         compute_reextract_diff,
+        preserve_reextract_decisions,
         derive_campos_formativos_options,
         derive_operational_queue,
         normalize_campos_formativos,
@@ -4465,6 +4466,8 @@ def tutor_import_interpretation(request, job_id):
                     actor_name = request.user.get_full_name().strip() or request.user.username
                     now_str = _utc_iso_now()
 
+                    extraction_deltas = compute_reextract_diff(old_dossier_snapshot, dossier)
+                    decision_deltas = preserve_reextract_decisions(old_dossier_snapshot, dossier, current_bytes)
                     reextract_entry = {
                         "version": dossier.version,
                         "action": "reextract",
@@ -4472,7 +4475,7 @@ def tutor_import_interpretation(request, job_id):
                         "timestamp": now_str,
                         "selection_reset": selection_reset,
                         "retry_after_cancel": had_cancel_request,
-                        "deltas": compute_reextract_diff(old_dossier_snapshot, dossier),
+                        "deltas": extraction_deltas + decision_deltas,
                         "summary": (
                             f"Reextracción segura ejecutada desde el documento actual "
                             f"(SHA-256: {current_pdf_sha256[:12]}...). "
