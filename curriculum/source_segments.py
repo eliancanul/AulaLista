@@ -22,8 +22,16 @@ _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
 # Horizontal Unicode whitespace, deliberately excluding every line separator.
 _H = r"[^\S\r\n\v\f\x85\u2028\u2029]"
 _SESSION_WORD = r"SESI[OÓ]\u0301?N"
+# Only a standalone positive number followed immediately by a labelled moment
+# corroborates this wrapped form. Keep unknown titles, lists, dates and other
+# line separators as safety cuts, without creating a session from them.
+_WRAPPED_SESSION_SEPARATOR = (
+    rf"{_H}*\r?\n(?={_H}*0*[1-9][0-9]*{_H}*\r?\n"
+    rf"{_H}*(?:Inicio|Desarrollo|Cierre)(?={_H}*(?::|\r?$))){_H}*"
+)
 _SESSION_RE = re.compile(
-    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}{_H}*(0*[1-9][0-9]*)"
+    rf"^{_H}*((?:({_DAYS}){_H}*[-–—]?{_H}*)?{_SESSION_WORD}"
+    rf"(?:{_H}*|{_WRAPPED_SESSION_SEPARATOR})(0*[1-9][0-9]*)"
     rf"(?={_H}*(?:[:.]|\r?$)){_H}*(?:[:.]{_H}*([^\n\r\u2028\u2029]*))?)",
     re.IGNORECASE | re.MULTILINE,
 )
