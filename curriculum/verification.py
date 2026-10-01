@@ -38,7 +38,7 @@ from pypdf.errors import PdfReadError, PyPdfError
 from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
-    project_context_matches, phase_project_context, phase_review_segments, session_boundary_positions,
+    project_context_matches, phase_project_context, phase_review_segments, has_possible_session_structure,
 )
 
 logger = logging.getLogger(__name__)
@@ -587,7 +587,7 @@ def verify_curriculum_dossier(
     # and declared offsets. A legacy repeated number is never matched to the
     # first textual occurrence merely because it appears on the same page.
     source_segments = scan_session_segments(pages_text, actual_sha256)
-    has_session_structure = bool(source_segments) or any(session_boundary_positions(pages_text, include_quoted=True).values())
+    has_session_structure = bool(source_segments) or has_possible_session_structure(pages_text)
     page_session_segments: dict[int, dict[str, str]] = {}
     uncertain_session_ids: set[str] = set()
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):

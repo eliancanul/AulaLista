@@ -28,6 +28,8 @@ abstenciones quedan explícitos en historial. Contrato en `docs/DATABASE.md`.
   Unicode, abstención ante formatos no resueltos y proyección contradictoria
 - QA residual: 2 negativos fallaron antes de conservar tramos literales sin
   asignar con incertidumbre visible y evitar el bypass por comilla sin cerrar
+- QA de fronteras ya emparejadas y días: 5 negativos fallaron antes de aplicar
+  límites conservadores independientes de comillas, sin crear entidades nuevas
 - Aplazamientos: 3 controles de campo fallaron antes de incluir `postponed`; cobertura de la acción
   real de cola en campo general, sesión y anexo, y snapshots de abstención
 - Casos authored sintéticos: proyectos y sesiones repetidos/idénticos,

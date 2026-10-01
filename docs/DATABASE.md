@@ -173,8 +173,11 @@ Ese límite débil no certifica un cierre completo: conserva el tramo literal si
 asignar y su página en `layout_notes`, visibles en la revisión. Marca la sesión
 y sus campos no vacíos como ambiguos/propuestos. La auditoría recomputa también
 esa incertidumbre; quitar las notas o cambiar estados no vuelve `checked` ese
-alcance. Para deshabilitar el fallback, la detección conservadora no depende de
-comillas: una comilla sin cerrar no puede ocultar encabezados de otra sesión.
+alcance. La detección conservadora no depende de comillas, tanto para deshabilitar el
+fallback como para limitar sesiones ya emparejadas. Una comilla sin cerrar no
+puede ocultar un posible Proyecto, sesión o día. Los días de formato no resuelto
+sólo delimitan el modo sin encabezados numerados posibles; no crean unidades.
+Los límites débiles conservan siempre el tramo sin asignar y su incertidumbre.
 Cada sesión termina ante el siguiente Proyecto
 **o** sesión; la continuación heurística sólo puede tomar el prefijo de la página
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos

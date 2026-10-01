@@ -504,3 +504,44 @@ def test_weak_boundary_candidate_is_visible_on_the_review_surface():
     assert "Tramo sin asignar, página física 1" in html
     assert "Preguntar qué opinan del personaje." in html
     assert "Ver página física 1" in html
+
+
+def test_open_quote_inside_a_matched_session_cannot_absorb_another_project():
+    pages = ["Proyecto: Senderos\n" + session_text(end='Leer "el cuento.') + "Proyecto: Jardines\n" + session_text("Medir", "Medir las plantas.")]
+    d = dossier_for(pages)
+    assert len(d.sessions) == 1
+    s = d.sessions[0]
+    assert "Proyecto: Jardines" not in s.fields["cierre"].value
+    assert "Proyecto: Jardines" in s.layout_notes
+    assert s.status == "ambiguous"
+    s.fields["inicio"].value = s.fields["inicio"].evidence[0].excerpt = "Medir las plantas."
+    s.fields["inicio"].origin, s.fields["inicio"].status = "extracted", "supported"
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.inicio") for i in verify_curriculum_dossier(d, source(pages)).items)
+
+
+@pytest.mark.parametrize("prefix,headings", [
+    ("", ("Lunes Observar", "Martes Medir")),
+    ('Leer "esta narración.\n', ("Lunes", "Martes")),
+    ("", ("Lunes iremos al parque.", "Martes miraremos plantas.")),
+])
+def test_unresolved_or_quoted_days_cannot_enable_legacy_whole_page_scope(prefix, headings):
+    from curriculum.source_interpreter import InterpretedField, SourceReference
+    pages = [prefix + f"{headings[0]}\nInicio: Texto A\n{headings[1]}\nInicio: Texto B"]
+    d = dossier_for(pages)
+    assert d.sessions == []
+    d.sessions = [SessionPlan(session_id="legacy-A", session_number=1, title="A", pages=[1], fields={
+        "inicio": InterpretedField(name="inicio", value="Texto B", evidence=[SourceReference(d.source_sha256, 1, excerpt="Texto B")]),
+    })]
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.legacy-A.inicio") for i in verify_curriculum_dossier(d, source(pages)).items)
+
+
+def test_unresolved_day_after_known_day_retains_candidate_with_uncertainty():
+    pages = ['Proyecto: Senderos\nLunes\nInicio: Mirar plantas.\nCierre: Leer "el cuento.\nMartes Medir\nInicio: Medir piedras.']
+    d = dossier_for(pages)
+    assert len(d.sessions) == 1
+    s = d.sessions[0]
+    assert s.status == "ambiguous"
+    assert "Martes Medir\nInicio: Medir piedras." in s.layout_notes
+    s.fields["inicio"].value = s.fields["inicio"].evidence[0].excerpt = "Medir piedras."
+    s.fields["inicio"].origin, s.fields["inicio"].status = "extracted", "supported"
+    assert not any(i["status"] == "checked" and i["target"].startswith("session.p1_s1.inicio") for i in verify_curriculum_dossier(d, source(pages)).items)

@@ -34,6 +34,12 @@ _UNRESOLVED_SESSION_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+_WEAK_DAY_RE = re.compile(rf"^{_H}*((?:{_DAYS})\b)", re.IGNORECASE | re.MULTILINE)
+_WEAK_PROJECT_RE = re.compile(
+    rf"^{_H}*((?:Nombre{_H}+del{_H}+)?Proyecto(?:{_H}+de{_H}+diagn[oó]stico)?)"
+    rf"(?={_H}*(?::|\r?$))", re.IGNORECASE | re.MULTILINE,
+)
+
 
 def session_boundary_positions(pages: list[str], *, include_quoted: bool = False) -> dict[int, list[int]]:
     """Possible numbered headers cut scope, but unknown formats create no unit.
@@ -46,6 +52,30 @@ def session_boundary_positions(pages: list[str], *, include_quoted: bool = False
         number: [m.start(1) for m in _UNRESOLVED_SESSION_RE.finditer(page) if include_quoted or not _quote_stack(page[:m.start()])]
         for number, page in enumerate(pages, 1)
     }
+
+
+def has_possible_session_structure(pages: list[str]) -> bool:
+    """Safety only: quotes/unknown layouts cannot license whole-page scope."""
+    return any(session_boundary_positions(pages, include_quoted=True).values()) or any(
+        _WEAK_DAY_RE.search(page) for page in pages
+    )
+
+
+def safety_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
+    """Unfiltered conservative scope barriers, distinct from entity extraction.
+
+    A source quote can suppress a candidate entity, but cannot enlarge another
+    entity's verified scope. Unknown day formats are only relevant when there
+    are no possible numbered headers, matching the existing day-only mode.
+    """
+    result = session_boundary_positions(pages, include_quoted=True)
+    day_only = not any(result.values())
+    for number, page in enumerate(pages, 1):
+        result[number].extend(m.start(1) for m in _WEAK_PROJECT_RE.finditer(page))
+        if day_only:
+            result[number].extend(m.start(1) for m in _WEAK_DAY_RE.finditer(page))
+        result[number] = sorted(set(result[number]))
+    return result
 
 
 def text_anchor(page: str, sha: str, page_number: int, occurrence: int, start: int, end: int, kind: str) -> dict[str, Any]:
@@ -170,7 +200,7 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
     use_numbered, headers = _session_headers(pages)
     segments = []
     counts: dict[str, int] = {}
-    boundaries = session_boundary_positions(pages)
+    boundaries = safety_boundary_positions(pages)
     strong_boundaries: dict[int, set[int]] = {}
     for project in projects:
         anchor = project["anchor"]
