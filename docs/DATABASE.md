@@ -183,7 +183,12 @@ Cada sesión termina ante el siguiente Proyecto
 inmediata siguiente antes de otro encabezado. Los títulos multilínea y vacíos
 reutilizan las reglas de `overview_fields.py`; su proyección general conserva
 el primer campo del documento. Las fases no se convierten en clases: se conserva
-la unidad sintética de revisión existente y se corta antes de otro Proyecto.
+la primera unidad sintética de revisión existente y se corta antes de otro
+Proyecto; no se generan varias unidades para documentos con varios proyectos
+organizados sólo por fases. La detección por días es un modo de documento,
+utilizado cuando no hay encabezados numerados posibles; no combina ambos modos.
+Formatos no resueltos y comillas incompletas pueden forzar abstención y tramos
+sin asignar. No se promete cobertura general de PDFs ni reconstrucción de tablas.
 
 La verificación vuelve a leer la fuente y a calcular las ocurrencias. No confía
 en offsets, fragmentos, título, orden del dossier ni subconjuntos declarados.
