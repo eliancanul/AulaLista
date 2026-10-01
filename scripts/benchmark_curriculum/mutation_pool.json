@@ -1,0 +1,19 @@
+{
+  "schema_version":"1.0.0",
+  "kind":"synthetic_harness_validation_controls",
+  "product_X_benchmark_status":"not_run_not_implemented_in_this_phase",
+  "reason":"This phase tests independent scorer fail-closed rules. It does not estimate product verifier acceptance of adversarial mutations.",
+  "source":"Hand-authored two-page text in tests/test_harness.py, no new corpus",
+  "pairs":[
+    {"valid":"EV","mutation":"document_sha256 b repeated 64","expected_mechanical":"invalid_sha"},
+    {"valid":"EV","mutation":"page_number 2 while excerpt Uno only appears page 1","expected_mechanical":"invalid_literal_page"},
+    {"valid":"EV","mutation":"page_number true","expected_mechanical":"invalid_type"},
+    {"valid":"EV","mutation":"page_number string 1","expected_mechanical":"invalid_type"},
+    {"valid":"EV","mutation":"empty or scalar evidence","expected_mechanical":"invalid_schema"},
+    {"valid":"ANCHOR","mutation":"schema_version/page_number/occurrence/start/end boolean or numeric string","expected_mechanical":"invalid_type"},
+    {"valid":"ANCHOR","mutation":"offsets shifted one character","expected_mechanical":"invalid_excerpt_offset"},
+    {"valid":"ANCHOR","mutation":"occurrence changed with same exact slice","expected_mechanical":"literal_integrity_valid_semantic_occurrence_not_evaluable"}
+  ],
+  "frozen_test_implementation":"tests/test_harness.py",
+  "new_corpus_mutations":false
+}
