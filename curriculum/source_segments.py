@@ -13,14 +13,16 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
-from curriculum.overview_fields import iter_overview_spans, _headers, _quote_stack, _advance_quotes
+from curriculum.overview_fields import (
+    iter_overview_spans, is_curriculum_columns_header, _headers, _quote_stack, _advance_quotes,
+)
 from curriculum.vocabulary import CANONICAL_CAMPOS
 
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
 _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
 # Horizontal Unicode whitespace, deliberately excluding every line separator.
-_H = r"[^\S\r\n\v\f\x85\u2028\u2029]"
+_H = r"[^\S\r\n\v\f\x85\x1c-\x1e\u2028\u2029]"
 _SESSION_WORD = r"SESI[OÓ]\u0301?N"
 # Only a standalone positive number followed immediately by a labelled moment
 # corroborates this wrapped form. Keep unknown titles, lists, dates and other
@@ -132,6 +134,10 @@ def planning_boundary_positions(pages: list[str]) -> dict[int, list[int]]:
             if page[page.rfind("\n", 0, start) + 1:start].strip():
                 continue
             if _CAMPO_LABEL_RE.fullmatch(label):
+                if is_curriculum_columns_header(page, start, value_start):
+                    # A table's column names do not replace the last actual
+                    # campo value or disable a later planning-reset safety cut.
+                    continue
                 stops = [headers[index + 1][1]] if index + 1 < len(headers) else []
                 stops.extend(p for p in data_starts + body_starts if p > start)
                 end = min(stops) if stops else len(page)
@@ -348,7 +354,14 @@ def scan_session_segments(pages: list[str], sha: str) -> list[SessionSegment]:
         for occurrence, m in enumerate(matches, 1):
             start, end = m.span(1)
             day = (m.group(2) or "").capitalize()
-            number = int(m.group(3)) if use_numbered else occurrence
+            try:
+                # Keep arbitrarily padded source labels literal in the anchor,
+                # while avoiding Python's string-to-int limit for their zeros.
+                number = int(m.group(3).lstrip("0")) if use_numbered else occurrence
+            except ValueError:
+                # An unconvertible number remains a weak boundary with its
+                # original text; malformed input must not abort extraction.
+                continue
             title = (m.group(4) or "") if use_numbered else day
             title = re.sub(r"\s*Recursos:?.*$", "", title, flags=re.IGNORECASE).strip()
             base = f"p{page_number}_s{number}"

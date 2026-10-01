@@ -210,6 +210,16 @@ def test_table_pair_requires_adjacent_physical_lines(separator):
     assert field.status == "ambiguous"
 
 
+@pytest.mark.parametrize("ending", ["\r\r\n", "\r \n", "\r\t\n"])
+@pytest.mark.parametrize("row", ["method", "columns"])
+def test_malformed_carriage_returns_do_not_corroborate_table_rows(ending, row):
+    method_end, columns_end = (ending, "\n") if row == "method" else ("\n", ending)
+    raw = f"Observar el patio.\n{METHOD}{method_end}{COLUMNS}{columns_end}{TABLE_BODY}"
+    field = _field(["Propósito: " + raw])
+    assert field.evidence[0].excerpt == raw
+    assert field.status == "ambiguous"
+
+
 @pytest.mark.parametrize("phase", [False, True])
 @pytest.mark.parametrize("columns", ["Campos formativos Contenidos PDA", "Campo formativo Contenido Proceso de desarrollo de aprendizajes"])
 def test_curricular_column_names_do_not_reset_the_known_campo(phase, columns):

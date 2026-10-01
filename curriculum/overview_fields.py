@@ -106,6 +106,22 @@ def _bare_metadata(label: str, page: str, start: int, end: int) -> bool:
     return False
 
 
+def _single_physical_row(page: str, start: int, end: int) -> bool:
+    row = page[start:end]
+    if page[end:end + 1] == "\n" and row.endswith("\r"):
+        row = row[:-1]
+    return not any(char in row for char in "\r\n\v\f\x85\x1c\x1d\x1e\u2028\u2029")
+
+
+def is_curriculum_columns_header(page: str, start: int, value_start: int) -> bool:
+    """A bare three-column header is not a value of Campo formativo."""
+    if not re.fullmatch(r"Campos?(?:[ \t]+formativos?)?", page[start:value_start], re.IGNORECASE):
+        return False
+    end = page.find("\n", value_start)
+    end = len(page) if end < 0 else end
+    return _single_physical_row(page, start, end) and bool(_THREE_CURRICULUM_COLUMNS_RE.fullmatch(page, value_start, end))
+
+
 def _corroborated_table_prefix(page: str, group: list[tuple]) -> bool:
     """A closed method row followed by three columns can introduce table data.
 
@@ -121,14 +137,12 @@ def _corroborated_table_prefix(page: str, group: list[tuple]) -> bool:
         return False
     if not _METHOD_RE.fullmatch(page, method[2], method[3]):
         return False
-    if not re.fullmatch(r"Campos?(?:[ \t]+formativos?)?", page[columns[1]:columns[2]], re.IGNORECASE):
+    if not is_curriculum_columns_header(page, columns[1], columns[2]):
         return False
-    if not _THREE_CURRICULUM_COLUMNS_RE.fullmatch(page, columns[2], columns[3]):
-        return False
-    if any("\n" in page[row[1]:row[3]] for row in (method, columns)):
+    if not _single_physical_row(page, method[1], method[3]):
         return False
     gap = page[method[3]:columns[1]]
-    if gap.count("\n") != 1 or gap.strip():
+    if not re.fullmatch(r"\n[^\S\r\n\v\f\x85\x1c-\x1e\u2028\u2029]*", gap):
         return False
     return all(not page[row[3]:group[index + 1][1]].strip()
                for index, row in enumerate(group[:-1]))
