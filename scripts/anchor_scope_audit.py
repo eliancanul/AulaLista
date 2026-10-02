@@ -47,6 +47,7 @@ class ScopeRequest:
     groups: dict[int, list[dict]]
     source_windows_text: str | None = None
     source_windows_sha256: str | None = None
+    governing_projects: bool = False
 
 
 class ScopeProvider(Protocol):
@@ -73,6 +74,7 @@ class ScopeAuditConfig:
     enabled: bool = False
     source_windows_text: str | None = None
     source_windows_sha256: str | None = None
+    governing_projects: bool = False
 
 
 class ScopeAuditError(ValueError):
@@ -172,9 +174,17 @@ def _anchor(request, anchor_id, record, supplied):
         high = label['start'] if n == label['page_number'] else len(request.pages[n - 1])
         if low < high:
             prior_line = ''
-            for _, _, line in lines(request.pages[n - 1][low:high]):
+            for begin, _, line in lines(request.pages[n - 1][low:high]):
                 metadata_continuation = bool(re.fullmatch(rf'{H}*(?:Fecha{H}*:{H}*(?:(?:Lunes|Martes|Mi[eé]rcoles|Jueves|Viernes){H}+)?(?:0?[1-9]|[12][0-9]|3[01]){H}+)?Tema{H}+de{H}+la{H}*', prior_line, re.I)
                                              and re.match(rf'{H}*sesi[oó]\u0301?n{H}*:', line, re.I))
+                if request.governing_projects and anchor.get('recognition_reason') == 'structurally_governing_book_project':
+                    offset = low + begin + len(line) - len(line.lstrip())
+                    metadata_continuation = metadata_continuation or bool(
+                        re.fullmatch(rf'{H}*Temas{H}+asociados{H}+al{H}*', prior_line, re.I)
+                        and re.fullmatch(rf'{H}*proyecto{H}*:{H}*', line, re.I)
+                        and any(s['role'] == 'wrapped_metadata_label' and s['page_number'] == n
+                                and s['start'] < offset < s['end']
+                                for s in anchor['structural_evidence']))
                 _need(not re.match(rf'{H}*DATOS{H}+GENERALES\b', line, re.I), 'reset_barrier')
                 _need(metadata_continuation or not re.match(rf'{H}*(?:(?:(?:Lunes|Martes|Mi[eé]rcoles|Jueves|Viernes){H}*[-–—]?{H}*)?SESI[OÓ]\u0301?N\b|(?:Nombre{H}+del{H}+)?Proyecto\b|P\.{H}*Integrador\b)', line, re.I), 'unresolved_scope_barrier')
                 prior_line = line
@@ -188,6 +198,7 @@ def _validate_current_request(request):
     from scripts.session_declarations import extract_declarations
     _need(isinstance(request, ScopeRequest), 'scope_request_contract')
     _need(isinstance(request.document_id, str) and 0 < len(request.document_id) <= 128, 'document_id_contract')
+    _need(type(request.governing_projects) is bool, 'governing_projects_contract')
     _need(isinstance(request.pages, tuple) and 0 < len(request.pages) <= 6
           and all(isinstance(p, str) for p in request.pages), 'source_window_contract')
     _need(sum(map(len, request.pages)) <= MAX_CHARACTERS, 'input_limit')
@@ -199,7 +210,8 @@ def _validate_current_request(request):
                                          allow_fence=False, max_bytes=4 * MAX_CHARACTERS)
     else:
         _need(request.source_windows_sha256 is None, 'unexpected_source_windows_hash')
-    rebuilt = catalogue_from_sources(source, source_windows_sha256=request.source_windows_sha256)
+    rebuilt = catalogue_from_sources(source, source_windows_sha256=request.source_windows_sha256,
+                                     governing_projects=request.governing_projects)
     _need(sum(len(p) for d in source['documents'] for p in d['pages']) <= MAX_CHARACTERS, 'source_windows_limit')
     current = [d for d in source['documents'] if d['id'] == request.document_id]
     _need(len(current) == 1 and _same(current[0]['pages'], list(request.pages)), 'source_windows_current_mismatch')
@@ -280,6 +292,7 @@ def audit_scopes(*, pages, declarations, config):
     attempts = 0
     try:
         _need(isinstance(config, ScopeAuditConfig) and config.enabled is True, 'config_contract')
+        _need(type(config.governing_projects) is bool, 'governing_projects_contract')
         _need(getattr(config.provider, 'kind', None) in {'synthetic_test', 'recorded_replay'}, 'external_provider_blocked')
         _need(isinstance(config.document_id, str) and 0 < len(config.document_id) <= 128, 'document_id_contract')
         _need(isinstance(pages, (tuple, list)) and 0 < len(pages) <= 6 and all(isinstance(p, str) for p in pages), 'source_window_contract')
@@ -293,7 +306,8 @@ def audit_scopes(*, pages, declarations, config):
             _need(isinstance(config.source_windows_text, str) and len(config.source_windows_text) <= MAX_CHARACTERS, 'source_windows_limit')
             source, _ = decode_recorded_json(config.source_windows_text.encode('utf-8'), config.source_windows_sha256, allow_fence=False, max_bytes=4 * MAX_CHARACTERS)
             source_windows_hash = config.source_windows_sha256
-        catalogue = catalogue_from_sources(source, source_windows_sha256=source_windows_hash)
+        catalogue = catalogue_from_sources(source, source_windows_sha256=source_windows_hash,
+                                           governing_projects=config.governing_projects)
         _need(sum(len(p) for d in source['documents'] for p in d['pages']) <= MAX_CHARACTERS, 'source_windows_limit')
         current = [d for d in source['documents'] if d['id'] == config.document_id]
         _need(len(current) == 1 and _same(current[0]['pages'], list(pages)), 'source_windows_current_mismatch')
@@ -307,7 +321,7 @@ def audit_scopes(*, pages, declarations, config):
         if not groups:
             return {'status': 'no_eligible_records', 'candidates': [], 'errors': [], 'external_calls': 0, 'provider_attempts': 0}
         request = ScopeRequest(config.document_id, tuple(pages), dsha, dsha, catalogue, groups,
-                               config.source_windows_text, config.source_windows_sha256)
+                               config.source_windows_text, config.source_windows_sha256, config.governing_projects)
         try:
             attempts = 1
             recordings = config.provider.propose(copy.deepcopy(request))
