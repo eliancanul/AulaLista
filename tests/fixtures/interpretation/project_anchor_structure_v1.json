@@ -1,0 +1,1053 @@
+{
+  "version": "project-anchor-structure-reference.v1",
+  "reference_kind": "original_synthetic_pre_matcher",
+  "scope": "development_only_no_private_sources",
+  "documents": [
+    {
+      "id": "positive-wrapped",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "7c1ebc932aba85a8fadb434b7c2aacd2fcc6b5b344e46388a0c75582bf85f5c1",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 49,
+        "end": 98,
+        "excerpt": "Proyecto del Libro\nde Texto:\nLa brújula de cartón",
+        "excerpt_sha256": "196bda9c71aa19b51058c9efba5a6c168405653e2637f81400842a4fba169228",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 49,
+          "end": 77,
+          "excerpt": "Proyecto del Libro\nde Texto:",
+          "excerpt_sha256": "1d7de34f7f1607b47f0a676de20bdae5dde2ee42a25dfe9d11dfc8540cb851c2",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 78,
+          "end": 98,
+          "excerpt": "La brújula de cartón",
+          "excerpt_sha256": "bd05481dbb5c1be2be5b7ef4d5c9266a6a14398e7c09bb87683d00feb7d8a0dc",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 109,
+          "end": 128,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 129,
+          "end": 169,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 170,
+          "end": 202,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 288,
+          "end": 325,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 203,
+          "end": 231,
+          "excerpt": "Temas asociados al\nproyecto:",
+          "excerpt_sha256": "8638002ca034b3807012d273301233610c7979fa50d5a5afa03f5cd1d646c366",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "positive-one-line-heading",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro de Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "1404b7e050f73802526077088b9da03b8eba4e41c6c6154e15a9cbd5053ed67a",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 49,
+        "end": 98,
+        "excerpt": "Proyecto del Libro de Texto:\nLa brújula de cartón",
+        "excerpt_sha256": "03e77d9406aeeef3c9234f8170439f01812c70a3f95eef71c780df702b9c1100",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 49,
+          "end": 77,
+          "excerpt": "Proyecto del Libro de Texto:",
+          "excerpt_sha256": "c028da130fc3009e883dda048d2e5f42275d816583c798bfd93a9d286798f055",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 78,
+          "end": 98,
+          "excerpt": "La brújula de cartón",
+          "excerpt_sha256": "bd05481dbb5c1be2be5b7ef4d5c9266a6a14398e7c09bb87683d00feb7d8a0dc",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 109,
+          "end": 128,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 129,
+          "end": 169,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 170,
+          "end": 202,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 288,
+          "end": 325,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 203,
+          "end": 231,
+          "excerpt": "Temas asociados al\nproyecto:",
+          "excerpt_sha256": "8638002ca034b3807012d273301233610c7979fa50d5a5afa03f5cd1d646c366",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "positive-inline-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro de Texto: La brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "766304517aef79d40e64a91430dd6764f84463f4bf0282ddfaea30aafc1b8e85",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 49,
+        "end": 98,
+        "excerpt": "Proyecto del Libro de Texto: La brújula de cartón",
+        "excerpt_sha256": "b739bfb0be06363b16411f423fe0cbec9c2af7e8c6b0e90469650eda8a5bc9fd",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 49,
+          "end": 77,
+          "excerpt": "Proyecto del Libro de Texto:",
+          "excerpt_sha256": "c028da130fc3009e883dda048d2e5f42275d816583c798bfd93a9d286798f055",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 78,
+          "end": 98,
+          "excerpt": "La brújula de cartón",
+          "excerpt_sha256": "bd05481dbb5c1be2be5b7ef4d5c9266a6a14398e7c09bb87683d00feb7d8a0dc",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 109,
+          "end": 128,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 129,
+          "end": 169,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 170,
+          "end": 202,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 288,
+          "end": 325,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 203,
+          "end": 231,
+          "excerpt": "Temas asociados al\nproyecto:",
+          "excerpt_sha256": "8638002ca034b3807012d273301233610c7979fa50d5a5afa03f5cd1d646c366",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "positive-balanced-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\n«La brújula de cartón»\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "de9ed93e98159463190607acf6089a0b29a03d514603e9f25dd53f045d0a6fce",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 49,
+        "end": 100,
+        "excerpt": "Proyecto del Libro\nde Texto:\n«La brújula de cartón»",
+        "excerpt_sha256": "a9505539abb29ebf29b43ce4486111c3732680379c6ba6cacdb429ee4961d615",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 49,
+          "end": 77,
+          "excerpt": "Proyecto del Libro\nde Texto:",
+          "excerpt_sha256": "1d7de34f7f1607b47f0a676de20bdae5dde2ee42a25dfe9d11dfc8540cb851c2",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 78,
+          "end": 100,
+          "excerpt": "«La brújula de cartón»",
+          "excerpt_sha256": "e014cb04cfab874c858d9c9c738d7b215abeaafff19555f0166b6127879030e4",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 111,
+          "end": 130,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 131,
+          "end": 171,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 172,
+          "end": 204,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 290,
+          "end": 327,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 205,
+          "end": 233,
+          "excerpt": "Temas asociados al\nproyecto:",
+          "excerpt_sha256": "8638002ca034b3807012d273301233610c7979fa50d5a5afa03f5cd1d646c366",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "positive-associated-tail",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto: Vinculación con otros campos:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "7e3b436f5027bee6bd5bf53aebfe3dd4ded15d122c5c98344a56efdb93a3b9e1",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 49,
+        "end": 98,
+        "excerpt": "Proyecto del Libro\nde Texto:\nLa brújula de cartón",
+        "excerpt_sha256": "196bda9c71aa19b51058c9efba5a6c168405653e2637f81400842a4fba169228",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 49,
+          "end": 77,
+          "excerpt": "Proyecto del Libro\nde Texto:",
+          "excerpt_sha256": "1d7de34f7f1607b47f0a676de20bdae5dde2ee42a25dfe9d11dfc8540cb851c2",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 78,
+          "end": 98,
+          "excerpt": "La brújula de cartón",
+          "excerpt_sha256": "bd05481dbb5c1be2be5b7ef4d5c9266a6a14398e7c09bb87683d00feb7d8a0dc",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 109,
+          "end": 128,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 129,
+          "end": 169,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 170,
+          "end": 202,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 288,
+          "end": 325,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 203,
+          "end": 231,
+          "excerpt": "Temas asociados al\nproyecto:",
+          "excerpt_sha256": "8638002ca034b3807012d273301233610c7979fa50d5a5afa03f5cd1d646c366",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "positive-crlf",
+      "pages": [
+        "Planeación didáctica\r\n\r\nCampo formativo: Lenguajes\r\nProyecto del Libro\r\nde Texto:\r\nLa brújula de cartón\r\n(p.30-34)\r\nEscenario: -Taller.\r\nPropósito: Construir un objeto de papel.\r\nProducto: Una brújula de cartón.\r\nTemas asociados al\r\nproyecto:\r\n✓ Formas de papel.\r\nMetodología: Trabajo por proyectos.\r\n\r\nContenidos/PDA asociados al proyecto:\r\nLenguajes\r\nPDA: Compara las formas de papel.\r\n"
+      ],
+      "document_sha256": "d10a6b2e05907b9f476f81b673521b4407637eedc78e43726c3a5be8d0081508",
+      "expected_role": "governing",
+      "expected_selectable": true,
+      "design_tags": [
+        "complete_structural_proof",
+        "original_crlf"
+      ],
+      "anchor": {
+        "page_number": 1,
+        "start": 52,
+        "end": 103,
+        "excerpt": "Proyecto del Libro\r\nde Texto:\r\nLa brújula de cartón",
+        "excerpt_sha256": "e44f5c7a27e041fb2ee1518e81a32a1bed73da7ab135cd25c5eff39aa622afd1",
+        "role": "unit_anchor"
+      },
+      "proof": [
+        {
+          "page_number": 1,
+          "start": 0,
+          "end": 20,
+          "excerpt": "Planeación didáctica",
+          "excerpt_sha256": "08e8d816281844a61db6d8e55b0b347b8ff330b11c9e299e2623c3a743f519c3",
+          "role": "planning_root"
+        },
+        {
+          "page_number": 1,
+          "start": 52,
+          "end": 81,
+          "excerpt": "Proyecto del Libro\r\nde Texto:",
+          "excerpt_sha256": "b26ed295ead3c019ad3252b69d8d7452bf5e72dcd5d26252ab9df01190cc09b5",
+          "role": "project_label"
+        },
+        {
+          "page_number": 1,
+          "start": 83,
+          "end": 103,
+          "excerpt": "La brújula de cartón",
+          "excerpt_sha256": "bd05481dbb5c1be2be5b7ef4d5c9266a6a14398e7c09bb87683d00feb7d8a0dc",
+          "role": "project_title"
+        },
+        {
+          "page_number": 1,
+          "start": 116,
+          "end": 135,
+          "excerpt": "Escenario: -Taller.",
+          "excerpt_sha256": "0f686fe084b262294a6bfeea8c8d8d61a112607bcd75a5af1b6ac88a386974b1",
+          "role": "scenario"
+        },
+        {
+          "page_number": 1,
+          "start": 137,
+          "end": 177,
+          "excerpt": "Propósito: Construir un objeto de papel.",
+          "excerpt_sha256": "80bd6a3187598d14bccdd30d8852a082e364d08bc5b882ccb5b11e15ceb51964",
+          "role": "purpose"
+        },
+        {
+          "page_number": 1,
+          "start": 179,
+          "end": 211,
+          "excerpt": "Producto: Una brújula de cartón.",
+          "excerpt_sha256": "56edebe5215d5f59ce7706ae185e70a767846ca1cf4e85ebe271773c5f05a994",
+          "role": "product"
+        },
+        {
+          "page_number": 1,
+          "start": 303,
+          "end": 340,
+          "excerpt": "Contenidos/PDA asociados al proyecto:",
+          "excerpt_sha256": "cd3d11c63125fb78d83e8395e045bcdc66753fab2593d0264935c437c38dfcd0",
+          "role": "project_association"
+        },
+        {
+          "page_number": 1,
+          "start": 213,
+          "end": 242,
+          "excerpt": "Temas asociados al\r\nproyecto:",
+          "excerpt_sha256": "662da642705df54dbe14313a6482623fada2756f1ecfa20180300e78cca30b6b",
+          "role": "wrapped_metadata_label"
+        }
+      ]
+    },
+    {
+      "id": "reference-isolated",
+      "pages": [
+        "Proyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\n"
+      ],
+      "document_sha256": "564568009a28d5e0a1642dcb68e0d3bd9dd14ff1df12285ab552150c1e1463c8",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-planning-root",
+      "pages": [
+        "Planeación didáctica\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n"
+      ],
+      "document_sha256": "012f1ab4d66a874af7cc940a6718635d270c3ec1605be05e712b4f48e7e1c5e8",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-no-root",
+      "pages": [
+        "Datos de un libro\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "e76fa761627b433911f4d21df48f04ebd7a87a5706e1f4ecf97966bc905cb66f",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-no-scenario",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\n\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "9b90ee9cf032a30b2ccfc7db35fa27fcc735e3e24f99361b2439827aa37b50bf",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-no-purpose",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\n\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "d0c0bae211b40afb8cde11fdb4a76538a9be30d15821f422ada3d4b9ad80dba6",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-no-product",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\n\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "6ca9c42c599113da86261fe4365ce48f2903084fb262422f800a3f4d237a25b9",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-no-association",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "9f9914b7d33d01b45664cc22faec431e43d2675cf6193b50001b85e564c2407d",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-wrong-association",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA mencionados en el libro:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "cabb388d316b8d1edae6ad559bd00e0927bf74c2d5200078db987e267d6954a7",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-association-before-heading",
+      "pages": [
+        "Planeación didáctica\nContenidos/PDA asociados al proyecto:\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\n\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "8430e771e2fdbd932abd6272e0f7ebc32deaecc3f8a9185e61179b90e1ff99f4",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-other-family",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyectos de Aula:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "4d22c31f247fecdf880d29a3b5a9577161839768384e3100270f1497b1204b98",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-title-only",
+      "pages": [
+        "La brújula de cartón\nContenidos/PDA asociados al proyecto:\n"
+      ],
+      "document_sha256": "29bb12872ed03886edcba45a005614388f1f2b066b809837e4e3fdf3effecb07",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-citation-block",
+      "pages": [
+        "Referencias:\nPlaneación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "2cff24b6bd80af8f343918d7175b281dc253a5dea42bf9c8bfdcea7611a47c7e",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-quoted-block",
+      "pages": [
+        "«\nPlaneación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n»\n"
+      ],
+      "document_sha256": "9419ac43a10fc22db14250af4d0076fef9f127c73e1166a83cb52353768a21a3",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-example-block",
+      "pages": [
+        "Ejemplo:\nPlaneación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "c2063c104e68335a66c8affbfa852d87a80a142d3b3f8df6fe03f335f071cca4",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-not-adopted",
+      "pages": [
+        "No adoptado:\nPlaneación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "23f578cae6c1956c72086f563e7a9dc71a7bec1883a08e55cc07e6a403c2b5cb",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-activity-intervenes",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nInicio:\n-Recortar.\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "38d88d67857cfc791c9f3a06020361034b09afaffacfcfe3269b1ddd9ec5ec03",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-activity-prefix",
+      "pages": [
+        "Planeación didáctica\nDescripción de actividades:\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "92fecce5f9fc924fca3939f044d6cb74985f32134da9cefc9325dc8fea2e2907",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-second-root",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nPlaneación didáctica\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "ddfe81a178b4786585b5d6bb74284977521c6cfc8202dd8161148a4d1f1743aa",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-second-project",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProyecto: Otro trabajo\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "9e1d2f2fcef2f272bdccc5bb653865cab5384177a6e64a59aacd81a5d2d834e3",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-second-scenario",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nEscenario: -Casa.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "daa36b871891b5cb62fe4e12cf6ab47900d8063cc265f1ee392c7ab2027e592c",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-duplicate-association",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "6d739a864dc904ad574891e285d30d1299e9626fe449782f52b3d54cde1d3d17",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-mixed-witness",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón. | Libro: Cartón\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "54b8b97f755c4fb94efdd0d0ec363e8166309edb814c5dac091c6d383ac7324d",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-control-witness",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón. Otro texto\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "2eaecfd1e006281d4cbb32da9eca4ffd8b8cc97cb097b48ce08d7311a2cba4b1",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-unsupported-tail",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto: Proyecto: Otro\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "6da6bf4d8589e656daf4e275a6eeb98b75d259306ced89eac5255d64e190c45f",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-narrative-new-unit",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nProyecto recordado de un libro: Otro\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "1e5c7a2b14dd24809993c5043c6299ce34ead3f2218d9c623c8b71e4edd6f8f6",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-empty-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\n\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "73d6952f5733abd10c6eef7ee8358167aebaeaa99557933c98b1ea5813e3f884",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-unclosed-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\n«La brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "7bfc2c3880b1b79d09e43b8fd63b59f87ae89901118cc4832b7b3f163abf1a2b",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-wrapped-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de\ncartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "a2e25aeae2ab10d77d94f7db14ce05e96eb7e405efa3a625e7c50db1167e723f",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-labelled-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nTítulo: La brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "0ed5827051b6ca9c4c03f656e189bd5ee816152e5fc0864e2168c15c460548be",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-table-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón | Otro libro\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "33253fe41721df3551e5fb8686b9b3f95f992af7cddc92c37ff6dfe58420cd63",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-conditional-title",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nSi es posible, hacer una brújula\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "b682d213cc725a3c54002f9e14f0281b6a077492af2fd98e5322f395d96b1e08",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-bare-project",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "72dcdb8aa883f48230846d74a84402afebd146681efb8fa6685848419cb46447",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-unknown-wrap",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nResumen asociado al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "03330fb8a14228e6c20f2e76de95c8276a892769753c2494553095a56001b165",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "ambiguous-cross-page-proof",
+      "pages": [
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\n",
+        "Contenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "17074b8035b6540146edf5f0ee8b324b246eb17a8229ba800d63e4e6ccf11741",
+      "expected_role": "ambiguous",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required",
+        "support_outside_page"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "reference-cross-page-quote",
+      "pages": [
+        "«Texto citado sin cierre",
+        "Planeación didáctica\n\nCampo formativo: Lenguajes\nProyecto del Libro\nde Texto:\nLa brújula de cartón\n(p.30-34)\nEscenario: -Taller.\nPropósito: Construir un objeto de papel.\nProducto: Una brújula de cartón.\nTemas asociados al\nproyecto:\n✓ Formas de papel.\nMetodología: Trabajo por proyectos.\n\nContenidos/PDA asociados al proyecto:\nLenguajes\nPDA: Compara las formas de papel.\n"
+      ],
+      "document_sha256": "0bb2f9abc6080b62e2e9d1a187cad1bbeca03cf2bfcd03937339157db469837f",
+      "expected_role": "reference_only",
+      "expected_selectable": false,
+      "design_tags": [
+        "nonpromotion_required",
+        "prior_quote_context"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "narrative-inline",
+      "pages": [
+        "En la lectura se menciona el proyecto de un libro y su producto.\n"
+      ],
+      "document_sha256": "907a5c56c0ecf131c46e7ad7e3bbbf04cd730376610c681106ab7d8b321babe2",
+      "expected_role": "narrative",
+      "expected_selectable": false,
+      "design_tags": [
+        "not_unit_heading"
+      ],
+      "anchor": null,
+      "proof": []
+    },
+    {
+      "id": "narrative-wrapped-metadata",
+      "pages": [
+        "Temas asociados al\nproyecto:\n✓ Formas de papel.\n"
+      ],
+      "document_sha256": "de344446f5563dedc628e2038c05886232c7504623d9f67d93a829b4a6cab57d",
+      "expected_role": "narrative",
+      "expected_selectable": false,
+      "design_tags": [
+        "not_unit_heading"
+      ],
+      "anchor": null,
+      "proof": []
+    }
+  ],
+  "denominators": {
+    "documents": 43,
+    "governing": 6,
+    "reference_only": 26,
+    "ambiguous": 9,
+    "narrative": 2
+  }
+}
