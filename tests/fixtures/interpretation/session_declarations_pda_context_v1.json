@@ -1,0 +1,6161 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "synthetic_prematcher_development",
+  "scope": {
+    "name": "opt_in_pda_local_context_v1",
+    "base_commit": "27b2b5850908ba3c088458f5d866077de58b20cf",
+    "status": "independent_source_first_reference",
+    "adjudication": "Source strings and complete expected literals authored before observing any matcher or scorer output. Only standard-library slices validate coordinates. No product implementation was read.",
+    "admission": [
+      "A clean page start or recognized unit permits a canonical formative-field header, bare or with Campo, Campos, or Campo formativo prefix.",
+      "A Spanish local code with 1–4 letters and 1–4 digits, then a literal dot, introduces a complete descriptor of 1–8 physical lines immediately followed by explicit coded numbered PDA labels; one hyphen is optional.",
+      "Descriptor and PDA codes are syntactic local evidence only: no code equality, identity, relationship, curriculum match, content declaration, or unit inference is asserted.",
+      "An ordinary colon is permitted in a descriptor; typed labels, activities, examples, nonadoption, quotes, table syntax, and controls are not.",
+      "A subsequent descriptor or canonical/compositionally abbreviated field closes a prior complete PDA only when corroborated by a complete descriptor/PDA block. An incomplete prior value blocks the rest of the block.",
+      "A transition can abbreviate exactly one interior word as its initial and dot while keeping first/last words and original punctuation; at most three physical lines are permitted. An abbreviation alone cannot open a region.",
+      "Examples, activities, unknown headings, and quotes remain blockers until an actual recognized unit; fields do not reset them.",
+      "No descriptor, field, value, or unit is inherited across pages. Every new literal is pda, abstained/unresolved_scope, and unit_id null."
+    ],
+    "not_established": [
+      "private_or_final_performance",
+      "ocr_accuracy",
+      "curricular_alignment",
+      "pedagogical_validity",
+      "publication_authority"
+    ],
+    "source_binding": {
+      "kind": "synthetic_exact_page_snapshot",
+      "algorithm": "sha256",
+      "serialization": "UTF-8 JSON pages, ensure_ascii=False, separators=(comma,colon)",
+      "page_snapshots_sha256": {
+        "context_basic": "1e7ad7e60b25c637283418d074ab93fd5083ac0d6457c06657427d20864655c2",
+        "context_science": "999b7bf860c504ec18974a8adb1c4803d6ab92fcc642fc27c398d10055cfd050",
+        "context_ethics": "7908c0584e9021e4192c607f2462c3fc65d3af46a49bdfb6b5e6319d7abfe207",
+        "context_community": "fc353893bc5df49971158e2c750ea98b4775e2aec24058e8b383937b6c0a72ec",
+        "context_field_prefix": "ba7fc8be073eb9b010286d4f15af4d03a939d58e9bdfa3c8ba723d03adc8de34",
+        "context_fields_prefix": "b3067a277e8cc2e5d6ab5e0ca835c440846dfacc682ad3f99ad937de4d3841de",
+        "context_formative_prefix": "9a74d7ab313fce2f8fe7ade872b3dcd921afec6029ce77a771c3395280adaf73",
+        "context_mismatched_codes": "1aae7b10dc3bf92340fbc7ffbc23d9ea47e8f5b0f434022f06d31a4445aad3af",
+        "context_spanish_max_code": "ccc30c5561ae879a00537c4348e85d54e1528a1fa1c82522bfe7505b78de18d2",
+        "context_lowercase": "9e86c03b3cc7a1ed8f9857a1d72000d39bf35468d836d3eaf65cb3ff95c20b35",
+        "context_hyphen_attached": "c75ad3429548cc716d4dfccd247dc3f18e2eea446ec307a5aa13ac5b78258259",
+        "context_hyphen_spaced": "fd31b706513a57fd3e640c47f1c43ab07118999d8251f04309cff9643b694a2e",
+        "context_crlf_horizontal": "80c08452a48d0da29d13458e920969c9f0d0f4bc5bc09791e98a533938d28d30",
+        "context_nfd": "f4723bfd06ed81a2b67d3da298aab321716b86b230b8e9590d3d1ae8838a3de9",
+        "context_multiple_pdas": "6f6a74a057f74a84d8d98eec7bfc52d3525b5cd1b502bb6f4f6eca8f786ec5af",
+        "context_repeated_occurrences": "97ac1d1fc0459897f0610ffc28844613cf2f120446ecfe7b3c985bf2ea6c8542",
+        "context_multiline_descriptor": "5d1ab4cc75675596597f79514d59f7016b6e46a0d2000a8c1e6a42a4a74c5218",
+        "context_eight_line_descriptor": "99bfe0b202decbb45ca844240982f0fde0225077ffa75a15e7b0bdccb0bf0ff3",
+        "context_ordinary_colon_descriptor": "5b9f0deab2ad3f219f0e88f1fc9fa2e46660a80e7c9001bb6c082583c9e99385",
+        "context_ordinary_colon_value": "40f718305b4332205c037c5aca13e91aaa5c6faebd55fa1af85e2239fb150adb",
+        "context_multiline_full_value": "411047976346422f4b08550a28f851d33f8f2bd324b6100d12557fe2d71b6ea4",
+        "context_leading_blank_rows": "00e5947a9e6858c3b36d9b21e22396083ea304374c96184e9d4fb94d4ed6540f",
+        "context_initial_general_data": "3ba4c4dcf6ea6bb791cadc370438ab2f2b6669b17df5d194e892dea991e1807b",
+        "context_blank_before_pda": "365c4afe8536cc4e346da0dc6c74add2d2e2a2a72846e4024a9875c9302c81f2",
+        "context_after_session": "958e6c38e5dc4e15c0c4a924004c1e9046789132ab7ba85236e6ff52d84943b4",
+        "context_after_project": "804336d4d6dd2acf8ea03969112ad12a2aadb17aefec828ffc004192729ca932",
+        "context_previous_page_unit": "dc3ded151b7175887727112a31c26c9ec394e29faeaf16283322eacb04a69070",
+        "context_next_descriptor": "2401705bc9ac9e8d77d7cc456d95b5873632a87ad0996867e3ca20e97deaa660",
+        "context_transition_science": "d36d50aaf15e63547d4bba55303b6abe6b0605420ca22e0735f63e7b507fce1a",
+        "context_transition_ethics": "abc16bf1a51fb715c614beebe738f4c7bf10e0b06129dedf982251c012a8002c",
+        "context_transition_community": "d65b5c814d95a4507433508b5a9718c6da4255b5034d8a6cf9a8d38fdd23603c",
+        "context_transition_abbrev_science": "513ee054e802c8b83acc8d19b803e35fa017ca32f4efeea60745356592b60ebe",
+        "context_transition_abbrev_ethics": "02a5e29bb9952e1fce19020c9cead7c795c2a43b9fa2e9b583e3028df76f0561",
+        "context_transition_abbrev_community": "7422d8a7e85d59757ba5d1f9088a9e87b02543cc6423cbca2496f1cc64b229cd",
+        "context_transition_wrapped_two": "a91aac9067f720e329e9322916f3a77228d24f2b8dc6dc212956ae3afad36b64",
+        "context_transition_wrapped_three": "01198e7647705b075e322d6ae4c4b852ef0b0de99fa2dbdd9a9060a91a8246e6",
+        "context_transition_abbrev_wrapped_two": "d324048a083e672b953a8320793cf80b011504cc73105afe0353e09bc503ffb2",
+        "context_transition_abbrev_wrapped_three": "16eed636c7b6ce05d14cfa4fddcb686248132b51dfc68d59fa87fb47e7bdb298",
+        "context_transition_prefixed": "42b76d819a87dc9162d9c39d9f2aaaeb9cce9e8592a1f5adacc3f8e0f8082f7d",
+        "context_all_canonical_fields": "995def9b95cb86e5a0fb09f32503234ef12d3f28eccb663041beed33cc709ee4",
+        "context_activity_reset_session": "5dac89e31803e78af77daff3cf3f6abf5304a64cb31e54c3f54d890c05f5578b",
+        "context_example_reset_session": "603869af250837ad6bdf5c2827e192cf11eeb2bbfc79ca0a00ef53e145bee4a6",
+        "context_unknown_reset_session": "5cd3f33e3d1da1d02f8eac24188f1269c1bf51330b8e93bb4d405898e2813076",
+        "context_nonadoption_reset_session": "8f602708c365380005c9e8dea614695f366fa0ad3e260eedc2363e6d16fee61b",
+        "silence_field_only": "42469cde690d9370c9aa8cc030d48a7bdc2fde71a864e9716011bfd6f0cb7222",
+        "silence_descriptor_only": "27cac7fae18598801fae58d911e9f8a90e2df9231bb0c40302e507afada27711",
+        "silence_descriptor_colon": "fa38a1903005abf7e613c9ab5b2a057d950dc8295704e22423e22ef90bb6a886",
+        "negative_no_field": "def2e3a8b0317459435b4960a1038b685e7e3bd220a1a80f07546a333d09595e",
+        "negative_unknown_field": "cd77ae2b4bdc79a9224a23c018a9bc992b396b5ab1ebd7fe279e97eb198f002a",
+        "negative_midpage_prose": "dbe9c7bbd7d5b4409666a23bd35eb4324ae78f09aed729bcef31890e44d3a31f",
+        "negative_abbrev_initial": "323a907e5021d2d2cf0d2c6957145a0d6d814fe08ada99b07785e6ea762b1b2a",
+        "negative_field_extra_word": "b634cfd40d7c42076ef097908755394082b806707276acb6841bddc1f8903179",
+        "negative_field_plural_synonym": "5b7ecd63c6997adc460d57f45de640dc1409bb3286a1c99953ef10b3ce34f82f",
+        "negative_field_abbrev_first": "537b89a231a6d1cfd90c9a609d76ca88e7d7d1bd0957e81d704d5a67a1d92ed8",
+        "negative_field_abbrev_last": "84f68b13581fc8b23f17b7456e25812354ed0ab3a7d0aea1fd78e29b14ec980f",
+        "negative_descriptor_empty": "0cf6f8417d01cd7193834ff678842728be51fceba484e8f121ae9ea469059b7e",
+        "negative_descriptor_incomplete": "17ede958f4e72c4a1858f26f0e022f6b79c325a292f50fa95c08c4ba8bbbd9ec",
+        "negative_descriptor_missing_dot": "ab55861c887f125e6debf1654468bcf80ed367961945d8f947a7671f37af975f",
+        "negative_descriptor_no_space": "250a08ef2d60bdea6f57bcf00c0bfeae988f12081f698e6a5891f19689a0d009",
+        "negative_descriptor_missing_letters": "57d8e2934817297f93f0888fedb7a273c3680d0c1d1dc7607179e331795296c2",
+        "negative_descriptor_missing_digits": "7fb538b2f371ddec2e47e5d8e0e113baafc5f7370b0b9fb98316837b996af458",
+        "negative_descriptor_long_letters": "3aa98ec39c4503fbca94c4249d9165f32b8f902301915c876d3e8a68662a54fa",
+        "negative_descriptor_long_digits": "186f90d7d057fa30958d10638d68cdfeeb14756611e48d991d58b51fcd85d274",
+        "negative_descriptor_foreign": "9d72a7cbe6fe3832726a1e51f8f0cd703ca77654efe37d372ec22ffa4381d6e8",
+        "negative_descriptor_casefold_lookalike": "7fc61f5c820934c05065db27b95c5df46f7166a7b3e040169e0596bbea667032",
+        "negative_descriptor_table": "269df92e705b879cae0f71c7bb95770da48d0b4741f612af7a188e60a4e3c078",
+        "negative_descriptor_control": "f79f2893ad933172a4907c619c60ebb9235f15715ea18b28a07e4f480b3c220e",
+        "negative_descriptor_vertical": "25131fe57145a80beb324028897cd2a2d654eb5d259ff550a838395bd0a191ec",
+        "negative_descriptor_typed_content": "49bad6af8666ca320d03a0e35dd0eae1b9214a553163a6b2460002b67a7d1e70",
+        "negative_descriptor_typed_pda": "a57010db36f32357e4b7ab7c3f595e9d2fc65e9cf424071010100c6a364dbe20",
+        "negative_descriptor_typed_field": "b3d918bcb842fb6527698af53c2d3dc27e135d5b0f5942771ae1e39bf4b6da7b",
+        "negative_descriptor_nine_lines": "ec77c3b7173ef99cc20bfe81a767505401af0289d3179c7699c81fb7bb551c40",
+        "negative_descriptor_loose_prose": "53534e82fadf683f09cd4052d5a374b6f546cd25da030c02593b0f548356e934",
+        "negative_descriptor_quoted": "2e9473f1cd84668270ef0715f0953fbd95effd2fdfe6a42a4b92d7a16d79b8fe",
+        "negative_descriptor_straight_quote": "e4e62fb4ca51353fc5fc345b722ac502d320af25e231fda75cf7cd9ee8d8937f",
+        "negative_descriptor_activity": "d8e9f6044d8471067c9808d52229bb6f7519565b40d7fb9666027e2319ad1c56",
+        "negative_descriptor_example": "814cfa751f441ef10afc1b10a68d38125aa25e83f953232e59ed2f7eabdbfc09",
+        "negative_descriptor_nonadoption": "7fd743a71d489b1386d0dcb687d17c4274a7c971e90636339c120f8eff0d2171",
+        "negative_activity_prefix": "336fead5e36f78799efb73811932fe76630ab7e254ce406a53b81aefafb023aa",
+        "negative_activity_prefix_repeat_field": "894f2ceeb8388dba4ed49873ca572a56395ea6ef88fd1a72e3654c5479785cb1",
+        "negative_example_prefix": "cab05be88f5476876a590ae0dc14e078adefcc0e5b386d81afed2333c089962e",
+        "negative_example_prefix_repeat_field": "1660dcbed6cbae35b220ae00ffe6e4f45662c66a66f2d0ba0274d15b5cd3a237",
+        "negative_nonadoption_prefix": "25046bf37986c0c7ce1eb1f9b9ae655df10fedd82cef11319246eb7138ef2bf5",
+        "negative_nonadoption_prefix_repeat_field": "77168435f60a2ca888f07ba402e02bdd89bad2cdd72edab02fe040cb6490d951",
+        "negative_unknown_prefix": "1b527a7f44dd8e0a82147fae56909ba520fd2441a2ede94977c01359a98820d0",
+        "negative_unknown_prefix_repeat_field": "6fe210894438e0ddbff7ffa7ce7d427ea4742fc820e4b955134471c5faf0618f",
+        "negative_quote_prefix": "422aaaa7fd04e612b593c8d0f81be71e41787c9c4692b598939d62dc674b4ae8",
+        "negative_quote_prefix_repeat_field": "9fdf67e47b8a2e1138b0f39b67942a3b795dc5c13bbebbeb6c10cda265e0366e",
+        "negative_pda_missing_code": "c99098ff560966be89860fb747e6a3bc4d592f8e54e563e9ba2fe10b762c4525",
+        "negative_pda_missing_number": "2fb8060b3b6e177551f5cf5e9f2de53091509a8653e90f51802c8db0a95b128f",
+        "negative_pda_missing_colon": "3f63addccd8d988211f5d1fd8787abef86987ec020f539755505688e9a9a19a3",
+        "negative_pda_double_hyphen": "8572ea9042c52a1c8837f5d98e9940213613b443cbf2efba00b58f019ffd0dad",
+        "negative_pda_star_marker": "7caff4fdf1eda61743aceaa883a439e97e26397a7f115f3f40c740c37fe5b099",
+        "negative_pda_bullet_marker": "cbca0bcd265ecfe2e1f2d99ae72c6ef9f93b53af04363ce38805b9dfcce48dae",
+        "negative_pda_foreign_code": "85508309433f92d849e6e8a0b4f8256e71f4ca34d12ceab32c48fc46aa0034f5",
+        "negative_pda_long_letters": "3ddd2830ac35e74f92c612914df4065d6a2cf1166a794a34a19fa337c886c1be",
+        "negative_pda_long_digits": "42da091b42ae749f523bff321b92133c569d44dd51d59cdc94d4f4d3b54e7880",
+        "negative_descriptor_pda_inline": "d686628cd0142f429946ece129ee18fc8c5da59a1668bd8c29b395430c3cfb1f",
+        "negative_empty_value": "964778ad812720550911a26a4edcec433bab6fe53abbc32317c4911097449ffe",
+        "negative_incomplete_value": "a61de121275cde1449c14ab5c89d9c7b199e30d59504dd85abccb84b01464c80",
+        "negative_value_open_quote": "9931225f532fe2dd877ff9791ce61fcb6b6a44579d0b699517aaec8b43853c26",
+        "negative_value_table": "28ab19cf3e50a9abcb39a25edde182495d11181ec1d351dbd8a7c10d3ba2501e",
+        "negative_field_cross_page": "2d646bc63d64a795fd0380d1b6d027b891b4f5bb8d84a830d7a3f84a3665f4ef",
+        "negative_descriptor_cross_page": "a3a34c52a0917f4b5c326667d06522484e8d6e1d6676510fff56e245612dbdb1",
+        "negative_value_cross_page": "4578d9cb97c9e2b78acb108b0ee01f608e883fb3bd4571dd3a0475a94b955a09",
+        "negative_unit_cross_page": "0217678bb475f56b6e6ca76a3dc3bbe217c4125a4545dbe7bcb6d20c89e39b6c",
+        "negative_incomplete_before_descriptor": "bd3c78bdc554d898418001a52e3785e55952a2701a6300b5689cf05c79255c7d",
+        "negative_incomplete_before_field": "a771899a6ec8e5d658d65b6472ecd29649c77103216fc875c14b3ab98b8eb6b7",
+        "negative_incomplete_before_next_label": "24b466b49e6a3b70ab007e5fe21d839cc48168cd7917b45e936642aaf4175dc1",
+        "negative_terminal_descriptor_no_corroboration": "fdd3232d123eb84ebd0ba8025b805b343b8571c1c95f897e06664c9de9489905",
+        "negative_terminal_field_no_corroboration": "0457a9881f129283b120a3208544156a056caee8e15b93c794f39d9596913935",
+        "negative_descriptor_then_empty_pda": "873ceac40f2c4abc202f3ff39297ad28ae2ea5d1ec16cb3509c35e1d8346ccbf",
+        "negative_unknown_between_descriptor_and_pda": "b3ba9a4336569ebfd284eeb61c090c18f520c0bcf9448cab97db8930789529b4",
+        "negative_transition_two_abbreviations": "f2bd1775b19e97ce265d046c73f08c0239f2e79fea9dfed25bb5599e73a1d94c",
+        "negative_transition_wrong_initial": "78a4b40af0daf22b659a3661a7d383a1d8a19fcea86a461b2877636af5d69223",
+        "negative_transition_missing_dot": "d9fa7fd24180772bc3e0636e1e3057b815e499ee9875b660137b33c16262592c",
+        "negative_transition_dropped_comma": "5cb057755a325d334d0e21ed3e7678d5d325c6402fbfa8cda318b34c1fe0bd38",
+        "negative_transition_extra_comma": "2b9adbea1f087ca90f7efacdb5c73b32af299a5ac31bb18a46ecd054ab83a6ef",
+        "negative_transition_four_lines": "a42bb6dc2f6ad8e73d00bc1ee658f143869ff28dd70651e08d3bc833c0bd258a",
+        "negative_transition_first_abbrev": "36975a5dc4b1eb220093a7919587911301c92b55f71cad702ac569f16b0c1f8e",
+        "negative_transition_last_abbrev": "1baaae84c8676f81b9cd466e8eb587a591bf6d5a799376dcc26fbf6794fe36b5",
+        "negative_previous_page_example": "adb8005578412fbe741dc1f57aeb16ef1f70181184d99a34ded2d03b71d401b9",
+        "negative_previous_page_nonadoption": "7802f2478c89b3aeedb80b147c685991187dcab338c35434d96609d0b12b3962",
+        "negative_previous_page_quote": "2841f02d8facc71a827dbd41aa6395a4b21cfb32a8ba8b0b42a72a5487727ade",
+        "preserved_dotted_ascii": "86b73d9b4e32aac5c9d0e37991ae2302d43c2351bd8a09f323669bda36625848",
+        "preserved_dotted_mismatched_codes": "10ff32dd6c5a7e9bb86b9ff755362f54d8740b1dff5ae4adfdc7df83da9e78cf",
+        "preserved_dotted_incomplete_prior_value": "bbcc6cd0970e4a5da411f6024341050cf75b36872a550be89eb649a6360a880b",
+        "preserved_dotted_narrative_no_repeated_prefix": "281d79b08341ab2d366d8f2e5872a463461c04f4a09fcee7d4715459d840a2ee",
+        "preserved_dotted_narrative_repeated_prefix": "96dc81fe63d2b6f1f32322d621f094e0ed915b4453c7da7d669d5d62cf61f753",
+        "preserved_dotted_next_label_inline": "4986b68111b5d16be53819fb47961eeda15c99f01d6aff3fb6c3fa43765288ba",
+        "preserved_dotted_terminal_without_corroboration": "751c14605e2c55023a3c0b2a025ba62b27105c7ba1421d2f2ef9e1948013624d",
+        "preserved_dotted_context_only_silence": "828d90f00557162222a0674612ca6f7ea76ec6015ce96bc9b2f95ad571d50b04"
+      }
+    },
+    "preserved_reference_sha256": {
+      "activity_annex_semantics_v1.json": "0a565876b3595209cf7969e0ee37437f7efaeafbea9f10cd82851e3424c812d9",
+      "activity_annex_v1.json": "c49e767843a695a3fa3e760f259ab17ffc2dc29ae01367dfa4e2dc3214bac48c",
+      "activity_session_bullets_v1.json": "79eebb377323b3a060f5243cd9d80fa459e956a774781c1937d16b84d59399b6",
+      "activity_session_v1.json": "9fb8fdc7595e24c065bfba0f8babd833d74f2eae208f2f228aaa4c8055a8b347",
+      "project_anchor_structure_v1.json": "266bcf93012d61774489fe82884e1a5979c43a5a142b47988b4f6992541be21e",
+      "session_declarations_labels_v1.json": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "session_declarations_literal_recovery_v1.json": "1a8f35662fe3d097cd14ce874d3e37ca9a52ecbace93ec2a7a371bfaf9d96184",
+      "session_declarations_project_metadata_v1.json": "9323aaaba522c8397aeb675afcafbd745c01d71c99338dbcb5745eded9f97d13",
+      "session_declarations_scaffold_supplement_v1.json": "f5136feae92c5c186845f2b080113a3a36f1aa2d1e20a2c8ebfa6b3bdd6cbc0d",
+      "session_declarations_scaffold_v1.json": "3b83730070b9e04859a39af78065dbf70399bdfb3a6d5edbbc3a8941d71f3b09",
+      "session_declarations_v1.json": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5"
+    },
+    "new_recovery_opportunities": [
+      {
+        "document_id": "context_basic",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_science",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_ethics",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_community",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_field_prefix",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_fields_prefix",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_formative_prefix",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_mismatched_codes",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_spanish_max_code",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_lowercase",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_hyphen_attached",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_hyphen_spaced",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_crlf_horizontal",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_nfd",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_multiple_pdas",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_multiple_pdas",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_multiple_pdas",
+        "declaration_id": "d3",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_repeated_occurrences",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_repeated_occurrences",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_multiline_descriptor",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_eight_line_descriptor",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_ordinary_colon_descriptor",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_ordinary_colon_value",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_multiline_full_value",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_leading_blank_rows",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_initial_general_data",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_blank_before_pda",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_after_session",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_after_project",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_previous_page_unit",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_next_descriptor",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_next_descriptor",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_science",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_science",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_ethics",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_ethics",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_community",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_community",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_science",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_science",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_ethics",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_ethics",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_community",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_community",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_wrapped_two",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_wrapped_two",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_wrapped_three",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_wrapped_three",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_two",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_two",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_three",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_three",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_prefixed",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_transition_prefixed",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "declaration_id": "d2",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "declaration_id": "d3",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "declaration_id": "d4",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_activity_reset_session",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_example_reset_session",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_unknown_reset_session",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      },
+      {
+        "document_id": "context_nonadoption_reset_session",
+        "declaration_id": "d1",
+        "route": "local_dotted_pda_context"
+      }
+    ],
+    "baseline_preservation_opportunities": [
+      {
+        "document_id": "preserved_dotted_ascii",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "preserved_dotted_mismatched_codes",
+        "declaration_id": "d1"
+      }
+    ],
+    "source_context_witnesses": [
+      {
+        "document_id": "context_basic",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_science",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 32,
+          "quote": "Saberes y Pensamiento Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 33,
+          "end": 63,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_ethics",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 30,
+          "quote": "Ética, Naturaleza y Sociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 31,
+          "end": 61,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_community",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 29,
+          "quote": "De lo Humano y lo Comunitario"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 30,
+          "end": 60,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_field_prefix",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 16,
+          "quote": "Campo: Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 17,
+          "end": 47,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_fields_prefix",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 17,
+          "quote": "Campos: Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 18,
+          "end": 48,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_formative_prefix",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 26,
+          "quote": "Campo formativo: Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 27,
+          "end": 57,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_mismatched_codes",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 39,
+          "quote": "Ñ7. Reconocimiento de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_spanish_max_code",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 46,
+          "quote": "ÜÑÉA0000. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_lowercase",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 39,
+          "quote": "ñ7. Reconocimiento de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_hyphen_attached",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_hyphen_spaced",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_crlf_horizontal",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 32,
+          "quote": "Saberes y Pensamiento Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 34,
+          "end": 63,
+          "quote": "Ñ2. Clasificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_nfd",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 31,
+          "quote": "Ética, Naturaleza y Sociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 32,
+          "end": 67,
+          "quote": "ÑÁ7. Clasificación de símbolos."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_multiple_pdas",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1",
+          "d2",
+          "d3"
+        ]
+      },
+      {
+        "document_id": "context_repeated_occurrences",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1",
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_multiline_descriptor",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 66,
+          "quote": "L1. Identificación de señales\nmediante formas y colores."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_eight_line_descriptor",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 138,
+          "quote": "L1. Identificación de señales\nmediante sus formas\ny sus colores\ncon tarjetas\nsobre una mesa\nen grupos\ncon marcas\nde orientación."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_ordinary_colon_descriptor",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Señales: formas y colores."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_ordinary_colon_value",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_multiline_full_value",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_leading_blank_rows",
+        "field": {
+          "page": 1,
+          "start": 3,
+          "end": 12,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 13,
+          "end": 43,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_initial_general_data",
+        "field": {
+          "page": 1,
+          "start": 16,
+          "end": 25,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 26,
+          "end": 56,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_blank_before_pda",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 41,
+          "quote": "L1. Identificación de señales.\n"
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_after_session",
+        "field": {
+          "page": 1,
+          "start": 27,
+          "end": 36,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 37,
+          "end": 67,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_after_project",
+        "field": {
+          "page": 1,
+          "start": 29,
+          "end": 38,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 39,
+          "end": 69,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_previous_page_unit",
+        "field": {
+          "page": 2,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 2,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_next_descriptor",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_next_descriptor",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 70,
+          "end": 96,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_science",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_science",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 102,
+          "quote": "Saberes y Pensamiento Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 103,
+          "end": 129,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_ethics",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_ethics",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 100,
+          "quote": "Ética, Naturaleza y Sociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 101,
+          "end": 127,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_community",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_community",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 99,
+          "quote": "De lo Humano y lo Comunitario"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 100,
+          "end": 126,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_science",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_science",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 93,
+          "quote": "Saberes y P. Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 94,
+          "end": 120,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_ethics",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_ethics",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 92,
+          "quote": "Ética, N. y Sociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 93,
+          "end": 119,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_community",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_community",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 95,
+          "quote": "De lo H. y lo Comunitario"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 96,
+          "end": 122,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_wrapped_two",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_wrapped_two",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 102,
+          "quote": "Saberes y Pensamiento\nCientífico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 103,
+          "end": 129,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_wrapped_three",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_wrapped_three",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 99,
+          "quote": "De lo Humano\ny lo\nComunitario"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 100,
+          "end": 126,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_two",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_two",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 93,
+          "quote": "Saberes y P.\nCientífico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 94,
+          "end": 120,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_three",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_abbrev_wrapped_three",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 92,
+          "quote": "Ética,\nN. y\nSociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 93,
+          "end": 119,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_transition_prefixed",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_transition_prefixed",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 110,
+          "quote": "Campo formativo: Saberes y P. Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 111,
+          "end": 137,
+          "quote": "X2. Comparación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "field": {
+          "page": 1,
+          "start": 0,
+          "end": 9,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 10,
+          "end": 40,
+          "quote": "L1. Identificación de señales."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "field": {
+          "page": 1,
+          "start": 70,
+          "end": 102,
+          "quote": "Saberes y Pensamiento Científico"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 103,
+          "end": 131,
+          "quote": "S2. Clasificación de marcas."
+        },
+        "declaration_ids": [
+          "d2"
+        ]
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "field": {
+          "page": 1,
+          "start": 159,
+          "end": 189,
+          "quote": "Ética, Naturaleza y Sociedades"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 190,
+          "end": 221,
+          "quote": "E3. Reconocimiento de símbolos."
+        },
+        "declaration_ids": [
+          "d3"
+        ]
+      },
+      {
+        "document_id": "context_all_canonical_fields",
+        "field": {
+          "page": 1,
+          "start": 250,
+          "end": 279,
+          "quote": "De lo Humano y lo Comunitario"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 280,
+          "end": 307,
+          "quote": "H4. Intercambio de señales."
+        },
+        "declaration_ids": [
+          "d4"
+        ]
+      },
+      {
+        "document_id": "context_activity_reset_session",
+        "field": {
+          "page": 1,
+          "start": 67,
+          "end": 76,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 77,
+          "end": 105,
+          "quote": "X2. Clasificación de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_example_reset_session",
+        "field": {
+          "page": 1,
+          "start": 107,
+          "end": 116,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 117,
+          "end": 145,
+          "quote": "X2. Clasificación de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_unknown_reset_session",
+        "field": {
+          "page": 1,
+          "start": 118,
+          "end": 127,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 128,
+          "end": 156,
+          "quote": "X2. Clasificación de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      },
+      {
+        "document_id": "context_nonadoption_reset_session",
+        "field": {
+          "page": 1,
+          "start": 121,
+          "end": 130,
+          "quote": "Lenguajes"
+        },
+        "descriptor": {
+          "page": 1,
+          "start": 131,
+          "end": 159,
+          "quote": "X2. Clasificación de marcas."
+        },
+        "declaration_ids": [
+          "d1"
+        ]
+      }
+    ],
+    "historical_preservation_documents": [
+      {
+        "document_id": "preserved_dotted_ascii",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_ascii"
+      },
+      {
+        "document_id": "preserved_dotted_mismatched_codes",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_mismatched_codes"
+      },
+      {
+        "document_id": "preserved_dotted_incomplete_prior_value",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_incomplete_prior_value"
+      },
+      {
+        "document_id": "preserved_dotted_narrative_no_repeated_prefix",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_narrative_no_repeated_prefix"
+      },
+      {
+        "document_id": "preserved_dotted_narrative_repeated_prefix",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_narrative_repeated_prefix"
+      },
+      {
+        "document_id": "preserved_dotted_next_label_inline",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_next_label_inline"
+      },
+      {
+        "document_id": "preserved_dotted_terminal_without_corroboration",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_terminal_without_corroboration"
+      },
+      {
+        "document_id": "preserved_dotted_context_only_silence",
+        "reference": "session_declarations_literal_recovery_v1.json",
+        "source_document_id": "dotted_context_only_silence"
+      }
+    ],
+    "source_adjudications": {
+      "context_basic": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_science": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_ethics": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_community": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_field_prefix": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_fields_prefix": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_formative_prefix": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_mismatched_codes": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_spanish_max_code": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_lowercase": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_hyphen_attached": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_hyphen_spaced": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_crlf_horizontal": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_nfd": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_multiple_pdas": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_repeated_occurrences": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_multiline_descriptor": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_eight_line_descriptor": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_ordinary_colon_descriptor": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_ordinary_colon_value": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_multiline_full_value": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_leading_blank_rows": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_initial_general_data": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_blank_before_pda": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_after_session": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_after_project": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_previous_page_unit": "Complete explicit numbered PDA under a page-local canonical field and complete dotted descriptor; context grants no unit assignment.",
+      "context_next_descriptor": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_science": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_ethics": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_community": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_abbrev_science": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_abbrev_ethics": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_abbrev_community": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_wrapped_two": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_wrapped_three": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_abbrev_wrapped_two": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_abbrev_wrapped_three": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_transition_prefixed": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_all_canonical_fields": "The previous PDA is complete; the next descriptor and explicit PDA corroborate the local context boundary without assigning a field or unit.",
+      "context_activity_reset_session": "An actual recognized session header ends the preceding blocked context; the new complete local PDA still abstains with no unit assignment.",
+      "context_example_reset_session": "An actual recognized session header ends the preceding blocked context; the new complete local PDA still abstains with no unit assignment.",
+      "context_unknown_reset_session": "An actual recognized session header ends the preceding blocked context; the new complete local PDA still abstains with no unit assignment.",
+      "context_nonadoption_reset_session": "An actual recognized session header ends the preceding blocked context; the new complete local PDA still abstains with no unit assignment.",
+      "silence_field_only": "Context without an explicit PDA is never invented as a declaration.",
+      "silence_descriptor_only": "Context without an explicit PDA is never invented as a declaration.",
+      "silence_descriptor_colon": "Context without an explicit PDA is never invented as a declaration.",
+      "negative_no_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_unknown_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_midpage_prose": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_abbrev_initial": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_field_extra_word": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_field_plural_synonym": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_field_abbrev_first": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_field_abbrev_last": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_empty": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_incomplete": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_missing_dot": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_no_space": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_missing_letters": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_missing_digits": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_long_letters": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_long_digits": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_foreign": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_casefold_lookalike": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_table": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_control": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_vertical": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_typed_content": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_typed_pda": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_typed_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_nine_lines": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_loose_prose": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_quoted": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_straight_quote": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_activity": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_example": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_nonadoption": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_activity_prefix": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_activity_prefix_repeat_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_example_prefix": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_example_prefix_repeat_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_nonadoption_prefix": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_nonadoption_prefix_repeat_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_unknown_prefix": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_unknown_prefix_repeat_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_quote_prefix": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_quote_prefix_repeat_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_missing_code": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_missing_number": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_missing_colon": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_double_hyphen": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_star_marker": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_bullet_marker": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_foreign_code": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_long_letters": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_pda_long_digits": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_pda_inline": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_empty_value": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_incomplete_value": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_value_open_quote": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_value_table": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_field_cross_page": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_cross_page": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_value_cross_page": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_unit_cross_page": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_incomplete_before_descriptor": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_incomplete_before_field": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_incomplete_before_next_label": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_terminal_descriptor_no_corroboration": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_terminal_field_no_corroboration": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_descriptor_then_empty_pda": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_unknown_between_descriptor_and_pda": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_two_abbreviations": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_wrong_initial": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_missing_dot": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_dropped_comma": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_extra_comma": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_four_lines": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_first_abbrev": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_transition_last_abbrev": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_previous_page_example": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_previous_page_nonadoption": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "negative_previous_page_quote": "The authored local-context precondition fails; do not repair the source, infer a unit, or invent a literal declaration.",
+      "preserved_dotted_ascii": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_mismatched_codes": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_incomplete_prior_value": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_narrative_no_repeated_prefix": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_narrative_repeated_prefix": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_next_label_inline": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_terminal_without_corroboration": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced.",
+      "preserved_dotted_context_only_silence": "Historical source and answers are preserved verbatim. No new clean page-local canonical-field/descriptor/PDA region has been introduced."
+    },
+    "frozen_denominators": {
+      "documents": 132,
+      "literal_declarations": 64,
+      "new_recovery_literals": 62,
+      "baseline_preservation_literals": 2,
+      "pda_literals": 64,
+      "contenido_literals": 0,
+      "scope_abstentions": 64,
+      "unresolved_units": 64,
+      "session_candidates": 0,
+      "new_context_blocks": 59,
+      "challenges": 104,
+      "documents_without_declarations": 86,
+      "clean_silence_documents": 4,
+      "historical_preservation_documents": 8,
+      "positive_documents": 44,
+      "negative_documents": 77
+    }
+  },
+  "documents": [
+    {
+      "id": "context_basic",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive"
+      ]
+    },
+    {
+      "id": "context_science",
+      "pages": [
+        "Saberes y Pensamiento Científico\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 73,
+            "end": 92,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_ethics",
+      "pages": [
+        "Ética, Naturaleza y Sociedades\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 62,
+            "end": 70,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 71,
+            "end": 90,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_community",
+      "pages": [
+        "De lo Humano y lo Comunitario\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 70,
+            "end": 89,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_field_prefix",
+      "pages": [
+        "Campo: Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 48,
+            "end": 56,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 57,
+            "end": 76,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_fields_prefix",
+      "pages": [
+        "Campos: Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 49,
+            "end": 57,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 58,
+            "end": 77,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_formative_prefix",
+      "pages": [
+        "Campo formativo: Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 58,
+            "end": 66,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 67,
+            "end": 86,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "canonical_field"
+      ]
+    },
+    {
+      "id": "context_mismatched_codes",
+      "pages": [
+        "Lenguajes\nÑ7. Reconocimiento de marcas.\nAB9999 PDA 002: Distingue dos marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 40,
+            "end": 55,
+            "quote": "AB9999 PDA 002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 56,
+            "end": 77,
+            "quote": "Distingue dos marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "different_codes",
+        "no_code_identity"
+      ]
+    },
+    {
+      "id": "context_spanish_max_code",
+      "pages": [
+        "Lenguajes\nÜÑÉA0000. Identificación de señales.\nÁÍÓÚ9999 PDA1: Compara señales.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 47,
+            "end": 61,
+            "quote": "ÁÍÓÚ9999 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 62,
+            "end": 78,
+            "quote": "Compara señales."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "spanish_code",
+        "maximum_code",
+        "no_code_identity"
+      ]
+    },
+    {
+      "id": "context_lowercase",
+      "pages": [
+        "lenguajes\nñ7. Reconocimiento de marcas.\nab2 pda003: Distingue dos marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 40,
+            "end": 51,
+            "quote": "ab2 pda003:"
+          },
+          "value": {
+            "page": 1,
+            "start": 52,
+            "end": 73,
+            "quote": "Distingue dos marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "case_preservation"
+      ]
+    },
+    {
+      "id": "context_hyphen_attached",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n-L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 51,
+            "end": 70,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "single_hyphen"
+      ]
+    },
+    {
+      "id": "context_hyphen_spaced",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n  - L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 45,
+            "end": 53,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 54,
+            "end": 73,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "single_hyphen",
+        "indentation"
+      ]
+    },
+    {
+      "id": "context_crlf_horizontal",
+      "pages": [
+        "Saberes y Pensamiento Científico\r\nÑ2. Clasificación de señales.\r\n\t- AB7\tPDA 002: Compara señales\r\ny describe sus formas.\r\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 68,
+            "end": 80,
+            "quote": "AB7\tPDA 002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 81,
+            "end": 120,
+            "quote": "Compara señales\r\ny describe sus formas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "crlf",
+        "horizontal_whitespace",
+        "multiline_value"
+      ]
+    },
+    {
+      "id": "context_nfd",
+      "pages": [
+        "Ética, Naturaleza y Sociedades\nÑÁ7. Clasificación de símbolos.\nÜ2 PDA1: Distingue símbolos pequeños.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 68,
+            "end": 77,
+            "quote": "Ü2 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 78,
+            "end": 108,
+            "quote": "Distingue símbolos pequeños."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "nfd",
+        "spanish_code",
+        "exact_unicode"
+      ]
+    },
+    {
+      "id": "context_multiple_pdas",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nX2 PDA 002: Compara dos señales.\nÑ3 PDA03: Agrupa señales.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 70,
+            "end": 81,
+            "quote": "X2 PDA 002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 82,
+            "end": 102,
+            "quote": "Compara dos señales."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 112,
+            "quote": "Ñ3 PDA03:"
+          },
+          "value": {
+            "page": 1,
+            "start": 113,
+            "end": 128,
+            "quote": "Agrupa señales."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "multiple_pdas",
+        "no_code_identity"
+      ]
+    },
+    {
+      "id": "context_repeated_occurrences",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 70,
+            "end": 78,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 79,
+            "end": 98,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "physical_occurrence_identity"
+      ]
+    },
+    {
+      "id": "context_multiline_descriptor",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales\nmediante formas y colores.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 67,
+            "end": 75,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 76,
+            "end": 95,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "descriptor_two_lines"
+      ]
+    },
+    {
+      "id": "context_eight_line_descriptor",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales\nmediante sus formas\ny sus colores\ncon tarjetas\nsobre una mesa\nen grupos\ncon marcas\nde orientación.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 139,
+            "end": 147,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 148,
+            "end": 167,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "descriptor_eight_lines"
+      ]
+    },
+    {
+      "id": "context_ordinary_colon_descriptor",
+      "pages": [
+        "Lenguajes\nL1. Señales: formas y colores.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "ordinary_colon"
+      ]
+    },
+    {
+      "id": "context_ordinary_colon_value",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe señales: formas, tamaños y colores.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 94,
+            "quote": "Describe señales: formas, tamaños y colores."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "ordinary_colon",
+        "full_value"
+      ]
+    },
+    {
+      "id": "context_multiline_full_value",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe señales\ny compara las formas.\nExplica sus diferencias.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 113,
+            "quote": "Describe señales\ny compara las formas.\nExplica sus diferencias."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "multiline_value",
+        "complete_full_value"
+      ]
+    },
+    {
+      "id": "context_leading_blank_rows",
+      "pages": [
+        "\n \nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 44,
+            "end": 52,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 53,
+            "end": 72,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "clean_page_whitespace"
+      ]
+    },
+    {
+      "id": "context_initial_general_data",
+      "pages": [
+        "DATOS GENERALES\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 57,
+            "end": 65,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 66,
+            "end": 85,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "clean_general_data"
+      ]
+    },
+    {
+      "id": "context_blank_before_pda",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 51,
+            "end": 70,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "next_nonblank_label"
+      ]
+    },
+    {
+      "id": "context_after_session",
+      "pages": [
+        "Sesión 2: Comparar señales\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 26,
+            "quote": "Sesión 2: Comparar señales"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 68,
+            "end": 76,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 77,
+            "end": 96,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "recognized_session",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "context_after_project",
+      "pages": [
+        "Proyecto: Señales sintéticas\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 28,
+            "quote": "Proyecto: Señales sintéticas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 70,
+            "end": 78,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 79,
+            "end": 98,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "recognized_project",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "context_previous_page_unit",
+      "pages": [
+        "Sesión 4: Explorar marcas\n",
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "Sesión 4: Explorar marcas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 2,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "page_local",
+        "no_unit_inheritance"
+      ]
+    },
+    {
+      "id": "context_next_descriptor",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 97,
+            "end": 105,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 106,
+            "end": 121,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "descriptor_closure",
+        "no_code_identity"
+      ]
+    },
+    {
+      "id": "context_transition_science",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 130,
+            "end": 138,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 139,
+            "end": 154,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_ethics",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nÉtica, Naturaleza y Sociedades\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 128,
+            "end": 136,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 137,
+            "end": 152,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_community",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nDe lo Humano y lo Comunitario\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 127,
+            "end": 135,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 136,
+            "end": 151,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_abbrev_science",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y P. Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 121,
+            "end": 129,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 130,
+            "end": 145,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_abbrev_ethics",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nÉtica, N. y Sociedades\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 120,
+            "end": 128,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 129,
+            "end": 144,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_abbrev_community",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nDe lo H. y lo Comunitario\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 123,
+            "end": 131,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 132,
+            "end": 147,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_wrapped_two",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento\nCientífico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 130,
+            "end": 138,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 139,
+            "end": 154,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_wrapped_three",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nDe lo Humano\ny lo\nComunitario\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 127,
+            "end": 135,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 136,
+            "end": 151,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_abbrev_wrapped_two",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y P.\nCientífico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 121,
+            "end": 129,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 130,
+            "end": 145,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_abbrev_wrapped_three",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nÉtica,\nN. y\nSociedades\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 120,
+            "end": 128,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 129,
+            "end": 144,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_transition_prefixed",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nCampo formativo: Saberes y P. Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 138,
+            "end": 146,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 147,
+            "end": 162,
+            "quote": "Compara marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "field_transition"
+      ]
+    },
+    {
+      "id": "context_all_canonical_fields",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nS2. Clasificación de marcas.\nS2 PDA2: Clasifica marcas.\nÉtica, Naturaleza y Sociedades\nE3. Reconocimiento de símbolos.\nE3 PDA3: Reconoce símbolos.\nDe lo Humano y lo Comunitario\nH4. Intercambio de señales.\nH4 PDA4: Intercambia señales.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 132,
+            "end": 140,
+            "quote": "S2 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 141,
+            "end": 158,
+            "quote": "Clasifica marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 222,
+            "end": 230,
+            "quote": "E3 PDA3:"
+          },
+          "value": {
+            "page": 1,
+            "start": 231,
+            "end": 249,
+            "quote": "Reconoce símbolos."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d4",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 308,
+            "end": 316,
+            "quote": "H4 PDA4:"
+          },
+          "value": {
+            "page": 1,
+            "start": 317,
+            "end": 337,
+            "quote": "Intercambia señales."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "corroborated_transition",
+        "four_canonical_fields"
+      ]
+    },
+    {
+      "id": "context_activity_reset_session",
+      "pages": [
+        "Inicio:\nActividad 1: Ordenar tarjetas.\nSesión 6: Clasificar marcas\nLenguajes\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 39,
+            "end": 66,
+            "quote": "Sesión 6: Clasificar marcas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 106,
+            "end": 114,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 115,
+            "end": 132,
+            "quote": "Clasifica marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "real_unit_reset",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "context_example_reset_session",
+      "pages": [
+        "Ejemplo:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSesión 6: Clasificar marcas\nLenguajes\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 79,
+            "end": 106,
+            "quote": "Sesión 6: Clasificar marcas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 146,
+            "end": 154,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 155,
+            "end": 172,
+            "quote": "Clasifica marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 50,
+            "end": 58,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "real_unit_reset",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "context_unknown_reset_session",
+      "pages": [
+        "Notas desconocidas:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSesión 6: Clasificar marcas\nLenguajes\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 90,
+            "end": 117,
+            "quote": "Sesión 6: Clasificar marcas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 157,
+            "end": 165,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 166,
+            "end": 183,
+            "quote": "Clasifica marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "real_unit_reset",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "context_nonadoption_reset_session",
+      "pages": [
+        "Propuesta no adoptada:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSesión 6: Clasificar marcas\nLenguajes\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [
+        {
+          "id": "u1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 93,
+            "end": 120,
+            "quote": "Sesión 6: Clasificar marcas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 160,
+            "end": 168,
+            "quote": "Q7 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 169,
+            "end": 186,
+            "quote": "Clasifica marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "positive",
+        "real_unit_reset",
+        "null_unit"
+      ]
+    },
+    {
+      "id": "silence_field_only",
+      "pages": [
+        "Lenguajes\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "context_not_declaration"
+      ]
+    },
+    {
+      "id": "silence_descriptor_only",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "context_not_declaration"
+      ]
+    },
+    {
+      "id": "silence_descriptor_colon",
+      "pages": [
+        "Lenguajes\nL1. Señales: formas y colores.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "context_not_declaration"
+      ]
+    },
+    {
+      "id": "negative_no_field",
+      "pages": [
+        "L1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 31,
+            "end": 39,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "missing_field"
+      ]
+    },
+    {
+      "id": "negative_unknown_field",
+      "pages": [
+        "Artes del entorno\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 49,
+            "end": 57,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "unknown_field"
+      ]
+    },
+    {
+      "id": "negative_midpage_prose",
+      "pages": [
+        "Las tarjetas quedan sobre la mesa.\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 76,
+            "end": 84,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "unclean_page_prefix"
+      ]
+    },
+    {
+      "id": "negative_abbrev_initial",
+      "pages": [
+        "Saberes y P. Científico\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 55,
+            "end": 63,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "abbreviation_cannot_start"
+      ]
+    },
+    {
+      "id": "negative_field_extra_word",
+      "pages": [
+        "Lenguajes locales\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 49,
+            "end": 57,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "field_not_exact"
+      ]
+    },
+    {
+      "id": "negative_field_plural_synonym",
+      "pages": [
+        "Lenguaje\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "field_not_exact"
+      ]
+    },
+    {
+      "id": "negative_field_abbrev_first",
+      "pages": [
+        "S. y Pensamiento Científico\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 59,
+            "end": 67,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "first_word_must_be_whole"
+      ]
+    },
+    {
+      "id": "negative_field_abbrev_last",
+      "pages": [
+        "Saberes y Pensamiento C.\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 56,
+            "end": 64,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "last_word_must_be_whole"
+      ]
+    },
+    {
+      "id": "negative_descriptor_empty",
+      "pages": [
+        "Lenguajes\nL1.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 14,
+            "end": 22,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_incomplete",
+      "pages": [
+        "Lenguajes\nL1. Identificación de\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 32,
+            "end": 40,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_missing_dot",
+      "pages": [
+        "Lenguajes\nL1 Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_no_space",
+      "pages": [
+        "Lenguajes\nL1.Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_missing_letters",
+      "pages": [
+        "Lenguajes\n1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_missing_digits",
+      "pages": [
+        "Lenguajes\nL. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 40,
+            "end": 48,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_long_letters",
+      "pages": [
+        "Lenguajes\nABCDE1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 45,
+            "end": 53,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_long_digits",
+      "pages": [
+        "Lenguajes\nL12345. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 45,
+            "end": 53,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_foreign",
+      "pages": [
+        "Lenguajes\nЖ1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_casefold_lookalike",
+      "pages": [
+        "Lenguajes\nK1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_table",
+      "pages": [
+        "Lenguajes\nL1. Señales | formas | colores.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_control",
+      "pages": [
+        "Lenguajes\nL1. Identificación\u0000 de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_vertical",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_typed_content",
+      "pages": [
+        "Lenguajes\nL1. Contenido: identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 52,
+            "end": 60,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_typed_pda",
+      "pages": [
+        "Lenguajes\nL1. PDA: identifica señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 39,
+            "end": 47,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_typed_field",
+      "pages": [
+        "Lenguajes\nL1. Campo formativo: Lenguajes.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_nine_lines",
+      "pages": [
+        "Lenguajes\nL1. Identificación\nde señales\nmediante formas\ny colores\nen tarjetas\nsobre mesas\ncon marcas\nordenadas\npor tamaño.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 123,
+            "end": 131,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_loose_prose",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nLas tarjetas quedan sobre la mesa.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 76,
+            "end": 84,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_quoted",
+      "pages": [
+        "Lenguajes\nL1. «Identificación de señales».\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "blocked_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_straight_quote",
+      "pages": [
+        "Lenguajes\nL1. \"Identificación de señales\".\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "blocked_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_activity",
+      "pages": [
+        "Lenguajes\nL1. Actividad: ordenar señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "blocked_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_example",
+      "pages": [
+        "Lenguajes\nL1. Ejemplo: nombres de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "blocked_descriptor"
+      ]
+    },
+    {
+      "id": "negative_descriptor_nonadoption",
+      "pages": [
+        "Lenguajes\nL1. Propuesta no adoptada de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 48,
+            "end": 56,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "blocked_descriptor"
+      ]
+    },
+    {
+      "id": "negative_activity_prefix",
+      "pages": [
+        "Inicio:\nActividad 1: Ordenar tarjetas.\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 80,
+            "end": 88,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_activity_prefix_repeat_field",
+      "pages": [
+        "Inicio:\nActividad 1: Ordenar tarjetas.\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 80,
+            "end": 88,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 171,
+            "end": 179,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "canonical_field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_example_prefix",
+      "pages": [
+        "Ejemplo:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 50,
+            "end": 58,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_example_prefix_repeat_field",
+      "pages": [
+        "Ejemplo:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 50,
+            "end": 58,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 141,
+            "end": 149,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "canonical_field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_nonadoption_prefix",
+      "pages": [
+        "Propuesta no adoptada:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_nonadoption_prefix_repeat_field",
+      "pages": [
+        "Propuesta no adoptada:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 155,
+            "end": 163,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "canonical_field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_unknown_prefix",
+      "pages": [
+        "Notas desconocidas:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_unknown_prefix_repeat_field",
+      "pages": [
+        "Notas desconocidas:\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 152,
+            "end": 160,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "canonical_field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_quote_prefix",
+      "pages": [
+        "«\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_quote_prefix_repeat_field",
+      "pages": [
+        "«\nLenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\nX2. Clasificación de marcas.\nQ7 PDA2: Clasifica marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 134,
+            "end": 142,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "sticky_blocker",
+        "canonical_field_does_not_reset"
+      ]
+    },
+    {
+      "id": "negative_pda_missing_code",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nPDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 46,
+            "quote": "PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_missing_number",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 48,
+            "quote": "L1 PDA:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_missing_colon",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1 Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 48,
+            "quote": "L1 PDA1"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_double_hyphen",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n--L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 51,
+            "quote": "--L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_star_marker",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n*L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 50,
+            "quote": "*L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_bullet_marker",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n•L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 50,
+            "quote": "•L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_foreign_code",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nЖ1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "Ж1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_long_letters",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nABCDE1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 53,
+            "quote": "ABCDE1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_pda_long_digits",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL12345 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 53,
+            "quote": "L12345 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_pda_label"
+      ]
+    },
+    {
+      "id": "negative_descriptor_pda_inline",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales. L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "label_not_line_anchored"
+      ]
+    },
+    {
+      "id": "negative_empty_value",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: \n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "empty_value"
+      ]
+    },
+    {
+      "id": "negative_incomplete_value",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "incomplete_value"
+      ]
+    },
+    {
+      "id": "negative_value_open_quote",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe «una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "unclosed_value_quote"
+      ]
+    },
+    {
+      "id": "negative_value_table",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal | azul.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "value_table"
+      ]
+    },
+    {
+      "id": "negative_field_cross_page",
+      "pages": [
+        "Lenguajes\n",
+        "L1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 31,
+            "end": 39,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "no_field_inheritance",
+        "page_local"
+      ]
+    },
+    {
+      "id": "negative_descriptor_cross_page",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\n",
+        "L1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 8,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "no_descriptor_inheritance",
+        "page_local"
+      ]
+    },
+    {
+      "id": "negative_value_cross_page",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una",
+        " señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "no_value_join",
+        "page_local"
+      ]
+    },
+    {
+      "id": "negative_unit_cross_page",
+      "pages": [
+        "Sesión 8: Marcas\n",
+        "L1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 31,
+            "end": 39,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "no_unit_inheritance",
+        "page_local"
+      ]
+    },
+    {
+      "id": "negative_incomplete_before_descriptor",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 90,
+            "end": 98,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "incomplete_blocks_rest",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_incomplete_before_field",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una\nSaberes y Pensamiento Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 123,
+            "end": 131,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "incomplete_blocks_rest",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_incomplete_before_next_label",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 63,
+            "end": 71,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "incomplete_blocks_rest",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_terminal_descriptor_no_corroboration",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nX2. Comparación de marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "uncorroborated_closure",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_terminal_field_no_corroboration",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento Científico\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "uncorroborated_closure",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_descriptor_then_empty_pda",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nX2. Comparación de marcas.\nQ7 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 97,
+            "end": 105,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "uncorroborated_closure",
+        "empty_next_value"
+      ]
+    },
+    {
+      "id": "negative_unknown_between_descriptor_and_pda",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nNotas desconocidas:\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "unknown_intervening_heading"
+      ]
+    },
+    {
+      "id": "negative_transition_two_abbreviations",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nDe lo H. y l. Comunitario\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 123,
+            "end": 131,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_wrong_initial",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y X. Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 121,
+            "end": 129,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_missing_dot",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y P Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 120,
+            "end": 128,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_dropped_comma",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nÉtica N. y Sociedades\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 119,
+            "end": 127,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_extra_comma",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes, y P. Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 122,
+            "end": 130,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_four_lines",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nDe lo\nHumano\ny lo\nComunitario\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 127,
+            "end": 135,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_first_abbrev",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nS. y Pensamiento Científico\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 125,
+            "end": 133,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_transition_last_abbrev",
+      "pages": [
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\nSaberes y Pensamiento C.\nX2. Comparación de marcas.\nQ7 PDA2: Compara marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 122,
+            "end": 130,
+            "quote": "Q7 PDA2:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "invalid_field_transition",
+        "no_prefix_truncation"
+      ]
+    },
+    {
+      "id": "negative_previous_page_example",
+      "pages": [
+        "Ejemplo:\n",
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "prior_page_safety",
+        "no_reset_by_clean_field"
+      ]
+    },
+    {
+      "id": "negative_previous_page_nonadoption",
+      "pages": [
+        "Propuesta no adoptada:\n",
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "prior_page_safety",
+        "no_reset_by_clean_field"
+      ]
+    },
+    {
+      "id": "negative_previous_page_quote",
+      "pages": [
+        "«\n",
+        "Lenguajes\nL1. Identificación de señales.\nL1 PDA1: Describe una señal.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negative",
+        "prior_page_safety",
+        "no_reset_by_clean_field"
+      ]
+    },
+    {
+      "id": "preserved_dotted_ascii",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 104,
+            "end": 112,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 113,
+            "end": 132,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "same_exact_code",
+        "complete_value",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_mismatched_codes",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nX2 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 111,
+            "quote": "X2 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 112,
+            "end": 131,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "descriptor_next_code_mismatch",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_incomplete_prior_value",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "incomplete_prior_value",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_narrative_no_repeated_prefix",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Compara este catálogo ficticio:\nL1. Nombres de fichas.\nPDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "narrative_ambiguity",
+        "no_repeated_typed_prefix",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_narrative_repeated_prefix",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Describe esta nota del ejemplo.\nL1. En este ejemplo se escribe un nombre.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "narrative_ambiguity",
+        "repeated_prefix_narrative",
+        "explicit_example_in_value",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_next_label_inline",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2: Explica una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "inline_next_label",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_terminal_without_corroboration",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "missing_next_label",
+        "historical_preservation"
+      ]
+    },
+    {
+      "id": "preserved_dotted_context_only_silence",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nL1. Identificación de fichas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "context_is_not_declaration",
+        "historical_preservation"
+      ]
+    }
+  ]
+}

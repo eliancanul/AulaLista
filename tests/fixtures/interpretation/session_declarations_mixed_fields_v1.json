@@ -1,0 +1,2259 @@
+{
+  "version": "session-declarations-mixed-fields-reference.v1",
+  "reference_kind": "synthetic_source_only",
+  "source_first_sha256": "570b412ecaed11e286349526a405bcfd68d0a3e546f79c08026bae6e8f95c297",
+  "source_freeze_stage": "sources_written_before_expectations",
+  "documents": [
+    {
+      "id": "multimarker_wrapped",
+      "tags": [
+        "positive",
+        "multimarker",
+        "wrapped"
+      ],
+      "pages": [
+        "Sesión 1\nContenidos/PDA:\n* Reconoce sonidos del entorno\n  y representa sus cambios.\n- Compara timbres cotidianos\n  mediante dibujos y palabras.\n• Registra hallazgos.\nInicio:\nEscuchar en silencio.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "multimarker_wrapped:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 24,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 25,
+            "end": 165,
+            "quote": "* Reconoce sonidos del entorno\n  y representa sus cambios.\n- Compara timbres cotidianos\n  mediante dibujos y palabras.\n• Registra hallazgos."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 166,
+            "end": 173,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 1"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "code_expression",
+      "tags": [
+        "positive",
+        "codes"
+      ],
+      "pages": [
+        "Sesión 2\nContenido/PDA:\nAB7(PDA1,PDA2)\nRecursos:\nTarjetas.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "code_expression:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 23,
+            "quote": "Contenido/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 24,
+            "end": 38,
+            "quote": "AB7(PDA1,PDA2)"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 39,
+            "end": 48,
+            "quote": "Recursos:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 2"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "sentence",
+      "tags": [
+        "positive",
+        "sentence"
+      ],
+      "pages": [
+        "Sesión 3\nContenido y PDA:\nObserva las sombras y explica cómo cambian durante el día.\nDesarrollo:\nRealizar el recorrido.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "sentence:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 25,
+            "quote": "Contenido y PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 84,
+            "quote": "Observa las sombras y explica cómo cambian durante el día."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 85,
+            "end": 96,
+            "quote": "Desarrollo:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 3"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "generic_literal",
+      "tags": [
+        "positive",
+        "generic"
+      ],
+      "pages": [
+        "Contenidos y PDAs:\nTexto general del campo compartido.\nObservaciones:\nRevisión pendiente.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "generic_literal:recover:1",
+          "label": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "Contenidos y PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 19,
+            "end": 54,
+            "quote": "Texto general del campo compartido."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 55,
+            "end": 69,
+            "quote": "Observaciones:"
+          },
+          "context": "initial_metadata",
+          "context_reset": null
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "generic_short",
+      "tags": [
+        "positive",
+        "generic",
+        "short"
+      ],
+      "pages": [
+        "Sesión 4\nContenido/PDAs:\nComunicación\nMateriales:\nPapel.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "generic_short:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 24,
+            "quote": "Contenido/PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 25,
+            "end": 37,
+            "quote": "Comunicación"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 38,
+            "end": 49,
+            "quote": "Materiales:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 4"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "crlf",
+      "tags": [
+        "positive",
+        "crlf",
+        "whitespace"
+      ],
+      "pages": [
+        "Sesión 5\r\n  Contenidos / PDA :  \r\n  * Describe formas.\r\n    - Distingue líneas curvas.  \r\n\r\nInicio:\r\nObservar.\r\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "crlf:recover:1",
+          "label": {
+            "page": 1,
+            "start": 12,
+            "end": 30,
+            "quote": "Contenidos / PDA :"
+          },
+          "value": {
+            "page": 1,
+            "start": 36,
+            "end": 86,
+            "quote": "* Describe formas.\r\n    - Distingue líneas curvas."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 92,
+            "end": 99,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 5"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "unicode",
+      "tags": [
+        "positive",
+        "unicode",
+        "nfd"
+      ],
+      "pages": [
+        "Sesión 6\nCONTENIDO Y PDAS:\n* Árbol, piñón y caña: palabras del entorno 🌱.\n- Relaciona ñandú con su descripción.\nEvaluación:\nConversar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "unicode:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 26,
+            "quote": "CONTENIDO Y PDAS:"
+          },
+          "value": {
+            "page": 1,
+            "start": 27,
+            "end": 112,
+            "quote": "* Árbol, piñón y caña: palabras del entorno 🌱.\n- Relaciona ñandú con su descripción."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 113,
+            "end": 124,
+            "quote": "Evaluación:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 6"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "repeated_values",
+      "tags": [
+        "positive",
+        "repeated"
+      ],
+      "pages": [
+        "Sesión 7\nContenidos/PDA:\n* Describe cambios.\nRecursos:\nLápices.\nSesión 8\nContenidos/PDA:\n* Describe cambios.\nInicio:\nComparar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "repeated_values:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 24,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 25,
+            "end": 44,
+            "quote": "* Describe cambios."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 45,
+            "end": 54,
+            "quote": "Recursos:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 7"
+          }
+        },
+        {
+          "id": "repeated_values:recover:2",
+          "label": {
+            "page": 1,
+            "start": 73,
+            "end": 88,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 89,
+            "end": 108,
+            "quote": "* Describe cambios."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 109,
+            "end": 116,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "Sesión 8"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "blank_lines",
+      "tags": [
+        "positive",
+        "whitespace"
+      ],
+      "pages": [
+        "Sesión 9\nContenido / PDAs:\n\n* Observa el cielo.\n\n- Dibuja nubes.\n\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "blank_lines:recover:1",
+          "label": {
+            "page": 1,
+            "start": 9,
+            "end": 26,
+            "quote": "Contenido / PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 28,
+            "end": 64,
+            "quote": "* Observa el cielo.\n\n- Dibuja nubes."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 66,
+            "end": 73,
+            "quote": "Cierre:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 9"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "embedded_symbols",
+      "tags": [
+        "positive",
+        "unsplit"
+      ],
+      "pages": [
+        "Sesión 10\nContenidos y PDA:\nReconoce A-B y el signo * como marcas del texto.\nActividades:\nLeer las tarjetas.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "embedded_symbols:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 27,
+            "quote": "Contenidos y PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 28,
+            "end": 76,
+            "quote": "Reconoce A-B y el signo * como marcas del texto."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 77,
+            "end": 89,
+            "quote": "Actividades:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 10"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "project_context",
+      "tags": [
+        "positive",
+        "project"
+      ],
+      "pages": [
+        "Proyecto: Archivo de sonidos\nContenidos/PDAs:\n* Escucha sonidos.\n- Expresa diferencias.\nMateriales:\nGrabaciones.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "project_context:recover:1",
+          "label": {
+            "page": 1,
+            "start": 29,
+            "end": 45,
+            "quote": "Contenidos/PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 46,
+            "end": 87,
+            "quote": "* Escucha sonidos.\n- Expresa diferencias."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 88,
+            "end": 99,
+            "quote": "Materiales:"
+          },
+          "context": "initial_metadata",
+          "context_reset": null
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "negative_word_in_literal",
+      "tags": [
+        "positive",
+        "sentence"
+      ],
+      "pages": [
+        "Sesión 11\nContenidos y PDAs:\nExplica por qué no se deben desperdiciar los materiales comunes.\nInicio:\nObservar ejemplos.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "negative_word_in_literal:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 28,
+            "quote": "Contenidos y PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 29,
+            "end": 93,
+            "quote": "Explica por qué no se deben desperdiciar los materiales comunes."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 94,
+            "end": 101,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 11"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "next_session_closes",
+      "tags": [
+        "positive",
+        "session_boundary"
+      ],
+      "pages": [
+        "Sesión 12\nContenido/PDA:\nDescribe texturas\nSesión 13\nInicio:\nExplorar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "next_session_closes:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 24,
+            "quote": "Contenido/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 25,
+            "end": 42,
+            "quote": "Describe texturas"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 43,
+            "end": 52,
+            "quote": "Sesión 13"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 12"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "whole_block_2048",
+      "tags": [
+        "positive",
+        "character_limit"
+      ],
+      "pages": [
+        "Sesión 14\nContenidos/PDA:\náááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááá\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "whole_block_2048:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 2074,
+            "quote": "áááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááá"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 2075,
+            "end": 2082,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 14"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "whole_block_32_lines",
+      "tags": [
+        "positive",
+        "line_limit"
+      ],
+      "pages": [
+        "Sesión 15\nContenidos/PDA:\n* Marca 1.\n* Marca 2.\n* Marca 3.\n* Marca 4.\n* Marca 5.\n* Marca 6.\n* Marca 7.\n* Marca 8.\n* Marca 9.\n* Marca 10.\n* Marca 11.\n* Marca 12.\n* Marca 13.\n* Marca 14.\n* Marca 15.\n* Marca 16.\n* Marca 17.\n* Marca 18.\n* Marca 19.\n* Marca 20.\n* Marca 21.\n* Marca 22.\n* Marca 23.\n* Marca 24.\n* Marca 25.\n* Marca 26.\n* Marca 27.\n* Marca 28.\n* Marca 29.\n* Marca 30.\n* Marca 31.\n* Marca 32.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "whole_block_32_lines:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 400,
+            "quote": "* Marca 1.\n* Marca 2.\n* Marca 3.\n* Marca 4.\n* Marca 5.\n* Marca 6.\n* Marca 7.\n* Marca 8.\n* Marca 9.\n* Marca 10.\n* Marca 11.\n* Marca 12.\n* Marca 13.\n* Marca 14.\n* Marca 15.\n* Marca 16.\n* Marca 17.\n* Marca 18.\n* Marca 19.\n* Marca 20.\n* Marca 21.\n* Marca 22.\n* Marca 23.\n* Marca 24.\n* Marca 25.\n* Marca 26.\n* Marca 27.\n* Marca 28.\n* Marca 29.\n* Marca 30.\n* Marca 31.\n* Marca 32."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 401,
+            "end": 408,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 15"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "missing_page_close",
+      "tags": [
+        "negative",
+        "no_closure"
+      ],
+      "pages": [
+        "Sesión 16\nContenidos/PDA:\nTexto completo con punto final.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "missing_page_close:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "no_page_local_closure",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "cross_page_close",
+      "tags": [
+        "negative",
+        "cross_page"
+      ],
+      "pages": [
+        "Sesión 17\nContenidos/PDA:\n* Identifica cambios",
+        "- Describe otros cambios.\nInicio:\nLeer.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "cross_page_close:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "cross_page_value",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "cross_page_late_label",
+      "tags": [
+        "positive",
+        "continuation_metadata",
+        "no_unit_inference"
+      ],
+      "pages": [
+        "Sesión 18\n",
+        "Contenidos/PDA:\nDescribe los objetos.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "cross_page_late_label:recover:1",
+          "label": {
+            "page": 2,
+            "start": 0,
+            "end": 15,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 2,
+            "start": 16,
+            "end": 37,
+            "quote": "Describe los objetos."
+          },
+          "closing_heading": {
+            "page": 2,
+            "start": 38,
+            "end": 45,
+            "quote": "Inicio:"
+          },
+          "context": "continuation_metadata",
+          "context_reset": null
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "interleaved_mixed",
+      "tags": [
+        "negative",
+        "interleaving"
+      ],
+      "pages": [
+        "Sesión 19\nContenidos/PDA:\nPrimer literal.\nContenidos y PDAs:\nSegundo literal.\nInicio:\nLeer.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "interleaved_mixed:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "interleaved_fields",
+          "expected_effect": "no_value_added"
+        },
+        {
+          "id": "interleaved_mixed:reject:2",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 60,
+            "quote": "Contenidos y PDAs:"
+          },
+          "category": "interleaved_fields",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "typed_child_pda",
+      "tags": [
+        "negative",
+        "typed_child"
+      ],
+      "pages": [
+        "Sesión 20\nContenidos/PDA:\nPDA: Distingue formas.\nInicio:\nComparar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "typed_child_pda:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "explicit_typed_child",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "typed_child_content",
+      "tags": [
+        "negative",
+        "typed_child"
+      ],
+      "pages": [
+        "Sesión 21\nContenidos/PDA:\n* Contenido: Figuras planas.\n- PDA: Clasifica figuras.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "typed_child_content:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "explicit_typed_child",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "inline_mention",
+      "tags": [
+        "negative",
+        "inline_mention"
+      ],
+      "pages": [
+        "Sesión 22\nEn la reunión se mencionó Contenidos/PDA: como rótulo de la ficha.\nInicio:\nConversar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "inline_mention:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 36,
+            "end": 51,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "label_mention",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "inline_value",
+      "tags": [
+        "positive",
+        "inline_value"
+      ],
+      "pages": [
+        "Sesión 23\nContenidos/PDA: Identifica colores.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "inline_value:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 45,
+            "quote": "Identifica colores."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 46,
+            "end": 53,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 23"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "table_pipe",
+      "tags": [
+        "negative",
+        "table"
+      ],
+      "pages": [
+        "Sesión 24\n| Contenidos/PDA: | Actividad |\n| Describe colores. | Pintar |\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "table_pipe:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 12,
+            "end": 27,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "table_ambiguous",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "table_tab",
+      "tags": [
+        "negative",
+        "table",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 25\nContenidos/PDA:\nDescribe colores.\tPintar.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "table_tab:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "table_ambiguous",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "table_flattened",
+      "tags": [
+        "negative",
+        "table"
+      ],
+      "pages": [
+        "Sesión 26\nTabla de planeación\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "table_flattened:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 30,
+            "end": 45,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "table_ambiguous",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "quoted",
+      "tags": [
+        "negative",
+        "quoted"
+      ],
+      "pages": [
+        "Sesión 27\n“Contenidos/PDA:\nDescribe colores.\nInicio:”\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "quoted:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 11,
+            "end": 26,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "quoted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "mismatched_quote",
+      "tags": [
+        "negative",
+        "mismatched_quote"
+      ],
+      "pages": [
+        "Sesión 28\n«Fragmento de una ficha\nContenidos/PDA:\nDescribe colores.\nInicio:\n”\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "mismatched_quote:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 34,
+            "end": 49,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "mismatched_quote",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "inherited_quote",
+      "tags": [
+        "negative",
+        "inherited_quote"
+      ],
+      "pages": [
+        "“Fragmento de una ficha\nSesión 29\nContenidos/PDA:\nDescribe colores.\nInicio:\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "inherited_quote:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 34,
+            "end": 49,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "inherited_quote",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "markdown_quote",
+      "tags": [
+        "negative",
+        "quoted"
+      ],
+      "pages": [
+        "Sesión 30\n> Contenidos/PDA:\n> Describe colores.\n> Inicio:\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "markdown_quote:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 12,
+            "end": 27,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "quoted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "fenced_quote",
+      "tags": [
+        "negative",
+        "quoted"
+      ],
+      "pages": [
+        "Sesión 31\n```text\nContenidos/PDA:\nDescribe colores.\nInicio:\n```\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "fenced_quote:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 18,
+            "end": 33,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "quoted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "example_not_adopted",
+      "tags": [
+        "negative",
+        "example",
+        "nonadoption"
+      ],
+      "pages": [
+        "Sesión 32\nEjemplo no adoptado:\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "example_not_adopted:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 31,
+            "end": 46,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "example_not_adopted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "proposal_not_adopted",
+      "tags": [
+        "negative",
+        "nonadoption"
+      ],
+      "pages": [
+        "Sesión 33\nPropuesta sin adoptar:\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "proposal_not_adopted:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 33,
+            "end": 48,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "nonadopted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "conditional",
+      "tags": [
+        "negative",
+        "conditional"
+      ],
+      "pages": [
+        "Sesión 34\nSi se elige este itinerario:\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "conditional:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 39,
+            "end": 54,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "conditional",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "negated",
+      "tags": [
+        "negative",
+        "negated"
+      ],
+      "pages": [
+        "Sesión 35\nNo se aplican los siguientes campos:\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "negated:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 47,
+            "end": 62,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "negated",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "empty_value",
+      "tags": [
+        "negative",
+        "empty"
+      ],
+      "pages": [
+        "Sesión 36\nContenidos/PDA:\n \nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "empty_value:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "empty_value",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "over_character_limit",
+      "tags": [
+        "negative",
+        "character_limit"
+      ],
+      "pages": [
+        "Sesión 37\nContenidos/PDA:\nááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááááá\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "over_character_limit:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "character_limit",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "over_line_limit",
+      "tags": [
+        "negative",
+        "line_limit"
+      ],
+      "pages": [
+        "Sesión 38\nContenidos/PDA:\n* Marca 1.\n* Marca 2.\n* Marca 3.\n* Marca 4.\n* Marca 5.\n* Marca 6.\n* Marca 7.\n* Marca 8.\n* Marca 9.\n* Marca 10.\n* Marca 11.\n* Marca 12.\n* Marca 13.\n* Marca 14.\n* Marca 15.\n* Marca 16.\n* Marca 17.\n* Marca 18.\n* Marca 19.\n* Marca 20.\n* Marca 21.\n* Marca 22.\n* Marca 23.\n* Marca 24.\n* Marca 25.\n* Marca 26.\n* Marca 27.\n* Marca 28.\n* Marca 29.\n* Marca 30.\n* Marca 31.\n* Marca 32.\n* Marca 33.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "over_line_limit:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "line_limit",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "nul",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 39\nContenidos/PDA:\nDescribe\u0000colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "nul:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "bidi",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 40\nContenidos/PDA:\nDescribe‮colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "bidi:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "zero_width",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 41\nContenidos/PDA:\nDescribe​colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "zero_width:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "bare_cr",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 42\nContenidos/PDA:\nDescribe\rcolores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "bare_cr:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "form_feed",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 43\nContenidos/PDA:\nDescribe\fcolores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "form_feed:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "unicode_line_separator",
+      "tags": [
+        "negative",
+        "control_character"
+      ],
+      "pages": [
+        "Sesión 44\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unicode_line_separator:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "control_character",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "activity_inside_value",
+      "tags": [
+        "negative",
+        "activity_middle"
+      ],
+      "pages": [
+        "Sesión 45\nContenidos/PDA:\nDescribe colores.\nActividad 1: Recorta las tarjetas.\nCompara los tonos.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "activity_inside_value:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_interleaving",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "metadata_inside_value",
+      "tags": [
+        "negative",
+        "interleaving"
+      ],
+      "pages": [
+        "Sesión 46\nContenidos/PDA:\nDescribe colores.\nCampo formativo: Lenguajes\nCompara los tonos.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "metadata_inside_value:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "metadata_interleaving",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "unknown_boundary",
+      "tags": [
+        "negative",
+        "uncertain_boundary"
+      ],
+      "pages": [
+        "Sesión 47\nContenidos/PDA:\nDescribe colores.\nNota lateral:\nCompara los tonos.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unknown_boundary:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "uncertain_boundary",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "activity_context_no_reset",
+      "tags": [
+        "negative",
+        "activity_context",
+        "no_mixed_reset"
+      ],
+      "pages": [
+        "Sesión 48\nInicio:\nObservar las tarjetas.\nContenidos/PDA:\nDescribe colores.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "activity_context_no_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 56,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "spurious_metadata_reset",
+      "tags": [
+        "negative",
+        "spurious_reset"
+      ],
+      "pages": [
+        "Sesión 49\nEjemplo no adoptado:\nDATOS GENERALES\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "spurious_metadata_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 47,
+            "end": 62,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "nonadopted_context_not_reset",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "genuine_session_reset",
+      "tags": [
+        "positive",
+        "negative",
+        "genuine_reset"
+      ],
+      "pages": [
+        "Sesión 50\nEjemplo no adoptado:\nContenidos/PDA:\nLiteral no adoptado.\nInicio:\nMirar.\nSesión 51\nContenidos/PDA:\nLiteral de la nueva sesión.\nRecursos:\nPapel.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "genuine_session_reset:recover:1",
+          "label": {
+            "page": 1,
+            "start": 93,
+            "end": 108,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 109,
+            "end": 136,
+            "quote": "Literal de la nueva sesión."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 137,
+            "end": 146,
+            "quote": "Recursos:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 83,
+            "end": 92,
+            "quote": "Sesión 51"
+          }
+        }
+      ],
+      "expected_rejections": [
+        {
+          "id": "genuine_session_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 31,
+            "end": 46,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "example_not_adopted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "quote_spurious_session",
+      "tags": [
+        "negative",
+        "inherited_quote",
+        "spurious_reset"
+      ],
+      "pages": [
+        "«Ficha citada\nSesión 52\nContenidos/PDA:\nLiteral citado.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "quote_spurious_session:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 24,
+            "end": 39,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "inherited_quote",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "typed_pda_control",
+      "tags": [
+        "control",
+        "typed_control"
+      ],
+      "pages": [
+        "Sesión 53\nPDA:\nDistingue sonidos cercanos y lejanos.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [],
+      "typed_controls": [
+        {
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 14,
+            "quote": "PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 15,
+            "end": 52,
+            "quote": "Distingue sonidos cercanos y lejanos."
+          },
+          "expected_effect": "unchanged_by_mixed_fields"
+        }
+      ]
+    },
+    {
+      "id": "typed_content_control",
+      "tags": [
+        "control",
+        "typed_control"
+      ],
+      "pages": [
+        "Sesión 54\nContenido:\nSonidos del entorno.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [],
+      "typed_controls": [
+        {
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 20,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 21,
+            "end": 41,
+            "quote": "Sonidos del entorno."
+          },
+          "expected_effect": "unchanged_by_mixed_fields"
+        }
+      ]
+    },
+    {
+      "id": "bare_mixed_label",
+      "tags": [
+        "negative",
+        "missing_colon"
+      ],
+      "pages": [
+        "Sesión 55\nContenidos/PDA\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "bare_mixed_label:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 24,
+            "quote": "Contenidos/PDA"
+          },
+          "category": "missing_colon",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "unsupported_order",
+      "tags": [
+        "negative",
+        "unsupported_label"
+      ],
+      "pages": [
+        "Sesión 56\nPDAs y Contenidos:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unsupported_order:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 28,
+            "quote": "PDAs y Contenidos:"
+          },
+          "category": "unsupported_label",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "parenthesized_plural",
+      "tags": [
+        "negative",
+        "unsupported_label"
+      ],
+      "pages": [
+        "Sesión 57\nContenido(s)/PDA(s):\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "parenthesized_plural:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 30,
+            "quote": "Contenido(s)/PDA(s):"
+          },
+          "category": "unsupported_label",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "unknown_prose_context",
+      "tags": [
+        "negative",
+        "unknown_context"
+      ],
+      "pages": [
+        "Sesión 58\nLa ficha siguiente se revisará en una reunión futura.\nContenidos/PDA:\nDescribe colores.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unknown_prose_context:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 79,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unknown_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "quoted_closed_then_session",
+      "tags": [
+        "positive",
+        "genuine_reset",
+        "quoted"
+      ],
+      "pages": [
+        "“Ejemplo ajeno”\nSesión 59\nContenidos/PDA:\nLiteral de una sesión explícita.\nInicio:\nMirar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "quoted_closed_then_session:recover:1",
+          "label": {
+            "page": 1,
+            "start": 26,
+            "end": 41,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 42,
+            "end": 74,
+            "quote": "Literal de una sesión explícita."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 75,
+            "end": 82,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 16,
+            "end": 25,
+            "quote": "Sesión 59"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "wrapped_metadata",
+      "tags": [
+        "positive",
+        "wrapped_metadata"
+      ],
+      "pages": [
+        "Sesión 60\nFecha: 12 de abril\nTiempo: 40 minutos\nTema de la\nsesión: Formas de comunicar\nOrganización:\nParejas.\nCampo formativo: Lenguajes\nFase: 4\nPáginas: 8–9\nContenidos y PDAs:\n* Comunica hallazgos\n  mediante un dibujo.\nInicio:\nCompartir.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "wrapped_metadata:recover:1",
+          "label": {
+            "page": 1,
+            "start": 158,
+            "end": 176,
+            "quote": "Contenidos y PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 177,
+            "end": 219,
+            "quote": "* Comunica hallazgos\n  mediante un dibujo."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 220,
+            "end": 227,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 60"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "initial_metadata_fragment",
+      "tags": [
+        "positive",
+        "continuation_metadata",
+        "no_unit_inference"
+      ],
+      "pages": [
+        "Fecha: 14 de abril\nCampo formativo: Saberes y pensamiento científico\nTema de la\nsesión: Cambios observables\nContenido/PDA: ZQ4(PDA2,PDA5)\nRecursos:\nHojas.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "initial_metadata_fragment:recover:1",
+          "label": {
+            "page": 1,
+            "start": 108,
+            "end": 122,
+            "quote": "Contenido/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 123,
+            "end": 137,
+            "quote": "ZQ4(PDA2,PDA5)"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 138,
+            "end": 147,
+            "quote": "Recursos:"
+          },
+          "context": "initial_metadata",
+          "context_reset": null
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "cross_page_quote_context",
+      "tags": [
+        "negative",
+        "cross_page",
+        "inherited_quote"
+      ],
+      "pages": [
+        "Sesión 61\n“Ficha de ejemplo\n",
+        "Contenidos/PDA:\nLiteral ajeno.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "cross_page_quote_context:reject:1",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 15,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "inherited_quote",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "cross_page_activity_context",
+      "tags": [
+        "negative",
+        "cross_page",
+        "activity_context"
+      ],
+      "pages": [
+        "Sesión 62\nInicio:\nLeer tarjetas.\n",
+        "Contenidos/PDA:\nLiteral tardío.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "cross_page_activity_context:reject:1",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 15,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "unbalanced_expression",
+      "tags": [
+        "negative",
+        "mismatched_delimiter"
+      ],
+      "pages": [
+        "Sesión 63\nContenidos/PDA:\nLM2(PDA1,PDA3\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unbalanced_expression:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "mismatched_delimiter",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "quote_inside_value",
+      "tags": [
+        "negative",
+        "quoted"
+      ],
+      "pages": [
+        "Sesión 64\nContenidos/PDA:\n“Literal citado.”\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "quote_inside_value:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "quoted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "conditional_inline",
+      "tags": [
+        "negative",
+        "conditional",
+        "inline_value"
+      ],
+      "pages": [
+        "Sesión 65\nContenidos/PDA: Si se adopta, trabajar con formas.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "conditional_inline:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "conditional",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "negated_inline",
+      "tags": [
+        "negative",
+        "negated",
+        "inline_value"
+      ],
+      "pages": [
+        "Sesión 66\nContenidos/PDA: No se aplica este campo.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "negated_inline:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "negated",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "content_then_typed_child",
+      "tags": [
+        "negative",
+        "typed_child"
+      ],
+      "pages": [
+        "Sesión 67\nContenidos/PDA:\nDescribe colores.\nPDA:\nCompara los tonos.\nInicio:\nObservar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "content_then_typed_child:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "explicit_typed_child",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "closed_activity_then_mixed",
+      "tags": [
+        "negative",
+        "activity_context",
+        "no_mixed_reset",
+        "positive"
+      ],
+      "pages": [
+        "Sesión 68\nContenidos/PDA:\nPrimer literal.\nInicio:\nObservar.\nContenidos/PDA:\nSegundo literal.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "closed_activity_then_mixed:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 41,
+            "quote": "Primer literal."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 42,
+            "end": 49,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 68"
+          }
+        }
+      ],
+      "expected_rejections": [
+        {
+          "id": "closed_activity_then_mixed:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 60,
+            "end": 75,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    },
+    {
+      "id": "description_activities_closer",
+      "tags": [
+        "positive",
+        "compositional_closer"
+      ],
+      "pages": [
+        "Sesión 69\nContenidos/PDA:\n* Observa hojas.\n- Compara sus formas.\nDescripción de actividades:\nInicio: Reunir materiales.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "description_activities_closer:recover:1",
+          "label": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 26,
+            "end": 64,
+            "quote": "* Observa hojas.\n- Compara sus formas."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 65,
+            "end": 92,
+            "quote": "Descripción de actividades:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 9,
+            "quote": "Sesión 69"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": []
+    },
+    {
+      "id": "inline_activity_not_closer",
+      "tags": [
+        "negative",
+        "activity_middle",
+        "no_closure"
+      ],
+      "pages": [
+        "Sesión 70\nContenidos/PDA: Describe formas. Inicio: Observa las tarjetas.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "inline_activity_not_closer:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 10,
+            "end": 25,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_interleaving",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": []
+    }
+  ],
+  "default_mixed_fields": false,
+  "enabled_patch_contract": {
+    "requires_existing_record": {
+      "kind": null,
+      "decision": "abstained",
+      "reason": "combined_label",
+      "claim": null
+    },
+    "only_added_evidence_role": "value",
+    "preserve_record_fields": [
+      "id",
+      "kind",
+      "decision",
+      "reason",
+      "unit",
+      "claim"
+    ],
+    "preserve_prior_evidence": true,
+    "preserve_other_records": true,
+    "unit_effect": "preserve_existing",
+    "new_units": 0,
+    "new_claims": 0,
+    "typed_detection_credit": false,
+    "limits": {
+      "max_value_codepoints": 2048,
+      "max_nonempty_value_lines": 32
+    }
+  },
+  "counts": {
+    "documents": 70,
+    "recoveries": 24,
+    "rejections": 48,
+    "typed_controls": 2
+  }
+}

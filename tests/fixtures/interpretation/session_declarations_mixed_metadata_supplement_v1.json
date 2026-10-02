@@ -1,0 +1,796 @@
+{
+  "version": 1,
+  "reference_kind": "source_only_mixed_metadata_supplement",
+  "source_first_sha256": "8fbe9730c40cf4a5896fb3062f0ccf6526272b4458ab0c95625b6b3740da843b",
+  "source_freeze_stage": "sources_saved_before_annotations",
+  "documents": [
+    {
+      "id": "dated_suffix_lf",
+      "pages": [
+        "Sesión 1 Fecha: Martes 8 Tema de la\nsesión:\nSonidos del patio\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\n* Reconoce sonidos del entorno\n  y describe sus diferencias.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "dated_suffix_lf:recover:1",
+          "label": {
+            "page": 1,
+            "start": 98,
+            "end": 113,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 114,
+            "end": 174,
+            "quote": "* Reconoce sonidos del entorno\n  y describe sus diferencias."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 175,
+            "end": 182,
+            "quote": "Inicio:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 35,
+            "quote": "Sesión 1 Fecha: Martes 8 Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "lf",
+        "multiline_value"
+      ]
+    },
+    {
+      "id": "dated_suffix_crlf_spaces",
+      "pages": [
+        "  Sesión 2 Fecha: Miércoles 9  Tema de la  \r\n  sesión:  \r\n  Formas de comunicar\r\n  Tiempo: 35 minutos\r\n  Campo formativo: Lenguajes\r\n  Contenidos / PDA :  \r\n  * Representa hallazgos.\r\n    - Compara sus dibujos.  \r\n  Recursos:  \r\n  Papel.\r\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "dated_suffix_crlf_spaces:recover:1",
+          "label": {
+            "page": 1,
+            "start": 135,
+            "end": 153,
+            "quote": "Contenidos / PDA :"
+          },
+          "value": {
+            "page": 1,
+            "start": 159,
+            "end": 210,
+            "quote": "* Representa hallazgos.\r\n    - Compara sus dibujos."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 216,
+            "end": 225,
+            "quote": "Recursos:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 2,
+            "end": 41,
+            "quote": "Sesión 2 Fecha: Miércoles 9  Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "crlf",
+        "ascii_spaces",
+        "multiline_value"
+      ]
+    },
+    {
+      "id": "initial_fecha_wrapped_inline_tiempo",
+      "pages": [
+        "Fecha: 4 de octubre de 2026 Tema de la\nsesión:\nTema largo\ncon continuación. Tiempo: 35 minutos\nCampo: Lenguajes\nContenidos y PDAs:\nComunicación\nInicio:\nConversar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "initial_fecha_wrapped_inline_tiempo:recover:1",
+          "label": {
+            "page": 1,
+            "start": 112,
+            "end": 130,
+            "quote": "Contenidos y PDAs:"
+          },
+          "value": {
+            "page": 1,
+            "start": 131,
+            "end": 143,
+            "quote": "Comunicación"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 144,
+            "end": 151,
+            "quote": "Inicio:"
+          },
+          "context": "initial_metadata",
+          "context_reset": null
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "initial_metadata",
+        "inline_known_metadata",
+        "multiline_theme"
+      ]
+    },
+    {
+      "id": "session_fecha_wrapped_inline_tiempo",
+      "pages": [
+        "Sesión 4\nFecha: 5 de octubre de 2026 Tema de la\nsesión:\nObservamos hojas\ny sus cambios. Tiempo: 35 minutos\nCampo formativo: Saberes y pensamiento científico\nContenido/PDA:\nAB7(PDA1,PDA2)\nMateriales:\nHojas.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "session_fecha_wrapped_inline_tiempo:recover:1",
+          "label": {
+            "page": 1,
+            "start": 157,
+            "end": 171,
+            "quote": "Contenido/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 172,
+            "end": 186,
+            "quote": "AB7(PDA1,PDA2)"
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 187,
+            "end": 198,
+            "quote": "Materiales:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 4"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "session_metadata",
+        "inline_known_metadata",
+        "multiline_theme",
+        "literal_code"
+      ]
+    },
+    {
+      "id": "dated_suffix_inline_tiempo",
+      "pages": [
+        "Sesión 5 Fecha: Lunes 12 Tema de la\nsesión:\nExploración del entorno\ncon registros compartidos. Tiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\n* Describe el árbol 🌳.\n- Registra cañas y hojas.\nDescripción de actividades:\nObservar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "dated_suffix_inline_tiempo:recover:1",
+          "label": {
+            "page": 1,
+            "start": 131,
+            "end": 146,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 147,
+            "end": 196,
+            "quote": "* Describe el árbol 🌳.\n- Registra cañas y hojas."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 197,
+            "end": 224,
+            "quote": "Descripción de actividades:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 0,
+            "end": 35,
+            "quote": "Sesión 5 Fecha: Lunes 12 Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "inline_known_metadata",
+        "unicode_literal",
+        "multiline_theme"
+      ]
+    },
+    {
+      "id": "activity_then_dated_reset",
+      "pages": [
+        "Sesión 6\nInicio:\nEscuchar una canción.\nSesión 7 Fecha: Miércoles 14 Tema de la\nsesión:\nRitmos del entorno\nTiempo: 35 minutos\nCampo: Lenguajes\nContenido y PDA:\nCompara ritmos cotidianos.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "activity_then_dated_reset:recover:1",
+          "label": {
+            "page": 1,
+            "start": 142,
+            "end": 158,
+            "quote": "Contenido y PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 159,
+            "end": 185,
+            "quote": "Compara ritmos cotidianos."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 186,
+            "end": 193,
+            "quote": "Cierre:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 39,
+            "end": 78,
+            "quote": "Sesión 7 Fecha: Miércoles 14 Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "genuine_reset_after_activity"
+      ]
+    },
+    {
+      "id": "example_then_dated_reset",
+      "pages": [
+        "Ejemplo no adoptado:\nUna propuesta para otro grupo.\nSesión 8 Fecha: Jueves 15 Tema de la\nsesión:\nVoces del barrio\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nDescribe las voces que escucha.\nEvaluación:\nConversar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "example_then_dated_reset:recover:1",
+          "label": {
+            "page": 1,
+            "start": 150,
+            "end": 165,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 166,
+            "end": 197,
+            "quote": "Describe las voces que escucha."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 198,
+            "end": 209,
+            "quote": "Evaluación:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 52,
+            "end": 88,
+            "quote": "Sesión 8 Fecha: Jueves 15 Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "genuine_reset_after_example"
+      ]
+    },
+    {
+      "id": "closed_quote_then_dated_reset",
+      "pages": [
+        "“Una sesión ajena y su tema.”\nSesión 9 Fecha: Viernes 16 Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia de su entorno.\nObservaciones:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [
+        {
+          "id": "closed_quote_then_dated_reset:recover:1",
+          "label": {
+            "page": 1,
+            "start": 131,
+            "end": 146,
+            "quote": "Contenidos/PDA:"
+          },
+          "value": {
+            "page": 1,
+            "start": 147,
+            "end": 181,
+            "quote": "Relata una historia de su entorno."
+          },
+          "closing_heading": {
+            "page": 1,
+            "start": 182,
+            "end": 196,
+            "quote": "Observaciones:"
+          },
+          "context": "session_metadata",
+          "context_reset": {
+            "page": 1,
+            "start": 30,
+            "end": 67,
+            "quote": "Sesión 9 Fecha: Viernes 16 Tema de la"
+          }
+        }
+      ],
+      "expected_rejections": [],
+      "typed_controls": [],
+      "tags": [
+        "positive",
+        "dated_anchor_suffix",
+        "genuine_reset_after_closed_quote"
+      ]
+    },
+    {
+      "id": "false_suffix_longer_phrase",
+      "pages": [
+        "Sesión 10 Fecha: Lunes 17 Tema de la vida\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "false_suffix_longer_phrase:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 105,
+            "end": 120,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "false_metadata_suffix",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "false_suffix"
+      ]
+    },
+    {
+      "id": "title_suffix_not_metadata",
+      "pages": [
+        "Sesión 11 Fecha: Martes 18 Título: Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "title_suffix_not_metadata:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 109,
+            "end": 124,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "title_is_not_metadata",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "title_suffix"
+      ]
+    },
+    {
+      "id": "unknown_split_label",
+      "pages": [
+        "Sesión 12 Fecha: Miércoles 19 Asunto de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unknown_split_label:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 106,
+            "end": 121,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unknown_split_metadata_label",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "unknown_label"
+      ]
+    },
+    {
+      "id": "tab_inside_split_label",
+      "pages": [
+        "Sesión 13 Fecha: Jueves 20 Tema\tde la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "tab_inside_split_label:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 101,
+            "end": 116,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unsafe_metadata_whitespace",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "tab"
+      ]
+    },
+    {
+      "id": "c0_inside_split_label",
+      "pages": [
+        "Sesión 14 Fecha: Viernes 21 Tema de\u0000 la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "c0_inside_split_label:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 103,
+            "end": 118,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unsafe_metadata_control",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "c0_control"
+      ]
+    },
+    {
+      "id": "format_control_theme_value",
+      "pages": [
+        "Fecha: 15 de octubre de 2026 Tema de la\nsesión:\nTema largo\ncon continua​ción. Tiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "format_control_theme_value:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 114,
+            "end": 129,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unsafe_metadata_control",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "format_control"
+      ]
+    },
+    {
+      "id": "bare_cr_label_boundary",
+      "pages": [
+        "Fecha: 16 de octubre de 2026 Tema de la\rsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "bare_cr_label_boundary:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 103,
+            "end": 118,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unsafe_metadata_line_break",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "bare_cr"
+      ]
+    },
+    {
+      "id": "non_ascii_space_suffix",
+      "pages": [
+        "Sesión 17 Fecha: Miércoles 24 Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "non_ascii_space_suffix:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 104,
+            "end": 119,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unsafe_metadata_whitespace",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "non_ascii_space"
+      ]
+    },
+    {
+      "id": "example_metadata_cannot_reset",
+      "pages": [
+        "Sesión 18\nEjemplo no adoptado:\nFecha: 18 de octubre de 2026 Tema de la\nsesión:\nTema largo\ncon continuación. Tiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "example_metadata_cannot_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 144,
+            "end": 159,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "example_not_adopted",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "example_context",
+        "no_metadata_reset"
+      ]
+    },
+    {
+      "id": "open_quote_dated_not_reset",
+      "pages": [
+        "“Ejemplo ajeno:\nSesión 19 Fecha: Viernes 26 Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "open_quote_dated_not_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 118,
+            "end": 133,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "quoted_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "open_quote",
+        "fake_reset_inside_quote"
+      ]
+    },
+    {
+      "id": "after_activity_metadata_cannot_reset",
+      "pages": [
+        "Sesión 20\nInicio:\nEscuchar una historia.\nFecha: 20 de octubre de 2026 Tema de la\nsesión:\nTema largo\ncon continuación. Tiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "after_activity_metadata_cannot_reset:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 154,
+            "end": 169,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "activity_context",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "activity_context",
+        "no_metadata_reset"
+      ]
+    },
+    {
+      "id": "missing_colon_split_label",
+      "pages": [
+        "Sesión 21 Fecha: Martes 28 Tema de la\nsesión\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "missing_colon_split_label:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 100,
+            "end": 115,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "missing_metadata_colon",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "missing_colon"
+      ]
+    },
+    {
+      "id": "unknown_colon_in_continuation",
+      "pages": [
+        "Fecha: 22 de octubre de 2026 Tema de la\nsesión:\nTema largo\ncon continuación. Duración: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "unknown_colon_in_continuation:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 115,
+            "end": 130,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "unknown_metadata_separator",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "unknown_colon",
+        "multiline_theme"
+      ]
+    },
+    {
+      "id": "arbitrary_fake_session",
+      "pages": [
+        "Inicio:\nEscuchar.\nProyecto de sesión 23 Fecha: Jueves 30 Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nCierre:\nCompartir.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "arbitrary_fake_session:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 131,
+            "end": 146,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "fake_session_no_reset",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "arbitrary_fake_session",
+        "activity_context"
+      ]
+    },
+    {
+      "id": "numbered_sesion_not_continuation",
+      "pages": [
+        "Fecha: 24 de octubre de 2026 Tema de la\nsesión 24:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\nInicio:\nEscuchar.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "numbered_sesion_not_continuation:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 106,
+            "end": 121,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "invalid_metadata_label_continuation",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "arbitrary_numbered_continuation"
+      ]
+    },
+    {
+      "id": "metadata_valid_mixed_unclosed",
+      "pages": [
+        "Sesión 25 Fecha: Lunes 32 Tema de la\nsesión:\nHistorias cercanas\nTiempo: 35 minutos\nCampo: Lenguajes\nContenidos/PDA:\nRelata una historia.\n"
+      ],
+      "expected_recoveries": [],
+      "expected_rejections": [
+        {
+          "id": "metadata_valid_mixed_unclosed:reject:1",
+          "anchor": {
+            "page": 1,
+            "start": 100,
+            "end": 115,
+            "quote": "Contenidos/PDA:"
+          },
+          "category": "missing_explicit_closer",
+          "expected_effect": "no_value_added"
+        }
+      ],
+      "typed_controls": [],
+      "tags": [
+        "negative",
+        "no_closer",
+        "dated_anchor_suffix"
+      ]
+    }
+  ],
+  "default_mixed_fields": false,
+  "enabled_patch_contract": {
+    "requires_existing_record": {
+      "kind": null,
+      "decision": "abstained",
+      "reason": "combined_label",
+      "claim": null
+    },
+    "only_added_evidence_role": "value",
+    "preserve_record_fields": [
+      "id",
+      "kind",
+      "decision",
+      "reason",
+      "unit",
+      "claim"
+    ],
+    "preserve_prior_evidence": true,
+    "preserve_other_records": true,
+    "unit_effect": "preserve_existing",
+    "new_units": 0,
+    "new_claims": 0,
+    "typed_detection_credit": false,
+    "limits": {
+      "max_value_codepoints": 2048,
+      "max_nonempty_value_lines": 32
+    }
+  },
+  "counts": {
+    "documents": 24,
+    "recoveries": 8,
+    "rejections": 16,
+    "typed_controls": 0
+  },
+  "source_unannotated_fixture_sha256": "1532d4a098934b3db425f5861b819cca8c21fdbb44ed4010e97db5a19f28f84e"
+}
