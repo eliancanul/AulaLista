@@ -1,0 +1,4341 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "synthetic_prematcher_development",
+  "scope": {
+    "name": "opt_in_literal_recovery_v1",
+    "base_commit": "740b5ca6d9b852824ebb8abdfcb8aa226f5016bb",
+    "status": "independent_reference_frozen_before_new_matcher",
+    "admission": "Only explicit closed local-content lists; dotted descriptors remain diagnostic uncertainty and never license recovery.",
+    "not_established": [
+      "private_or_final_performance",
+      "ocr_accuracy",
+      "curricular_alignment",
+      "pedagogical_validity",
+      "publication_authority"
+    ],
+    "source_binding": {
+      "kind": "synthetic_exact_page_snapshot",
+      "algorithm": "sha256",
+      "serialization": "UTF-8 JSON pages, ensure_ascii=False, separators=(comma,colon)",
+      "page_snapshots_sha256": {
+        "dotted_ascii": "86b73d9b4e32aac5c9d0e37991ae2302d43c2351bd8a09f323669bda36625848",
+        "dotted_prior_code_can_differ": "ff06dedf98379473cbfd1e2435d8ea1e8ff0cba6d947004d6e7700ca2096e2c6",
+        "dotted_long_form_label": "eac65b3fae8d601e3ed6454676a3ea3210e9040b569ebd261137d043322805c9",
+        "dotted_four_spanish_letters": "61838f7b81743700835eff21ea4cd9ae14e336863cda6719d3c92047ed9d59f7",
+        "dotted_spanish_nfd": "1973cc2ead276892e665299cf1af6cb30a5ed9ac0d96c509d38804cf73db2891",
+        "dotted_lowercase": "5e9c965251a308fa4296512f3dfe9efc42cf46add0fe54486713dcb8cb41e156",
+        "dotted_crlf_horizontal": "0898862a59ff89339acda1bc2c636b73595f5c570192120a652374e490b0c387",
+        "dotted_blank_rows": "833a99a0392a84be54180f3f994f0a1d9d238488e2bc1444b854b125f9945785",
+        "dotted_multiline_prior_value": "c1029f42bee648c5d74c5178a71f9f0dad455e0b63075a3a8fbfbdd3f01848f5",
+        "dotted_balanced_value_quotes": "fa104ed61d7b428f77675942e240080aaac0bf93ad9d7814ab9aa1fe34860982",
+        "dotted_question_terminal": "438229dcc2bd4473e6d57115240c893a53019d810b9a565eda5cd317af6979e8",
+        "dotted_same_page_session_control": "5bfaddc26adc80579b613ede7b934737c0aca3996dea0ba2cf3bdc3e3e9ada62",
+        "dotted_same_page_project_control": "7ad1ef42fd0d765981ff449bf537d42c523353d96ddb385d1cc1294abb9a19c1",
+        "dotted_repeated_physical_labels": "b8f3690f0d804c64ee210cf2a626508ab7720ad79dc266a04cd800e87ca8c3e6",
+        "local_singular_hyphen": "bad2cb2ee651ceea6833162ba1bdb903aa12bf392d33b3ca49b68a5de91799dd",
+        "local_plural_bullet": "a012f4587449a23c672fa667b955400218a205eca3956bcd14e5554ff62c2a63",
+        "local_incorporation_singular_star": "fa2e20a0716c277b2e2bb2aaac71792adc4d38971240be14febf8cde06682876",
+        "local_incorporation_plural": "597e7c19bd9ac476bb7a855f060c55e29fddbbc80a6bd1c588438bdb03fd4ec0",
+        "local_case_and_indentation": "0712d68485361807b8506b247383be88e52eeca48b4fd57fd00511977e2642ea",
+        "local_crlf": "71d363443c2ef26b401e1b0ca9236610f4bb160a9fd09f3a4f2fd8f72caf4311",
+        "local_nfd_header_and_value": "bdeb8eb528ac1aef5af9b200a9b66cf3be8ba08e9bab1ec6ece3abbf2dc076e1",
+        "local_balanced_quotes": "b5a06fcf04e1890233bed23aedac3efd5354ea028abe3a8daf00a4af879a512d",
+        "local_blank_lines_full_list": "cfaaaaa68da7b0d4fcc1901e7bfb2298eccf303227087cdd90ffb811523ac2fc",
+        "local_explicit_activity_stop": "062bc289da3088924116c65fe6576150eaa36e01285871a0450be83ee3d58a4f",
+        "local_heading_with_value": "5cc71edf00a2e048d45b3a3b2adcb408d60443a76d9bb88d3dd9c463df6390f0",
+        "local_two_labelled_fields_closure": "c31a8493ffa855797348552d5c2cd70c8d5eb56d272c871c8b7044b6c537a026",
+        "local_same_page_session_unresolved": "e7fa6e8d3450d3d3c8068a09d40aaace1c37247be49240d8df7ecff63bc1a204",
+        "local_same_page_project_unresolved": "fde027438f1b85cfb6752a5662339fb0bc07742adb71ccfdfc2aa821596e2732",
+        "local_repeated_physical_labels": "4b69e22d30a8de968b511063e57371be3479dd32c1fd21f6d125ded6f5f3c488",
+        "local_previous_page_unit_not_inherited": "829bf873fd8bd7ddc51b639f343460224643e6b81c63568e12ad5d8ff1b42e17",
+        "dotted_mismatched_codes": "10ff32dd6c5a7e9bb86b9ff755362f54d8740b1dff5ae4adfdc7df83da9e78cf",
+        "dotted_canonically_equal_but_not_exact_codes": "51de56d1f05f705ee22cd5edb2e37aa58be1de0d320cab4ca07dbec11c92943e",
+        "dotted_missing_period": "3e7436f17d02ea801758f9ca1d49c94697aa96ba85239ec55a644cefe1d62bf5",
+        "dotted_missing_digits": "c90430d90e3c822b7f1058f72c0286a77a1ccbac2642715253b4be5d5e139575",
+        "dotted_missing_letters": "df4bcc7a9d913f5f6d5c775b267d51fe3e3f8630b4db249da1410a26a9c9f463",
+        "dotted_oversize_code": "3e8f29d729912b5491b2ac76b6bb16e314eeb181a59d4f0379c2fbdbd99b8de5",
+        "dotted_foreign_code": "76eeffb209940774f3d08204804a213e921dff43b054fbb41e86a4cb39c2cab7",
+        "dotted_casefold_lookalike": "710909d7cdd6fa2f5050066475566a128190a4b6a6844465199d373da334116f",
+        "dotted_missing_hspace": "59375cb9e63a40c33f8df7457088f0fc1ea1dfcf546828c9617ce797c3acba5e",
+        "dotted_empty_descriptor": "c7f728ec1fc96c9b276bd28a9cdc3bd7d0a5ef4a49ade49e217c772aab807e6a",
+        "dotted_incomplete_descriptor": "cdcede2752814c9619bd0ac73a9442635bada91cdb229089898a1d866b2c43d4",
+        "dotted_wrapped_descriptor": "02de56498b06ae52b97676497210536a12de2beaa05965f578e2129638db58cc",
+        "dotted_quoted_descriptor": "a0b467137297442d1306b5324644c178475d2fe4928da895470b61990a274f4b",
+        "dotted_descriptor_activity": "09972db0841ef6b87f444d9de15ad153e824b78ba61ea53e837e63b5ce04795c",
+        "dotted_descriptor_example": "26ed553a5374d14b16021b7ec173391836cef820eceecc82ac96736f2d08df62",
+        "dotted_descriptor_nonadoption": "4305b41efd98951a2a30b839d97a09d53cf01ab06c6cfac644a0107b38ba873d",
+        "dotted_descriptor_contains_typed_label": "33bf909c6ae6efe254881fea26aa82b19e2fe7f6d7bbc1ff1d8f39f5961db5e1",
+        "dotted_next_label_partial": "da84b2072838b2a9ab9b36e0512fdd566479ccdee964ebbfe997a8a2cb8df05a",
+        "dotted_next_label_missing_colon": "82b033cab2295f8786b7ce7170321b67e93adbd368b2a4fb7406d3344862029e",
+        "dotted_next_label_inline": "4986b68111b5d16be53819fb47961eeda15c99f01d6aff3fb6c3fa43765288ba",
+        "dotted_vertical_code_separator": "7a26646fff8d4b7370bdc9fb508840274e240c9ecb8116c079d771575fe11495",
+        "dotted_incomplete_prior_value": "bbcc6cd0970e4a5da411f6024341050cf75b36872a550be89eb649a6360a880b",
+        "dotted_unclosed_prior_value_quote": "7a32273401a81f810ffd19976b81d15a79e48068e15d29dde9dd54dcf0137177",
+        "dotted_terminal_without_corroboration": "751c14605e2c55023a3c0b2a025ba62b27105c7ba1421d2f2ef9e1948013624d",
+        "dotted_nonadjacent_corroboration": "3189b6c54aa5bd1919d83a9bfcc36b3691badc5dc3b582a77fbe522e3e70c9c4",
+        "dotted_narrative_no_repeated_prefix": "281d79b08341ab2d366d8f2e5872a463461c04f4a09fcee7d4715459d840a2ee",
+        "dotted_narrative_repeated_prefix": "96dc81fe63d2b6f1f32322d621f094e0ed915b4453c7da7d669d5d62cf61f753",
+        "dotted_prose_before_planning_root": "2a1ca0b254c92114c4a2fdf2ffceca22d6aa84626e5babc3f6c2be56b675041f",
+        "dotted_activity_before_field": "7d787533cc27f33157ba076398c3cbceaf895c9d50d448f63eaa2a33548e7ac4",
+        "dotted_page_boundary": "90aa206302b526be45659a9172a801bb7658b8b50e6bd4ad5411cb4f5d623be4",
+        "dotted_next_label_across_page": "9592841ad5e90f041c1067b5255b58de67b1c3f05a49d3876cfa24ed186783ae",
+        "local_missing_colon": "ba9a228da1e7ef0706a50bdefeddbe30da615896b7a62ac7432e498840e3d4ad",
+        "local_partial_label": "d089ada9f6d8ee0978139fe503ad03be9f9503e694f35c29a9ce3e4a5dc128ad",
+        "local_extra_qualifier": "f78a31261ae85b5744b84335d7ac114b1bda23b15583e703eb8ffd042e15ebc3",
+        "local_synonym": "4a2102a8ff94c081561b34515da017fa72aa5d49b435ca2dcdf1efdb57322496",
+        "local_unaccented_prefix": "eda659f5684ce434ec8dc8d9d4d6e4f0d597460caf8302d73d9638409daeca08",
+        "local_number_mismatch": "47a9950c346ce14f61ed58918c498f2e15c38c724b9540aac52bd4721db321e8",
+        "local_reverse_number_mismatch": "230feee940aadf926922e389b64294a8a7a9cbb79f0b90ce719710f4319228a6",
+        "local_double_incorporation": "88bee2c34dd8b275adee4abc43b77e6e3aef22157939deb0db3c8efd34a456b1",
+        "local_vertical_label": "d6e22325f2ccbfaba6b0e989554e3c0fc021746222f9cd956c5e50a57f33e233",
+        "local_numbered_list": "72aae0b4493ccbfe8666a20e7fcd9dd82c40a2531d77154c6f32e4f5c3c1f1d7",
+        "local_mixed_markers": "67da83bf4ed6f4220aec320eeda9275e9761aa952e5197256835ddd80f331749",
+        "local_doubled_marker": "23e40d424fc761f553720b7a1986a2151de3feb4a2c38321f3b7802146195f5c",
+        "local_unmarked_list": "8c471fbbcebb8e646b530148e0c6007f3344ca34981370faa56cd461d6fd80fe",
+        "local_incomplete_item": "8060e7d6f999b30b1f73a86903009c94af944830907f54f8a03b1033f3b26b08",
+        "local_semicolon_item": "9183523bbf638e28071bc4baf64d332d39cf890c322133a87de2d30e42d3e624",
+        "local_wrapped_item": "c18705531dde245b3ce525ea3242a8895b5c09e608a977c60c5036f97c9a0cbc",
+        "local_typed_label_item": "43bdaba5800c8656971163ec5b4beb73593b751c174ac9f8fb3724711a1a32d9",
+        "local_heading_item": "1f9bc7c8103745b635ba6921a738f15cfc01df87ddbb32308131b7ef04af66a7",
+        "local_activity_item": "abdf382fdbce870ffa4baf8c1e56cd541b84f9cd6a94624bf473e30eee70c23b",
+        "local_code_row_item": "cd6e3fe2adc1005597e436a43eb04cd0b46d479f94d61cb5ad5675527d150b13",
+        "local_open_quote_item": "013f14e90c0cf64c4367a2c503530efb4819839a05543d43c5084268f253c185",
+        "local_mismatched_quote_item": "16e6b4f0a99c29e4992953a257dc33ead43560af1ee304c031fb4405072125a0",
+        "local_empty_list": "9aff5d77f2c5fca5aa90e0d194bf2237236effa888172224b92c965bd624d80c",
+        "local_vertical_after_marker": "91b63774b5d968bb08a1625eb294b8d4111b62e63c97f1863185b24c138b418f",
+        "local_unmarked_narrative_between_items": "16871e392d250d8afe4913ffabf547b21ef7eabb3b1ec38f61d6dc6b2eed4bb4",
+        "local_terminal_complete_list": "d5d3c359c1db225c494730546c8ab09b51fd1857c914f5a81f9061b7a3c51455",
+        "local_noncolon_heading_stop": "1b4f04c61d74501ebf770f5f4fb9b6075f3f44e3caada90576c1ee88d54ed763",
+        "local_bulleted_heading_stop": "017039f694b698b0cde458c65ee5e1bdaeebb8c012db9d77c7b0d39eedf949cf",
+        "local_inline_header": "845577e858679322059c1011d95c3f4d8ef34b5933489d138c738f5e328a339e",
+        "local_inline_mention": "382765d9427e0a5c8a9b9b4882ed1c889476df2bc4fb31e9629a0a454e829910",
+        "local_quoted_header": "9cc04bcbeef1ac697c816269d36a671af1f225ca4a4d2eef27147eae987757b8",
+        "local_example_before_planning_root": "fdaae1729401b3ac9c1b3b3854749402b8b56cd92bebbd65ba2fe34d3230378f",
+        "local_nonadoption_before_planning_root": "ec8f115997461159cb68f0aed2476a01fa39b3ae9b9f1227f3e08953876d169d",
+        "local_open_source_quote_before_root": "b803b6299515ecc74de06ed9e52d4f910196a164441a1a542d06c9e665600a80",
+        "local_mismatched_source_quote_before_root": "1e04b3c1d70fe6d9a6a2af02ebcc1f0ecf47582e68e99b6573691004b42dd0a9",
+        "local_activity_before_header": "2032f8c5aa624581f11e7d585c2848001ac50be578d3b24c4557f19f7e3aa459",
+        "local_example_previous_page": "88c9d71754c9272792cdd8ace07bbcc10469d4de65b3756caca4980132d0cf00",
+        "local_nonadoption_previous_page": "38e2500fb9ae08ccf2fd1a73ce6d8a862c8f84b9d0f61c890b06cfafeb8d1e2b",
+        "local_open_quote_previous_page": "b21490476cebb3d5d1cc47f50d0bf378ea26eeeda6f1f158767ff0a3c78a73b4",
+        "local_mismatched_quote_previous_page": "93208a7ad4e410cd2e3bfbe4a54cc430fc533d24475ec88dbbfb3eac272ec95c",
+        "local_list_across_page": "d0547ddb3311dbc8740d5a8099348b8b79e1c5955436a1eda0b81fc6b0733734",
+        "local_heading_across_page": "f9447b59604fe458c1191382f00df49922f1742a141aa110bb2a3637a46c8bf5",
+        "local_complete_typed_adjacency": "73d03b32feae6f6c7558728eaac76db35b91a3a6336b52be4e2a700bbd71b549",
+        "local_unknown_note_closure": "b0a94a5cb23a43f3df2c6ea9bd0af5a7fab459b54f0c6b6f0a31e90d2e612f0f",
+        "local_unlabelled_continuation_context": "fb79d06a449a1e7bc7bc4fee1b089b97bc18e6979450a6ce3bafae96dc85ae79",
+        "local_unknown_note_context": "127dcaeaffc9ecb7d640110f9a3e4d42521a2749c5a6e734b8dc9a71f7ce249a",
+        "local_uncertain_typed_adjacency": "beef733071aa999b9a13eb04691ce4b4aed20f0cb1a1aef5a5e9cd8b6c47bb0e",
+        "local_nonwhitespace_typed_gap": "767af0a7b967faeb5357850bc92545a1bfad069f6ada510ead5f06499b81dc65",
+        "local_activity_typed_adjacency": "e859c435dd898b95ac61b402c8193256ee9c17908fe40828144e246a7e60179f",
+        "local_example_typed_adjacency": "c86851f0996016deadfb654c24bddcef5101115d5884edbea76def26f989d472",
+        "local_nonadoption_typed_adjacency": "e9948502e637368144b57441c369bab7fac84a273ee515df583f9cd3e4d7fd61",
+        "local_quoted_typed_adjacency": "2ed9787db75556ba73a7258d96558c6e828b9cfc14a6e2810a9291f786b4d611",
+        "local_example_previous_page_typed_adjacency": "3579f6daa1e8122247774a7fe77dd45fde62eb6de5880d8b272a56ab5f49b6f1",
+        "local_safe_source_proven_book_context": "0dacfca17c66369d29333f59c3e95a9167fb54003e56ed31b20f17e1faf91ec2",
+        "local_active_example_book_context": "d63cfbb31b21a96ef445fb9f837768f334cb89d856ac00bb10aacdf5312ee6b3",
+        "local_inherited_quote_book_context": "6d274c2f35be4229591f563142cb13d89af12ba52b0dba181eaadfb00dd5c249",
+        "dotted_context_only_silence": "828d90f00557162222a0674612ca6f7ea76ec6015ce96bc9b2f95ad571d50b04",
+        "ordinary_prose_clean_silence": "bb2f02543fc7ab3b5c002c2a513cda0216f895d981f9df89b8f776db9978e1c7"
+      }
+    },
+    "preserved_reference_sha256": {
+      "activity_annex_semantics_v1.json": "0a565876b3595209cf7969e0ee37437f7efaeafbea9f10cd82851e3424c812d9",
+      "activity_annex_v1.json": "c49e767843a695a3fa3e760f259ab17ffc2dc29ae01367dfa4e2dc3214bac48c",
+      "activity_session_bullets_v1.json": "79eebb377323b3a060f5243cd9d80fa459e956a774781c1937d16b84d59399b6",
+      "activity_session_v1.json": "9fb8fdc7595e24c065bfba0f8babd833d74f2eae208f2f228aaa4c8055a8b347",
+      "project_anchor_structure_v1.json": "266bcf93012d61774489fe82884e1a5979c43a5a142b47988b4f6992541be21e",
+      "session_declarations_labels_v1.json": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "session_declarations_project_metadata_v1.json": "9323aaaba522c8397aeb675afcafbd745c01d71c99338dbcb5745eded9f97d13",
+      "session_declarations_scaffold_supplement_v1.json": "f5136feae92c5c186845f2b080113a3a36f1aa2d1e20a2c8ebfa6b3bdd6cbc0d",
+      "session_declarations_scaffold_v1.json": "3b83730070b9e04859a39af78065dbf70399bdfb3a6d5edbbc3a8941d71f3b09",
+      "session_declarations_v1.json": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5"
+    },
+    "preserved_scorer_sha256": {
+      "scripts/evaluate_session_declarations.py": "393285dc7a472febecb3056f162eeecb91510f8c927db5d4e516e2e7c053a8ca"
+    },
+    "new_recovery_opportunities": [
+      {
+        "document_id": "local_singular_hyphen",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_plural_bullet",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_incorporation_singular_star",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_incorporation_plural",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_case_and_indentation",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_crlf",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_nfd_header_and_value",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_balanced_quotes",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_blank_lines_full_list",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_explicit_activity_stop",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_heading_with_value",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_two_labelled_fields_closure",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_same_page_session_unresolved",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_same_page_project_unresolved",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_repeated_physical_labels",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_repeated_physical_labels",
+        "declaration_id": "d2",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_previous_page_unit_not_inherited",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_complete_typed_adjacency",
+        "declaration_id": "d2",
+        "route": "local_content_list"
+      },
+      {
+        "document_id": "local_safe_source_proven_book_context",
+        "declaration_id": "d1",
+        "route": "local_content_list"
+      }
+    ],
+    "source_proven_context_reset_controls": [
+      {
+        "document_id": "local_safe_source_proven_book_context",
+        "expected_safe_existing_context_proof": true,
+        "prefix_paragraph_closed": true,
+        "prefix_quote_open": false,
+        "proof_profile_span": {
+          "page": 2,
+          "start": 0,
+          "end": 194,
+          "quote": "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:"
+        },
+        "witnesses": [
+          {
+            "role": "planning_root",
+            "span": {
+              "page": 2,
+              "start": 0,
+              "end": 20,
+              "quote": "Planeación didáctica"
+            }
+          },
+          {
+            "role": "project_label",
+            "span": {
+              "page": 2,
+              "start": 21,
+              "end": 49,
+              "quote": "Proyecto del Libro de Texto:"
+            }
+          },
+          {
+            "role": "project_title",
+            "span": {
+              "page": 2,
+              "start": 50,
+              "end": 67,
+              "quote": "Cartas de colores"
+            }
+          },
+          {
+            "role": "scenario",
+            "span": {
+              "page": 2,
+              "start": 68,
+              "end": 83,
+              "quote": "Escenario: Aula"
+            }
+          },
+          {
+            "role": "purpose",
+            "span": {
+              "page": 2,
+              "start": 84,
+              "end": 126,
+              "quote": "Propósito: Comparar marcas de orientación."
+            }
+          },
+          {
+            "role": "product",
+            "span": {
+              "page": 2,
+              "start": 127,
+              "end": 156,
+              "quote": "Producto: Tarjetas de marcas."
+            }
+          },
+          {
+            "role": "project_association",
+            "span": {
+              "page": 2,
+              "start": 157,
+              "end": 194,
+              "quote": "Contenidos/PDA asociados al proyecto:"
+            }
+          }
+        ]
+      },
+      {
+        "document_id": "local_active_example_book_context",
+        "expected_safe_existing_context_proof": false,
+        "prefix_paragraph_closed": false,
+        "prefix_quote_open": false,
+        "proof_profile_span": {
+          "page": 2,
+          "start": 0,
+          "end": 194,
+          "quote": "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:"
+        },
+        "witnesses": [
+          {
+            "role": "planning_root",
+            "span": {
+              "page": 2,
+              "start": 0,
+              "end": 20,
+              "quote": "Planeación didáctica"
+            }
+          },
+          {
+            "role": "project_label",
+            "span": {
+              "page": 2,
+              "start": 21,
+              "end": 49,
+              "quote": "Proyecto del Libro de Texto:"
+            }
+          },
+          {
+            "role": "project_title",
+            "span": {
+              "page": 2,
+              "start": 50,
+              "end": 67,
+              "quote": "Cartas de colores"
+            }
+          },
+          {
+            "role": "scenario",
+            "span": {
+              "page": 2,
+              "start": 68,
+              "end": 83,
+              "quote": "Escenario: Aula"
+            }
+          },
+          {
+            "role": "purpose",
+            "span": {
+              "page": 2,
+              "start": 84,
+              "end": 126,
+              "quote": "Propósito: Comparar marcas de orientación."
+            }
+          },
+          {
+            "role": "product",
+            "span": {
+              "page": 2,
+              "start": 127,
+              "end": 156,
+              "quote": "Producto: Tarjetas de marcas."
+            }
+          },
+          {
+            "role": "project_association",
+            "span": {
+              "page": 2,
+              "start": 157,
+              "end": 194,
+              "quote": "Contenidos/PDA asociados al proyecto:"
+            }
+          }
+        ]
+      },
+      {
+        "document_id": "local_inherited_quote_book_context",
+        "expected_safe_existing_context_proof": false,
+        "prefix_paragraph_closed": true,
+        "prefix_quote_open": true,
+        "proof_profile_span": {
+          "page": 2,
+          "start": 0,
+          "end": 194,
+          "quote": "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:"
+        },
+        "witnesses": [
+          {
+            "role": "planning_root",
+            "span": {
+              "page": 2,
+              "start": 0,
+              "end": 20,
+              "quote": "Planeación didáctica"
+            }
+          },
+          {
+            "role": "project_label",
+            "span": {
+              "page": 2,
+              "start": 21,
+              "end": 49,
+              "quote": "Proyecto del Libro de Texto:"
+            }
+          },
+          {
+            "role": "project_title",
+            "span": {
+              "page": 2,
+              "start": 50,
+              "end": 67,
+              "quote": "Cartas de colores"
+            }
+          },
+          {
+            "role": "scenario",
+            "span": {
+              "page": 2,
+              "start": 68,
+              "end": 83,
+              "quote": "Escenario: Aula"
+            }
+          },
+          {
+            "role": "purpose",
+            "span": {
+              "page": 2,
+              "start": 84,
+              "end": 126,
+              "quote": "Propósito: Comparar marcas de orientación."
+            }
+          },
+          {
+            "role": "product",
+            "span": {
+              "page": 2,
+              "start": 127,
+              "end": 156,
+              "quote": "Producto: Tarjetas de marcas."
+            }
+          },
+          {
+            "role": "project_association",
+            "span": {
+              "page": 2,
+              "start": 157,
+              "end": 194,
+              "quote": "Contenidos/PDA asociados al proyecto:"
+            }
+          }
+        ]
+      }
+    ],
+    "preserved_context_proof_sha256": {
+      "scripts/anchor_scope_catalogue.py": "2f408dc2738927503630e1fe42081385a8b04deaee0fb076c049a2f43c3430af",
+      "docs/development/project-anchor-structure-v1.md": "540e251ebaf68b4df3d712784d0666f8ea1ce457ef0fcaccd9aefbdd55e2201b"
+    },
+    "baseline_preservation_opportunities": [
+      {
+        "document_id": "dotted_ascii",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_prior_code_can_differ",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_long_form_label",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_four_spanish_letters",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_spanish_nfd",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_lowercase",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_crlf_horizontal",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_blank_rows",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_multiline_prior_value",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_balanced_value_quotes",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_question_terminal",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_same_page_session_control",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_same_page_project_control",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_repeated_physical_labels",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_repeated_physical_labels",
+        "declaration_id": "d2"
+      },
+      {
+        "document_id": "dotted_mismatched_codes",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "dotted_canonically_equal_but_not_exact_codes",
+        "declaration_id": "d1"
+      },
+      {
+        "document_id": "local_complete_typed_adjacency",
+        "declaration_id": "d1"
+      }
+    ],
+    "frozen_denominators": {
+      "documents": 119,
+      "literal_declarations": 37,
+      "new_recovery_literals": 19,
+      "dotted_descriptor_recoveries": 0,
+      "dotted_descriptor_challenges": 48,
+      "local_content_list_recoveries": 19,
+      "baseline_preservation_literals": 18,
+      "unit_assignment": 37,
+      "known_session_units": 1,
+      "known_project_units": 1,
+      "unresolved_units": 35,
+      "session_candidates": 1,
+      "scope_abstentions": 36,
+      "new_recovery_scope_abstentions": 19,
+      "challenges": 109,
+      "documents_without_declarations": 85,
+      "clean_silence_documents": 2,
+      "source_proven_context_reset_controls": 3,
+      "source_proven_context_reset_recoveries": 1,
+      "source_unsafe_context_reset_challenges": 2
+    }
+  },
+  "documents": [
+    {
+      "id": "dotted_ascii",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 104,
+            "end": 112,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 113,
+            "end": 132,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "same_exact_code",
+        "complete_value"
+      ]
+    },
+    {
+      "id": "dotted_prior_code_can_differ",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nX7 PDA001: Distingue dos marcas.\nÑ2. Identificación de fichas.\n\nÑ2 PDA 0002: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 107,
+            "end": 119,
+            "quote": "Ñ2 PDA 0002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 120,
+            "end": 139,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "X7 PDA001:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "prior_code_may_differ",
+        "whole_numbered_label"
+      ]
+    },
+    {
+      "id": "dotted_long_form_label",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nProcesos de desarrollo de aprendizajes (PDA): Compara dos señales.\nAB9999. Identificación de fichas.\n\nAB9999 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 145,
+            "end": 157,
+            "quote": "AB9999 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 158,
+            "end": 177,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 88,
+            "quote": "Procesos de desarrollo de aprendizajes (PDA):"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "long_form_label",
+        "max_digits"
+      ]
+    },
+    {
+      "id": "dotted_four_spanish_letters",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nÜÑÉA0000. Identificación de fichas.\n\nÜÑÉA0000 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 110,
+            "end": 124,
+            "quote": "ÜÑÉA0000 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 125,
+            "end": 144,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "spanish_letters_nfc",
+        "max_letters",
+        "zero_padding"
+      ]
+    },
+    {
+      "id": "dotted_spanish_nfd",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Compara una señal con otra.\nÜÑ3. Identificación de fichas.\n\nÜÑ3 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 117,
+            "end": 128,
+            "quote": "ÜÑ3 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 129,
+            "end": 148,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "spanish_letters_nfd",
+        "source_nfd"
+      ]
+    },
+    {
+      "id": "dotted_lowercase",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\ncontenidos curriculares: Símbolos de orientación.\náñ2. Identificación de fichas.\n\náñ2 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 125,
+            "end": 134,
+            "quote": "áñ2 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 135,
+            "end": 154,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 67,
+            "quote": "contenidos curriculares:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "lowercase",
+        "accented_value"
+      ]
+    },
+    {
+      "id": "dotted_crlf_horizontal",
+      "pages": [
+        "DATOS GENERALES\r\nCampo formativo: Lenguajes\r\n\tContenido: Una marca y otra marca.\r\nL1. Identificación de fichas.\r\n\r\nL1 PDA\t002: Describe una ficha.\r\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 115,
+            "end": 126,
+            "quote": "L1 PDA\t002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 127,
+            "end": 146,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 46,
+            "end": 56,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "crlf",
+        "nbsp",
+        "tabs",
+        "whole_label_spacing"
+      ]
+    },
+    {
+      "id": "dotted_blank_rows",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 105,
+            "end": 113,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 114,
+            "end": 133,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "next_nonblank_corroboration"
+      ]
+    },
+    {
+      "id": "dotted_multiline_prior_value",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Compara marcas mediante\nla observación de sus formas.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 139,
+            "end": 147,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 148,
+            "end": 167,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "multiline_prior",
+        "full_value_span"
+      ]
+    },
+    {
+      "id": "dotted_balanced_value_quotes",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Compara «L1» con la palabra “señal”.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 122,
+            "end": 130,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 131,
+            "end": 150,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "balanced_value_quotes",
+        "inline_code_mention"
+      ]
+    },
+    {
+      "id": "dotted_question_terminal",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: ¿Cómo se nombra una ficha?\nL1. Identificación de fichas!\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 112,
+            "end": 120,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 121,
+            "end": 140,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "complete_question",
+        "complete_exclamation"
+      ]
+    },
+    {
+      "id": "dotted_same_page_session_control",
+      "pages": [
+        "Sesión 1\nDATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 1"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 113,
+            "end": 121,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 122,
+            "end": 141,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 52,
+            "end": 62,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "same_page_session_not_assigned_to_recovery",
+        "baseline_candidate_preserved"
+      ]
+    },
+    {
+      "id": "dotted_same_page_project_control",
+      "pages": [
+        "Proyecto: Cartas sintéticas\n\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 27,
+            "quote": "Proyecto: Cartas sintéticas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 117,
+            "end": 125,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 126,
+            "end": 145,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 56,
+            "end": 66,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "same_page_project_not_assigned_to_recovery",
+        "baseline_project_preserved"
+      ]
+    },
+    {
+      "id": "dotted_repeated_physical_labels",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2: Describe una ficha.\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 111,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 112,
+            "end": 131,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 192,
+            "end": 200,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 201,
+            "end": 220,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 132,
+            "end": 142,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_diagnostic",
+        "dotted_route_not_admitted",
+        "repeated_physical_labels"
+      ]
+    },
+    {
+      "id": "local_singular_hyphen",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "hyphen_family"
+      ]
+    },
+    {
+      "id": "local_plural_bullet",
+      "pages": [
+        "DATOS GENERALES\nContenidos locales:\n• Señales de orientación.\n• Colores de referencia.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 35,
+            "quote": "Contenidos locales:"
+          },
+          "value": {
+            "page": 1,
+            "start": 36,
+            "end": 86,
+            "quote": "• Señales de orientación.\n• Colores de referencia."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "bullet_family"
+      ]
+    },
+    {
+      "id": "local_incorporation_singular_star",
+      "pages": [
+        "DATOS GENERALES\nIncorporación de Contenido local:\n* Marcas de posición.\n* Símbolos de dirección.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 49,
+            "quote": "Incorporación de Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 96,
+            "quote": "* Marcas de posición.\n* Símbolos de dirección."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "asterisk_family",
+        "incorporation_singular"
+      ]
+    },
+    {
+      "id": "local_incorporation_plural",
+      "pages": [
+        "DATOS GENERALES\nIncorporación de Contenidos locales:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 52,
+            "quote": "Incorporación de Contenidos locales:"
+          },
+          "value": {
+            "page": 1,
+            "start": 53,
+            "end": 93,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "incorporation_plural"
+      ]
+    },
+    {
+      "id": "local_case_and_indentation",
+      "pages": [
+        "DATOS GENERALES\n\t cOnTeNiDoS LoCaLeS:\n- Símbolos de una tarjeta.\n\t- Formas de una ficha.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 18,
+            "end": 37,
+            "quote": "cOnTeNiDoS LoCaLeS:"
+          },
+          "value": {
+            "page": 1,
+            "start": 38,
+            "end": 88,
+            "quote": "- Símbolos de una tarjeta.\n\t- Formas de una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "case_insensitive",
+        "external_horizontal_indentation",
+        "internal_indentation_preserved"
+      ]
+    },
+    {
+      "id": "local_crlf",
+      "pages": [
+        "DATOS GENERALES\r\n\tContenido local:\r\n- Nombres de fichas.\r\n\t- Formas de marcas.\r\nRecursos:\r\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 18,
+            "end": 34,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 36,
+            "end": 78,
+            "quote": "- Nombres de fichas.\r\n\t- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "crlf",
+        "nbsp",
+        "tabs"
+      ]
+    },
+    {
+      "id": "local_nfd_header_and_value",
+      "pages": [
+        "DATOS GENERALES\nIncorporación de Contenidos locales:\n- Señales de dirección.\n- Símbolos de posición.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 53,
+            "quote": "Incorporación de Contenidos locales:"
+          },
+          "value": {
+            "page": 1,
+            "start": 54,
+            "end": 105,
+            "quote": "- Señales de dirección.\n- Símbolos de posición."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "source_nfd",
+        "nfd_header"
+      ]
+    },
+    {
+      "id": "local_balanced_quotes",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Compara «L1» y «L2».\n- Formas llamadas “círculos”.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 85,
+            "quote": "- Compara «L1» y «L2».\n- Formas llamadas “círculos”."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "balanced_value_quotes",
+        "inline_code_mentions"
+      ]
+    },
+    {
+      "id": "local_blank_lines_full_list",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 74,
+            "quote": "- Nombres de fichas.\n\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "blank_lines_inside_list",
+        "full_list_not_split"
+      ]
+    },
+    {
+      "id": "local_explicit_activity_stop",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nInicio:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "complete_list_before_activity_heading"
+      ]
+    },
+    {
+      "id": "local_heading_with_value",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos: Cartas sintéticas.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "colon_field_row_closure"
+      ]
+    },
+    {
+      "id": "local_two_labelled_fields_closure",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos: Cartas. Tiempo: Dos turnos.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "two_labelled_fields_closure"
+      ]
+    },
+    {
+      "id": "local_same_page_session_unresolved",
+      "pages": [
+        "Sesión 1\nDATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 1"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 25,
+            "end": 41,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 42,
+            "end": 82,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "same_page_session_not_assigned_to_recovery"
+      ]
+    },
+    {
+      "id": "local_same_page_project_unresolved",
+      "pages": [
+        "Proyecto: Cartas sintéticas\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 27,
+            "quote": "Proyecto: Cartas sintéticas"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 29,
+            "end": 45,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 46,
+            "end": 86,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "same_page_project_not_assigned_to_recovery"
+      ]
+    },
+    {
+      "id": "local_repeated_physical_labels",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 74,
+            "end": 90,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 91,
+            "end": 131,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "repeated_physical_labels"
+      ]
+    },
+    {
+      "id": "local_previous_page_unit_not_inherited",
+      "pages": [
+        "Sesión 1\n",
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 8,
+            "quote": "Sesión 1"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 2,
+            "start": 33,
+            "end": 73,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "previous_page_unit_not_inherited",
+        "page_local"
+      ]
+    },
+    {
+      "id": "dotted_mismatched_codes",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nX2 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 111,
+            "quote": "X2 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 112,
+            "end": 131,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "descriptor_next_code_mismatch"
+      ]
+    },
+    {
+      "id": "dotted_canonically_equal_but_not_exact_codes",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nÜ2. Identificación de fichas.\nÜ2 PDA2: Describe una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 112,
+            "quote": "Ü2 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 113,
+            "end": 132,
+            "quote": "Describe una ficha."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "canonical_equality_not_literal_equality"
+      ]
+    },
+    {
+      "id": "dotted_missing_period",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1 Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "missing_descriptor_period"
+      ]
+    },
+    {
+      "id": "dotted_missing_digits",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "partial_code"
+      ]
+    },
+    {
+      "id": "dotted_missing_letters",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\n2. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "partial_code",
+        "numbered_narrative"
+      ]
+    },
+    {
+      "id": "dotted_oversize_code",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nABCDE12345. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "oversize_code"
+      ]
+    },
+    {
+      "id": "dotted_foreign_code",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nЖ2. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "foreign_script_code"
+      ]
+    },
+    {
+      "id": "dotted_casefold_lookalike",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nK2. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "unicode_casefold_lookalike"
+      ]
+    },
+    {
+      "id": "dotted_missing_hspace",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1.Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "missing_descriptor_hspace"
+      ]
+    },
+    {
+      "id": "dotted_empty_descriptor",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. \nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "empty_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_incomplete_descriptor",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "incomplete_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_wrapped_descriptor",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de\nfichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "wrapped_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_quoted_descriptor",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. «Identificación de fichas».\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "quoted_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_descriptor_activity",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Actividad: ordenar fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "activity_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_descriptor_example",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Ejemplo: nombres de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "example_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_descriptor_nonadoption",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Propuesta no adoptada de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "nonadoption_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_descriptor_contains_typed_label",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Contenido: nombres de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "typed_label_descriptor"
+      ]
+    },
+    {
+      "id": "dotted_next_label_partial",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "partial_numbered_label"
+      ]
+    },
+    {
+      "id": "dotted_next_label_missing_colon",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "missing_numbered_colon"
+      ]
+    },
+    {
+      "id": "dotted_next_label_inline",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2: Explica una ficha.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "inline_next_label"
+      ]
+    },
+    {
+      "id": "dotted_vertical_code_separator",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "vertical_descriptor_separator"
+      ]
+    },
+    {
+      "id": "dotted_incomplete_prior_value",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "incomplete_prior_value"
+      ]
+    },
+    {
+      "id": "dotted_unclosed_prior_value_quote",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de «fichas.\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "unclosed_value_quote"
+      ]
+    },
+    {
+      "id": "dotted_terminal_without_corroboration",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "missing_next_label"
+      ]
+    },
+    {
+      "id": "dotted_nonadjacent_corroboration",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nNota intermedia.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "intervening_nonblank_row"
+      ]
+    },
+    {
+      "id": "dotted_narrative_no_repeated_prefix",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Compara este catálogo ficticio:\nL1. Nombres de fichas.\nPDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "narrative_ambiguity",
+        "no_repeated_typed_prefix"
+      ]
+    },
+    {
+      "id": "dotted_narrative_repeated_prefix",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Describe esta nota del ejemplo.\nL1. En este ejemplo se escribe un nombre.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "narrative_ambiguity",
+        "repeated_prefix_narrative",
+        "explicit_example_in_value"
+      ]
+    },
+    {
+      "id": "dotted_prose_before_planning_root",
+      "pages": [
+        "En este ejemplo se muestra una ficha.\nDATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 81,
+            "end": 91,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 141,
+            "end": 149,
+            "quote": "L1 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "example_before_planning_root",
+        "source_prefix_safety"
+      ]
+    },
+    {
+      "id": "dotted_activity_before_field",
+      "pages": [
+        "DATOS GENERALES\nInicio:\nActividad 1: Ordenar fichas.\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 80,
+            "end": 90,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 140,
+            "end": 148,
+            "quote": "L1 PDA2:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "activity_before_context",
+        "field_does_not_reset_activity"
+      ]
+    },
+    {
+      "id": "dotted_page_boundary",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\n",
+        "L1. Identificación de fichas.\nL1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "descriptor_across_page",
+        "no_cross_page_join"
+      ]
+    },
+    {
+      "id": "dotted_next_label_across_page",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nContenido: Nombres de fichas.\nL1. Identificación de fichas.\n",
+        "L1 PDA2:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 53,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "dotted_descriptor_negative",
+        "corroboration_across_page",
+        "no_cross_page_join"
+      ]
+    },
+    {
+      "id": "local_missing_colon",
+      "pages": [
+        "DATOS GENERALES\nContenido local\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 31,
+            "quote": "Contenido local"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "missing_local_colon"
+      ]
+    },
+    {
+      "id": "local_partial_label",
+      "pages": [
+        "DATOS GENERALES\nIncorporación de Contenid:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 42,
+            "quote": "Incorporación de Contenid:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "partial_local_label"
+      ]
+    },
+    {
+      "id": "local_extra_qualifier",
+      "pages": [
+        "DATOS GENERALES\nContenidos locales de lectura:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 46,
+            "quote": "Contenidos locales de lectura:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "arbitrary_qualifier"
+      ]
+    },
+    {
+      "id": "local_synonym",
+      "pages": [
+        "DATOS GENERALES\nContenido del entorno:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 38,
+            "quote": "Contenido del entorno:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsupported_synonym"
+      ]
+    },
+    {
+      "id": "local_unaccented_prefix",
+      "pages": [
+        "DATOS GENERALES\nIncorporacion de Contenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 49,
+            "quote": "Incorporacion de Contenido local:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unaccented_prefix"
+      ]
+    },
+    {
+      "id": "local_number_mismatch",
+      "pages": [
+        "DATOS GENERALES\nContenidos local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 33,
+            "quote": "Contenidos local:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "number_disagreement"
+      ]
+    },
+    {
+      "id": "local_reverse_number_mismatch",
+      "pages": [
+        "DATOS GENERALES\nContenido locales:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 34,
+            "quote": "Contenido locales:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "number_disagreement"
+      ]
+    },
+    {
+      "id": "local_double_incorporation",
+      "pages": [
+        "DATOS GENERALES\nIncorporación de Incorporación de Contenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 66,
+            "quote": "Incorporación de Incorporación de Contenido local:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "double_prefix"
+      ]
+    },
+    {
+      "id": "local_vertical_label",
+      "pages": [
+        "DATOS GENERALES\nContenido\nlocal:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido\nlocal:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "vertical_inside_label"
+      ]
+    },
+    {
+      "id": "local_numbered_list",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n1. Nombres de fichas.\n2. Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "numbered_list"
+      ]
+    },
+    {
+      "id": "local_mixed_markers",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n• Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "mixed_bullet_families"
+      ]
+    },
+    {
+      "id": "local_doubled_marker",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n-- Nombres de fichas.\n-- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "doubled_marker"
+      ]
+    },
+    {
+      "id": "local_unmarked_list",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\nNombres de fichas.\nFormas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unmarked_list"
+      ]
+    },
+    {
+      "id": "local_incomplete_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "incomplete_item"
+      ]
+    },
+    {
+      "id": "local_semicolon_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas;\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "nonterminal_punctuation"
+      ]
+    },
+    {
+      "id": "local_wrapped_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de\nfichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "wrapped_item"
+      ]
+    },
+    {
+      "id": "local_typed_label_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- PDA1: Describe una marca.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "typed_label_in_list"
+      ]
+    },
+    {
+      "id": "local_heading_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Recursos: cartas sintéticas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "heading_in_list"
+      ]
+    },
+    {
+      "id": "local_activity_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Actividad 1: ordenar tarjetas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "activity_in_list"
+      ]
+    },
+    {
+      "id": "local_code_row_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- L1. Identificación de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "code_row_in_list"
+      ]
+    },
+    {
+      "id": "local_open_quote_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de «fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unclosed_value_quote"
+      ]
+    },
+    {
+      "id": "local_mismatched_quote_item",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de “fichas».\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "mismatched_value_quote"
+      ]
+    },
+    {
+      "id": "local_empty_list",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "empty_list"
+      ]
+    },
+    {
+      "id": "local_vertical_after_marker",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n-\u000bNombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "vertical_marker_separator"
+      ]
+    },
+    {
+      "id": "local_unmarked_narrative_between_items",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\nLa nota sigue aquí.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "narrative_in_list"
+      ]
+    },
+    {
+      "id": "local_terminal_complete_list",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "terminal_page_only",
+        "missing_explicit_closure"
+      ]
+    },
+    {
+      "id": "local_noncolon_heading_stop",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "noncolon_heading_closure"
+      ]
+    },
+    {
+      "id": "local_bulleted_heading_stop",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\n- Recursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "bulleted_heading_not_closure"
+      ]
+    },
+    {
+      "id": "local_inline_header",
+      "pages": [
+        "DATOS GENERALES\nContenido local: - Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 53,
+            "quote": "Contenido local: - Nombres de fichas."
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "inline_local_header"
+      ]
+    },
+    {
+      "id": "local_inline_mention",
+      "pages": [
+        "DATOS GENERALES\nLa nota menciona Contenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 49,
+            "quote": "La nota menciona Contenido local:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "inline_label_mention"
+      ]
+    },
+    {
+      "id": "local_quoted_header",
+      "pages": [
+        "DATOS GENERALES\n«Contenido local:»\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 34,
+            "quote": "«Contenido local:»"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "quoted_header"
+      ]
+    },
+    {
+      "id": "local_example_before_planning_root",
+      "pages": [
+        "Ejemplo de una lista ficticia.\nDATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 47,
+            "end": 63,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "example_before_planning_root",
+        "source_prefix_safety"
+      ]
+    },
+    {
+      "id": "local_nonadoption_before_planning_root",
+      "pages": [
+        "Propuesta no adoptada.\nDATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 39,
+            "end": 55,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "nonadoption_before_planning_root",
+        "source_prefix_safety"
+      ]
+    },
+    {
+      "id": "local_open_source_quote_before_root",
+      "pages": [
+        "“Nota de ejemplo\nDATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 33,
+            "end": 49,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "open_source_quote",
+        "source_prefix_safety"
+      ]
+    },
+    {
+      "id": "local_mismatched_source_quote_before_root",
+      "pages": [
+        "“Nota de ejemplo»\nDATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 34,
+            "end": 50,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "mismatched_source_quote",
+        "source_prefix_safety"
+      ]
+    },
+    {
+      "id": "local_activity_before_header",
+      "pages": [
+        "DATOS GENERALES\nInicio:\nActividad 1: ordenar fichas.\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 53,
+            "end": 69,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "activity_before_context",
+        "local_header_does_not_reset_activity"
+      ]
+    },
+    {
+      "id": "local_example_previous_page",
+      "pages": [
+        "Ejemplo de una lista ficticia.\n",
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsafe_context_inherited_across_pages",
+        "source_prefix_safety",
+        "example_previous_page"
+      ]
+    },
+    {
+      "id": "local_nonadoption_previous_page",
+      "pages": [
+        "Propuesta no adoptada.\n",
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsafe_context_inherited_across_pages",
+        "source_prefix_safety",
+        "nonadoption_previous_page"
+      ]
+    },
+    {
+      "id": "local_open_quote_previous_page",
+      "pages": [
+        "“Nota de ejemplo\n",
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsafe_context_inherited_across_pages",
+        "source_prefix_safety",
+        "open_quote_previous_page"
+      ]
+    },
+    {
+      "id": "local_mismatched_quote_previous_page",
+      "pages": [
+        "“Nota de ejemplo»\n",
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsafe_context_inherited_across_pages",
+        "source_prefix_safety",
+        "mismatched_quote_previous_page"
+      ]
+    },
+    {
+      "id": "local_list_across_page",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n",
+        "- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "list_across_page",
+        "no_cross_page_join"
+      ]
+    },
+    {
+      "id": "local_heading_across_page",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\n",
+        "Recursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "closure_across_page",
+        "no_cross_page_join"
+      ]
+    },
+    {
+      "id": "local_complete_typed_adjacency",
+      "pages": [
+        "Contenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 11,
+            "end": 33,
+            "quote": "Marcas de orientación."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 35,
+            "end": 51,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 1,
+            "start": 52,
+            "end": 92,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "explicit_colon_heading_closure",
+        "independently_complete_typed_adjacency",
+        "whitespace_only_gap"
+      ]
+    },
+    {
+      "id": "local_unknown_note_closure",
+      "pages": [
+        "DATOS GENERALES\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nNota adicional: Texto aparte.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 16,
+            "end": 32,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unknown_note_not_closure"
+      ]
+    },
+    {
+      "id": "local_unlabelled_continuation_context",
+      "pages": [
+        "Palabras de una nota continuada.\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 33,
+            "end": 49,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unlabelled_continuation_not_context"
+      ]
+    },
+    {
+      "id": "local_unknown_note_context",
+      "pages": [
+        "Nota continuada: Palabras aparte.\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 34,
+            "end": 50,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unknown_note_not_context"
+      ]
+    },
+    {
+      "id": "local_uncertain_typed_adjacency",
+      "pages": [
+        "Contenido: Marcas de\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 22,
+            "end": 38,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "uncertain_typed_adjacency_not_context"
+      ]
+    },
+    {
+      "id": "local_nonwhitespace_typed_gap",
+      "pages": [
+        "Contenido: Marcas de orientación.\nNota aparte.\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "reason": "uncertain_boundary"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 47,
+            "end": 63,
+            "quote": "Contenido local:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "nonwhitespace_gap_not_adjacency",
+        "unknown_prose_not_context"
+      ]
+    },
+    {
+      "id": "local_activity_typed_adjacency",
+      "pages": [
+        "Inicio:\nActividad 1: Ordenar fichas.\nContenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 37,
+            "end": 47,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 72,
+            "end": 88,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "activity_vetoes_typed_adjacency"
+      ]
+    },
+    {
+      "id": "local_example_typed_adjacency",
+      "pages": [
+        "Ejemplo de una ficha.\nContenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 22,
+            "end": 32,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 57,
+            "end": 73,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "example_vetoes_typed_adjacency"
+      ]
+    },
+    {
+      "id": "local_nonadoption_typed_adjacency",
+      "pages": [
+        "Propuesta no adoptada.\nContenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 23,
+            "end": 33,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 58,
+            "end": 74,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "nonadoption_vetoes_typed_adjacency"
+      ]
+    },
+    {
+      "id": "local_quoted_typed_adjacency",
+      "pages": [
+        "“Nota de una ficha\nContenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 19,
+            "end": 29,
+            "quote": "Contenido:"
+          },
+          "reason": "quoted"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 54,
+            "end": 70,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "quotation_vetoes_typed_adjacency"
+      ]
+    },
+    {
+      "id": "local_example_previous_page_typed_adjacency",
+      "pages": [
+        "Ejemplo de una ficha.\n",
+        "Contenido: Marcas de orientación.\n\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 0,
+            "end": 10,
+            "quote": "Contenido:"
+          },
+          "reason": "nonaffirmative"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 2,
+            "start": 35,
+            "end": 51,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "unsafe_context_inherited_across_pages",
+        "example_vetoes_typed_adjacency"
+      ]
+    },
+    {
+      "id": "local_safe_source_proven_book_context",
+      "pages": [
+        "Ejemplo de una propuesta no adoptada.\n\n",
+        "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 2,
+            "start": 195,
+            "end": 211,
+            "quote": "Contenido local:"
+          },
+          "value": {
+            "page": 2,
+            "start": 212,
+            "end": 252,
+            "quote": "- Nombres de fichas.\n- Formas de marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "local_content_positive",
+        "existing_governing_book_project_context_control",
+        "physically_closed_prior_example_paragraph",
+        "context_only_safe_existing_project_proof",
+        "explicit_colon_heading_closure"
+      ]
+    },
+    {
+      "id": "local_active_example_book_context",
+      "pages": [
+        "Ejemplo de una propuesta no adoptada.\n",
+        "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 195,
+            "end": 211,
+            "quote": "Contenido local:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "existing_governing_book_project_context_control",
+        "active_prior_example_paragraph",
+        "context_proof_cannot_clear_active_example",
+        "unsafe_context_inherited_across_pages"
+      ]
+    },
+    {
+      "id": "local_inherited_quote_book_context",
+      "pages": [
+        "“Ejemplo de una propuesta no adoptada.\n\n",
+        "Planeación didáctica\nProyecto del Libro de Texto: Cartas de colores\nEscenario: Aula\nPropósito: Comparar marcas de orientación.\nProducto: Tarjetas de marcas.\nContenidos/PDA asociados al proyecto:\nContenido local:\n- Nombres de fichas.\n- Formas de marcas.\nRecursos:\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 195,
+            "end": 211,
+            "quote": "Contenido local:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "local_content_negative",
+        "existing_governing_book_project_context_control",
+        "inherited_open_quote",
+        "context_proof_cannot_clear_open_quote",
+        "unsafe_context_inherited_across_pages"
+      ]
+    },
+    {
+      "id": "dotted_context_only_silence",
+      "pages": [
+        "DATOS GENERALES\nCampo formativo: Lenguajes\nL1. Identificación de fichas.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "context_is_not_declaration"
+      ]
+    },
+    {
+      "id": "ordinary_prose_clean_silence",
+      "pages": [
+        "Una ficha tiene una marca y otra tiene dos.\n"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence",
+        "ordinary_prose"
+      ]
+    }
+  ]
+}

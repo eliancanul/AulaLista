@@ -53,6 +53,16 @@ LITERAL_NUMBERED_PDA = rf'(?:{LITERAL_CODE}{HORIZONTAL}+)?PDA{HORIZONTAL}*[0-9]+
 LITERAL_PDA = rf'(?:{LITERAL_NUMBERED_PDA}|PDAs?|Procesos?{H}+de{H}+desarrollo{H}+de{H}+aprendizajes?(?:{H}*\(PDAs?\))?)'
 LITERAL_LABEL = re.compile(
     rf'(?<![\w\u0300-\u036f])(?P<label>{COMBINED}|{CONTENT}|{LITERAL_PDA})(?!\w)(?:{H}*:)?', re.I)
+# A separate opt-in grammar; never add this family to session scaffold proofs.
+LOCAL_CONTENT = (rf'(?a:(?:Incorporaci(?:[óÓ]|[oO]\u0301)n{HORIZONTAL}+de{HORIZONTAL}+)?'
+                 rf'(?:Contenido{HORIZONTAL}+local|Contenidos{HORIZONTAL}+locales))')
+LOCAL_CONTENT_KIND = re.compile(LOCAL_CONTENT, re.I)
+LOCAL_CONTENT_LABEL = re.compile(rf'{LOCAL_CONTENT}{HORIZONTAL}*:', re.I)
+RECOVERY_LABEL = re.compile(
+    rf'(?<![\w\u0300-\u036f])(?P<label>{LOCAL_CONTENT}|{COMBINED}|{CONTENT}|{LITERAL_PDA})'
+    rf'(?!\w)(?:{H}*:)?', re.I)
+LITERAL_RECOVERY_VERSION = 'closed-local-content-list.v1'
+RECOVERY_CONTROL = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\u2028\u2029]')
 COMBINED_ONLY = re.compile(COMBINED, re.I)
 HEADING = re.compile(
     r'^(?:Inicio|Desarrollo|Cierre|Tarea|Actividad(?:\s+\d+)?|'
@@ -525,8 +535,155 @@ def _checked_value_span(page, label_end, end):
     return (start, end), None
 
 
-def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
+def local_content_label(excerpt):
+    """Exact opt-in whole-label recognition shared with source replay guards."""
+    return isinstance(excerpt, str) and bool(LOCAL_CONTENT_LABEL.fullmatch(excerpt))
+
+
+def _local_list_boundary(line):
+    """Known explicit heading vocabulary, never an arbitrary colon-bearing note."""
+    from curriculum.overview_fields import _LABEL_RE
+    if RECOVERY_CONTROL.search(line) or '|' in line:
+        return None
+    text = line.lstrip()
+    local = LOCAL_CONTENT_LABEL.match(text)
+    typed = LITERAL_LABEL.match(text)
+    overview = _LABEL_RE.match(text)
+    if local:
+        return len(line) - len(text) + local.end()
+    if typed and typed.group().endswith(':'):
+        return len(line) - len(text) + typed.end()
+    if overview:
+        colon = re.match(rf'{HORIZONTAL}*:', text[overview.end():])
+        if colon:
+            return len(line) - len(text) + overview.end() + colon.end()
+    heading = HEADING.match(text)
+    if heading and ':' in heading.group():
+        return len(line) - len(text) + heading.end()
+    return None
+
+
+def _local_list_span(page, lines, index, label_end):
+    """One closed unchanged slice, with no terminal-page or wrapped-item repair."""
+    from scripts.anchor_scope_catalogue import EXAMPLE, NONAFFIRMATIVE as UNSAFE
+    if page[label_end:lines[index][0] + len(lines[index][2])].strip():
+        return None, None, 'label_mention'
+    marker, start, end = None, None, None
+    for begin, _, line in lines[index + 1:]:
+        if RECOVERY_CONTROL.search(line) or '|' in line:
+            return None, None, 'uncertain_boundary'
+        text = line.strip()
+        if not text:
+            continue
+        boundary_end = _local_list_boundary(line)
+        if boundary_end is not None and start is not None:
+            return (start, end), (begin + len(line) - len(line.lstrip()), begin + boundary_end), None
+        bullet = re.fullmatch(rf'(?P<marker>[-*•]){HORIZONTAL}*(?P<item>\S.*)', text)
+        if not bullet or marker is not None and bullet['marker'] != marker:
+            return None, None, 'uncertain_boundary'
+        item = bullet['item']
+        outside = _outside_value_quotes(item, [])
+        if (item.startswith(('-', '*', '•')) or VERTICAL.search(item) or '\x1f' in item or '|' in item
+                or ':' in outside or not SENTENCE_END.search(item) or DANGLING_END.search(item)
+                or not _scaffold_quotes_balanced(item) or not re.search(r'\w', item)
+                or LITERAL_LABEL.search(outside) or _boundary(outside)
+                or re.match(rf'^{LITERAL_CODE}\.?{HORIZONTAL}+', outside)):
+            return None, None, 'uncertain_boundary'
+        if NEGATED.match(item):
+            return None, None, 'negated'
+        if CONDITIONAL.match(item):
+            return None, None, 'conditional'
+        if EXAMPLE.match(item) or UNSAFE.match(item):
+            return None, None, 'nonaffirmative'
+        marker = bullet['marker']
+        if start is None:
+            start = begin + len(line) - len(line.lstrip())
+        end = begin + len(line.rstrip())
+    return None, None, 'uncertain_boundary'
+
+
+def _local_list_context(pages, source, number, start, units, records):
+    """Source-only safety and metadata edge; no unit identity is returned."""
+    from scripts.anchor_scope_catalogue import (
+        EXAMPLE, NONAFFIRMATIVE as UNSAFE, _governing_book_project,
+        _physical_lines, _source_prefix, example_context,
+    )
+    history = _source_prefix(pages, number, start)
+    if not _scaffold_quotes_balanced(history):
+        return 'quoted', []
+    resets = []
+    for unit in units:
+        anchor = unit['anchor']
+        position = (anchor['page_number'], anchor['region']['end'])
+        if (position <= (number, start) and not RECOVERY_CONTROL.search(anchor['excerpt'])
+                and '|' not in anchor['excerpt']):
+            before = _source_prefix(pages, anchor['page_number'], anchor['region']['start'])
+            if _scaffold_quotes_balanced(before) and not example_context(before, len(before)):
+                resets.append((position, [dict(anchor, role='metadata_context')]))
+    # Reuse the independently frozen complete profile, not a planning-root line
+    # shortcut. Its unchanged inherited-context rules certify each reset.
+    for n, page in enumerate(pages[:number], 1):
+        rows = _physical_lines(page)
+        for a, _, text in rows:
+            if not re.match(r'Proyecto\b', text, re.I):
+                continue
+            supported = _governing_book_project(pages, n, a, rows)
+            if supported:
+                _, proof = supported
+                end = max(s['end'] for s in proof)
+                if (n, end) <= (number, start):
+                    refs = [_ref(pages, source, n, s['start'], s['end'], 'metadata_context')
+                            for s in proof]
+                    resets.append(((n, end), refs))
+    reset, context = max(resets, default=((1, 0), []), key=lambda r: r[0])
+    # Physical offsets select the suffix; virtual EOL belongs to safety only.
+    prefix = _source_prefix(pages, reset[0], reset[1])
+    active = history[len(prefix):]
+    for _, _, line in _lines(active):
+        if RECOVERY_CONTROL.search(line) or '|' in line:
+            return 'uncertain_boundary', []
+        text = line.strip()
+        if EXAMPLE.match(text) or UNSAFE.match(text):
+            return 'nonaffirmative', []
+        if MOMENT.match(text) or re.match(rf'Actividad(?:es)?(?:{HORIZONTAL}+[0-9]+)?{HORIZONTAL}*:', text, re.I):
+            return 'nonaffirmative', []
+    page = pages[number - 1]
+    on_page_values = [(r, e) for r in records for e in r['evidence']
+                      if e['role'] == 'value' and e['page_number'] == number and e['region']['end'] <= start]
+    for begin, _, line in _lines(page[:start]):
+        if (begin >= (reset[1] if reset[0] == number else 0) and SCAFFOLD_ACTIVITY.match(line.strip())
+                and not any(e['region']['start'] <= begin < e['region']['end'] for _, e in on_page_values)):
+            return 'nonaffirmative', []
+    for record, value in sorted(on_page_values, key=lambda pair: pair[1]['region']['end'], reverse=True):
+        if (record['kind'] in PREDICATES and not page[value['region']['end']:start].strip()
+                and record['reason'] in ('explicit_session', 'project_scope', 'unresolved_scope')):
+            return None, context + [dict(e, role='metadata_context') for e in record['evidence']
+                                    if e['role'] in ('label', 'value')]
+    # Without a complete predecessor, only bounded already recognized metadata
+    # may precede the new header; unknown prose cannot manufacture a region.
+    begin = reset[1] if reset[0] == number else 0
+    supported = reset[0] == number and bool(context)
+    for a, _, line in _lines(page[begin:start]):
+        if RECOVERY_CONTROL.search(line) or '|' in line:
+            return 'uncertain_boundary', []
+        text = line.strip()
+        if not text:
+            continue
+        if re.fullmatch(rf'DATOS{HORIZONTAL}+GENERALES{HORIZONTAL}*:?', text, re.I) or _field_line(line):
+            supported = True
+            continue
+        meta = PLANNING_META.fullmatch(text)
+        if meta and _complete_planning_value(meta[1]):
+            supported = True
+            continue
+        return 'uncertain_boundary', []
+    return (None, context) if supported else ('uncertain_boundary', [])
+
+
+def extract_declarations(pages, *, source_doc_sha256, scope_audit=None, literal_recovery=False):
     """Return detached proposals; reject malformed/bounded inputs without truncation."""
+    if type(literal_recovery) is not bool:
+        raise ValueError('Invalid literal recovery opt-in')
     if (not isinstance(pages, (list, tuple)) or not pages or any(not isinstance(p, str) for p in pages)
             or not isinstance(source_doc_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', source_doc_sha256)):
         raise ValueError('Invalid source contract')
@@ -535,14 +692,14 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
         raise ValueError('Input exceeds explicit character limit; no silent truncation')
     extraction = snapshot_hash(pages)
     units, barriers = _unit_data(pages, source_doc_sha256)
-    records, quotes = [], []
+    records, quotes, recoveries = [], [], []
     for number, page in enumerate(pages, 1):
         # An unresolved quotation cannot become a declaration merely because
         # extraction moved to another physical page.
         lines, consumed_until = _lines(page), -1
         tabular = _table_lines(lines)
         for index, (begin, _, line) in enumerate(lines):
-            mentions = list(LITERAL_LABEL.finditer(line))
+            mentions = list((RECOVERY_LABEL if literal_recovery else LITERAL_LABEL).finditer(line))
             child_start = _explicit_container_child(line, mentions, quotes)
             row_is_table = ('|' in line or index in tabular or
                             child_start is None and len(mentions) > 1 and ((line[:mentions[0].start()].strip() == ''
@@ -559,18 +716,27 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
                 _advance_quotes(prefix_quotes, line[:mention.start()])
                 label = _ref(pages, source_doc_sha256, number, start, end, 'label')
                 raw_kind = mention['label']
+                local = literal_recovery and bool(LOCAL_CONTENT_KIND.fullmatch(raw_kind))
                 kind = 'pda' if re.fullmatch(LITERAL_PDA, raw_kind, re.I) else 'contenido'
                 field_context = _field_marker_allowed(page, lines, index, number, units)
                 marker = (MARKER_PREFIX.fullmatch(line[:mention.start()])
                           and mention.group().endswith(':') and not VERTICAL.search(mention.group())
                           and (_marker_allowed(pages, number, begin, units) or field_context))
-                value, reason = None, None
+                value, reason, local_boundary, local_context = None, None, None, []
                 if prefix_quotes:
                     reason = 'quoted'
                 elif COMBINED_ONLY.fullmatch(raw_kind):
                     kind, reason = None, 'combined_label'
                 elif row_is_table:
                     reason = 'table_ambiguous'
+                elif local:
+                    if (not HORIZONTAL_ONLY.fullmatch(line[:mention.start()])
+                            or not local_content_label(mention.group())):
+                        reason = 'label_mention'
+                    else:
+                        reason, local_context = _local_list_context(pages, source_doc_sha256, number, start, units, records)
+                        if reason is None:
+                            value, local_boundary, reason = _local_list_span(page, lines, index, end)
                 elif (re.fullmatch(LITERAL_NUMBERED_PDA, raw_kind, re.I)
                       and (VERTICAL.search(mention.group())
                            or child_start is None and not marker and not HORIZONTAL_ONLY.fullmatch(line[:mention.start()]))):
@@ -589,7 +755,7 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
                         value, reason = _metadata_value_span(page, lines, index, end)
                     else:
                         value, reason = _value_span(page, lines, index, end, closed_block=closed_block)
-                unit, scope_proofs, scope_basis = _scope(
+                unit, scope_proofs, scope_basis = (None, [], None) if local else _scope(
                     pages, source_doc_sha256, number, start, units, barriers,
                     value_end=value[1] if value else None)
                 evidence = [label]
@@ -601,6 +767,12 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
                 decision = 'candidate' if reason == 'explicit_session' else 'abstained'
                 identity = [VERSION, source_doc_sha256, extraction, number, start, end, kind]
                 record_id = hashlib.sha256(json.dumps(identity, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()[:16]
+                if local and value:
+                    recoveries.append({'record_id': record_id, 'method': LITERAL_RECOVERY_VERSION,
+                                       'label_utf8_sha256': hashlib.sha256(label['excerpt'].encode()).hexdigest(),
+                                       'value_utf8_sha256': hashlib.sha256(page[value[0]:value[1]].encode()).hexdigest(),
+                                       'boundary': _ref(pages, source_doc_sha256, number, *local_boundary, 'literal_list_boundary'),
+                                       'context': local_context})
                 claim = None
                 if decision == 'candidate':
                     refs = [SourceReference.from_dict(ev) for ev in evidence + [unit['anchor']]]
@@ -629,6 +801,11 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
                        'Page-local values; cross-page scope needs named continuation or a bounded structural proposal.',
                        'Candidates pending human review; no SEP alignment or pedagogical approval.',
                        'Bounded textual grammar; ambiguous or unrecognized discourse may be omitted or abstained.']}
+    if literal_recovery:
+        result['literal_recovery'] = {'version': LITERAL_RECOVERY_VERSION, 'enabled': True,
+                                     'recoveries': recoveries,
+                                     'limits': ['Closed page-local lists only; no dotted-descriptor recovery.',
+                                                'No new units, AtomicClaims, SEP identity or semantic validation.']}
     if scope_audit is not None and getattr(scope_audit, 'enabled', False):
         from scripts.anchor_scope_audit import audit_scopes
         result['scope_audit'] = audit_scopes(pages=pages, declarations=result, config=scope_audit)
@@ -639,9 +816,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', type=Path, help='JSON with pages and source_doc_sha256')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--literal-recovery', action='store_true', help='Opt-in closed local-content lists only')
     args = parser.parse_args()
     data = json.loads(args.input.read_bytes())
-    result = extract_declarations(data['pages'], source_doc_sha256=data['source_doc_sha256'])
+    result = extract_declarations(data['pages'], source_doc_sha256=data['source_doc_sha256'],
+                                  literal_recovery=args.literal_recovery)
     # Detached output only, and no accidental replacement of a previous run.
     with args.output.open('x', encoding='utf-8', newline='') as stream:
         stream.write(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
