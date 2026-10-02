@@ -74,6 +74,6 @@ Next supervisor pass (2731): Phase-1 baseline under renewed 2731–2739 carry gr
 
 - Push target: branch `supervisor/aulalista-docs` (already checked out; no switch). PR #115 already OPEN (`docs: supervisor iteration 90 checkpoint (handoffs only, do not merge)`); this checkpoint pushes to the same branch/PR — no new PR needed, never merge/approve/close.
 - Staged set (explicit paths only, never `git add -A`): `docs/handoffs/supervisor-iteration-2730.md` + `docs/handoffs/supervisor-cumulative.md` + `docs/handoffs/supervisor-prompt-catalog.md` + `docs/handoffs/IMPLEMENTATION-GATE.md`. Cached-diff verified docs-only via `git diff --cached --name-only` before commit (no code/root-doc/config).
-- Outcome: COMMITTED + PUSHED to `supervisor/aulalista-docs`; PR #115 remains OPEN (observe-only, never merged/approved/closed).
+- Outcome: COMMITTED + PUSHED `7530950` (`9e2c6d8..7530950`, 4 files, +99/−1, docs-only verified via `git diff --cached --name-only`) to `supervisor/aulalista-docs`; PR #115 remains OPEN (observe-only, never merged/approved/closed).
 
 (End of file)
