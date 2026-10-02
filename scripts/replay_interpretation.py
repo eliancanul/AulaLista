@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Offline replay of recorded interpretation experiments, never production apply.
 
-No network, provider SDK, product interpreter or database imports. Validates the
-saved source/transport and literal provenance only, not semantic correctness.
+No network, provider SDK or production apply. Original session/annex replay
+validates saved source/transport and literal provenance only. The opt-in scope
+extension also recomputes the detached literal matcher, never semantic approval.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 
@@ -216,6 +218,67 @@ def replay(*, kind, document_id, pages, source_sha256, request_text,
                 response_normalization=normalization, external_calls=0, production_applied=False,
                 semantic_validation=False, proposals=proposals)
 
+
+
+def decode_recorded_json(raw, expected_sha256, *, allow_fence=True, max_bytes=262_272):
+    """Bounded byte transport shared by the v2 scope replay extension.
+
+    A matching hash proves integrity against the caller's retained digest, not
+    an independent timestamp, original model provenance or semantic validity.
+    """
+    _check(isinstance(raw, bytes) and len(raw) <= max_bytes, 'transport_type_or_limit')
+    actual = hashlib.sha256(raw).hexdigest()
+    _check(actual == expected_sha256, 'recording_hash_mismatch')
+    try:
+        content = raw.decode('utf-8', errors='strict')
+    except UnicodeDecodeError:
+        raise ReplayError('invalid_utf8') from None
+    normalization = None
+    if allow_fence:
+        match = re.fullmatch(rb'[ \t\r\n]*```json(?:\r\n|\n)(?P<payload>.*\n)```[ \t\r\n]*', raw, re.S)
+        if match:
+            content = match['payload'].decode('utf-8')
+            normalization = 'single_outer_json_fence'
+    depth, quoted, escaped = 0, False, False
+    for char in content:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif char == '\\':
+                escaped = True
+            elif char == '"':
+                quoted = False
+        elif char == '"':
+            quoted = True
+        elif char in '[{':
+            depth += 1
+            _check(depth <= 64, 'json_depth_limit')
+        elif char in ']}':
+            depth -= 1
+    payload = _json(content)
+    pending = [payload]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, float):
+            _check(math.isfinite(item), 'nonfinite_json')
+        elif isinstance(item, str):
+            _check(not any(0xD800 <= ord(c) <= 0xDFFF for c in item), 'unpaired_surrogate')
+        elif isinstance(item, dict):
+            pending.extend(item.keys()); pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
+    return payload, dict(input_sha256=actual, input_bytes=len(raw),
+                         payload_sha256=digest(content), response_normalization=normalization,
+                         transport_status='accepted')
+
+
+def replay_scope_audit(*, request, recordings):
+    """v2 detached scope replay; no value extraction or production apply."""
+    from scripts.anchor_scope_audit import validate_scope_recordings
+    result = validate_scope_recordings(request=request, recordings=recordings)
+    result.update(version=VERSION, kind='literal_declaration_scope', external_calls=0,
+                  semantic_validation=False, production_applied=False)
+    return result
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

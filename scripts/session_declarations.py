@@ -1,8 +1,9 @@
 """Detached, deterministic v1 candidates for literal session declarations.
 
-Never imported by production. No PDF access, database, provider, network,
-catalogue lookup, dossier mutation, or pedagogical approval. See the frozen
-contract in docs/development/session-declarations-contract.md.
+Never imported by production. No PDF access, database, external provider, network,
+dossier mutation or pedagogical approval. Default literal extraction is unchanged;
+the explicit scope_audit option adds detached source-catalogue replay candidates.
+See docs/development/session-declarations-contract.md and anchor-scope-audit-contract.md.
 """
 from __future__ import annotations
 
@@ -23,9 +24,10 @@ from curriculum.source_interpreter import SourceReference
 from curriculum.source_segments import (
     project_occurrences, safety_boundary_positions, scan_session_segments,
 )
+from curriculum.vocabulary import CANONICAL_CAMPOS
 
 VERSION = 'session-declarations.v1'
-MATCHER_VERSION = 'session-declarations-matcher.v3.0.3'
+MATCHER_VERSION = 'session-declarations-matcher.v3.1.2'
 PREDICATES = {'contenido': 'contenido_declarado', 'pda': 'pda_declarado'}
 MAX_CHARACTERS = 2_000_000
 MAX_RECORDS = 2_000
@@ -41,6 +43,16 @@ NUMBERED_PDA = rf'(?:{LOCAL_CODE}{HORIZONTAL}+)?PDA{HORIZONTAL}*[0-9]+'
 PDA = rf'(?:{NUMBERED_PDA}|PDAs?|Procesos?{H}+de{H}+desarrollo{H}+de{H}+aprendizajes?(?:{H}*\(PDAs?\))?)'
 COMBINED = rf'Contenidos?{H}*(?:/|y){H}*PDAs?'
 LABEL = re.compile(rf'(?<!\w)(?P<label>{COMBINED}|{CONTENT}|{PDA})(?!\w)(?:{H}*:)?', re.I)
+# Literal extraction alone gains Spanish local codes. Keep LABEL/PDA above
+# frozen for the old marker and structural-scope proofs. Scoped case handling
+# excludes Python re.I lookalikes (Kelvin sign, dotted I and long s), and the
+# explicit decompositions count as one letter without normalizing source text.
+LITERAL_CODE = (r'(?-i:(?:[AEIOUaeiou]\u0301|[Uu]\u0308|[Nn]\u0303|'
+                r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){1,4}[0-9]{1,4})')
+LITERAL_NUMBERED_PDA = rf'(?:{LITERAL_CODE}{HORIZONTAL}+)?PDA{HORIZONTAL}*[0-9]+'
+LITERAL_PDA = rf'(?:{LITERAL_NUMBERED_PDA}|PDAs?|Procesos?{H}+de{H}+desarrollo{H}+de{H}+aprendizajes?(?:{H}*\(PDAs?\))?)'
+LITERAL_LABEL = re.compile(
+    rf'(?<![\w\u0300-\u036f])(?P<label>{COMBINED}|{CONTENT}|{LITERAL_PDA})(?!\w)(?:{H}*:)?', re.I)
 COMBINED_ONLY = re.compile(COMBINED, re.I)
 HEADING = re.compile(
     r'^(?:Inicio|Desarrollo|Cierre|Tarea|Actividad(?:\s+\d+)?|'
@@ -74,6 +86,13 @@ SCAFFOLD_ACTIVITY = re.compile(rf'^(?:[-+•*◦]|[0-9]+[.)]){HORIZONTAL}*\S')
 SCAFFOLD_INLINE_CUT = re.compile(
     rf'\b(?:(?:Inicio|Desarrollo|Cierre|(?:Nombre{HORIZONTAL}+del{HORIZONTAL}+)?Proyecto){HORIZONTAL}*:'
     rf'|DATOS{HORIZONTAL}+GENERALES\b|SESI[OÓ]N{HORIZONTAL}*[0-9]+\b)', re.I)
+FIELD_LABEL = re.compile(rf'^Campos?(?:{HORIZONTAL}+formativos?)?{HORIZONTAL}*:{HORIZONTAL}*(.*)$', re.I | re.A)
+FIELD_NAMES = {name.lower() for name in CANONICAL_CAMPOS}
+CODE_ROW = re.compile(rf'^{LITERAL_CODE}{HORIZONTAL}+(?P<description>.+)$')
+EXAMPLE_BLOCK = re.compile(r'^(?:Ejemplos?\b|Propuesta\b|Sugerencia\b|No\s+adoptad[oa]\b)', re.I)
+CODE_ROW_CUT = re.compile(
+    r'\b(?:Ejemplos?|Propuestas?|Sugerencias?|No\s+adoptad[oa]s?|'
+    r'Inicio|Desarrollo|Cierre|Actividades?|Actividad)\b', re.I)
 
 
 def snapshot_hash(pages):
@@ -319,10 +338,155 @@ def _scope(pages, source, number, start, units, barriers, *, value_end=None):
     return {k: v for k, v in current.items() if not k.startswith('_')}, [proof], 'explicit_continuation'
 
 
+def _field_line(line):
+    """Exact existing names are textual context, never field/unit identities."""
+    if VERTICAL.search(line) or '\x1f' in line:
+        return False
+    text = line.strip()
+    labelled = FIELD_LABEL.fullmatch(text)
+    return (labelled[1].strip() if labelled else text).lower() in FIELD_NAMES
+
+
+def _code_context_row(line):
+    if VERTICAL.search(line) or '\x1f' in line or any(c in line for c in '|:«»“”"'):
+        return False
+    match = CODE_ROW.fullmatch(line.strip())
+    return bool(match and SENTENCE_END.search(match['description'])
+                and not DANGLING_END.search(match['description'])
+                and not LITERAL_LABEL.search(match['description'])
+                and not CODE_ROW_CUT.search(match['description'])
+                and not NONAFFIRMATIVE.match(match['description'])
+                and not NEGATED.match(match['description'])
+                and not CONDITIONAL.match(match['description']))
+
+
+def _metadata_typed_row(line):
+    """One physical typed label, with at most the single formatting hyphen."""
+    if VERTICAL.search(line) or '\x1f' in line or '|' in line:
+        return None
+    mentions = [m for m in LITERAL_LABEL.finditer(line) if m.group().endswith(':')]
+    if len(mentions) != 1:
+        return None
+    label, = mentions
+    prefix = line[:label.start()]
+    if (COMBINED_ONLY.fullmatch(label['label'])
+            or not (HORIZONTAL_ONLY.fullmatch(prefix) or MARKER_PREFIX.fullmatch(prefix))):
+        return None
+    return label
+
+
+def _outside_value_quotes(line, quotes):
+    """Mask quoted characters for structure checks, never for evidence."""
+    stack, outside = list(quotes), []
+    for char in line:
+        was_quoted = bool(stack)
+        _advance_quotes(stack, char)
+        outside.append(' ' if was_quoted or stack else char)
+    return ''.join(outside)
+
+
+def _metadata_stop(line, *, quotes):
+    outside = _outside_value_quotes(line, quotes)
+    text = outside.strip()
+    # Typed and valid context rows are handled before this check. An unquoted
+    # colon or an externally code-shaped row is a structural rejection, even
+    # when a rejected code description itself contains balanced quoted text.
+    # Carry the active value's quote state across its physical lines, but never
+    # use a separate quote-led block to continue a value or resume metadata.
+    return bool(line.strip() and (VERTICAL.search(line) or '\x1f' in line or '|' in line or ':' in outside
+                         or not quotes and CODE_ROW.fullmatch(line.strip())
+                         or CODE_ROW.fullmatch(text) or _boundary(outside) or SCAFFOLD_ACTIVITY.match(text)
+                         or not quotes and line.strip().startswith(('«', '»', '“', '”', '"'))
+                         or EXAMPLE_BLOCK.match(text) or NONAFFIRMATIVE.match(text)
+                         or text.isupper()))
+
+
+def _metadata_value_span(page, lines, line_index, label_end):
+    """Bound literals in a field block without making a scope proof from it."""
+    end = len(page)
+    for index in range(line_index + 1, len(lines)):
+        begin, _, line = lines[index]
+        if not line.strip():
+            continue
+        preceding = page[label_end:begin].strip()
+        quotes = []
+        _advance_quotes(quotes, preceding)
+        complete = bool(SENTENCE_END.search(preceding)
+                        and not DANGLING_END.search(preceding)
+                        and _scaffold_quotes_balanced(preceding))
+        if not quotes and (_field_line(line) or _code_context_row(line)):
+            following = next((row for _, _, row in lines[index + 1:] if row.strip()), None)
+            corroborated = following is not None and (
+                _field_line(following) or _code_context_row(following) or _metadata_typed_row(following))
+            if not complete or not corroborated:
+                return None, 'uncertain_boundary'
+            end = begin
+            break
+        if not quotes and _metadata_typed_row(line):
+            end = begin
+            break
+        if _metadata_stop(line, quotes=quotes):
+            if not complete:
+                return None, 'uncertain_boundary'
+            end = begin
+            break
+    if not _scaffold_quotes_balanced(page[label_end:end]):
+        return None, 'uncertain_boundary'
+    return _checked_value_span(page, label_end, end)
+
+
+def _field_marker_allowed(page, lines, line_index, number, units):
+    """Page-local extraction context, deliberately separate from _scope.
+
+    Only a product-recognized explicit unit restarts a blocked region. A later
+    campo or DATOS GENERALES cannot skip an activity, example, or unknown row.
+    Completed declaration values are consumed using their original slices.
+    """
+    target = lines[line_index][0]
+    anchors = [u['anchor'] for u in units if u['anchor']['page_number'] == number
+               and u['anchor']['region']['end'] <= target]
+    begin = max(anchors, key=lambda a: a['region']['start'])['region']['end'] if anchors else 0
+    field, initial, consumed = False, True, begin
+    for index, (start, end, original) in enumerate(lines[:line_index]):
+        if end <= consumed:
+            continue
+        line = original[max(0, consumed - start):]
+        text = line.strip()
+        if not text:
+            continue
+        if VERTICAL.search(line) or '\x1f' in line:
+            return False
+        if _field_line(line):
+            field, initial = True, False
+            continue
+        if not field:
+            if initial and re.fullmatch(rf'DATOS{HORIZONTAL}+GENERALES{HORIZONTAL}*:?', text, re.I):
+                initial = False
+                continue
+            initial = False
+            if re.fullmatch(rf'Proyecto{HORIZONTAL}*:', text, re.I):
+                continue
+            metadata = PLANNING_META.fullmatch(text[1:].lstrip() if text.startswith('-') else text)
+            if metadata and _complete_planning_value(metadata[1]):
+                continue
+            return False
+        if _code_context_row(line):
+            continue
+        label = _metadata_typed_row(line)
+        if label:
+            # Here consumed never starts inside a declaration's physical row.
+            value, reason = _metadata_value_span(page, lines, index, start + label.end())
+            if value:
+                consumed = value[1]
+                continue
+        return False
+    return field
+
+
 def _value_span(page, lines, line_index, label_end, *, closed_block=False):
     end = len(page)
     for begin, _, line in lines[line_index + 1:]:
-        if _boundary(line):
+        if _boundary(line) or _metadata_typed_row(line):
             end = begin
             break
         # Only a new scaffold context may retain a completed literal block
@@ -330,6 +494,10 @@ def _value_span(page, lines, line_index, label_end, *, closed_block=False):
         if closed_block and SENTENCE_END.search(page[label_end:begin].rstrip()) and line.strip():
             end = begin
             break
+    return _checked_value_span(page, label_end, end)
+
+
+def _checked_value_span(page, label_end, end):
     raw = page[label_end:end]
     start = label_end + len(raw) - len(raw.lstrip())
     end = label_end + len(raw.rstrip())
@@ -357,7 +525,7 @@ def _value_span(page, lines, line_index, label_end, *, closed_block=False):
     return (start, end), None
 
 
-def extract_declarations(pages, *, source_doc_sha256):
+def extract_declarations(pages, *, source_doc_sha256, scope_audit=None):
     """Return detached proposals; reject malformed/bounded inputs without truncation."""
     if (not isinstance(pages, (list, tuple)) or not pages or any(not isinstance(p, str) for p in pages)
             or not isinstance(source_doc_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', source_doc_sha256)):
@@ -374,7 +542,7 @@ def extract_declarations(pages, *, source_doc_sha256):
         lines, consumed_until = _lines(page), -1
         tabular = _table_lines(lines)
         for index, (begin, _, line) in enumerate(lines):
-            mentions = list(LABEL.finditer(line))
+            mentions = list(LITERAL_LABEL.finditer(line))
             child_start = _explicit_container_child(line, mentions, quotes)
             row_is_table = ('|' in line or index in tabular or
                             child_start is None and len(mentions) > 1 and ((line[:mentions[0].start()].strip() == ''
@@ -391,10 +559,11 @@ def extract_declarations(pages, *, source_doc_sha256):
                 _advance_quotes(prefix_quotes, line[:mention.start()])
                 label = _ref(pages, source_doc_sha256, number, start, end, 'label')
                 raw_kind = mention['label']
-                kind = 'pda' if re.fullmatch(PDA, raw_kind, re.I) else 'contenido'
+                kind = 'pda' if re.fullmatch(LITERAL_PDA, raw_kind, re.I) else 'contenido'
+                field_context = _field_marker_allowed(page, lines, index, number, units)
                 marker = (MARKER_PREFIX.fullmatch(line[:mention.start()])
                           and mention.group().endswith(':') and not VERTICAL.search(mention.group())
-                          and _marker_allowed(pages, number, begin, units))
+                          and (_marker_allowed(pages, number, begin, units) or field_context))
                 value, reason = None, None
                 if prefix_quotes:
                     reason = 'quoted'
@@ -402,7 +571,7 @@ def extract_declarations(pages, *, source_doc_sha256):
                     kind, reason = None, 'combined_label'
                 elif row_is_table:
                     reason = 'table_ambiguous'
-                elif (re.fullmatch(NUMBERED_PDA, raw_kind, re.I)
+                elif (re.fullmatch(LITERAL_NUMBERED_PDA, raw_kind, re.I)
                       and (VERTICAL.search(mention.group())
                            or child_start is None and not marker and not HORIZONTAL_ONLY.fullmatch(line[:mention.start()]))):
                     reason = 'label_mention'
@@ -416,7 +585,10 @@ def extract_declarations(pages, *, source_doc_sha256):
                     closed_block = bool(scaffold_prior and first_moment and first_moment[1] == 'inicio'
                                         and not any(u['anchor']['page_number'] == number
                                                     and u['anchor']['region']['end'] <= start for u in units))
-                    value, reason = _value_span(page, lines, index, end, closed_block=closed_block)
+                    if field_context:
+                        value, reason = _metadata_value_span(page, lines, index, end)
+                    else:
+                        value, reason = _value_span(page, lines, index, end, closed_block=closed_block)
                 unit, scope_proofs, scope_basis = _scope(
                     pages, source_doc_sha256, number, start, units, barriers,
                     value_end=value[1] if value else None)
@@ -450,13 +622,17 @@ def extract_declarations(pages, *, source_doc_sha256):
                 if len(records) > MAX_RECORDS:
                     raise ValueError('Output exceeds explicit record limit; no silent truncation')
             _advance_quotes(quotes, line)
-    return {'version': VERSION, 'source_doc_sha256': source_doc_sha256, 'extraction_sha256': extraction,
+    result = {'version': VERSION, 'source_doc_sha256': source_doc_sha256, 'extraction_sha256': extraction,
             'records': records,
             'limits': ['Matcher implementation: ' + MATCHER_VERSION,
                        'Extracted text only; no PDF/OCR or table reconstruction.',
                        'Page-local values; cross-page scope needs named continuation or a bounded structural proposal.',
                        'Candidates pending human review; no SEP alignment or pedagogical approval.',
                        'Bounded textual grammar; ambiguous or unrecognized discourse may be omitted or abstained.']}
+    if scope_audit is not None and getattr(scope_audit, 'enabled', False):
+        from scripts.anchor_scope_audit import audit_scopes
+        result['scope_audit'] = audit_scopes(pages=pages, declarations=result, config=scope_audit)
+    return result
 
 
 def main():

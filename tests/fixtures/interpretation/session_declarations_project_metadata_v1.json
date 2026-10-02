@@ -1,0 +1,1746 @@
+{
+  "version": "session-declarations-reference.v1",
+  "reference_kind": "synthetic_prematcher_development",
+  "scope": {
+    "name": "project-general-literal-metadata.v1",
+    "base_commit": "ad1616a1d8b958bbcc7652c814369ca8b1474416",
+    "provenance": "New synthetic development hypotheses; authored before matcher/scorer changes; not held out, private, final reserve, teacher validated or SEP aligned.",
+    "declaration_policy": "Existing detached record contract; literal code and field headings have no identity or relational semantics.",
+    "frozen_denominators": {
+      "documents": 46,
+      "literal_declarations": 28,
+      "unit_assignment": 28,
+      "known_project_units": 10,
+      "known_session_units": 2,
+      "unresolved_units": 16,
+      "session_candidates": 2,
+      "scope_abstentions": 26,
+      "challenges": 40,
+      "documents_without_declarations": 27,
+      "clean_silence_documents": 2
+    },
+    "preserved_reference_sha256": {
+      "session_declarations_v1.json": "3c7a9aedf5be30b8755d12e6567d154b5d54859d1ff0a868727b8576060201f5",
+      "session_declarations_labels_v1.json": "a5674e0ef46a8b8e6f374df3e6198bdf917ff3b2ec04ec6c96b23e9b2105d9e9",
+      "session_declarations_scaffold_v1.json": "3b83730070b9e04859a39af78065dbf70399bdfb3a6d5edbbc3a8941d71f3b09",
+      "session_declarations_scaffold_supplement_v1.json": "f5136feae92c5c186845f2b080113a3a36f1aa2d1e20a2c8ebfa6b3bdd6cbc0d"
+    }
+  },
+  "documents": [
+    {
+      "id": "general_named_multiple",
+      "pages": [
+        "DATOS GENERALES\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe marcas escritas.\n-L1 PDA2: Compara dos mensajes."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 57,
+            "end": 65,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 66,
+            "end": 91,
+            "quote": "Describe marcas escritas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 93,
+            "end": 101,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 102,
+            "end": 123,
+            "quote": "Compara dos mensajes."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "general_metadata",
+        "bare_canonical_field",
+        "multiple"
+      ]
+    },
+    {
+      "id": "project_repeated_occurrences",
+      "pages": [
+        "Proyecto: Rutas de papel\n\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe marcas escritas.\n-L1 PDA1: Describe marcas escritas."
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 24,
+            "quote": "Proyecto: Rutas de papel"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 67,
+            "end": 75,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 76,
+            "end": 101,
+            "quote": "Describe marcas escritas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 103,
+            "end": 111,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 112,
+            "end": 137,
+            "quote": "Describe marcas escritas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "project_metadata",
+        "repeated_physical_occurrences"
+      ]
+    },
+    {
+      "id": "project_labelled_field_content",
+      "pages": [
+        "Proyecto: Sombras de cartón\nCampo formativo: Saberes y pensamiento científico\n-Contenido: Formas y posiciones.\n-X7 PDA003: Describe la posición de una figura."
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 27,
+            "quote": "Proyecto: Sombras de cartón"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 79,
+            "end": 89,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 90,
+            "end": 110,
+            "quote": "Formas y posiciones."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 112,
+            "end": 122,
+            "quote": "X7 PDA003:"
+          },
+          "value": {
+            "page": 1,
+            "start": 123,
+            "end": 158,
+            "quote": "Describe la posición de una figura."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "labelled_canonical_field",
+        "content_marker",
+        "number_padding"
+      ]
+    },
+    {
+      "id": "general_spanish_codes_nfc",
+      "pages": [
+        "DATOS GENERALES\nÉtica, naturaleza y sociedades\nÑ2 Relatos del entorno.\n-Ñ2 PDA1: Distingue dos relatos.\n-ÁB3 PDA 02: Explica una diferencia."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 72,
+            "end": 80,
+            "quote": "Ñ2 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 81,
+            "end": 103,
+            "quote": "Distingue dos relatos."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 105,
+            "end": 116,
+            "quote": "ÁB3 PDA 02:"
+          },
+          "value": {
+            "page": 1,
+            "start": 117,
+            "end": 140,
+            "quote": "Explica una diferencia."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "spanish_code_nfc",
+        "code_is_not_identity"
+      ]
+    },
+    {
+      "id": "general_spanish_codes_nfd",
+      "pages": [
+        "De lo humano y lo comunitario\nÜ2 Juegos compartidos.\n-Ü2 PDA1: Describe una señal de acuerdo."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 55,
+            "end": 64,
+            "quote": "Ü2 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 65,
+            "end": 96,
+            "quote": "Describe una señal de acuerdo."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "spanish_code_nfd",
+        "value_nfd_preserved"
+      ]
+    },
+    {
+      "id": "general_crlf_horizontal",
+      "pages": [
+        "DATOS GENERALES\r\nCampos formativos: Lenguajes\r\nL1 Representaciones escritas.\r\n \t- L1\tPDA 0002: Compara dos marcas.\r\n"
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 82,
+            "end": 94,
+            "quote": "L1\tPDA 0002:"
+          },
+          "value": {
+            "page": 1,
+            "start": 95,
+            "end": 114,
+            "quote": "Compara dos marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "crlf",
+        "horizontal_spacing"
+      ]
+    },
+    {
+      "id": "project_field_and_code_switches",
+      "pages": [
+        "Proyecto: Mapas de cartón\n\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe dos marcas.\nL2 Mensajes del entorno.\n-L2 PDA1: Explica un mensaje.\nSaberes y pensamiento científico\nS1 Formas geométricas.\n-S1 PDA1: Compara dos figuras.\n-Contenidos curriculares: Figuras y posiciones."
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 25,
+            "quote": "Proyecto: Mapas de cartón"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 68,
+            "end": 76,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 77,
+            "end": 97,
+            "quote": "Describe dos marcas."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 124,
+            "end": 132,
+            "quote": "L2 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 133,
+            "end": 152,
+            "quote": "Explica un mensaje."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "d3",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 210,
+            "end": 218,
+            "quote": "S1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 219,
+            "end": 239,
+            "quote": "Compara dos figuras."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        },
+        {
+          "id": "d4",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 241,
+            "end": 265,
+            "quote": "Contenidos curriculares:"
+          },
+          "value": {
+            "page": 1,
+            "start": 266,
+            "end": 287,
+            "quote": "Figuras y posiciones."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "field_switch",
+        "code_row_switch",
+        "context_rows_not_values",
+        "multiple"
+      ]
+    },
+    {
+      "id": "general_multiline_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Compara palabras mediante\nla observación de sus letras.\n-L1 PDA2: Describe una semejanza."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 105,
+            "quote": "Compara palabras mediante\nla observación de sus letras."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        },
+        {
+          "id": "d2",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 107,
+            "end": 115,
+            "quote": "L1 PDA2:"
+          },
+          "value": {
+            "page": 1,
+            "start": 116,
+            "end": 139,
+            "quote": "Describe una semejanza."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "multiline_value"
+      ]
+    },
+    {
+      "id": "inline_context_mentions_in_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Explica la referencia X7 mediante\nun ejemplo de Lenguajes escrito en una tarjeta."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 131,
+            "quote": "Explica la referencia X7 mediante\nun ejemplo de Lenguajes escrito en una tarjeta."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "inline_code_not_boundary",
+        "inline_field_not_boundary"
+      ]
+    },
+    {
+      "id": "balanced_quotes_inside_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Compara «X7» con la palabra «Lenguajes»."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 90,
+            "quote": "Compara «X7» con la palabra «Lenguajes»."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "balanced_quoted_value"
+      ]
+    },
+    {
+      "id": "project_not_inherited_by_session",
+      "pages": [
+        "Proyecto: Señales de papel\n\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una señal.\nSESIÓN 1: Taller\nInicio: Observar una tarjeta."
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 26,
+            "quote": "Proyecto: Señales de papel"
+          }
+        },
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 98,
+            "end": 114,
+            "quote": "SESIÓN 1: Taller"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 69,
+            "end": 77,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 78,
+            "end": 97,
+            "quote": "Describe una señal."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "no_project_to_session_inheritance"
+      ]
+    },
+    {
+      "id": "previous_page_project_not_inherited",
+      "pages": [
+        "Proyecto: Señales de papel\nPropósito: Comparar marcas.",
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una señal."
+      ],
+      "units": [
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 26,
+            "quote": "Proyecto: Señales de papel"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 2,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "no_cross_page_project_scope"
+      ]
+    },
+    {
+      "id": "previous_page_session_not_inherited",
+      "pages": [
+        "SESIÓN 1: Taller",
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una señal."
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 16,
+            "quote": "SESIÓN 1: Taller"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 2,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "no_cross_page_session_scope"
+      ]
+    },
+    {
+      "id": "same_page_session_controls",
+      "pages": [
+        "SESIÓN 1: Taller\nCampo: Lenguajes\n-L1 PDA1: Describe una señal.\n-Contenido: Marcas escritas.\nInicio: Comparar tarjetas."
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 16,
+            "quote": "SESIÓN 1: Taller"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 35,
+            "end": 43,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 44,
+            "end": 63,
+            "quote": "Describe una señal."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        },
+        {
+          "id": "d2",
+          "kind": "contenido",
+          "label": {
+            "page": 1,
+            "start": 65,
+            "end": 75,
+            "quote": "Contenido:"
+          },
+          "value": {
+            "page": 1,
+            "start": 76,
+            "end": 92,
+            "quote": "Marcas escritas."
+          },
+          "unit_id": "s1",
+          "expected_decision": "candidate",
+          "reason": "explicit_session"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "same_page_session_control"
+      ]
+    },
+    {
+      "id": "empty_project_is_unresolved",
+      "pages": [
+        "Proyecto:\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una señal."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 51,
+            "end": 59,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 60,
+            "end": 79,
+            "quote": "Describe una señal."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "empty_project_anchor",
+        "unresolved_scope"
+      ]
+    },
+    {
+      "id": "local_codes_need_not_match",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-Ñ7 PDA1: Compara dos marcas."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "Ñ7 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Compara dos marcas."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "no_code_identity_join"
+      ]
+    },
+    {
+      "id": "new_explicit_project_after_activity",
+      "pages": [
+        "SESIÓN 1: Lectura\nInicio: Leer tarjetas.\nProyecto: Dibujos de papel\n\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [
+        {
+          "id": "s1",
+          "kind": "session",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 17,
+            "quote": "SESIÓN 1: Lectura"
+          }
+        },
+        {
+          "id": "p1",
+          "kind": "project",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 67,
+            "quote": "Proyecto: Dibujos de papel"
+          }
+        }
+      ],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 110,
+            "end": 118,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 119,
+            "end": 138,
+            "quote": "Describe una marca."
+          },
+          "unit_id": "p1",
+          "expected_decision": "abstained",
+          "reason": "project_scope"
+        }
+      ],
+      "challenges": [],
+      "absence_expected": false,
+      "design_tags": [
+        "explicit_new_unit_resets_activity"
+      ]
+    },
+    {
+      "id": "complete_value_then_activity_stop",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca.\nActividad 1: Leer tarjetas.\n-L1 PDA2: Copiar un dibujo."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una marca."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 99,
+            "end": 107,
+            "quote": "L1 PDA2:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "completed_value_before_activity",
+        "activity_inside_block"
+      ]
+    },
+    {
+      "id": "context_rows_are_not_declarations",
+      "pages": [
+        "DATOS GENERALES\nLenguajes\nL1 Representaciones escritas.\nL2 Mensajes del entorno."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "context_only_no_inference"
+      ]
+    },
+    {
+      "id": "quiet_unlabelled_text",
+      "pages": [
+        "Las tarjetas de cartón tienen distintos colores."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [],
+      "absence_expected": true,
+      "design_tags": [
+        "clean_silence"
+      ]
+    },
+    {
+      "id": "activity_before_field",
+      "pages": [
+        "-Leer tarjetas.\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 57,
+            "end": 65,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "activity_before_block"
+      ]
+    },
+    {
+      "id": "example_before_field",
+      "pages": [
+        "Ejemplo:\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 50,
+            "end": 58,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "explicit_example"
+      ]
+    },
+    {
+      "id": "nonadopted_before_field",
+      "pages": [
+        "Propuesta no adoptada:\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "explicit_nonadoption"
+      ]
+    },
+    {
+      "id": "field_name_in_prose",
+      "pages": [
+        "Trabajaremos Lenguajes.\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 55,
+            "end": 63,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "field_mention_in_prose"
+      ]
+    },
+    {
+      "id": "longer_field_title",
+      "pages": [
+        "Lenguajes para la convivencia\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "longer_field_title"
+      ]
+    },
+    {
+      "id": "quoted_field_name_only",
+      "pages": [
+        "«Lenguajes»\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 51,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "quoted_field_heading"
+      ]
+    },
+    {
+      "id": "unrecognized_block",
+      "pages": [
+        "Mapa de temas:\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 46,
+            "end": 54,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "unrecognized_block"
+      ]
+    },
+    {
+      "id": "code_row_without_field",
+      "pages": [
+        "L1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 31,
+            "end": 39,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "code_without_field"
+      ]
+    },
+    {
+      "id": "activity_bullet_inside_block",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-Recortar tarjetas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 61,
+            "end": 69,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "activity_inside_block"
+      ]
+    },
+    {
+      "id": "unknown_heading_inside_block",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\nTema auxiliar:\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 56,
+            "end": 64,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "unknown_heading_stops_block"
+      ]
+    },
+    {
+      "id": "quoted_whole_block",
+      "pages": [
+        "«Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca.»"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "quoted_block"
+      ]
+    },
+    {
+      "id": "incoming_quote_across_page",
+      "pages": [
+        "«Texto de ejemplo abierto",
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca.»"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 2,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "quoted"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "quote_across_page"
+      ]
+    },
+    {
+      "id": "pipe_table_row",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca. | Contenido: Marcas escritas."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 72,
+            "end": 82,
+            "quote": "Contenido:"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "pipe_table"
+      ]
+    },
+    {
+      "id": "mixed_typed_row",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-Contenido: Marcas escritas. PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 51,
+            "quote": "Contenido:"
+          },
+          "reason": "table_ambiguous"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 69,
+            "end": 74,
+            "quote": "PDA1:"
+          },
+          "reason": "table_ambiguous"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "mixed_typed_row"
+      ]
+    },
+    {
+      "id": "malformed_local_codes",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-Ñ PDA1: Describe una marca.\n-Ω7 PDA2: Describe una figura.\n-ÁBCDE7 PDA3: Describe un dibujo.\n-L12345 PDA4: Describe un trazo.\n-Ñ́7 PDA5: Describe una forma.\n-K7 PDA6: Describe un círculo.\n-İ7 PDA7: Describe una línea.\n-ſ7 PDA8: Describe un punto."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 43,
+            "end": 48,
+            "quote": "PDA1:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 73,
+            "end": 78,
+            "quote": "PDA2:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c3",
+          "anchor": {
+            "page": 1,
+            "start": 108,
+            "end": 113,
+            "quote": "PDA3:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c4",
+          "anchor": {
+            "page": 1,
+            "start": 142,
+            "end": 147,
+            "quote": "PDA4:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c5",
+          "anchor": {
+            "page": 1,
+            "start": 172,
+            "end": 177,
+            "quote": "PDA5:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c6",
+          "anchor": {
+            "page": 1,
+            "start": 202,
+            "end": 207,
+            "quote": "PDA6:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c7",
+          "anchor": {
+            "page": 1,
+            "start": 233,
+            "end": 238,
+            "quote": "PDA7:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c8",
+          "anchor": {
+            "page": 1,
+            "start": 263,
+            "end": 268,
+            "quote": "PDA8:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "incomplete_code",
+        "foreign_script_code",
+        "oversize_code",
+        "unsupported_combining_mark",
+        "unicode_casefold_lookalikes"
+      ]
+    },
+    {
+      "id": "unsupported_marker_and_incomplete_label",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n--L1 PDA1: Describe una marca.\n•L1 PDA2: Describe una figura.\n-L1 PDA3 Describe un dibujo."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 42,
+            "end": 50,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 72,
+            "end": 80,
+            "quote": "L1 PDA2:"
+          },
+          "reason": "label_mention"
+        },
+        {
+          "id": "c3",
+          "anchor": {
+            "page": 1,
+            "start": 103,
+            "end": 110,
+            "quote": "L1 PDA3"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "double_hyphen",
+        "other_bullet",
+        "missing_colon"
+      ]
+    },
+    {
+      "id": "nonaffirmative_values",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: No se trabaja este proceso.\n-L1 PDA2: Si hay tiempo, se describe una marca.\n-L1 PDA3: Se sugiere describir una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "negated"
+        },
+        {
+          "id": "c2",
+          "anchor": {
+            "page": 1,
+            "start": 79,
+            "end": 87,
+            "quote": "L1 PDA2:"
+          },
+          "reason": "conditional"
+        },
+        {
+          "id": "c3",
+          "anchor": {
+            "page": 1,
+            "start": 127,
+            "end": 135,
+            "quote": "L1 PDA3:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "negated",
+        "conditional",
+        "suggested_not_adopted"
+      ]
+    },
+    {
+      "id": "after_inicio",
+      "pages": [
+        "Inicio: Leer tarjetas.\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "after_moment",
+        "after_inicio"
+      ]
+    },
+    {
+      "id": "after_desarrollo",
+      "pages": [
+        "Desarrollo: Leer tarjetas.\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 68,
+            "end": 76,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "after_moment",
+        "after_desarrollo"
+      ]
+    },
+    {
+      "id": "after_cierre",
+      "pages": [
+        "Cierre: Leer tarjetas.\nLenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 64,
+            "end": 72,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "after_moment",
+        "after_cierre"
+      ]
+    },
+    {
+      "id": "canonical_heading_inside_open_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Compara palabras mediante\nLenguajes\nL2 Recursos escritos."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "ambiguous_context_boundary",
+        "no_partial_value_credit"
+      ]
+    },
+    {
+      "id": "code_row_inside_value_example",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Explica este ejemplo:\nX7 Formas de representación."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "code_in_value_example",
+        "no_arbitrary_cut"
+      ]
+    },
+    {
+      "id": "unclosed_quoted_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Compara «dos marcas."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "unclosed_value_quote"
+      ]
+    },
+    {
+      "id": "truncated_value",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Reconoce formas y"
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "reason": "uncertain_boundary"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "truncated_value"
+      ]
+    },
+    {
+      "id": "context_switch_into_explicit_example",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-L1 PDA1: Describe una marca.\nEjemplo:\nSaberes y pensamiento científico\nS1 Formas geométricas.\n-S1 PDA1: Compara dos figuras."
+      ],
+      "units": [],
+      "declarations": [
+        {
+          "id": "d1",
+          "kind": "pda",
+          "label": {
+            "page": 1,
+            "start": 41,
+            "end": 49,
+            "quote": "L1 PDA1:"
+          },
+          "value": {
+            "page": 1,
+            "start": 50,
+            "end": 69,
+            "quote": "Describe una marca."
+          },
+          "unit_id": null,
+          "expected_decision": "abstained",
+          "reason": "unresolved_scope"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 136,
+            "end": 144,
+            "quote": "S1 PDA1:"
+          },
+          "reason": "nonaffirmative"
+        }
+      ],
+      "absence_expected": false,
+      "design_tags": [
+        "example_stops_switch",
+        "completed_value_before_example"
+      ]
+    },
+    {
+      "id": "vertical_inside_code_label",
+      "pages": [
+        "Lenguajes\nL1 Representaciones escritas.\n-Á 7 PDA1: Describe una marca."
+      ],
+      "units": [],
+      "declarations": [],
+      "challenges": [
+        {
+          "id": "c1",
+          "anchor": {
+            "page": 1,
+            "start": 45,
+            "end": 50,
+            "quote": "PDA1:"
+          },
+          "reason": "label_mention"
+        }
+      ],
+      "absence_expected": true,
+      "design_tags": [
+        "vertical_inside_code"
+      ]
+    }
+  ]
+}
