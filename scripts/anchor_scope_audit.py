@@ -13,7 +13,7 @@ from typing import Protocol
 
 from scripts.anchor_scope_catalogue import (
     CUT_LINE, H, SESSION_SIMPLE, VERSION, canonical, catalogue_from_sources, document_hash,
-    example_context, lines, quote_open, route_record, sha,
+    example_context, lines, literal_ref, quote_open, route_record as _legacy_route_record, sha, simple_span,
 )
 
 MAX_CHARACTERS = 2_000_000
@@ -48,6 +48,7 @@ class ScopeRequest:
     source_windows_text: str | None = None
     source_windows_sha256: str | None = None
     governing_projects: bool = False
+    literal_recovery: bool = False
 
 
 class ScopeProvider(Protocol):
@@ -75,6 +76,7 @@ class ScopeAuditConfig:
     source_windows_text: str | None = None
     source_windows_sha256: str | None = None
     governing_projects: bool = False
+    literal_recovery: bool = False
 
 
 class ScopeAuditError(ValueError):
@@ -89,6 +91,44 @@ def _need(condition, code):
 def _same(left, right):
     # JSON identity distinguishes bool/int and avoids normalization.
     return canonical(left) == canonical(right)
+
+
+def _source_recovery_records(doc):
+    """Fresh source admission, retaining the frozen catalogue/router bytes."""
+    from scripts.session_declarations import extract_declarations
+    output = extract_declarations(doc['pages'], source_doc_sha256=document_hash(doc['pages']),
+                                  literal_recovery=True)
+    ids = {proof['record_id'] for proof in output['literal_recovery']['recoveries']}
+    return {record['id']: record for record in output['records'] if record['id'] in ids}
+
+
+def _route_with_recoveries(doc, record, recoveries):
+    row = _legacy_route_record(doc, record)
+    current = recoveries.get(record['id'])
+    if current is None or not _same(record, current):
+        return row
+    # Only an exactly reconstructed new list can use the existing Mode A.
+    # Source extraction, closure, polarity and null scope are independently
+    # re-established; packet/response schemas and immutable-value rules stay put.
+    values = [e for e in current['evidence'] if e['role'] == 'value']
+    if len(values) != 1 or not literal_ref(values[0], doc['pages'], document_hash(doc['pages'])):
+        return row
+    row.update(eligible=True, mode='a', route_reason='literal_prior_value_unresolved_scope',
+               immutable_value_span=simple_span(values[0]))
+    return row
+
+
+def route_record(doc, record, *, literal_recovery=False):
+    """Existing router, with source-reconstructed local lists only when opted in."""
+    if type(literal_recovery) is not bool:
+        raise ValueError('Invalid literal recovery opt-in')
+    if not literal_recovery:
+        return _legacy_route_record(doc, record)
+    from scripts.session_declarations import local_content_label
+    labels = [e for e in record.get('evidence', []) if isinstance(e, dict) and e.get('role') == 'label']
+    if len(labels) != 1 or not local_content_label(labels[0].get('excerpt')):
+        return _legacy_route_record(doc, record)
+    return _route_with_recoveries(doc, record, _source_recovery_records(doc))
 
 
 def _reason(value):
@@ -199,6 +239,7 @@ def _validate_current_request(request):
     _need(isinstance(request, ScopeRequest), 'scope_request_contract')
     _need(isinstance(request.document_id, str) and 0 < len(request.document_id) <= 128, 'document_id_contract')
     _need(type(request.governing_projects) is bool, 'governing_projects_contract')
+    _need(type(request.literal_recovery) is bool, 'literal_recovery_contract')
     _need(isinstance(request.pages, tuple) and 0 < len(request.pages) <= 6
           and all(isinstance(p, str) for p in request.pages), 'source_window_contract')
     _need(sum(map(len, request.pages)) <= MAX_CHARACTERS, 'input_limit')
@@ -216,10 +257,13 @@ def _validate_current_request(request):
     current = [d for d in source['documents'] if d['id'] == request.document_id]
     _need(len(current) == 1 and _same(current[0]['pages'], list(request.pages)), 'source_windows_current_mismatch')
     _need(_same(request.catalogue, rebuilt), 'catalogue_source_reconstruction_mismatch')
-    baseline = extract_declarations(request.pages, source_doc_sha256=request.source_sha256)
+    baseline = extract_declarations(request.pages, source_doc_sha256=request.source_sha256,
+                                    literal_recovery=request.literal_recovery)
+    recovery_ids = {p['record_id'] for p in baseline.get('literal_recovery', {}).get('recoveries', [])}
+    recoveries = {r['id']: r for r in baseline['records'] if r['id'] in recovery_ids}
     groups = {}
     for record in baseline['records']:
-        row = route_record(current[0], record)
+        row = _route_with_recoveries(current[0], record, recoveries) if request.literal_recovery else _legacy_route_record(current[0], record)
         if row['eligible'] and record.get('claim') is None:
             groups.setdefault(row['label_span']['page_number'], []).append({k: copy.deepcopy(row[k]) for k in RECORD_KEYS})
     _need(_same(request.groups, groups) and list(request.groups) == list(groups), 'current_route_reconstruction_mismatch')
@@ -293,6 +337,8 @@ def audit_scopes(*, pages, declarations, config):
     try:
         _need(isinstance(config, ScopeAuditConfig) and config.enabled is True, 'config_contract')
         _need(type(config.governing_projects) is bool, 'governing_projects_contract')
+        _need(type(config.literal_recovery) is bool, 'literal_recovery_contract')
+        _need(('literal_recovery' in declarations) == config.literal_recovery, 'literal_recovery_config_mismatch')
         _need(getattr(config.provider, 'kind', None) in {'synthetic_test', 'recorded_replay'}, 'external_provider_blocked')
         _need(isinstance(config.document_id, str) and 0 < len(config.document_id) <= 128, 'document_id_contract')
         _need(isinstance(pages, (tuple, list)) and 0 < len(pages) <= 6 and all(isinstance(p, str) for p in pages), 'source_window_contract')
@@ -311,17 +357,19 @@ def audit_scopes(*, pages, declarations, config):
         _need(sum(len(p) for d in source['documents'] for p in d['pages']) <= MAX_CHARACTERS, 'source_windows_limit')
         current = [d for d in source['documents'] if d['id'] == config.document_id]
         _need(len(current) == 1 and _same(current[0]['pages'], list(pages)), 'source_windows_current_mismatch')
+        recoveries = _source_recovery_records(current[0]) if config.literal_recovery else {}
         groups, seen = {}, set()
         for record in declarations['records']:
             _need(isinstance(record, dict) and isinstance(record.get('id'), str) and record['id'] not in seen, 'record_identity_contract')
             seen.add(record['id'])
-            row = route_record(current[0], record)
+            row = _route_with_recoveries(current[0], record, recoveries) if config.literal_recovery else _legacy_route_record(current[0], record)
             if row['eligible'] and record.get('claim') is None:
                 groups.setdefault(row['label_span']['page_number'], []).append({k: copy.deepcopy(row[k]) for k in RECORD_KEYS})
         if not groups:
             return {'status': 'no_eligible_records', 'candidates': [], 'errors': [], 'external_calls': 0, 'provider_attempts': 0}
         request = ScopeRequest(config.document_id, tuple(pages), dsha, dsha, catalogue, groups,
-                               config.source_windows_text, config.source_windows_sha256, config.governing_projects)
+                               config.source_windows_text, config.source_windows_sha256, config.governing_projects,
+                               config.literal_recovery)
         try:
             attempts = 1
             recordings = config.provider.propose(copy.deepcopy(request))
