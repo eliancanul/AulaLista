@@ -6,7 +6,7 @@ from dataclasses import replace
 import pytest
 
 from scripts.anchor_scope_audit import (
-    RecordedScopeProvider, ScopeAuditConfig, ScopeRecording, audit_scopes,
+    RecordedScopeProvider, ScopeAuditConfig, ScopeRecording, audit_scopes, scope_group_id,
 )
 from scripts.anchor_scope_catalogue import canonical, catalogue_from_sources, sha
 from scripts.replay_interpretation import ReplayError, decode_recorded_json, replay_scope_audit
@@ -36,7 +36,8 @@ class Stub:
         recordings = []
         for page, records in request.groups.items():
             context = [page - 1, page] if page > 1 else [page]
-            packet = dict(contract_version='anchor-id-auditor.v1', group_id=f'SYNTHETIC-{page}',
+            packet = dict(contract_version='anchor-id-auditor.v1',
+                          group_id=scope_group_id(request, page) if request.pda_context else f'SYNTHETIC-{page}',
                           document_id=request.document_id, document_sha256=request.source_sha256,
                           catalog_sha256=sha(canonical(request.catalogue)), records=copy.deepcopy(records),
                           context_pages=[dict(page_number=n, text=request.pages[n - 1]) for n in context],

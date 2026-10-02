@@ -680,10 +680,15 @@ def _local_list_context(pages, source, number, start, units, records):
     return (None, context) if supported else ('uncertain_boundary', [])
 
 
-def extract_declarations(pages, *, source_doc_sha256, scope_audit=None, literal_recovery=False):
+def extract_declarations(pages, *, source_doc_sha256, scope_audit=None, literal_recovery=False,
+                         mixed_fields=False, mixed_audit=None, pda_context=False):
     """Return detached proposals; reject malformed/bounded inputs without truncation."""
+    if type(pda_context) is not bool:
+        raise ValueError('Invalid PDA context opt-in')
     if type(literal_recovery) is not bool:
         raise ValueError('Invalid literal recovery opt-in')
+    if type(mixed_fields) is not bool:
+        raise ValueError('Invalid mixed fields opt-in')
     if (not isinstance(pages, (list, tuple)) or not pages or any(not isinstance(p, str) for p in pages)
             or not isinstance(source_doc_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', source_doc_sha256)):
         raise ValueError('Invalid source contract')
@@ -806,6 +811,17 @@ def extract_declarations(pages, *, source_doc_sha256, scope_audit=None, literal_
                                      'recoveries': recoveries,
                                      'limits': ['Closed page-local lists only; no dotted-descriptor recovery.',
                                                 'No new units, AtomicClaims, SEP identity or semantic validation.']}
+    if pda_context:
+        from scripts.pda_context_recovery import apply_pda_context
+        result = apply_pda_context(pages, result)
+    if mixed_fields:
+        from scripts.mixed_field_recovery import recover_mixed_fields
+        result['records'], result['mixed_field_recovery'] = recover_mixed_fields(
+            pages=pages, source_doc_sha256=source_doc_sha256, records=result['records'], units=units)
+    if mixed_audit is not None and getattr(mixed_audit, 'enabled', False):
+        from scripts.mixed_field_audit import audit_mixed_fields
+        result['mixed_field_audit'] = audit_mixed_fields(
+            pages=pages, declarations=result, config=mixed_audit)
     if scope_audit is not None and getattr(scope_audit, 'enabled', False):
         from scripts.anchor_scope_audit import audit_scopes
         result['scope_audit'] = audit_scopes(pages=pages, declarations=result, config=scope_audit)
@@ -817,10 +833,13 @@ def main():
     parser.add_argument('input', type=Path, help='JSON with pages and source_doc_sha256')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--literal-recovery', action='store_true', help='Opt-in closed local-content lists only')
+    parser.add_argument('--mixed-fields', action='store_true', help='Opt-in closed mixed-field literal evidence only')
+    parser.add_argument('--pda-context', action='store_true', help='Opt-in explicit PDA after dotted local descriptors')
     args = parser.parse_args()
     data = json.loads(args.input.read_bytes())
     result = extract_declarations(data['pages'], source_doc_sha256=data['source_doc_sha256'],
-                                  literal_recovery=args.literal_recovery)
+                                  literal_recovery=args.literal_recovery, mixed_fields=args.mixed_fields,
+                                  pda_context=args.pda_context)
     # Detached output only, and no accidental replacement of a previous run.
     with args.output.open('x', encoding='utf-8', newline='') as stream:
         stream.write(json.dumps(result, ensure_ascii=False, indent=2) + '\n')

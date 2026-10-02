@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 import json
+from pathlib import Path
 import re
 from typing import Protocol
 
@@ -49,6 +50,7 @@ class ScopeRequest:
     source_windows_sha256: str | None = None
     governing_projects: bool = False
     literal_recovery: bool = False
+    pda_context: bool = False
 
 
 class ScopeProvider(Protocol):
@@ -77,6 +79,7 @@ class ScopeAuditConfig:
     source_windows_sha256: str | None = None
     governing_projects: bool = False
     literal_recovery: bool = False
+    pda_context: bool = False
 
 
 class ScopeAuditError(ValueError):
@@ -93,21 +96,27 @@ def _same(left, right):
     return canonical(left) == canonical(right)
 
 
-def _source_recovery_records(doc):
+def _source_recovery_records(doc, *, literal_recovery=True, pda_context=False):
     """Fresh source admission, retaining the frozen catalogue/router bytes."""
     from scripts.session_declarations import extract_declarations
     output = extract_declarations(doc['pages'], source_doc_sha256=document_hash(doc['pages']),
-                                  literal_recovery=True)
-    ids = {proof['record_id'] for proof in output['literal_recovery']['recoveries']}
+                                  literal_recovery=literal_recovery, pda_context=pda_context)
+    ids = {proof['record_id'] for key in ('literal_recovery', 'pda_context')
+           for proof in output.get(key, {}).get('recoveries', [])}
     return {record['id']: record for record in output['records'] if record['id'] in ids}
 
 
 def _route_with_recoveries(doc, record, recoveries):
     row = _legacy_route_record(doc, record)
     current = recoveries.get(record['id'])
-    if current is None or not _same(record, current):
+    if current is None:
         return row
-    # Only an exactly reconstructed new list can use the existing Mode A.
+    if not _same(record, current):
+        # A known new-recovery identity cannot fall back to permissive legacy
+        # geometry after its full value or prior state was tampered with.
+        row.update(eligible=False, mode=None, route_reason='current_recovery_record_mismatch')
+        return row
+    # Only an exactly reconstructed recovery can use the existing Mode A.
     # Source extraction, closure, polarity and null scope are independently
     # re-established; packet/response schemas and immutable-value rules stay put.
     values = [e for e in current['evidence'] if e['role'] == 'value']
@@ -118,21 +127,49 @@ def _route_with_recoveries(doc, record, recoveries):
     return row
 
 
-def route_record(doc, record, *, literal_recovery=False):
-    """Existing router, with source-reconstructed local lists only when opted in."""
+def route_record(doc, record, *, literal_recovery=False, pda_context=False):
+    """Existing router plus explicitly opted-in source-reconstructed recoveries."""
     if type(literal_recovery) is not bool:
         raise ValueError('Invalid literal recovery opt-in')
-    if not literal_recovery:
+    if type(pda_context) is not bool:
+        raise ValueError('Invalid PDA context opt-in')
+    if not (literal_recovery or pda_context):
         return _legacy_route_record(doc, record)
     from scripts.session_declarations import local_content_label
     labels = [e for e in record.get('evidence', []) if isinstance(e, dict) and e.get('role') == 'label']
-    if len(labels) != 1 or not local_content_label(labels[0].get('excerpt')):
+    if len(labels) != 1 or not (literal_recovery and local_content_label(labels[0].get('excerpt'))
+                                or pda_context and record.get('kind') == 'pda'):
         return _legacy_route_record(doc, record)
-    return _route_with_recoveries(doc, record, _source_recovery_records(doc))
+    return _route_with_recoveries(doc, record, _source_recovery_records(
+        doc, literal_recovery=literal_recovery, pda_context=pda_context))
 
 
 def _reason(value):
     _need(isinstance(value, str) and bool(value.strip()) and len(value) <= 1000, 'reason_contract')
+
+
+CURRENT_GROUP_PREFIX = 'scope-current:'
+SCOPE_CODE_PATHS = (
+    'curriculum/claims.py', 'curriculum/overview_fields.py',
+    'curriculum/source_interpreter.py', 'curriculum/source_segments.py',
+    'curriculum/vocabulary.py', 'scripts/session_declarations.py',
+    'scripts/pda_context_recovery.py', 'scripts/anchor_scope_catalogue.py',
+    'scripts/anchor_scope_audit.py',
+)
+
+
+def scope_group_id(request, page_number):
+    """Current opt-in identity, not a unit identity or semantic scope proof."""
+    _need(request.pda_context is True, 'current_profile_required')
+    _need(type(page_number) is int and page_number in request.groups, 'foreign_group_page')
+    root = Path(__file__).resolve().parents[1]
+    profile = {'version': 'pda-scope-current-profile.v1.1',
+               'literal_recovery': request.literal_recovery, 'pda_context': request.pda_context,
+               'governing_projects': request.governing_projects,
+               'code': {p: sha((root / p).read_bytes()) for p in SCOPE_CODE_PATHS}}
+    binding = {'profile': profile, 'document_id': request.document_id,
+               'source_sha256': request.source_sha256, 'page_number': page_number}
+    return CURRENT_GROUP_PREFIX + 'v1.1:' + sha(canonical(binding)) + ':p' + str(page_number)
 
 
 def _packet(request, packet):
@@ -149,6 +186,10 @@ def _packet(request, packet):
     _need(isinstance(records[0], dict) and isinstance(records[0].get('label_span'), dict), 'record_contract')
     number = records[0]['label_span'].get('page_number')
     _need(type(number) is int and number in request.groups, 'foreign_group_page')
+    if request.pda_context:
+        _need(packet['group_id'] == scope_group_id(request, number), 'current_profile_group_binding')
+    else:
+        _need(not packet['group_id'].startswith(CURRENT_GROUP_PREFIX), 'unexpected_current_profile_group')
     _need(_same(records, request.groups[number]), 'current_record_binding_mismatch')
     context_numbers = [number - 1, number] if number > 1 else [number]
     expected_context = [{'page_number': n, 'text': request.pages[n - 1]} for n in context_numbers]
@@ -240,6 +281,7 @@ def _validate_current_request(request):
     _need(isinstance(request.document_id, str) and 0 < len(request.document_id) <= 128, 'document_id_contract')
     _need(type(request.governing_projects) is bool, 'governing_projects_contract')
     _need(type(request.literal_recovery) is bool, 'literal_recovery_contract')
+    _need(type(request.pda_context) is bool, 'pda_context_contract')
     _need(isinstance(request.pages, tuple) and 0 < len(request.pages) <= 6
           and all(isinstance(p, str) for p in request.pages), 'source_window_contract')
     _need(sum(map(len, request.pages)) <= MAX_CHARACTERS, 'input_limit')
@@ -258,15 +300,19 @@ def _validate_current_request(request):
     _need(len(current) == 1 and _same(current[0]['pages'], list(request.pages)), 'source_windows_current_mismatch')
     _need(_same(request.catalogue, rebuilt), 'catalogue_source_reconstruction_mismatch')
     baseline = extract_declarations(request.pages, source_doc_sha256=request.source_sha256,
-                                    literal_recovery=request.literal_recovery)
-    recovery_ids = {p['record_id'] for p in baseline.get('literal_recovery', {}).get('recoveries', [])}
+                                    literal_recovery=request.literal_recovery, pda_context=request.pda_context)
+    recovery_ids = {p['record_id'] for key in ('literal_recovery', 'pda_context')
+                    for p in baseline.get(key, {}).get('recoveries', [])}
     recoveries = {r['id']: r for r in baseline['records'] if r['id'] in recovery_ids}
     groups = {}
     for record in baseline['records']:
-        row = _route_with_recoveries(current[0], record, recoveries) if request.literal_recovery else _legacy_route_record(current[0], record)
+        row = _route_with_recoveries(current[0], record, recoveries) if (request.literal_recovery or request.pda_context) else _legacy_route_record(current[0], record)
         if row['eligible'] and record.get('claim') is None:
             groups.setdefault(row['label_span']['page_number'], []).append({k: copy.deepcopy(row[k]) for k in RECORD_KEYS})
     _need(_same(request.groups, groups) and list(request.groups) == list(groups), 'current_route_reconstruction_mismatch')
+    if request.pda_context:
+        for number in request.groups:
+            scope_group_id(request, number)  # Also verify fingerprint availability before provider invocation.
 
 def validate_scope_recordings(*, request, recordings):
     """Atomic current-state validation; all candidates remain review-only."""
@@ -338,8 +384,14 @@ def audit_scopes(*, pages, declarations, config):
         _need(isinstance(config, ScopeAuditConfig) and config.enabled is True, 'config_contract')
         _need(type(config.governing_projects) is bool, 'governing_projects_contract')
         _need(type(config.literal_recovery) is bool, 'literal_recovery_contract')
+        _need(type(config.pda_context) is bool, 'pda_context_contract')
+        _need(('pda_context' in declarations) == config.pda_context, 'pda_context_config_mismatch')
         _need(('literal_recovery' in declarations) == config.literal_recovery, 'literal_recovery_config_mismatch')
-        _need(getattr(config.provider, 'kind', None) in {'synthetic_test', 'recorded_replay'}, 'external_provider_blocked')
+        try:
+            provider_kind = getattr(config.provider, 'kind', None)
+        except Exception:
+            raise ScopeAuditError('provider_failure') from None
+        _need(isinstance(provider_kind, str) and provider_kind in {'synthetic_test', 'recorded_replay'}, 'external_provider_blocked')
         _need(isinstance(config.document_id, str) and 0 < len(config.document_id) <= 128, 'document_id_contract')
         _need(isinstance(pages, (tuple, list)) and 0 < len(pages) <= 6 and all(isinstance(p, str) for p in pages), 'source_window_contract')
         _need(sum(map(len, pages)) <= MAX_CHARACTERS, 'input_limit')
@@ -357,19 +409,22 @@ def audit_scopes(*, pages, declarations, config):
         _need(sum(len(p) for d in source['documents'] for p in d['pages']) <= MAX_CHARACTERS, 'source_windows_limit')
         current = [d for d in source['documents'] if d['id'] == config.document_id]
         _need(len(current) == 1 and _same(current[0]['pages'], list(pages)), 'source_windows_current_mismatch')
-        recoveries = _source_recovery_records(current[0]) if config.literal_recovery else {}
+        recoveries = _source_recovery_records(
+            current[0], literal_recovery=config.literal_recovery, pda_context=config.pda_context
+        ) if (config.literal_recovery or config.pda_context) else {}
         groups, seen = {}, set()
         for record in declarations['records']:
             _need(isinstance(record, dict) and isinstance(record.get('id'), str) and record['id'] not in seen, 'record_identity_contract')
             seen.add(record['id'])
-            row = _route_with_recoveries(current[0], record, recoveries) if config.literal_recovery else _legacy_route_record(current[0], record)
+            row = _route_with_recoveries(current[0], record, recoveries) if (config.literal_recovery or config.pda_context) else _legacy_route_record(current[0], record)
             if row['eligible'] and record.get('claim') is None:
                 groups.setdefault(row['label_span']['page_number'], []).append({k: copy.deepcopy(row[k]) for k in RECORD_KEYS})
-        if not groups:
-            return {'status': 'no_eligible_records', 'candidates': [], 'errors': [], 'external_calls': 0, 'provider_attempts': 0}
         request = ScopeRequest(config.document_id, tuple(pages), dsha, dsha, catalogue, groups,
                                config.source_windows_text, config.source_windows_sha256, config.governing_projects,
-                               config.literal_recovery)
+                               config.literal_recovery, config.pda_context)
+        _validate_current_request(request)
+        if not groups:
+            return {'status': 'no_eligible_records', 'candidates': [], 'errors': [], 'external_calls': 0, 'provider_attempts': 0}
         try:
             attempts = 1
             recordings = config.provider.propose(copy.deepcopy(request))
@@ -379,7 +434,7 @@ def audit_scopes(*, pages, declarations, config):
         result = replay_scope_audit(request=request, recordings=recordings)
         result.update(external_calls=0, provider_attempts=1)
         return result
-    except (ScopeAuditError, ValueError, TypeError, KeyError, OverflowError, RecursionError, UnicodeError) as error:
+    except (ScopeAuditError, ValueError, TypeError, KeyError, OverflowError, RecursionError, UnicodeError, OSError, ImportError) as error:
         code = str(error) if isinstance(error, ScopeAuditError) else 'malformed_scope_input'
         return {'status': 'invalid', 'candidates': [], 'errors': [code], 'external_calls': 0,
                 'semantic_validation': False, 'production_applied': False, 'provider_attempts': attempts}
