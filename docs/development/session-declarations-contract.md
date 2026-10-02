@@ -149,3 +149,32 @@ criterion. Missing/zero denominators are N/A. Hash mismatches, fabricated quotes
 invalid states or claim/evidence contradictions are invalid outputs, never
 silently corrected. No result establishes global reliability, teacher validation,
 performance on private/final-reserve material, OCR accuracy or real API cost.
+
+## Literal general/project metadata, matcher v3.1.0
+
+The independently frozen `session-declarations-project-metadata-v1.md` contract
+and its synthetic reference govern this bounded extension. A complete existing
+typed label with a single formatting hyphen can now be detected in a page-local
+metadata block introduced by an exact canonical campo name, optionally labelled
+`Campo(s)` or `Campo(s) formativo(s)`. The name is only a textual block cue. A
+bounded local-code description row supplies context, never a declaration or a
+curricular relationship. Local numbered PDA prefixes additionally admit the
+Spanish letters and ordinary NFC/NFD forms specified in that frozen contract;
+all evidence remains unchanged original text.
+
+Literal extraction has separate label/context functions. The existing marker
+proofs, `_planning_structure`, unit scanner, same-page unit assignment, named
+continuation and structural-scaffold rules remain unchanged. In particular,
+adding Inicio below a new bare campo/code block cannot turn it into a previous
+page's session scaffold. Only an existing recognized same-page unit can resolve
+the new context; a project remains an abstention and an unresolved unit stays
+null. A recognized explicit new unit may restart metadata, but a later campo or
+DATOS GENERALES cannot reopen an activity, quotation, example or unknown block.
+
+Field/code switches cut a value only after complete terminal punctuation and
+corroborating subsequent field/code/typed structure. A final uncorroborated code
+row or a field/code row within an unfinished value remains uncertain. Explicit
+stops can bound a completed prior literal but cannot license later declarations
+through the new context. The independent v1.3.3 scorer needs no changes: its
+literal, physical-unit, null-scope, joint, session-claim and challenge measures
+remain separate. Frozen fixtures and pre-matcher expected answers are untouched.
