@@ -66,6 +66,6 @@ Next supervisor pass (2761): Phase 1 baseline under RENEWED 2761–2769 carry gr
 
 ## PR record
 
-- Staged for this checkpoint (docs-only Markdown): `docs/handoffs/supervisor-iteration-2760.md` (this file) + `docs/handoffs/supervisor-cumulative.md` (deltas 2751–2760) + `docs/handoffs/supervisor-prompt-catalog.md` (2760 row) + `docs/handoffs/IMPLEMENTATION-GATE.md` (2760 HOLD note). Verified `git diff --cached --name-only` before commit — four Markdown paths only, no code. Pushed branch `supervisor/aulalista-docs` as commit `REPLACE_WITH_HASH` (`cfd8f61..REPLACE_WITH_HASH`, 4 files); PR #115 already OPEN so no new PR created; never merged/approved/closed.
+- Staged for this checkpoint (docs-only Markdown): `docs/handoffs/supervisor-iteration-2760.md` (this file) + `docs/handoffs/supervisor-cumulative.md` (deltas 2751–2760) + `docs/handoffs/supervisor-prompt-catalog.md` (2760 row) + `docs/handoffs/IMPLEMENTATION-GATE.md` (2760 HOLD note). Verified `git diff --cached --name-only` before commit — four Markdown paths only, no code. Pushed branch `supervisor/aulalista-docs` as commit `1856d4e` (`cfd8f61..1856d4e`, 4 files, +90/−1); PR #115 already OPEN so no new PR created; never merged/approved/closed.
 
 (End of file - total 70 lines)
