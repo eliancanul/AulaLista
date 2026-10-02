@@ -78,6 +78,6 @@ Next supervisor pass (2721): Phase-1 baseline slice under the RENEWED 2721–272
 - Pre-commit verification: `git diff --cached --name-only` reviewed before commit (docs-only Markdown under `docs/handoffs/` only — this handoff, cumulative, prompt catalog, gate; no code, no root docs, no config).
 - Push target: branch `supervisor/aulalista-docs` (already checked out; no switch). PR #115 already OPEN (`docs: supervisor iteration 90 checkpoint (handoffs only, do not merge)`); this checkpoint pushes to the same branch/PR — no new PR needed, never merge/approve/close.
 - Dirty-tree note: pre-existing `M`/`D`/`??` code backlog left untouched and unstaged (human Phase A–E review/commit still due — blocks a clean base ref since 2380; docs-only pushes work around it but do not resolve it). If push is unsafe at packaging time, skip and record why here.
-- Outcome: (to be filled at packaging time — commit hash / push range / PR #115 state, or reason skipped).
+- Outcome: COMMITTED + PUSHED `1b2d52c` (`2de445e..1b2d52c`, 4 files, +103/−1, docs-only verified via `git diff --cached --name-only`) to `supervisor/aulalista-docs`; PR #115 remains OPEN (observe-only, never merged/approved/closed).
 
 (End of file)
