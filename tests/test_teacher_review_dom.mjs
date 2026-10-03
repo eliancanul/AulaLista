@@ -46,3 +46,24 @@ test('native textarea Enter is not intercepted or submitted',()=>{const s=setup(
 test('deliberate form submission bypasses warning; pageshow restores dirty protection',async()=>{const s=setup();s.type('UNSAVED DIRECT SUBMIT');s.form.requestSubmit(s.saveButton);await s.tick();assert.equal(s.submissions.length,1);assert.equal(isGuarded(s),false);s.win.dispatch('pageshow',{persisted:true});assert.ok(isGuarded(s));});
 
 test('an older acknowledgment cannot clear a newer edit with identical text',async()=>{const s=setup();s.type('A');await s.flush();s.type('B');await s.flush();s.type('A');await s.ack(0);assert.ok(isGuarded(s));await s.ack(1);assert.ok(isGuarded(s));await s.flush();await s.ack(2);assert.equal(isGuarded(s),false);});
+
+// CDP keyDown must carry Enter's character event to activate a native button.
+// This checks the actual browser-harness helper; it does not launch a browser.
+test('CDP Enter carries carriage return without replacing native keyboard activation', async () => {
+  const harness = fs.readFileSync(new URL('./teacher_review_browser.mjs', import.meta.url), 'utf8');
+  const helper = harness.match(/  async function nativeEnter\(\) \{([\s\S]*?)\n  \}/);
+  assert.ok(helper, 'The current journey must retain its native Enter helper');
+  const events = [];
+  await vm.runInNewContext(`(async () => {${helper[0]}; await nativeEnter();})()`, {
+    send: async (method, params) => events.push(JSON.parse(JSON.stringify({method, params}))),
+  });
+  assert.deepEqual(events, [
+    {method: 'Input.dispatchKeyEvent', params: {
+      type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13,
+      text: '\r', unmodifiedText: '\r',
+    }},
+    {method: 'Input.dispatchKeyEvent', params: {
+      type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13,
+    }},
+  ]);
+});

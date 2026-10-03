@@ -96,7 +96,7 @@ try {
     await evaluate(`document.querySelector('button[name=action][value=${action}]').click()`);
   }
   async function nativeEnter() {
-    await send('Input.dispatchKeyEvent', {type:'keyDown', key:'Enter', code:'Enter', windowsVirtualKeyCode:13});
+    await send('Input.dispatchKeyEvent', {type:'keyDown', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, text:'\r', unmodifiedText:'\r'});
     await send('Input.dispatchKeyEvent', {type:'keyUp', key:'Enter', code:'Enter', windowsVirtualKeyCode:13});
   }
   const first = config.firstAnswer;
