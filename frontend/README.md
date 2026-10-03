@@ -46,10 +46,10 @@ Plain local fragment links in review components and the skip link are handled wi
 
 Shared components are `PrimaryAction` (`type`, `busy`, `disabled`, default slot), `AppStatus` (`title`, `detail`, `kind`, default slot) and `EditorialBoundary`. Components should accept immutable props and emit intents; they must not import the shell or mutate sibling state.
 
-## Known integration gaps
+## Current limits and verification
 
-- S07/S09 have no write contract for review metadata or teacher answers. Notes remain visibly unpersisted; S20/Robert must assign any durable extension to those owners.
-- S07/S09 return only the current approval state, without the prior approved snapshot after reopen. No historical approval is invented.
+- Review metadata and teacher answers have no persistence contract. Notes remain visibly temporary until the teacher explicitly incorporates them into the saved activity.
+- The editor reloads revision history and the last approved snapshot from the authenticated API. A subsequent edit remains pending; historical approval never approves current text.
 - S17's component exposes no state or leave method. The shell conservatively marks the whole chat view dirty after input, including after sending. It may ask for confirmation even when the composer is empty.
-- Real session/CSRF/reviewer capability bootstrap, API persistence round trips, browser layout and downloadable-file acceptance remain S08/S19/S20 integration checks.
-- S15's standalone verifier currently misses single-quoted `vue` imports in its data-URL rewrite. The actual component is covered by the S11 integrated build and mounting test. S15 owns a fix to its verifier.
+- The compiled browser and API regression suites exercise real local Django sessions, CSRF, persistence, reopen and explicit approval with temporary databases and synthetic PDFs. Export has separate focused tests; neither fixture suite establishes pedagogical quality or provider performance.
+- Standalone feature verifiers exercise their own fixtures. Use the integrated build and browser suite to assess the assembled application; a focused feature result does not establish the full workflow.
