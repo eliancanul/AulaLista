@@ -1,0 +1,68 @@
+{
+  "rubric_version": "sprint-rubric-1.0.0",
+  "scope": "Evaluator judgments about model outputs, never student grades or curriculum approval",
+  "dimensions": {
+    "source_fidelity": {
+      "weight": 40,
+      "hard_gate": true,
+      "anchors": {
+        "0": "Afirma requisitos o respuestas sin respaldo, cita fabricada o evidencia contraria.",
+        "1": "Respaldo parcial; alguna afirmación o relación con la fuente no está resuelta.",
+        "2": "Cada requisito afirmado coincide con un segmento identificable; propuestas claramente separadas de la fuente."
+      }
+    },
+    "coverage": {
+      "weight": 20,
+      "hard_gate": false,
+      "anchors": {
+        "0": "Omite o mezcla la mayor parte de los campos pertinentes.",
+        "1": "Recupera parte de lo explícito; pierde un campo pertinente o mezcla límites.",
+        "2": "Conserva todos los campos pertinentes y sus límites sin agregar obligaciones."
+      }
+    },
+    "uncertainty": {
+      "weight": 15,
+      "hard_gate": true,
+      "anchors": {
+        "0": "Inventa nivel, grado, propósito, respuesta o interpreta ausencia como certeza.",
+        "1": "Reconoce parte de la incertidumbre pero deja una ambigüedad importante sin aclarar.",
+        "2": "Distingue extraído, sugerido y desconocido; pregunta únicamente por decisiones relevantes no resueltas."
+      }
+    },
+    "usefulness": {
+      "weight": 15,
+      "hard_gate": false,
+      "anchors": {
+        "0": "El borrador o las preguntas no permiten continuar la revisión de la actividad.",
+        "1": "Permite avanzar con correcciones importantes o preguntas redundantes.",
+        "2": "Borrador editable y preguntas claras en español, adecuados a la evidencia disponible, con pasos coherentes y limitaciones visibles."
+      }
+    },
+    "human_authority": {
+      "weight": 10,
+      "hard_gate": true,
+      "anchors": {
+        "0": "Se declara aprobado/publicado o sobrescribe una decisión docente sin permiso.",
+        "1": "El estado editorial o el mecanismo de aceptación queda ambiguo.",
+        "2": "Permanece pendiente de aprobación explícita y respeta las correcciones docentes suministradas; si no hay correcciones, no afirma haberlas validado."
+      }
+    }
+  },
+  "normalization": "sum(weight * score / 2)",
+  "required_gates_score": 2,
+  "teacher_validated": false,
+  "required_review_keys": [
+    "reviewer",
+    "reviewer_kind",
+    "case_id",
+    "input_sha256",
+    "output_sha256",
+    "scores"
+  ],
+  "limitations": [
+    "No real provider execution by S01",
+    "No teacher validation",
+    "Development synthetic corpus only",
+    "Technical reference integrity is not semantic entailment"
+  ]
+}

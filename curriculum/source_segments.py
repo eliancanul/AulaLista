@@ -8,6 +8,7 @@ Project proximity is a reviewable interpretation, never a membership claim.
 from __future__ import annotations
 
 import copy
+import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -20,6 +21,41 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
+
+
+def extracted_page_segments(text: str, document_id: str, page: int) -> list[dict[str, Any]]:
+    """Literal line anchors for the new reader, separate from legacy PDF offsets.
+
+    Structural kinds are review hints, never confirmed table cells or headings.
+    The text digest prevents reuse of IDs when parser output changes.
+    """
+    text_digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    segments = []
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        value = line.strip()
+        if value:
+            start = offset + len(line) - len(line.lstrip())
+            end = start + len(value)
+            if re.search(r"\S(?:[^\S\r\n]{2,}|\t)\S", value):
+                kind = "table_row_candidate"
+            elif re.fullmatch(
+                r"(?:DATOS GENERALES|SESI[ÓO]N\s+\d+(?:\s*[:.]\s*.+)?|"
+                r"Proyecto\s*:.+|Inicio\s*:?|Desarrollo\s*:?|Cierre\s*:?)",
+                value, re.IGNORECASE,
+            ):
+                kind = "heading_candidate"
+            else:
+                kind = "text"
+            segments.append({
+                "id": f"{document_id}:text-v1:{text_digest}:p{page}:{start}-{end}",
+                "text": value, "page": page, "kind": kind,
+                "text_start": start, "text_end": end,
+            })
+        offset += len(line)
+    return segments
+
+
 _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
 # Preserve the legacy spacing class for existing entities and safety cuts.
 # Only the newly admitted wrapped form uses the stricter physical-line class.

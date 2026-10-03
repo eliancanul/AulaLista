@@ -60,7 +60,12 @@ from curriculum.views import (
 )
 
 
+from api.views import sprint_shell
+from api.auth import teacher_logout
+
 urlpatterns = [
+    path("tutor/logout/", teacher_logout, name="teacher-logout"),
+    path("sprint/", sprint_shell, name="sprint-shell"),
     path("", lambda request: redirect("student-packages")),
     path("cms/", include("wagtail.admin.urls")),
     path("documents/", include("wagtail.documents.urls")),

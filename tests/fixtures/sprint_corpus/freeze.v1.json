@@ -1,0 +1,10 @@
+{
+  "corpus_version": "sprint-corpus-1.0.1-synthetic",
+  "frozen_at_utc": "2026-10-03T07:02:57.948003+00:00",
+  "classification": "synthetic_development_only",
+  "scope": "Repository-derived synthetic inputs and technical rubric only; no real-source inventory or historical run artifacts.",
+  "files": {
+    "cases.v1.json": "1d3b0de1f5a514a2e7643230b913ab8afcf03bfab2d6ae0983fa436a94141411",
+    "rubric.v1.json": "081118acc984033ca6ba99ba3b937c4c53ddce0466faeda5d36025d4501022d3"
+  }
+}

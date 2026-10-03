@@ -4,6 +4,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SPRINT_PERSISTENCE_PATH = os.environ.get("AULALISTA_DRAFTS_DB_PATH")
+
 SECRET_KEY = "aulalista-t01-local-development-only"
 DEBUG = True
 ALLOWED_HOSTS = [
