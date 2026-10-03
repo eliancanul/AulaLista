@@ -69,4 +69,4 @@ Next supervisor pass (2791): Phase-1 baseline slice under the RENEWED 2791–279
 
 ## PR record
 
-- Packaging attempted at this 10th-iteration checkpoint per loop rule (docs-only Markdown: this file + cumulative + prompt catalog + gate; branch `supervisor/aulalista-docs`; `git diff --cached --name-only` verified before commit; never `git add -A`, never code; no merge/approve/close). Outcome: COMMITTED + PUSHED (see follow-up PR-update record); PR #115 already OPEN so no new PR created — https://github.com/eliancanul/AulaLista/pull/115 (observe-only, never merged/approved/closed by this loop).
+- Packaging attempted at this 10th-iteration checkpoint per loop rule (docs-only Markdown: this file + cumulative + prompt catalog + gate; branch `supervisor/aulalista-docs`; `git diff --cached --name-only` verified before commit; never `git add -A`, never code; no merge/approve/close). Outcome: COMMITTED + PUSHED as `9d197c7` (`956ba1f..9d197c7`, 4 files, +92/−1) to `supervisor/aulalista-docs`; PR #115 already OPEN so no new PR created — https://github.com/eliancanul/AulaLista/pull/115 (observe-only, never merged/approved/closed by this loop).
