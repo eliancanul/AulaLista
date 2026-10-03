@@ -1640,15 +1640,15 @@
                   Hay <strong>{{ queue.pending_review_count }} elemento{{ queue.pending_review_count|pluralize:"s" }} opcional{{ queue.pending_review_count|pluralize:"es" }}</strong> pendiente{{ queue.pending_review_count|pluralize:"s" }} de revisión.
                 </div>
                 <label for="id_confirm_pending_items" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #166534; cursor: pointer; min-height: 44px;">
-                  <input type="checkbox" name="confirm_pending_items" id="id_confirm_pending_items" value="1" style="width: 1.1rem; height: 1.1rem;">
+                  <input type="checkbox" form="teacher-approval-form" name="confirm_pending_items" id="id_confirm_pending_items" value="1" style="width: 1.1rem; height: 1.1rem;">
                   <span>Acepto continuar con {{ queue.pending_review_count }} elemento{{ queue.pending_review_count|pluralize:"s" }} opcional{{ queue.pending_review_count|pluralize:"es" }} pendiente{{ queue.pending_review_count|pluralize:"s" }}</span>
                 </label>
               {% endif %}
               <label for="id_confirm_approval" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #166534; cursor: pointer; min-height: 44px;">
-                <input type="checkbox" name="confirm_approval" id="id_confirm_approval" value="1" style="width: 1.1rem; height: 1.1rem;">
+                <input type="checkbox" form="teacher-approval-form" name="confirm_approval" id="id_confirm_approval" value="1" style="width: 1.1rem; height: 1.1rem;">
                 <span>Confirmar aprobación de la planeación</span>
               </label>
-              <button type="submit" name="action" value="approve" class="button button-primary" style="background: #15803d; border-color: #166534; font-weight: 700; min-height: 44px;">
+              <button type="submit" form="teacher-approval-form" name="action" value="approve" class="button button-primary" style="background: #15803d; border-color: #166534; font-weight: 700; min-height: 44px;">
                 ✓ Aprobar planeación
               </button>
             </div>
@@ -1657,6 +1657,7 @@
               La aprobación estará disponible una vez resueltos todos los conflictos y completada la revisión docente.
             </span>
           {% endif %}
+          <button type="button" id="download-form-recovery" class="button button-secondary">Descargar copia de mi edición</button>
           <a href="{% url 'tutor-import-interpretation' job.pk %}" class="button button-secondary">
             Reabrir / Recargar
           </a>
@@ -1666,6 +1667,10 @@
         </div>
       </form>
 
+      <form method="post" id="teacher-approval-form" action="{% url 'tutor-import-approve' job.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+      </form>
       <!-- Historial de Auditoría Editorial -->
       {% if dossier.history %}
         <section aria-labelledby="history-heading" style="margin-top: 1.5rem; border-top: 1px solid var(--color-line); padding-top: 1.5rem;">
@@ -1714,15 +1719,30 @@
       (function() {
         let isFormDirty = false;
         let isSubmitting = false;
+        let guidedPending = false;
 
-        function setDirty() {
-          if (!isFormDirty) {
-            isFormDirty = true;
-            const dirtyIndicator = document.getElementById('dirty-indicator');
-            if (dirtyIndicator) {
-              dirtyIndicator.style.display = 'inline-flex';
-            }
+        function updateDirtyState() {
+          isFormDirty = ['#interpretation-form', '#queue-item-form'].some(function(selector) {
+            return document.querySelector(selector)?.dataset.edited === 'true';
+          });
+          const dirtyIndicator = document.getElementById('dirty-indicator');
+          if (dirtyIndicator) {
+            dirtyIndicator.style.display = isFormDirty ? 'inline-flex' : 'none';
           }
+        }
+
+        function setDirty(event) {
+          const form = event.currentTarget;
+          if (event.target.form && event.target.form !== form) return;
+          form.dataset.edited = 'true';
+          form.dataset.editRevision = String(Number(form.dataset.editRevision || 0) + 1);
+          updateDirtyState();
+        }
+
+        function keepPendingEdits(queueForm) {
+          if (!isFormDirty) return false;
+          showAsyncError(queueForm, 'La respuesta enviada se guardó. Hay cambios sin guardar en la página; se conservaron para que puedas revisarlos y guardarlos.');
+          return true;
         }
 
         function showAsyncError(form, message) {
@@ -1735,13 +1755,19 @@
             form.prepend(alert);
           }
           alert.textContent = message || 'No se pudo guardar. Tu edición sigue aquí; revisa la conexión e inténtalo de nuevo.';
-          alert.focus();
+          const editing = document.activeElement?.matches(
+            '#queue-item-form input, #queue-item-form textarea, #queue-item-form select, ' +
+            '#interpretation-form input, #interpretation-form textarea, #interpretation-form select'
+          );
+          if (!editing) alert.focus();
         }
 
         async function submitGuidedReview(event) {
           event.preventDefault();
           const queueForm = event.currentTarget;
           const submitter = event.submitter;
+          if (guidedPending || isSubmitting) return;
+          const submittedRevision = queueForm.dataset.editRevision;
           if (queueForm.dataset.edited === 'true' &&
               (submitter?.value === 'postpone_queue_item' ||
                (submitter?.value === 'confirm_queue_item' && !queueForm.querySelector('.active-annex-controls')))) {
@@ -1753,8 +1779,9 @@
             formData.set(submitter.name, submitter.value);
           }
           const buttons = queueForm.querySelectorAll('button[type="submit"]');
+          const disabledBeforeSave = Array.from(buttons, function(button) { return button.disabled; });
           buttons.forEach(function(button) { button.disabled = true; });
-          isSubmitting = true;
+          guidedPending = true;
           let saved = false;
 
           try {
@@ -1775,6 +1802,21 @@
               throw new Error(payload.message || raw || 'No se pudo guardar la respuesta.');
             }
             saved = true;
+            const version = queueForm.querySelector('[name="expected_version"]');
+            if (version && Number.isSafeInteger(payload.version) && payload.version > 0) {
+              version.value = String(payload.version);
+              // Other forms still describe their original snapshot. Never lift
+              // their conflict guard using a response to a different form.
+              ['#interpretation-form', '#teacher-approval-form'].forEach(function(selector) {
+                const other = document.querySelector(selector);
+                if (other) other.dataset.remoteVersion = String(payload.version);
+              });
+            }
+            if (queueForm.dataset.editRevision === submittedRevision) {
+              queueForm.dataset.edited = 'false';
+            }
+            updateDirtyState();
+            if (keepPendingEdits(queueForm)) return;
 
             const nextUrl = new URL(formUrl, window.location.href);
             nextUrl.searchParams.delete('item');
@@ -1797,11 +1839,11 @@
               throw new Error('La respuesta se guardó, pero la vista no pudo actualizarse.');
             }
 
+            if (keepPendingEdits(queueForm)) return;
             const scrollPosition = window.scrollY;
             current.replaceWith(replacement);
             history.replaceState({}, '', nextUrl.toString());
             isFormDirty = false;
-            isSubmitting = false;
             bindInteractive(replacement);
             window.scrollTo(0, scrollPosition);
             const nextControl = replacement.querySelector('#queue-item-form textarea, #queue-item-form input:not([type="hidden"]), #queue-item-form button');
@@ -1809,31 +1851,78 @@
               nextControl.focus({preventScroll: true});
             }
           } catch (error) {
-            isSubmitting = false;
             if (saved) {
-              isFormDirty = false;
+              if (keepPendingEdits(queueForm)) return;
               showAsyncError(queueForm, 'La respuesta se guardó, pero la vista no pudo actualizarse. Recarga la página para continuar.');
             } else {
-              showAsyncError(queueForm, error.message);
-              buttons.forEach(function(button) { button.disabled = false; });
+              showAsyncError(queueForm, error instanceof TypeError
+                ? 'No se pudo conectar con AulaLista. Tu edición sigue en pantalla. Revisa la conexión e inténtalo de nuevo.'
+                : error.message);
             }
+          } finally {
+            guidedPending = false;
+            buttons.forEach(function(button, index) { button.disabled = disabledBeforeSave[index]; });
           }
+        }
+
+        function hasNewerSavedVersion(form) {
+          const expected = Number(form?.querySelector('[name="expected_version"]')?.value);
+          return Number(form?.dataset.remoteVersion) > expected;
+        }
+
+        function retainStaleForm(form) {
+          showAsyncError(form, 'La revisión guiada guardó una versión más reciente. Tu edición completa sigue aquí. Descarga una copia de tus cambios antes de reabrir la versión guardada y compararla. No se envió ni sobrescribió tu edición.');
+        }
+
+        function downloadRecovery(form) {
+          const fields = Array.from(new FormData(form).entries()).filter(function(entry) {
+            return entry[0] !== 'csrfmiddlewaretoken';
+          });
+          const file = new Blob([JSON.stringify({
+            kind: 'aulalista-unsaved-form', approved: false,
+            expected_version: form.querySelector('[name="expected_version"]')?.value,
+            fields: fields
+          }, null, 2)], {type: 'application/json;charset=utf-8'});
+          const url = URL.createObjectURL(file);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'copia-edicion-sin-aprobar.json';
+          link.click();
+          setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
         }
 
         function bindInteractive(root) {
           const form = root.querySelector ? root.querySelector('#interpretation-form') : null;
           const queueForm = root.querySelector ? root.querySelector('#queue-item-form') : null;
+          const approvalForm = root.querySelector ? root.querySelector('#teacher-approval-form') : null;
+          if (approvalForm) approvalForm.addEventListener('submit', function(event) {
+            updateDirtyState();
+            if (isFormDirty || guidedPending) { event.preventDefault(); showAsyncError(form, 'Guarda tus cambios antes de aprobar.'); }
+            else if (hasNewerSavedVersion(approvalForm)) { event.preventDefault(); retainStaleForm(form); }
+          });
+          const recoveryButton = root.querySelector ? root.querySelector('#download-form-recovery') : null;
+          if (recoveryButton) recoveryButton.addEventListener('click', function() { downloadRecovery(form); });
           [form, queueForm].forEach(function(boundForm) {
             if (boundForm && !boundForm.dataset.guidedBound) {
               boundForm.dataset.guidedBound = 'true';
               boundForm.addEventListener('input', setDirty);
               boundForm.addEventListener('change', setDirty);
               if (boundForm === queueForm) {
-                boundForm.addEventListener('input', function() { boundForm.dataset.edited = 'true'; });
-                boundForm.addEventListener('change', function() { boundForm.dataset.edited = 'true'; });
                 boundForm.addEventListener('submit', submitGuidedReview);
               } else {
-                boundForm.addEventListener('submit', function() { isSubmitting = true; });
+                boundForm.addEventListener('submit', function(event) {
+                  if (guidedPending || queueForm?.dataset.edited === 'true') {
+                    event.preventDefault();
+                    showAsyncError(boundForm, 'Guarda primero la edición de la duda activa y espera a que termine antes de continuar.');
+                    return;
+                  }
+                  if (hasNewerSavedVersion(boundForm)) {
+                    event.preventDefault();
+                    retainStaleForm(boundForm);
+                    return;
+                  }
+                  isSubmitting = true;
+                });
               }
             }
           });
@@ -1843,7 +1932,7 @@
             anchor.dataset.dirtyBound = 'true';
             anchor.addEventListener('click', function(e) {
               if (anchor.getAttribute('target') === '_blank') return;
-              if (isFormDirty && !isSubmitting) {
+              if ((isFormDirty && !isSubmitting) || guidedPending) {
                 const proceed = window.confirm('Tienes cambios no guardados en la planeación. ¿Deseas salir sin guardar?');
                 if (!proceed) e.preventDefault();
               }
@@ -1855,7 +1944,7 @@
 
         // Intercept page unload / navigation away
         window.addEventListener('beforeunload', function(e) {
-          if (isFormDirty && !isSubmitting) {
+          if ((isFormDirty && !isSubmitting) || guidedPending) {
             e.preventDefault();
             e.returnValue = 'Tienes cambios no guardados en la revisión. ¿Seguro que deseas salir?';
             return e.returnValue;

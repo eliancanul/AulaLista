@@ -19,3 +19,8 @@ La investigación de algoritmos se presenta en [aulalista-research](https://gith
 `docs/research/` conserva material histórico y de descubrimiento del producto, además de inventarios privados de corpus usados en investigaciones anteriores. Esos archivos no son documentación pública del repositorio de investigación. `scripts/benchmark_issue96_annexes.py` permanece aquí porque ejecuta un recorrido del importador Django; su eventual extracción exige desacoplarlo y sustituir el PDF de prueba por un fixture con permiso claro.
 
 Los issues y PR anteriores mantienen su historial en este repositorio. El trabajo nuevo de investigación debe registrarse en el repositorio de investigación; los cambios del producto se siguen aquí.
+
+## Integración privada del sprint
+
+El recorrido local Vue + Django + FastAPI se inicia en `/sprint/`. Véase
+[el arranque, las pruebas y los límites](docs/integration-night.md).

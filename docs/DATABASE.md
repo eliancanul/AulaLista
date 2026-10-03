@@ -286,3 +286,19 @@ una confirmación o aplazamiento no se aplica al nuevo valor
 anexos requieren además la misma referencia, mención, páginas y evidencia.
 El historial registra tanto el delta de extracción como la decisión de retener
 o abstenerse; las aprobaciones editoriales siguen invalidándose al reextraer.
+
+## Almacenamiento de revisión del sprint
+
+`api.persistence.SQLiteRepository` utiliza un archivo SQLite dedicado, elegido por
+`AULALISTA_DRAFTS_DB_PATH`, diferente de `AULALISTA_DB_PATH` (Django). No migra ni
+reescribe `CurriculumImportJob`. `documents` conserva propietario Django, JSON
+inicial v1/v2, bytes PDF, SHA-256, nombre y fecha; `revisions` conserva versiones
+append-only del borrador, acción, actor y fecha. El esquema SQLite usa application_id
+`0x41554c41` y user_version `1`; la versión curricular permanece dentro del JSON.
+
+Cada escritura usa `BEGIN IMMEDIATE` y la revisión esperada. Guardar invalida la
+aprobación; aprobar exige confirmación explícita, fuentes, objetivo y pasos.
+Se preserva el historial aprobado y no se crean snapshots publicados ni sesiones.
+Listar, leer, descargar fuente e historial se restringe al propietario autenticado.
+La API conserva metadatos v2 y permite vacíos/saltos de línea en ediciones docentes;
+la validación inicial de S06 sigue exigiendo procedencia y aprobación pendiente.

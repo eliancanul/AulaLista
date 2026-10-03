@@ -1,0 +1,18 @@
+{
+  "state": {
+    "saved": { "revision": 3 },
+    "draft": {
+      "title": "Compartimos una hoja en partes iguales",
+      "objective": "Representar mitades y cuartos con una hoja de papel.\nAdaptación docente: trabajar en parejas y explicar con palabras propias.",
+      "materials": ["Una hoja reutilizada por pareja", "Lápiz", "Pizarrón o una hoja grande"],
+      "steps": ["Doblen la hoja en dos partes iguales. Marquen cada mitad.", "Doblen otra vez y cuenten las cuatro partes. Comparen una mitad con un cuarto.", "En parejas, expliquen por qué dos cuartos cubren una mitad. Dibujen un ejemplo distinto."],
+      "assessment": "Escucha la explicación y revisa el dibujo. Respuesta prevista: dos cuartos equivalen a una mitad si las partes son iguales. Si las partes no son iguales, pide que revisen los dobleces.",
+      "source_ids": ["ejemplo-p1"]
+    },
+    "approved": null
+  },
+  "source": {
+    "document_id": "Ejemplo sintético S14, no es un documento curricular oficial",
+    "source_segments": [{ "id": "ejemplo-p1", "text": "Representar mitades y cuartos mediante dobleces de una hoja en partes iguales.", "page": 1 }]
+  }
+}
