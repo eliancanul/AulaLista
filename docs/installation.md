@@ -89,6 +89,12 @@ sh scripts/package_macos.sh
 
 El archivo queda en `dist/aulalista-local.tar.gz`. En una MacBook Air limpia:
 
+El paquete excluye los directorios privados conocidos (`media`, `.runtime`,
+`artifacts`, `output`, `outputs`, `evidence`, `docs/PLANEACIONES` y
+`docs/research`) y `.env*`. Mantén cualquier ruta privada personalizada fuera
+del checkout y revisa el inventario del archivo antes de compartirlo: estas
+exclusiones no detectan datos privados guardados en otros directorios.
+
 ```sh
 tar -xzf aulalista-local.tar.gz
 cd AulaLista

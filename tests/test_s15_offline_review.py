@@ -13,11 +13,15 @@ from test_t15_curriculum_import import make_minimal_pdf
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.browser
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_s15_offline_review_keeps_edit_and_retries(live_server, tmp_path, settings):
     chrome = os.environ.get(
         "S15_CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     )
     if not Path(chrome).is_file() or not shutil.which("node"):
+        if os.environ.get("CI") or os.environ.get("TEACHER_REVIEW_BROWSER_REQUIRED") == "1":
+            pytest.fail("Required legacy Chrome/Node acceptance did not run")
         pytest.skip("S15 browser check requires installed Chrome and Node 22+")
     settings.AULALISTA_IMPORT_ASYNC = False
     pdf = tmp_path / 'synthetic-reading.pdf'

@@ -21,6 +21,16 @@ tar -czf "$ARCHIVE" \
   --exclude="$PROJECT_NAME/db.sqlite3-shm" \
   --exclude="$PROJECT_NAME/db.sqlite3-journal" \
   --exclude="$PROJECT_NAME/staticfiles" \
+  --exclude="$PROJECT_NAME/.runtime" \
+  --exclude="$PROJECT_NAME/media" \
+  --exclude="$PROJECT_NAME/artifacts" \
+  --exclude="$PROJECT_NAME/.env" \
+  --exclude="$PROJECT_NAME/.env.*" \
+  --exclude="$PROJECT_NAME/output" \
+  --exclude="$PROJECT_NAME/outputs" \
+  --exclude="$PROJECT_NAME/evidence" \
+  --exclude="$PROJECT_NAME/docs/PLANEACIONES" \
+  --exclude="$PROJECT_NAME/docs/research" \
   --exclude="$PROJECT_NAME/dist" \
   "$PROJECT_NAME"
 

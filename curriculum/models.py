@@ -3279,3 +3279,20 @@ CurriculumPackageViewSet.permission_policy = CurriculumPackagePermissionPolicy(
 
 
 register_snippet(CurriculumPackageViewSet)
+
+
+class CurriculumTeacherReview(models.Model):
+    """Durable, bounded clarification conversation; never an editorial approval."""
+
+    job = models.OneToOneField(
+        CurriculumImportJob, on_delete=models.PROTECT, related_name="teacher_review"
+    )
+    revision = models.PositiveIntegerField(default=1)
+    dossier_version = models.PositiveIntegerField()
+    source_sha256 = models.CharField(max_length=64)
+    state = models.JSONField(default=dict)
+    draft_state = models.JSONField(default=dict)
+    draft_epoch = models.PositiveIntegerField(default=0)
+    generation_token = models.UUIDField(null=True, blank=True, editable=False)
+    generation_started_at = models.DateTimeField(null=True, blank=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)

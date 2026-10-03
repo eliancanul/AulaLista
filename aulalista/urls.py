@@ -60,6 +60,8 @@ from curriculum.views import (
 )
 
 
+from curriculum.teacher_review_views import teacher_review
+
 from api.views import sprint_shell
 from api.auth import teacher_logout
 
@@ -145,12 +147,12 @@ urlpatterns = [
     ),
     path(
         "tutor/imports/<int:job_id>/",
-        tutor_import_detail,
+        teacher_review,
         name="tutor-import-detail",
     ),
     path(
         "tutor/imports/<int:job_id>/interpretacion/",
-        tutor_import_interpretation,
+        teacher_review,
         name="tutor-import-interpretation",
     ),
     path(

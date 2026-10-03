@@ -1,0 +1,5 @@
+{% if evidence %}<details class="source-citations"><summary>Citas originales del PDF</summary>
+<ul>{% for cite in evidence %}<li>{% if cite.page_number %}<a href="{% url 'tutor-import-source-page' job.pk cite.page_number %}">Página física {{ cite.page_number }}</a>{% endif %}{% if cite.role %} · {{ cite.role }}{% endif %}
+<p class="literal-answer">{{ cite.excerpt }}</p>{% if cite.printed_label %}<p>Etiqueta impresa: {{ cite.printed_label }}</p>{% endif %}</li>{% endfor %}</ul>
+<p class="muted">Estas citas conservan la procedencia original. Un dato aportado por docente puede diferir del texto de la fuente.</p>
+</details>{% endif %}

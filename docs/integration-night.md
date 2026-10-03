@@ -1,4 +1,6 @@
-# Revisión local del sprint
+# Registro histórico del sprint experimental
+
+**Recorrido retirado:** esta nota conserva el contrato experimental Vue anterior. La entrada pública `/sprint/` ahora redirige a Currícula y autoría; no se usa para el MVP docente. Para ejecutar y probar el recorrido activo, seguir [Revisión docente](teacher-review.md) y [Aceptación y operación](teacher-review-acceptance.md). Las cuatro regresiones históricas de navegador se conservan sólo con URLconfs optativos de tests.
 
 Integración local desde `c787068014c9ebbe1c7eb1ead341e1182b667c0a`.
 No representa veinte módulos terminados ni validación pedagógica. El frontend

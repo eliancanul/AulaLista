@@ -172,6 +172,7 @@ def test_chat_json_retries_until_schema_valid_response():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_extract_action_identifies_topics_with_citations_and_no_packages():
     client = tutor_client()
     job = upload_job(client)
@@ -215,6 +216,7 @@ def test_extract_action_identifies_topics_with_citations_and_no_packages():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_failed_stage_records_error_and_allows_retry():
     client = tutor_client()
     job = upload_job(client)
@@ -253,6 +255,7 @@ def test_failed_stage_records_error_and_allows_retry():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
     client = tutor_client()
     job = upload_job(client)
@@ -301,6 +304,7 @@ def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
     assert CurriculumPackage.objects.count() == 0
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_confirm_subtopics_completes_hierarchy_without_creating_packages():
     client = tutor_client()
     job = upload_job(client)
@@ -596,6 +600,7 @@ def test_convert_rejects_stale_positional_index_for_explicit_ids():
     assert CurriculumPackage.objects.get().title == "Actividad segunda"
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_review_form_submits_stable_activity_identity():
     first = _convert_entry("aaa11111", "Actividad primera")
     second = _convert_entry("bbb22222", "Actividad segunda")

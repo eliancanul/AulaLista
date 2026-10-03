@@ -215,6 +215,7 @@ def _persisted_fast_job():
     return teacher, job, result
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_activity_review_renders_source_pages_urls_and_original_instruction():
     teacher, job, _result = _persisted_fast_job()
     client = Client()
@@ -252,6 +253,7 @@ def test_source_page_endpoint_is_owner_scoped_and_keeps_pdf_inline():
     assert owner.get(reverse("tutor-import-source-page", args=[job.pk, 99])).status_code == 404
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_an_annex_without_answer_key_cannot_be_converted_but_other_companions_can():
     teacher, job, result = _persisted_fast_job()
     client = Client()
@@ -294,11 +296,7 @@ def _editorial_reviewer(username="annex-editorial-reviewer"):
 
 
 def _portable_annex_pdf():
-    """Use the fixed issue PDF when present, otherwise create a tiny PDF fixture."""
-
-    fixed = Path(__file__).parents[1] / "output/pdf/prueba-issue-96-paginas-4-a-8.pdf"
-    if fixed.exists():
-        return fixed.read_bytes()
+    """Always construct a synthetic PDF; never discover private local inputs."""
 
     from pypdf import PdfWriter
     from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
@@ -352,6 +350,7 @@ def _approve_and_publish(client, package, reviewer):
     return snapshot
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_real_upload_worker_review_convert_and_publish_preserves_annex_sources():
     reviewer = _editorial_reviewer()
     client = Client()

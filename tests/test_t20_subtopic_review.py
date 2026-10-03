@@ -115,6 +115,7 @@ def test_incremental_prompt_declares_existing_immutable():
     assert "NUEVA" in flat
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_remove_activity_drops_only_the_targeted_proposal():
     client, job = activities_job()
     response = client.post(
@@ -129,6 +130,7 @@ def test_remove_activity_drops_only_the_targeted_proposal():
     assert job.topics[0]["subtemas"][0]["titulo"] == "Suma de fracciones"
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_remove_unknown_activity_reports_error_without_changes():
     client, job = activities_job()
     response = client.post(
@@ -143,6 +145,7 @@ def test_remove_unknown_activity_reports_error_without_changes():
 
 
 @override_settings(AULALISTA_IMPORT_ASYNC=False)
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_topup_appends_missing_and_never_touches_existing():
     client, job = activities_job()
 
@@ -187,6 +190,7 @@ def test_topup_appends_missing_and_never_touches_existing():
     assert job.progress_stage == ""
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_review_screen_shows_full_titles_grouping_and_x_buttons():
     client, job = activities_job()
     response = client.get(reverse("tutor-import-detail", args=[job.pk]))
@@ -209,6 +213,7 @@ def invalid_proposal(title="Suma de fracciones"):
     return proposal
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_invalid_activity_regenerates_with_feedback_until_valid():
     from django.test import override_settings
 
@@ -244,6 +249,7 @@ def test_invalid_activity_regenerates_with_feedback_until_valid():
     assert new_entry["is_valid"] is True
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_regeneration_is_bounded_and_last_attempt_stays_flagged():
     from django.test import override_settings
 
@@ -268,6 +274,7 @@ def test_regeneration_is_bounded_and_last_attempt_stays_flagged():
     assert new_entry["issues"]
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_review_screen_renders_new_card_design():
     client, job = activities_job()
     response = client.get(reverse("tutor-import-detail", args=[job.pk]))

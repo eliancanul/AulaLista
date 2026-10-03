@@ -1,0 +1,13 @@
+.review-shell { max-width: 850px; }
+.review-box { border: 1px solid #d5dbe3; border-radius: 8px; padding: 1.4rem; background: #fff; }
+.review-box h2 { font-size: 1.3rem; line-height: 1.5; }
+.review-box label { display: block; font-weight: 600; margin-bottom: .5rem; }
+.review-box textarea { box-sizing: border-box; width: 100%; font: inherit; line-height: 1.5; padding: .8rem; border: 1px solid #aeb8c5; border-radius: 5px; resize: vertical; }
+.review-actions { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
+.review-details { margin-top: 1.25rem; padding: .8rem 0; border-bottom: 1px solid #d5dbe3; }
+.review-details summary { cursor: pointer; font-weight: 600; }
+.review-details li { margin-bottom: 1.1rem; }
+.literal-answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-error { color: #972a24; }
+.review-approval { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.review-approval button { justify-self: start; }

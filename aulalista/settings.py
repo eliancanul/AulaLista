@@ -130,3 +130,15 @@ AULALISTA_LLM_MODEL = os.environ.get("AULALISTA_LLM_MODEL", "qwen2.5:14b")
 CURRICULUM_MAX_UPLOAD_SIZE_BYTES = int(
     os.environ.get("CURRICULUM_MAX_UPLOAD_SIZE_BYTES", 25 * 1024 * 1024)
 )
+
+# Adaptive review is opt-in. No implicit local model or cloud fallback.
+AULALISTA_TEACHER_REVIEW_PROVIDER = os.environ.get("AULALISTA_TEACHER_REVIEW_PROVIDER", "gemini").strip()
+
+# Selected Gemini HIGH route. No credentials are read/copied by the application;
+# the official, already-authenticated CLI manages its own cached sign-in.
+AULALISTA_GEMINI_MODEL = os.environ.get("AULALISTA_GEMINI_MODEL", "gemini-3.8-flash-high")
+AULALISTA_GEMINI_AGY_LAUNCHER = os.environ.get("AULALISTA_GEMINI_AGY_LAUNCHER", "")
+AULALISTA_GEMINI_AGY_AGENT_FILE = os.environ.get("AULALISTA_GEMINI_AGY_AGENT_FILE", "")
+AULALISTA_GEMINI_ATTEMPT_DIR = os.environ.get("AULALISTA_GEMINI_ATTEMPT_DIR", str(BASE_DIR / ".runtime" / "gemini"))
+AULALISTA_GEMINI_LIVE_ENABLED = os.environ.get("AULALISTA_GEMINI_LIVE_ENABLED", "") == "1"
+AULALISTA_GEMINI_TIMEOUT_SECONDS = int(os.environ.get("AULALISTA_GEMINI_TIMEOUT_SECONDS", "90"))

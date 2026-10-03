@@ -1,4 +1,4 @@
-"""Actual compiled Vue, real Django login/CSRF, FastAPI and SQLite; synthetic PDF."""
+"""Retired Vue regression, isolated test-only shell; not active-flow acceptance."""
 import json
 import os
 from pathlib import Path
@@ -17,6 +17,8 @@ from test_t15_curriculum_import import make_minimal_pdf
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.browser
+@pytest.mark.usefixtures("legacy_vue_routes")
 def test_compiled_browser_journey(tmp_path, settings):
     chrome = (os.environ.get('NIGHT_CHROME') or shutil.which('google-chrome')
               or shutil.which('chromium') or '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')

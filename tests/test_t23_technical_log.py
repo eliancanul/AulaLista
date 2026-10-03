@@ -47,6 +47,7 @@ def topics_transport(request):
     }
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_stage_records_full_exchange_in_job_trace():
     client = tutor_client()
     client.post(reverse("tutor-import-upload"), {"pdf": pdf_upload()})

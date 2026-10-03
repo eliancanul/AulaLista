@@ -20,7 +20,10 @@ La investigación de algoritmos se presenta en [aulalista-research](https://gith
 
 Los issues y PR anteriores mantienen su historial en este repositorio. El trabajo nuevo de investigación debe registrarse en el repositorio de investigación; los cambios del producto se siguen aquí.
 
-## Integración privada del sprint
+## Revisión docente activa
 
-El recorrido local Vue + Django + FastAPI se inicia en `/sprint/`. Véase
-[el arranque, las pruebas y los límites](docs/integration-night.md).
+El recorrido activo usa la shell Django: **Currícula y autoría → Importar
+planeación → Revisar planeación**. `/sprint/` redirige a Currícula y autoría.
+Véase [el contrato, las comprobaciones y los bloqueos actuales de la revisión
+docente](docs/teacher-review.md). La integración experimental Vue + Django +
+FastAPI conserva su [documentación técnica](docs/integration-night.md).
