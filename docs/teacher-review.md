@@ -122,3 +122,23 @@ separadas dentro del mismo snapshot. Los checks reales de GitHub corresponden
 al commit publicado; un resultado local parcial no los sustituye. La evaluación
 con documentos de desarrollo o un proveedor real es otra ejecución autorizada y
 privada, nunca un paso automático del CI público.
+
+
+## Fallos esperados de seguridad conservados
+
+El hallazgo S18-F01 afectaba al verificador usado por el recorrido activo: un
+valor distinto del citado podía marcarse comprobado sólo por aparecer en la
+misma página. Su regresión ahora exige que el valor esté ligado a la cita;
+la única compatibilidad de preview corresponde a una cita de exactamente
+200 caracteres para un valor más largo de inicio, desarrollo, cierre, materiales
+o evaluación de sesión, tal como la emite el parser. Exige el prefijo exacto y
+el valor completo en esa página y segmento. Los campos generales y los prefijos
+triviales no reciben esa excepción. No acredita corrección pedagógica.
+
+S18-F02 sigue declarado como `xfail(strict=True)` en
+`tests/sprint_security/test_s18_known_findings.py`: el adaptador histórico
+`identify_topics` acepta un título propuesto y páginas fuera del chunk. Ese
+adaptador pertenece al worker de etapas anterior, no al recorrido activo de
+revisión Django. No se presenta como corregido; su cambio requiere conservar
+el contrato de propuestas y la validación de fuentes del flujo antiguo. La
+suite sigue mostrando explícitamente ese fallo esperado.

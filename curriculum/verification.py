@@ -136,6 +136,28 @@ def _is_value_present(val: Any, target_text: str) -> bool:
     return bool(norm_v and norm_v in target_text)
 
 
+def _value_matches_citation(
+    val: Any, excerpt: str, normalized_page: str, *, allow_session_preview: bool = False,
+) -> bool:
+    """Bind the value to its citation; allow only the parser's exact preview.
+
+    _section_evidence emits one 200-character preview for a longer session
+    moment/resource/evaluation value. No general field or shorter/arbitrary
+    prefix receives this exception. The complete value must still occur on
+    the physical page; the caller additionally enforces the session segment.
+    """
+    normalized_excerpt = normalize_text_for_evidence_check(excerpt)
+    if not normalized_excerpt or not _is_value_present(val, normalized_page):
+        return False
+    if _is_value_present(val, normalized_excerpt):
+        return True
+    return bool(
+        allow_session_preview and isinstance(val, str) and isinstance(excerpt, str)
+        and len(val) > 200 and len(excerpt) == 200
+        and normalized_excerpt == normalize_text_for_evidence_check(val[:200])
+    )
+
+
 def _contains_whole_literal(value: str, text: str) -> bool:
     return bool(value and re.search(rf"(?<!\w){re.escape(value)}(?!\w)", text))
 
@@ -1141,8 +1163,14 @@ def verify_curriculum_dossier(
 
             # E. Physical contiguous match check
             if norm_ex in norm_page:
-                # Check if the actual field VALUE is also present
-                value_present = _is_value_present(val, norm_page)
+                # The value must be tied to this citation as well as its page.
+                value_present = _value_matches_citation(
+                    val, ev_excerpt, norm_page,
+                    allow_session_preview=(
+                        scope == SCOPE_SESSION and origin == "extracted" and len(ev_list) == 1
+                        and field_name in {"inicio", "desarrollo", "cierre", "materiales", "evaluacion"}
+                    ),
+                )
                 if campos_coverage is not None:
                     value_present = campos_coverage and any(
                         _contains_whole_literal(normalize_text_for_evidence_check(v), norm_ex)
@@ -1232,7 +1260,7 @@ def verify_curriculum_dossier(
                                     "pero falta cobertura textual de todos los valores en citas válidas, "
                                     "o esta cita no respalda ningún valor."
                                     if campos_coverage is not None
-                                    else "pero el valor del campo no se encontró textualmente en la página."
+                                    else "pero la cita no respalda el valor del campo o su texto completo no aparece en la página."
                                 )
                             ),
                             excerpt=str(ev_excerpt or ""),

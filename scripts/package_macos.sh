@@ -31,6 +31,10 @@ tar -czf "$ARCHIVE" \
   --exclude="$PROJECT_NAME/evidence" \
   --exclude="$PROJECT_NAME/docs/PLANEACIONES" \
   --exclude="$PROJECT_NAME/docs/research" \
+  --exclude="$PROJECT_NAME/tests/fixtures/sprint_corpus" \
+  --exclude="$PROJECT_NAME/prototypes/docente-skeleton" \
+  --exclude="$PROJECT_NAME/frontend/node_modules" \
+  --exclude="*.[pP][dD][fF]" \
   --exclude="$PROJECT_NAME/dist" \
   "$PROJECT_NAME"
 
