@@ -2,6 +2,8 @@
   const form = document.querySelector('#teacher-answer-form');
   const status = document.querySelector('#draft-status');
   let timer;
+  let resumeTimer;
+  let submissionGeneration = 0;
   let pending = Promise.resolve();
   let unsaved = false;
   let inputVersion = 0;
@@ -49,15 +51,31 @@
       if (current.dataset.submitting) return;
       current.dataset.submitting = 'true';
       const submitter = event.submitter;
-      pending.finally(() => {current.dataset.prepared = 'true'; current.requestSubmit(submitter);});
+      const generation = ++submissionGeneration;
+      pending.finally(() => {
+        // Native submit listeners can run microtasks before the form releases
+        // its submission-event guard. A new task avoids ignored reentrant
+        // requestSubmit calls, while still waiting for the latest saved epoch.
+        resumeTimer = setTimeout(() => {
+          if (generation !== submissionGeneration || !current.dataset.submitting) return;
+          current.dataset.prepared = 'true';
+          current.requestSubmit(submitter);
+        }, 0);
+      });
       return;
     }
     if (current === form) leavingForSubmit = true;
     current.setAttribute('aria-busy', 'true');
     if (status) status.textContent = 'Guardando y preparando el siguiente paso…';
-    setTimeout(() => current.querySelectorAll('button').forEach(button => {button.disabled = true;}), 0);
+    const generation = submissionGeneration;
+    setTimeout(() => {
+      if (generation !== submissionGeneration) return;
+      current.querySelectorAll('button').forEach(button => {button.disabled = true;});
+    }, 0);
   }));
   window.addEventListener('pageshow', () => {
+    ++submissionGeneration;
+    clearTimeout(resumeTimer);
     leavingForSubmit = false;
     document.querySelectorAll('form').forEach(current => {
       current.removeAttribute('aria-busy');
