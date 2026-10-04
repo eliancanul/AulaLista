@@ -10,7 +10,10 @@ La entrada activa conserva la shell Django: **Currícula y autoría → Importar
 - La pregunta, sus destinos exactos, la respuesta literal y cada corrección se persisten. El borrador usa un epoch/CAS independiente: los autosaves se serializan y un envío tardío no puede resucitar una respuesta guardada/descartada ni reemplazar un borrador más reciente. Refrescar no consulta el modelo.
 - Los borradores se conservan por pregunta: corregir o descartar una respuesta anterior no borra el texto de la pregunta actual. Guardar una respuesta exige el epoch vigente, incluso entre pestañas. Mientras el texto más reciente no esté confirmado por el servidor, se solicita confirmación antes de salir de la página; ignorar ese aviso puede descartar texto aún no guardado.
 - Guardar respuesta y preparar la siguiente pregunta son operaciones separadas. Si falla el proveedor, la respuesta queda guardada y el reintento es explícito.
+- Una corrección literal nueva conserva una marca durable de procesamiento pendiente. Si sus destinos siguen siendo elegibles, se procesa aunque una edición independiente ya haya completado todos los campos; en ese caso no se permite otra pregunta. Las respuestas desconocidas o saltadas no reemplazan datos confirmados.
+- Al retomar estados anteriores sin esa marca, se comparan las fechas guardadas de la última respuesta y del último resultado aplicado: sólo una respuesta posterior sigue pendiente. Una respuesta antigua ya procesada no vuelve a interpretarse por actualizar la instalación.
 - Recibos UUID y revisiones evitan doble aplicación; reclamos CAS impiden consultas simultáneas. La recuperación de una consulta interrumpida es manual y queda auditada.
+- El recibo observado se conserva también si la aplicación se rechaza, cambia la fuente o llega un resultado obsoleto. Registrar ese descarte no modifica la pregunta, revisión o reclamo de una consulta sucesora, ni convierte un consumo desconocido en cero.
 - El proveedor recibe el dossier completo, todas las sesiones, actividades, anexos, procedencia, respuestas acumuladas y elementos faltantes. No recibe un recorte de la primera sesión.
 - Además recibe `source_document`, separado del dossier interpretado: SHA del mismo PDF verificado, número de páginas y texto digital literal de cada página física en orden. Así conserva cuerpos de anexos y títulos que todavía no están mapeados a campos. Páginas sin texto o con extracción no disponible quedan explícitas; no se hace OCR ni se afirma interpretar imágenes. La lectura y extracción usan una sola copia de bytes comprobada y ocurren fuera de la transacción de reclamo.
 - Los momentos que cruzan páginas conservan su valor completo y citas separadas por página física. Esto corrige la atribución de evidencia; no convierte tablas linealizadas, texto de imagen o límites ambiguos en una extracción semántica garantizada.
@@ -136,10 +139,12 @@ o evaluación de sesión, tal como la emite el parser. Exige el prefijo exacto y
 el valor completo en esa página y segmento. Los campos generales y los prefijos
 triviales no reciben esa excepción. No acredita corrección pedagógica.
 
-S18-F02 sigue declarado como `xfail(strict=True)` en
-`tests/sprint_security/test_s18_known_findings.py`: el adaptador histórico
-`identify_topics` acepta un título propuesto y páginas fuera del chunk. Ese
-adaptador pertenece al worker de etapas anterior, no al recorrido activo de
-revisión Django. No se presenta como corregido; su cambio requiere conservar
-el contrato de propuestas y la validación de fuentes del flujo antiguo. La
-suite sigue mostrando explícitamente ese fallo esperado.
+S18-F02 corresponde al adaptador histórico `identify_topics`, del worker de
+etapas anterior. Su regresión ahora exige un título literal en alguna de las
+páginas citadas y un rango entero, ordenado y dentro del chunk. No se convierten
+strings, booleanos o decimales en páginas válidas ni se recorta un título largo
+para hacerlo coincidir. Los chunks nuevos conservan los límites físicos aparte
+de los marcadores impresos; el formato anterior sólo admite secuencias completas
+e inequívocas. Se mantienen las propuestas válidas y la revisión humana, sin
+atribuir a esta comprobación literal una validación semántica o pedagógica. La
+ruta activa Django no usa ese adaptador legado.

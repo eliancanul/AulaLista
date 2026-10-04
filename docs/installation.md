@@ -103,6 +103,11 @@ sh scripts/package_macos.sh
 
 El archivo queda en `dist/aulalista-local.tar.gz`. Su carpeta raíz conserva el
 nombre del checkout; sustituye `NOMBRE_DEL_CHECKOUT` por ese nombre al extraerlo.
+Puedes pasar otra carpeta de salida como primer argumento. El paquete final y
+los temporales de empaquetado no se incluyen a sí mismos, incluso con un destino
+anidado dentro del checkout. Si falla la creación, se conserva el paquete anterior
+y se elimina únicamente el temporal de esa ejecución. Las exclusiones privadas
+no dependen de interpretar el nombre del checkout como un patrón.
 En una MacBook Air limpia:
 
 El paquete excluye los directorios privados conocidos (`media`, `.runtime`,

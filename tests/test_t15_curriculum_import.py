@@ -89,7 +89,7 @@ def test_qwen14b_is_default_in_settings_and_curriculum_import():
 
 
 def test_topic_identification_drops_administrative_and_project_containers():
-    chunk = {"first_page": 1, "last_page": 1, "text": "[página 1] Planeación Didáctica Semana 01"}
+    chunk = {"first_page": 1, "last_page": 1, "text": "[página 1] Planeación Didáctica Semana 01\nRepresentación numérica"}
 
     def transport(_request):
         return {
@@ -412,7 +412,7 @@ def typed_topics_transport(payload):
 
 
 def test_identify_topics_filters_activity_and_other_titles():
-    chunk = {"text": "[página 1] contenido", "first_page": 1, "last_page": 1}
+    chunk = {"text": "[página 1] Fracciones\nNúmeros enteros\nActividad: colorea las mitades\nNota editorial", "first_page": 1, "last_page": 1}
     transport = typed_topics_transport(
         {
             "temas": [

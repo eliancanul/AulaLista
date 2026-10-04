@@ -21,7 +21,6 @@ def test_s18_unrelated_same_page_value_must_not_be_checked():
     assert not any(item["status"] == "checked" for item in items), items
 
 
-@pytest.mark.xfail(strict=True, reason="S18-F02: legacy topic adapter accepts invented title and page")
 def test_s18_schema_valid_provider_fixture_needs_source_validation():
     def synthetic_transport(request):
         sent = json.loads(request.data)
