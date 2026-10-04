@@ -27,8 +27,8 @@ def _no_runtime(monkeypatch):
     monkeypatch.setattr('curriculum.gemini_review_provider._metadata', forbidden)
 
 
-def _disabled(settings):
-    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'gemini'
+def _disabled(settings, provider='gemini'):
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = provider
     settings.AULALISTA_GEMINI_LIVE_ENABLED = False
     settings.AULALISTA_GEMINI_AGY_LAUNCHER = ''
     settings.AULALISTA_GEMINI_AGY_AGENT_FILE = ''
@@ -40,6 +40,8 @@ def test_fresh_availability_notice_reads_settings_only_and_never_claims_validati
     url = reverse('tutor-import-interpretation', args=[job.pk])
     cases = [
         ('', False, '', '', 'provider_not_configured'),
+        ('luna', False, '', '', 'luna_route_not_configured'),
+        ('luna', True, '/synthetic-not-executed/launcher', '/synthetic-not-executed/agent.md', 'luna_route_not_configured'),
         ('gemini', False, '', '', 'gemini_live_not_enabled'),
         ('gemini', True, '', '', 'gemini_route_not_configured'),
         ('gemini', True, '/synthetic-not-executed/launcher', '/synthetic-not-executed/agent.md', 'provider_configured_unverified'),
@@ -66,11 +68,12 @@ def test_fresh_availability_notice_reads_settings_only_and_never_claims_validati
     assert not job.is_approved
 
 
-def test_disabled_provider_keeps_pending_and_edit_drafts_in_usable_one_box(ready_job, settings, monkeypatch):
+@pytest.mark.parametrize('provider,code', [('gemini','gemini_live_not_enabled'), ('luna','luna_route_not_configured')])
+def test_disabled_provider_keeps_pending_and_edit_drafts_in_usable_one_box(ready_job, settings, monkeypatch, provider, code):
     client, user, job = ready_job
     review = advance(save(start(job, user, ask_first), user, 'Stored literal answer'), user, apply_and_next)
     first, pending = review.state['turns']
-    _disabled(settings)
+    _disabled(settings, provider)
     _no_runtime(monkeypatch)
     url = reverse('tutor-import-interpretation', args=[job.pk])
     for suffix, text, turn_id in [('', 'Pending durable draft', pending['id']),
@@ -83,7 +86,7 @@ def test_disabled_provider_keeps_pending_and_edit_drafts_in_usable_one_box(ready
         assert form.find('textarea').text == text
         assert data['turn_id'] == turn_id
         assert not form.find('button', {'value': 'edit' if suffix else 'answer'}).has_attr('disabled')
-        assert response.context['provider_notice']['code'] == 'gemini_live_not_enabled'
+        assert response.context['provider_notice']['code'] == code
         assert soup.find(id='provider-configuration-status') is not None
     assert _form(client.get(url))[1].find('textarea').text == 'Pending durable draft'
     review.refresh_from_db()
@@ -92,10 +95,11 @@ def test_disabled_provider_keeps_pending_and_edit_drafts_in_usable_one_box(ready
     assert review.generation_token is None
 
 
-def test_disabled_continuation_still_saves_answers_and_corrections(ready_job, settings, monkeypatch, tmp_path):
+@pytest.mark.parametrize('provider,code', [('gemini','gemini_live_not_enabled'), ('luna','luna_route_not_configured')])
+def test_disabled_continuation_still_saves_answers_and_corrections(ready_job, settings, monkeypatch, tmp_path, provider, code):
     client, user, job = ready_job
     review = start(job, user, ask_first)
-    _disabled(settings)
+    _disabled(settings, provider)
     settings.AULALISTA_GEMINI_ATTEMPT_DIR = str(tmp_path / 'must-not-be-created')
     monkeypatch.setattr('curriculum.gemini_review_provider.GeminiHighAgyProvider.preflight',
                         lambda *a, **k: pytest.fail('Live-disabled provider must not run preflight'))
@@ -108,10 +112,10 @@ def test_disabled_continuation_still_saves_answers_and_corrections(ready_job, se
         assert response.status_code == 302
         review.refresh_from_db()
         assert review.state['turns'][0]['answer'] == text
-        assert review.state['error'] == 'gemini_live_not_enabled'
+        assert review.state['error'] == code
         assert review.generation_token is None
         page = client.get(url)
-        assert page.context['provider_notice']['code'] == 'gemini_live_not_enabled'
+        assert page.context['provider_notice']['code'] == code
         assert text.strip() in page.content.decode()
     assert len(review.state['turns'][0]['answer_history']) == 2
     assert not (tmp_path / 'must-not-be-created').exists()
@@ -119,10 +123,11 @@ def test_disabled_continuation_still_saves_answers_and_corrections(ready_job, se
     assert not job.is_approved
 
 
-def test_unknown_result_notice_has_priority_and_remains_blocked(ready_job, settings, monkeypatch):
+@pytest.mark.parametrize('provider', ['gemini','luna'])
+def test_unknown_result_notice_has_priority_and_remains_blocked(ready_job, settings, monkeypatch, provider):
     client, user, job = ready_job
     review = save(start(job, user, ask_first), user, 'Retained answer before unknown result')
-    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'gemini'
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = provider
     settings.AULALISTA_GEMINI_LIVE_ENABLED = True
     settings.AULALISTA_GEMINI_AGY_LAUNCHER = '/synthetic-not-executed/launcher'
     settings.AULALISTA_GEMINI_AGY_AGENT_FILE = '/synthetic-not-executed/agent.md'
@@ -143,3 +148,15 @@ def test_unknown_result_notice_has_priority_and_remains_blocked(ready_job, setti
         assert review.state['error'] == code
         assert review.state['turns'][0]['answer'] == 'Retained answer before unknown result'
         assert review.generation_token is None
+
+
+def test_luna_selection_cannot_construct_or_fall_back_to_historical_transports(settings, monkeypatch):
+    from curriculum.teacher_review_provider import ReviewProviderError, get_review_provider
+    def forbidden(*args, **kwargs):
+        pytest.fail('Luna selection must not construct or call another provider')
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'luna'
+    settings.AULALISTA_GEMINI_LIVE_ENABLED = True
+    monkeypatch.setattr('curriculum.gemini_review_provider.GeminiHighAgyProvider', forbidden)
+    monkeypatch.setattr('curriculum.curriculum_import.chat_json', forbidden)
+    with pytest.raises(ReviewProviderError, match='^luna_route_not_configured$'):
+        get_review_provider()

@@ -132,9 +132,9 @@ CURRICULUM_MAX_UPLOAD_SIZE_BYTES = int(
 )
 
 # Adaptive review is opt-in. No implicit local model or cloud fallback.
-AULALISTA_TEACHER_REVIEW_PROVIDER = os.environ.get("AULALISTA_TEACHER_REVIEW_PROVIDER", "gemini").strip()
+AULALISTA_TEACHER_REVIEW_PROVIDER = os.environ.get("AULALISTA_TEACHER_REVIEW_PROVIDER", "luna").strip()
 
-# Selected Gemini HIGH route. No credentials are read/copied by the application;
+# Historical explicit Gemini HIGH route. Luna is selected above; no fallback. No credentials are read/copied by the application;
 # the official, already-authenticated CLI manages its own cached sign-in.
 AULALISTA_GEMINI_MODEL = os.environ.get("AULALISTA_GEMINI_MODEL", "gemini-3.8-flash-high")
 AULALISTA_GEMINI_AGY_LAUNCHER = os.environ.get("AULALISTA_GEMINI_AGY_LAUNCHER", "")

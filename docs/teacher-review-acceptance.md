@@ -4,19 +4,21 @@
 
 La entrada activa usa Django: **Currícula y autoría → Importar planeación → Revisar planeación**. `/sprint/` redirige a Currícula y autoría. La presentación visual definitiva se revisará por separado.
 
-La ruta real Gemini high todavía no está validada. El primer intento sintético autorizado terminó sin respuesta aceptada ni recibo terminal de consumo. **STOP_UNKNOWN: transmisión y consumo desconocidos, no cero.** No se debe reintentar, borrar el bloqueo, cambiar el directorio de recibos para eludirlo ni sustituir el modelo. Una nueva autorización puede admitir otro ensayo acotado con una ruta efectivamente sin herramientas y datos concretos permitidos; nunca reescribe ni concilia automáticamente el intento anterior. El ensayo empieza con un smoke sintético y sólo después puede usar una planeación de desarrollo revisada para excluir datos sensibles. FINAL queda fuera.
+Luna es el modelo seleccionado; su ruta CLI todavía no está integrada ni validada. La aplicación informa que falta configurar esa ruta y conserva respuestas y borradores. No hay llamadas Luna admitidas ni fallback automático a otro proveedor.
 
-El navegador de nube bloqueó el acceso local. Las pruebas HTTP y de plantillas no acreditan QA visual ni aceptación con un PDF real. Las pruebas con respuestas simuladas tampoco acreditan calidad de Gemini o validación pedagógica.
+La ruta histórica Gemini high tampoco está validada. Su primer intento sintético autorizado terminó sin respuesta aceptada ni recibo terminal de consumo. **STOP_UNKNOWN: transmisión y consumo desconocidos, no cero.** No se debe reintentar, borrar el bloqueo, cambiar el directorio de recibos para eludirlo ni sustituir silenciosamente el modelo para eludir el bloqueo. La nueva selección Luna no borra ni reetiqueta ese intento. Una nueva autorización puede admitir otro ensayo acotado con una ruta efectivamente sin herramientas y datos concretos permitidos; nunca reescribe ni concilia automáticamente el intento anterior. El ensayo empieza con un smoke sintético y sólo después puede usar una planeación de desarrollo revisada para excluir datos sensibles. FINAL queda fuera.
+
+El navegador de nube bloqueó el acceso local. Las pruebas HTTP y de plantillas no acreditan QA visual ni aceptación con un PDF real. Las pruebas con respuestas simuladas tampoco acreditan calidad del modelo real o validación pedagógica.
 
 ## Lista de aceptación con tu PDF real
 
-Primero, en un entorno autorizado y con Gemini deshabilitado:
+Primero, en un entorno autorizado y con las llamadas reales deshabilitadas:
 
 1. Importar una planeación elegida por ti. Llegar a la revisión Django sin entrar a Vue ni a la antigua pantalla de edición masiva.
 2. Abrir «Planeación completa y procedencia». Comparar el número de sesiones, todas las actividades, anexos y sus páginas con el PDF. Registrar cualquier omisión; una página candidata nunca equivale a un anexo confirmado.
 3. Comprobar que los campos desconocidos y la falta de conexión real se muestran con claridad, sin inventar respuestas ni afirmar aprobación.
 
-Sólo cuando se resuelva el bloqueo y se autorice el envío del PDF/dossier y las respuestas a Google:
+Sólo cuando se resuelva el bloqueo y se autorice el envío del PDF/dossier y las respuestas al proveedor específico de la ruta Luna verificada:
 
 4. Ver una sola pregunta y una sola caja. Comprobar que la siguiente pregunta usa lo que ya respondiste y contempla sesiones posteriores/anexos; no basta con que la API devuelva JSON válido.
 5. Escribir, esperar la confirmación de borrador guardado, recargar y volver a abrir. Enviar una respuesta literal, comprobarla en «Respuestas guardadas» y corregirla. No debe desaparecer, duplicarse ni reaplicarse a otra sesión.
@@ -34,7 +36,7 @@ Trabajar con la revisión exacta acordada y Python 3.13. Antes de aplicar migrac
 python3.13 -m venv .venv
 . .venv/bin/activate
 python -m pip install --require-hashes -r requirements.lock -r requirements-service.lock
-export AULALISTA_TEACHER_REVIEW_PROVIDER=gemini
+export AULALISTA_TEACHER_REVIEW_PROVIDER=luna
 export AULALISTA_GEMINI_LIVE_ENABLED=0
 python manage.py check
 python manage.py makemigrations --check --dry-run
@@ -44,7 +46,7 @@ python manage.py runserver
 
 La revisión Django no requiere construir Vue. La comprobación local de navegador se realiza únicamente donde el acceso esté permitido; no se elude el bloqueo de la nube.
 
-Configuración de la ruta futura, sin guardar secretos en el repositorio:
+La selección `luna` permanece bloqueada hasta disponer de una ruta CLI admitida; no hay una bandera que por sí sola la vuelva operativa. La configuración histórica siguiente pertenece a Gemini y no configura Luna:
 
 - `AULALISTA_GEMINI_AGY_LAUNCHER`: launcher oficial validado de la instalación existente.
 - `AULALISTA_GEMINI_AGY_AGENT_FILE`: perfil cuya ausencia efectiva de herramientas esté demostrada; que el archivo diga `tools: []` no basta.
@@ -64,10 +66,10 @@ Configuración de la ruta futura, sin guardar secretos en el repositorio:
 
 El paquete debe contener código, plantillas, CSS/JS y migraciones. Debe excluir entradas privadas, media, bases, `.runtime`, `.env*`, artefactos y corpus. La configuración de rutas privadas personalizadas requiere excluirlas también. Revisar el inventario del tarball antes de compartirlo; `.gitignore` no protege un archivo tar.
 
-Distinguir siempre: pruebas enfocadas del nuevo flujo, agregado offline permitido, suites no ejecutadas/excluidas, CI del commit exacto, QA visual y prueba real de Gemini/PDF. Ninguna de esas etiquetas sustituye a las demás. Publicar, hacer push, modificar el PR, fusionar o desplegar requiere la autorización correspondiente.
+Distinguir siempre: pruebas enfocadas del nuevo flujo, agregado offline permitido, suites no ejecutadas/excluidas, CI del commit exacto, QA visual y prueba real de Luna/PDF. Ninguna de esas etiquetas sustituye a las demás. Publicar, hacer push, modificar el PR, fusionar o desplegar requiere la autorización correspondiente.
 
 ## CI del recorrido activo
 
-El gate `test_teacher_review_browser.py` usa Chrome, autenticación Django real, bases temporales, un PDF generado y un proveedor adaptativo simulado instalado exclusivamente por la prueba. Las llamadas reales permanecen deshabilitadas. Verifica la caja única, guardado y reapertura, corrección, fuentes, aprobación humana y ausencia de publicación. La prueba no instala un proveedor ficticio en producción ni mide calidad de Gemini.
+El gate `test_teacher_review_browser.py` usa Chrome, autenticación Django real, bases temporales, un PDF generado y un proveedor adaptativo simulado instalado exclusivamente por la prueba. Las llamadas reales permanecen deshabilitadas. Verifica la caja única, guardado y reapertura, corrección, fuentes, aprobación humana y ausencia de publicación. La prueba no instala un proveedor ficticio en producción ni mide calidad del modelo real.
 
 Las regresiones de navegador de Vue y edición masiva siguen separadas como contratos inactivos. Los eventos DOM sintéticos se comprueban además con `node --test tests/test_teacher_review_dom.mjs`. El navegador local debe estar permitido; estas pruebas no autorizan eludir una denegación de acceso.

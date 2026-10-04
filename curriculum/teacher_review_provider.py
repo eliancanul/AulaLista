@@ -62,6 +62,9 @@ RESPONSE_SCHEMA = {
 def provider_configuration_notice():
     """Settings-only UI information, never a connection or generation check."""
     name = getattr(settings, "AULALISTA_TEACHER_REVIEW_PROVIDER", "")
+    if name == "luna":
+        return {"code": "luna_route_not_configured", "message":
+                "Luna está seleccionado, pero su ruta de ejecución aún no está configurada y validada. Puedes consultar la planeación y guardar o corregir respuestas existentes; todavía no se generarán preguntas con Luna."}
     if name not in ("gemini", "ollama"):
         return {"code": "provider_not_configured", "message":
                 "Falta configurar el proveedor de preguntas. Puedes consultar la fuente y conservar tus respuestas."}
@@ -79,6 +82,10 @@ def provider_configuration_notice():
 
 def get_review_provider():
     name = getattr(settings, "AULALISTA_TEACHER_REVIEW_PROVIDER", "")
+    if name == "luna":
+        # Selecting a model is not runtime access. No API/CLI route has yet been
+        # admitted; in particular, never fall back to the historical provider.
+        raise ReviewProviderError("luna_route_not_configured")
     if name == "gemini":
         from curriculum.gemini_review_provider import GeminiHighAgyProvider
         return GeminiHighAgyProvider(

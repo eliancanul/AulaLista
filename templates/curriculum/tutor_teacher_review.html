@@ -59,6 +59,7 @@
     {% else %}
       <h2 id="review-question-heading">{% if state.status == 'new' %}Aclarar lo que falta{% else %}Tus respuestas están guardadas{% endif %}</h2>
       {% if state.error == 'provider_not_configured' %}<p role="status">Falta configurar y validar el proveedor de preguntas. Todavía no hay preguntas generadas por un modelo real.</p>
+      {% elif state.error == 'luna_route_not_configured' %}<p role="status">Luna está seleccionado; falta configurar y validar su ruta de ejecución. Tus respuestas se conservan, pero aún no puede generar la siguiente pregunta.</p>
       {% elif state.error == 'gemini_live_not_enabled' or state.error == 'gemini_route_not_configured' %}<p role="status">Gemini high está seleccionado, pero la conexión real no está habilitada y comprobada en esta instalación. Todavía no hay preguntas reales disponibles.</p>
       {% elif state.error == 'gemini_attempt_unknown' or state.error == 'gemini_prior_attempt_unknown' %}<p role="status">La solicitud anterior tiene resultado y consumo pendientes de conciliación. No se reintentará automáticamente ni se enviará otra sin autorización nueva.</p>
       {% elif state.error == 'gemini_full_context_too_large' %}<p role="status">La planeación completa supera el límite de envío. Se conserva íntegra; no se recortó ni se envió al modelo.</p>

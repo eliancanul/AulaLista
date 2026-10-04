@@ -21,11 +21,33 @@ La entrada activa conserva la shell Django: **Currícula y autoría → Importar
 - Los datos irresolubles quedan explícitos al cerrar. Guardar respuestas nunca aprueba ni publica: la aprobación final usa el comando humano existente y sigue bloqueada por requisitos faltantes.
 - Las ediciones independientes/reextracción requieren revisar y retomar explícitamente la nueva versión. Las respuestas y el contador se conservan.
 
-## Gemini high seleccionado
+## Luna seleccionado, ruta pendiente
 
-La persona usuaria eligió Gemini high. La ruta implementada usa exclusivamente la CLI oficial Google Antigravity y su conexión autenticada existente; no lee ni copia sus credenciales y no imita endpoints privados. El catálogo autenticado de CLI 1.2.15, consultado el 3 de octubre de 2026, anuncia el identificador exacto `gemini-3.8-flash-high`. Se fijan tanto ese ID como `--effort high`; no hay fallback a otros modelos, esfuerzos ni Ollama.
+La selección predeterminada de `AULALISTA_TEACHER_REVIEW_PROVIDER` es ahora
+`luna`, por elección de la persona usuaria. El ID documentado es `gpt-6-luna`.
+La aplicación todavía no tiene una ruta Luna admitida: muestra
+`luna_route_not_configured` y no envía solicitudes, aunque exista un inicio de
+sesión de Codex en la máquina. Seleccionar el modelo no verifica acceso,
+herramientas deshabilitadas, resultado ni consumo. No hay fallback a Gemini,
+Ollama o una API con credenciales distintas.
 
-`AULALISTA_TEACHER_REVIEW_PROVIDER` usa `gemini` como selección predeterminada. La ejecución real sigue cerrada hasta configurar explícitamente las rutas no secretas y habilitarla tras la autorización correspondiente:
+La ruta buscada sigue siendo CLI. Hace falta comprobar su superficie efectiva
+sin herramientas y el estado de ejecución permitido antes de integrar y admitir
+un smoke sintético. Un timeout o un límite de bytes no es un tope de tokens o
+costo del servidor. El contrato compartido de preguntas, máximo seis,
+procedencia, contexto completo y guardado durable permanece igual. Las pruebas
+con un callable inyectado son doubles explícitos, nunca evidencia de Luna real.
+
+El intento histórico desconocido de Gemini se conserva con su identidad;
+seleccionar Luna no lo convierte en un intento Luna ni concilia su consumo.
+Las revisiones ya bloqueadas por ese intento continúan bloqueadas hasta la
+resolución explícita correspondiente.
+
+## Ruta Gemini histórica, conservada para auditoría
+
+La selección anterior fue Gemini high. La ruta implementada usa exclusivamente la CLI oficial Google Antigravity y su conexión autenticada existente; no lee ni copia sus credenciales y no imita endpoints privados. El catálogo autenticado de CLI 1.2.15, consultado el 3 de octubre de 2026, anuncia el identificador exacto `gemini-3.8-flash-high`. Se fijan tanto ese ID como `--effort high`; no hay fallback a otros modelos, esfuerzos ni Ollama.
+
+La configuración histórica explícita `gemini` se conserva, pero ya no es la selección predeterminada. Sus variables no habilitan Luna y no deben usarse como fallback:
 
 - `AULALISTA_GEMINI_AGY_LAUNCHER`: launcher oficial comprobado que ya gestiona su autenticación
 - `AULALISTA_GEMINI_AGY_AGENT_FILE`: perfil de sólo respuesta comprobado, sin herramientas, comandos, MCP, skills ni plugins
@@ -98,5 +120,5 @@ un PDF accidentalmente presente en la máquina.
 Las pruebas de navegador actuales e históricas usan PDFs generados y bases
 separadas dentro del mismo snapshot. Los checks reales de GitHub corresponden
 al commit publicado; un resultado local parcial no los sustituye. La evaluación
-con documentos de desarrollo o Gemini real es otra ejecución autorizada y
+con documentos de desarrollo o un proveedor real es otra ejecución autorizada y
 privada, nunca un paso automático del CI público.
