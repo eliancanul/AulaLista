@@ -23,20 +23,21 @@ La entrada activa conserva la shell Django: **Currícula y autoría → Importar
 
 ## Luna seleccionado, ruta pendiente
 
-La selección predeterminada de `AULALISTA_TEACHER_REVIEW_PROVIDER` es ahora
-`luna`, por elección de la persona usuaria. El ID documentado es `gpt-6-luna`.
-La aplicación todavía no tiene una ruta Luna admitida: muestra
-`luna_route_not_configured` y no envía solicitudes, aunque exista un inicio de
-sesión de Codex en la máquina. Seleccionar el modelo no verifica acceso,
-herramientas deshabilitadas, resultado ni consumo. No hay fallback a Gemini,
-Ollama o una API con credenciales distintas.
+La selección predeterminada de `AULALISTA_TEACHER_REVIEW_PROVIDER` es `luna`.
+El adaptador local invoca Codex CLI con `gpt-6-luna` y esfuerzo `high`, stdin,
+salida estructurada, límites locales y ledger privado. No espera una API key.
+Su contrato se prueba con una CLI sintética; la ejecución real sigue pendiente.
 
-La ruta buscada sigue siendo CLI. Hace falta comprobar su superficie efectiva
-sin herramientas y el estado de ejecución permitido antes de integrar y admitir
-un smoke sintético. Un timeout o un límite de bytes no es un tope de tokens o
-costo del servidor. El contrato compartido de preguntas, máximo seis,
-procedencia, contexto completo y guardado durable permanece igual. Las pruebas
-con un callable inyectado son doubles explícitos, nunca evidencia de Luna real.
+Las rutas explícitas, el registro de revisión de restricciones y la habilitación
+se describen en [la guía de Luna CLI](luna-cli.md). Sin ellos, la interfaz informa
+configuración pendiente o llamadas deshabilitadas. La preflight real debe pasar
+antes de enviar el prompt; no se evita un fallo del sandbox. No hay fallback a
+Gemini, Ollama o una API. Los límites de tiempo/bytes no son topes de tokens/costo,
+y la detección de eventos no garantiza prevenir toda herramienta.
+
+El contrato compartido de preguntas, máximo seis, procedencia, contexto completo
+y guardado durable permanece vigente. Una prueba de la CLI inventada o un aviso
+de configuración no demuestra acceso, calidad de Luna o seguridad efectiva.
 
 El intento histórico desconocido de Gemini se conserva con su identidad;
 seleccionar Luna no lo convierte en un intento Luna ni concilia su consumo.

@@ -24,7 +24,7 @@ from curriculum.source_interpreter import (
     AnnexReference, HistoryEntry, InterpretedField,
     derive_operational_queue, resolve,
 )
-from curriculum.teacher_review_provider import ReviewProviderError, get_review_provider
+from curriculum.teacher_review_provider import BLOCKING_PROVIDER_ERRORS, ReviewProviderError, get_review_provider
 from curriculum.teacher_review_source import source_document_context
 
 MAX_QUESTIONS = 6
@@ -238,7 +238,7 @@ def submit_answer(*, job_id, user, expected_revision, expected_version, expected
         turn["skipped"] = skip
         state["receipts"].append({"id": receipt, "fingerprint": fingerprint})
         state["receipts"] = state["receipts"][-64:]
-        state.update(status="pending", error="")
+        state.update(status="pending", error=state.get("error", "") if state.get("error") in BLOCKING_PROVIDER_ERRORS else "")
         _bump_answer(job, dossier, user, "teacher_review_answer_edit" if edit else "teacher_review_answer", edit_deltas)
         turn["answer_source_sha256"] = dossier.source_sha256
         turn["answer_dossier_version"] = dossier.version
@@ -353,7 +353,7 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
         review = CurriculumTeacherReview.objects.select_for_update().get(job=job)
         _check(review, dossier, expected_revision, expected_version)
         state = copy.deepcopy(review.state)
-        if state.get("error") in ("gemini_attempt_unknown", "gemini_prior_attempt_unknown"):
+        if state.get("error") in BLOCKING_PROVIDER_ERRORS:
             raise ReviewError("La consulta anterior tiene estado y consumo pendientes de conciliación. No se enviará otra sin una autorización nueva.")
         if state["status"] in ("complete", "limited"):
             return review
@@ -373,7 +373,15 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
         # SHA-verified byte snapshot and includes every physical page, rather
         # than assuming the interpreted dossier contains all literal PDF text.
         context["source_document"] = source_document_context(job, dossier)
-        output = _validate_output((provider or get_review_provider())(context), context)
+        provider_output = (provider or get_review_provider())(context)
+        try:
+            output = _validate_output(provider_output, context)
+        except ReviewProviderError as exc:
+            # A semantic rejection must not lose the already observed transport
+            # receipt or imply that the completed model call consumed nothing.
+            if hasattr(provider_output, "provider_receipt"):
+                exc.provider_receipt = provider_output.provider_receipt
+            raise
         with transaction.atomic():
             job = CurriculumImportJob.objects.select_for_update().get(pk=job_id, created_by=user)
             dossier = _ready(job)
@@ -460,7 +468,7 @@ def resume_changed_dossier(*, job_id, user, expected_revision, expected_version)
         if review.source_sha256 != dossier.source_sha256:
             for turn in state["turns"]:
                 turn["applied"] = []
-        state.update(status="pending", error="")
+        state.update(status="pending", error=state.get("error", "") if state.get("error") in BLOCKING_PROVIDER_ERRORS else "")
         count = CurriculumTeacherReview.objects.filter(pk=review.pk, revision=review.revision).update(
             state=state, revision=review.revision + 1, dossier_version=dossier.version,
             source_sha256=dossier.source_sha256, updated_at=timezone.now())

@@ -19,7 +19,7 @@
   </header>
   <section class="review-box" aria-labelledby="review-question-heading" data-review-state="{{ state.status }}" data-asked-count="{{ asked_count }}">
     <p class="muted">{{ asked_count }} de {{ max_questions }} preguntas planteadas · Tus respuestas se conservan al salir</p>
-    {% if state.error != 'gemini_attempt_unknown' and state.error != 'gemini_prior_attempt_unknown' %}<p id="provider-configuration-status" role="status" data-provider-status="{{ provider_notice.code }}">{{ provider_notice.message }}</p>{% endif %}
+    {% if not provider_blocked %}<p id="provider-configuration-status" role="status" data-provider-status="{{ provider_notice.code }}">{{ provider_notice.message }}</p>{% endif %}
     {% if error %}<p role="alert" class="review-error">{{ error }}</p>{% endif %}
     {% if saved_message %}<p role="status">{{ saved_message }}</p>{% endif %}
     {% if review.generation_token %}
@@ -59,13 +59,16 @@
     {% else %}
       <h2 id="review-question-heading">{% if state.status == 'new' %}Aclarar lo que falta{% else %}Tus respuestas están guardadas{% endif %}</h2>
       {% if state.error == 'provider_not_configured' %}<p role="status">Falta configurar y validar el proveedor de preguntas. Todavía no hay preguntas generadas por un modelo real.</p>
-      {% elif state.error == 'luna_route_not_configured' %}<p role="status">Luna está seleccionado; falta configurar y validar su ruta de ejecución. Tus respuestas se conservan, pero aún no puede generar la siguiente pregunta.</p>
+      {% elif state.error == 'luna_route_not_configured' or state.error == 'luna_live_not_enabled' %}<p role="status">Luna usa una ruta CLI local que aún no está habilitada y comprobada. Tus respuestas se conservan, pero aún no puede generar la siguiente pregunta.</p>
       {% elif state.error == 'gemini_live_not_enabled' or state.error == 'gemini_route_not_configured' %}<p role="status">Gemini high está seleccionado, pero la conexión real no está habilitada y comprobada en esta instalación. Todavía no hay preguntas reales disponibles.</p>
-      {% elif state.error == 'gemini_attempt_unknown' or state.error == 'gemini_prior_attempt_unknown' %}<p role="status">La solicitud anterior tiene resultado y consumo pendientes de conciliación. No se reintentará automáticamente ni se enviará otra sin autorización nueva.</p>
-      {% elif state.error == 'gemini_full_context_too_large' %}<p role="status">La planeación completa supera el límite de envío. Se conserva íntegra; no se recortó ni se envió al modelo.</p>
+      {% elif provider_blocked %}<p role="status">La solicitud anterior tiene resultado y consumo pendientes de conciliación. No se reintentará automáticamente ni se enviará otra sin autorización nueva.</p>
+      {% elif state.error == 'luna_sandbox_preflight_failed' or state.error == 'luna_runtime_review_required' or state.error == 'luna_preflight_failed' %}<p role="status">La comprobación local de seguridad no pasó. No se envió el prompt al modelo. Conserva el registro y revisa la instalación sin desactivar el sandbox.</p>
+      {% elif state.error == 'luna_auth_override_present' %}<p role="status">Esta ruta requiere la sesión ChatGPT de la CLI, pero hay una variable de autenticación API o destino alternativo. No se inició la consulta ni se modificaron credenciales.</p>
+      {% elif state.error == 'luna_login_required' %}<p role="status">La CLI local necesita una sesión ChatGPT válida. La aplicación no inicia sesión ni copia credenciales. No se envió el prompt al modelo.</p>
+      {% elif state.error == 'gemini_full_context_too_large' or state.error == 'luna_full_context_too_large' %}<p role="status">La planeación completa supera el límite de envío. Se conserva íntegra; no se recortó ni se envió al modelo.</p>
       {% elif state.error == 'source_context_changed' or state.error == 'source_context_unavailable' %}<p role="status">No se pudo comprobar el texto completo de la fuente actual. No se envió una fuente parcial al modelo. Tus respuestas siguen guardadas; comprueba el PDF antes de continuar.</p>
       {% elif state.error %}<p role="status">No se pudo preparar la siguiente pregunta. Tu respuesta permanece guardada; puedes reintentar.</p>{% else %}<p>El asistente considerará la planeación completa y tus respuestas anteriores.</p>{% endif %}
-      {% if state.error != 'gemini_attempt_unknown' and state.error != 'gemini_prior_attempt_unknown' %}<form method="post">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ dossier.version }}"><input type="hidden" name="expected_revision" value="{{ review.revision }}"><button class="primary-action" name="action" value="continue">{% if state.status == 'new' %}Comenzar{% else %}Reintentar continuar{% endif %}</button></form>{% endif %}
+      {% if not provider_blocked %}<form method="post">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ dossier.version }}"><input type="hidden" name="expected_revision" value="{{ review.revision }}"><button class="primary-action" name="action" value="continue">{% if state.status == 'new' %}Comenzar{% else %}Reintentar continuar{% endif %}</button></form>{% endif %}
     {% endif %}
   </section>
   {% if turns %}<details class="review-details"><summary>Respuestas guardadas</summary>

@@ -48,8 +48,8 @@ def validate_snapshot(root):
 
 def main():
     validate_snapshot(Path.cwd())
-    if os.environ.get("AULALISTA_GEMINI_LIVE_ENABLED", "0") != "0":
-        raise SystemExit("Synthetic CI requires live Gemini disabled")
+    if any(os.environ.get(key, "0") != "0" for key in ("AULALISTA_GEMINI_LIVE_ENABLED", "AULALISTA_LUNA_LIVE_ENABLED")):
+        raise SystemExit("Synthetic CI requires real providers disabled")
     print("Synthetic backend scope. Private-input modules excluded:", *PRIVATE_MODULES,
           "Frozen corpus contracts excluded:", *FROZEN_CORPUS_NODES, sep="\n", flush=True)
     args = [sys.executable, "-m", "pytest", "-q", "-rs", "-m", "not browser", "tests"]

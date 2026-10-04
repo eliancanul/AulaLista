@@ -58,3 +58,15 @@ def test_exact_synthetic_export_preserves_code_without_reading_private_blobs(tmp
     (snapshot / "code.py").write_text("changed after freeze")
     with pytest.raises(SystemExit, match="changed after materialization"):
         validate_snapshot(snapshot)
+
+
+@pytest.mark.parametrize('enabled',['AULALISTA_GEMINI_LIVE_ENABLED','AULALISTA_LUNA_LIVE_ENABLED'])
+def test_synthetic_runner_rejects_either_live_provider(monkeypatch,enabled):
+    from scripts import run_synthetic_backend as runner
+    monkeypatch.setattr(runner,'validate_snapshot',lambda _:None)
+    monkeypatch.setenv('AULALISTA_GEMINI_LIVE_ENABLED','0')
+    monkeypatch.setenv('AULALISTA_LUNA_LIVE_ENABLED','0')
+    monkeypatch.setenv(enabled,'1')
+    monkeypatch.setattr(runner.subprocess,'run',lambda *_:pytest.fail('No subprocess may start'))
+    with pytest.raises(SystemExit,match='real providers disabled'):
+        runner.main()

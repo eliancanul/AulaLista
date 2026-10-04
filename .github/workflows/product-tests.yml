@@ -20,7 +20,10 @@ jobs:
     env:
       # Every provider in acceptance is an explicit test double. Never enable
       # production inference, developer credentials or private trial inputs here.
-      AULALISTA_TEACHER_REVIEW_PROVIDER: gemini
+      AULALISTA_TEACHER_REVIEW_PROVIDER: luna
+      AULALISTA_LUNA_LIVE_ENABLED: '0'
+      AULALISTA_LUNA_CLI_EXECUTABLE: ''
+      AULALISTA_LUNA_RUNTIME_REVIEW: ''
       AULALISTA_GEMINI_LIVE_ENABLED: '0'
       AULALISTA_GEMINI_AGY_LAUNCHER: ''
       AULALISTA_GEMINI_AGY_AGENT_FILE: ''

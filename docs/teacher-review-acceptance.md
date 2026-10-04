@@ -4,7 +4,7 @@
 
 La entrada activa usa Django: **Currícula y autoría → Importar planeación → Revisar planeación**. `/sprint/` redirige a Currícula y autoría. La presentación visual definitiva se revisará por separado.
 
-Luna es el modelo seleccionado; su ruta CLI todavía no está integrada ni validada. La aplicación informa que falta configurar esa ruta y conserva respuestas y borradores. No hay llamadas Luna admitidas ni fallback automático a otro proveedor.
+Luna es el modelo seleccionado; su adaptador CLI local está implementado, pero su ejecución real todavía no está validada. La aplicación informa que falta configurar esa ruta y conserva respuestas y borradores. No hay llamadas Luna admitidas ni fallback automático a otro proveedor.
 
 La ruta histórica Gemini high tampoco está validada. Su primer intento sintético autorizado terminó sin respuesta aceptada ni recibo terminal de consumo. **STOP_UNKNOWN: transmisión y consumo desconocidos, no cero.** No se debe reintentar, borrar el bloqueo, cambiar el directorio de recibos para eludirlo ni sustituir silenciosamente el modelo para eludir el bloqueo. La nueva selección Luna no borra ni reetiqueta ese intento. Una nueva autorización puede admitir otro ensayo acotado con una ruta efectivamente sin herramientas y datos concretos permitidos; nunca reescribe ni concilia automáticamente el intento anterior. El ensayo empieza con un smoke sintético y sólo después puede usar una planeación de desarrollo revisada para excluir datos sensibles. FINAL queda fuera.
 
@@ -46,7 +46,7 @@ python manage.py runserver
 
 La revisión Django no requiere construir Vue. La comprobación local de navegador se realiza únicamente donde el acceso esté permitido; no se elude el bloqueo de la nube.
 
-La selección `luna` permanece bloqueada hasta disponer de una ruta CLI admitida; no hay una bandera que por sí sola la vuelva operativa. La configuración histórica siguiente pertenece a Gemini y no configura Luna:
+La selección `luna` requiere la preparación de [Luna CLI](luna-cli.md); la habilitación no sustituye el preflight ni una consulta real. La configuración histórica siguiente pertenece a Gemini y no configura Luna:
 
 - `AULALISTA_GEMINI_AGY_LAUNCHER`: launcher oficial validado de la instalación existente.
 - `AULALISTA_GEMINI_AGY_AGENT_FILE`: perfil cuya ausencia efectiva de herramientas esté demostrada; que el archivo diga `tools: []` no basta.

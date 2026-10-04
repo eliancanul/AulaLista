@@ -12,7 +12,7 @@ from curriculum.teacher_review import (
     save_local_draft, discard_local_draft, local_drafts,
 )
 from curriculum.source_interpreter import derive_operational_queue
-from curriculum.teacher_review_provider import provider_configuration_notice
+from curriculum.teacher_review_provider import BLOCKING_PROVIDER_ERRORS, provider_configuration_notice
 from curriculum.views import teacher_required
 
 
@@ -155,6 +155,7 @@ def teacher_review(request, job_id):
                      for t in state["turns"]]
     context = {"job": job, "dossier": dossier, "review": review, "state": state,
         "provider_notice": provider_configuration_notice(),
+        "provider_blocked": state.get("error") in BLOCKING_PROVIDER_ERRORS,
         "turns": display_turns, "active": active, "editing": editing, "form_turn": form_turn,
         "form_text": form_text, "has_draft": bool(draft_turn),
         "max_questions": MAX_QUESTIONS, "asked_count": len(state["turns"]),

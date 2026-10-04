@@ -134,6 +134,13 @@ CURRICULUM_MAX_UPLOAD_SIZE_BYTES = int(
 # Adaptive review is opt-in. No implicit local model or cloud fallback.
 AULALISTA_TEACHER_REVIEW_PROVIDER = os.environ.get("AULALISTA_TEACHER_REVIEW_PROVIDER", "luna").strip()
 
+# Explicit local Codex route. No API key or credential is read by the application.
+AULALISTA_LUNA_CLI_EXECUTABLE = os.environ.get("AULALISTA_LUNA_CLI_EXECUTABLE", "")
+AULALISTA_LUNA_RUNTIME_REVIEW = os.environ.get("AULALISTA_LUNA_RUNTIME_REVIEW", "")
+AULALISTA_LUNA_ATTEMPT_DIR = os.environ.get("AULALISTA_LUNA_ATTEMPT_DIR", str(BASE_DIR / ".runtime" / "luna"))
+AULALISTA_LUNA_LIVE_ENABLED = os.environ.get("AULALISTA_LUNA_LIVE_ENABLED", "") == "1"
+AULALISTA_LUNA_TIMEOUT_SECONDS = int(os.environ.get("AULALISTA_LUNA_TIMEOUT_SECONDS", "30"))
+
 # Historical explicit Gemini HIGH route. Luna is selected above; no fallback. No credentials are read/copied by the application;
 # the official, already-authenticated CLI manages its own cached sign-in.
 AULALISTA_GEMINI_MODEL = os.environ.get("AULALISTA_GEMINI_MODEL", "gemini-3.8-flash-high")
