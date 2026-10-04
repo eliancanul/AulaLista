@@ -4,6 +4,23 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+
+// Diagnostic-only allowlist; never include CSRF, passwords or response text.
+function safeReviewPost(body = '') {
+  const multipart = body.startsWith('--');
+  const params = multipart ? null : new URLSearchParams(body);
+  const pick = key => multipart
+    ? body.match(new RegExp('name="' + key + '"\\r?\\n\\r?\\n([^\\r\\n]*)'))?.[1]
+    : params.get(key);
+  const action = pick('action');
+  const actions = ['answer','edit','skip','save_draft','discard_draft','continue','retry_interrupted','resume_changed'];
+  const numeric = key => /^[0-9]{1,20}$/.test(pick(key) || '') ? pick(key) : null;
+  return {action: action == null ? 'missing' : actions.includes(action) ? action : 'other',
+    expected_revision:numeric('expected_revision'), expected_version:numeric('expected_version'),
+    draft_epoch:numeric('draft_epoch')};
+}
+// End diagnostic allowlist.
+
 const config = JSON.parse(readFileSync(0, 'utf8'));
 const evidence = { method: 'CI Chrome CDP, current Django one-box, generated two-page PDF, explicitly mocked adaptive provider; no Gemini execution', checks: [], observations: [] };
 const chrome = spawn(config.chrome, [
@@ -12,6 +29,10 @@ const chrome = spawn(config.chrome, [
   'about:blank',
 ], { stdio: ['ignore', 'ignore', 'pipe'] });
 let socket;
+let tracingAnswerTransition = false;
+const tracedPosts = new Map();
+const transitionNetwork = [];
+const transitionExceptions = [];
 try {
   const endpoint = await new Promise((resolve, reject) => {
     let stderr = '';
@@ -32,6 +53,29 @@ try {
   const pending = new Map();
   socket.onmessage = event => {
     const message = JSON.parse(event.data);
+    if (tracingAnswerTransition && transitionExceptions.length < 20 && message.method === 'Runtime.exceptionThrown') {
+      const details = message.params.exceptionDetails;
+      transitionExceptions.push({className:String(details.exception?.className || 'Error').slice(0,80),
+        lineNumber:details.lineNumber,columnNumber:details.columnNumber,
+        frames:(details.stackTrace?.callFrames || []).slice(0,4).map(f=>({functionName:String(f.functionName || '').slice(0,80),lineNumber:f.lineNumber,columnNumber:f.columnNumber}))});
+    }
+    if (tracingAnswerTransition && message.method === 'Network.requestWillBeSent') {
+      const request = message.params.request;
+      if (message.params.redirectResponse && tracedPosts.has(message.params.requestId) && tracedPosts.get(message.params.requestId).responses.length < 8) {
+        tracedPosts.get(message.params.requestId).responses.push({phase:'redirect',status:message.params.redirectResponse.status});
+      }
+      if (transitionNetwork.length < 20 && request.method === 'POST' && /^\/tutor\/imports\/\d+\/interpretacion\/$/.test(new URL(request.url).pathname)) {
+        const item = {requestId:message.params.requestId, method:'POST', path:new URL(request.url).pathname,
+          ...safeReviewPost(request.postData || ''), postDataAvailable:typeof request.postData === 'string', responses:[]};
+        transitionNetwork.push(item);tracedPosts.set(message.params.requestId,item);
+      }
+    }
+    if (message.method === 'Network.responseReceived' && tracedPosts.has(message.params.requestId) && tracedPosts.get(message.params.requestId).responses.length < 8) {
+      tracedPosts.get(message.params.requestId).responses.push({phase:'response',status:message.params.response.status});
+    }
+    if (message.method === 'Network.loadingFailed' && tracedPosts.has(message.params.requestId)) {
+      tracedPosts.get(message.params.requestId).failure = /^net::ERR_[A-Z_]{1,60}$/.test(message.params.errorText || '') ? message.params.errorText : 'network_failure';
+    }
     if (message.method === 'Page.javascriptDialogOpening' && message.params.type === 'beforeunload') {
       send('Page.handleJavaScriptDialog', { accept: true });
       return;
@@ -63,7 +107,7 @@ try {
       catch (error) { if (!/Execution context was destroyed|Cannot find context|Inspected target navigated/.test(String(error))) throw error; }
       await delay(100);
     }
-    evidence.observations.push({label:'timeout-page', ...await evaluate('({url:location.href,text:document.body.innerText.slice(0,2500)})')});
+    evidence.observations.push({label:'timeout-page', ...await evaluate('({url:location.href,text:document.body.innerText.slice(0,2500), transition:window.__oneboxTransitionTrace || [], form:window.__oneboxTransitionSnapshot?.() || null})')});
     const shot = await send('Page.captureScreenshot', {format:'png'});
     writeFileSync(join(config.evidenceDir,'timeout.png'),Buffer.from(shot.data,'base64'));
     throw new Error(`Browser condition timeout: ${expression}`);
@@ -83,6 +127,7 @@ try {
   }
   await send('Page.enable');
   await send('Network.enable');
+  await send('Runtime.enable');
   const inputSelector = '#teacher-answer';
   const formSelector = '#teacher-answer-form';
   const savedCondition = "document.querySelector('#draft-status')?.textContent.includes('Borrador guardado')";
@@ -123,6 +168,7 @@ try {
   await oneBox();
   assert.ok(await evaluate("document.querySelector('label[for=teacher-answer]') !== null"));
   assert.equal(await evaluate("document.querySelector('#draft-status').getAttribute('aria-live')"),'polite');
+  tracingAnswerTransition = true;
   // Autosave failure, text retention and explicit user input retry on reconnection.
   await send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
   await typeAnswer(first);
@@ -135,6 +181,42 @@ try {
   await navigate(reviewPath,"document.querySelector('#teacher-answer') !== null && document.querySelector('#teacher-answer').value === "+JSON.stringify(first));
   await oneBox();
   assert.equal(await count(),1);
+  // Instrument only the generated-fixture Q1 transition. No default is prevented.
+  tracingAnswerTransition = true;
+  await evaluate(`(() => {
+    const form = document.querySelector('#teacher-answer-form');
+    const trace = window.__oneboxTransitionTrace = [];
+    const buttonInfo = b => b ? {tag:b.tagName,id:b.id,name:b.name,
+      action:b.name === 'action' ? b.value : null,disabled:!!b.disabled,
+      belongsToAnswerForm:b.form === form} : null;
+    const snapshot = window.__oneboxTransitionSnapshot = () => ({
+      prepared:form.dataset.prepared || null,submitting:form.dataset.submitting || null,
+      busy:form.getAttribute('aria-busy'),valid:[...form.elements].every(e=>!e.willValidate || e.validity.valid),
+      draftEpoch:form.querySelector('[name=draft_epoch]')?.value,
+      revision:form.querySelector('[name=expected_revision]')?.value,
+      answerLength:form.querySelector('textarea')?.value.length,
+      actionControls:[...form.querySelectorAll('[name=action]')].map(buttonInfo),
+      active:buttonInfo(document.activeElement),
+    });
+    const record = (kind,extra={}) => {if(trace.length<60)trace.push({kind,...extra,form:snapshot()});};
+    for (const type of ['keydown','keypress','keyup','click','submit','invalid','formdata']) {
+      for (const capture of [true,false]) document.addEventListener(type,event => {
+        if (!(event.target === form || form.contains(event.target))) return;
+        if (type.startsWith('key') && !['Enter','Tab'].includes(event.key)) return;
+        record(type,{phase:capture?'capture':'bubble',key:event.key || null,
+          charCode:event.charCode || null,defaultPrevented:event.defaultPrevented,
+          submitter:buttonInfo(event.submitter),target:buttonInfo(event.target),
+          actions:type==='formdata'?event.formData.getAll('action').map(v=>['answer','edit','skip','save_draft','discard_draft'].includes(v)?v:'other'):null});
+      },capture);
+    }
+    const original = form.requestSubmit;
+    form.requestSubmit = function(submitter) {
+      record('requestSubmit-before',{submitter:buttonInfo(submitter)});
+      try {return original.call(this,submitter);}
+      finally {record('requestSubmit-after',{submitter:buttonInfo(submitter)});}
+    };
+    record('trace-installed');
+  })()`);
   // Native keyboard traversal from the answer reaches its explicit submit action.
   await evaluate("document.querySelector('#teacher-answer').focus()");
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
@@ -142,6 +224,7 @@ try {
   assert.equal(await evaluate('document.activeElement.value'),'answer');
   await nativeEnter();
   await until("document.querySelector('[data-asked-count]')?.dataset.askedCount === '2'");
+  tracingAnswerTransition = false;
   await oneBox();
   assert.ok(await evaluate("document.querySelector('#review-question-heading').textContent").then(t=>t.includes(first.trim())));
   evidence.checks.push('One labeled box; offline autosave retains exact text and leave guard; retry acknowledgment, reload and keyboard submit advance one adaptive fake question');
@@ -213,6 +296,7 @@ try {
 } catch (error) {
   evidence.error=String(error.stack||error);process.exitCode=1;
 } finally {
+  evidence.transitionNetwork=transitionNetwork; evidence.transitionExceptions=transitionExceptions;
   writeFileSync(join(config.evidenceDir,'teacher-review-browser.json'),JSON.stringify(evidence,null,2));
   console.log(JSON.stringify(evidence,null,2));socket?.close();chrome.kill('SIGKILL');
 }

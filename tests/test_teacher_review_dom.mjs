@@ -67,3 +67,29 @@ test('CDP Enter carries carriage return without replacing native keyboard activa
     }},
   ]);
 });
+
+// Diagnostic parser tests: no browser, network or full form serialization.
+test('review POST diagnostics allow only action and numeric concurrency metadata', () => {
+  const harness=fs.readFileSync(new URL('./teacher_review_browser.mjs',import.meta.url),'utf8');
+  const helper=harness.slice(harness.indexOf('function safeReviewPost('),harness.indexOf('// End diagnostic allowlist.'));
+  const parse=vm.runInNewContext(`(${helper.trim()})`,{URLSearchParams});
+  const clean=value=>JSON.parse(JSON.stringify(parse(value)));
+  const body=new URLSearchParams({action:'answer',expected_revision:'5',expected_version:'2',draft_epoch:'8',
+    csrfmiddlewaretoken:'SECRET_CSRF_SENTINEL',password:'SECRET_PASSWORD_SENTINEL',answer:'PRIVATE_ANSWER_SENTINEL'}).toString();
+  assert.deepEqual(clean(body),{action:'answer',expected_revision:'5',expected_version:'2',draft_epoch:'8'});
+  assert.doesNotMatch(JSON.stringify(clean(body)),/SECRET|PRIVATE/);
+  assert.equal(clean('draft_epoch=9').action,'missing');
+  assert.equal(clean('action=UNTRUSTED_SECRET&draft_epoch=abc').action,'other');
+  assert.equal(clean('action=answer&draft_epoch=abc').draft_epoch,null);
+  assert.equal(clean('action=answer&draft_epoch='+ '9'.repeat(21)).draft_epoch,null);
+});
+test('multipart autosave diagnostic redaction keeps action and epoch only', () => {
+  const harness=fs.readFileSync(new URL('./teacher_review_browser.mjs',import.meta.url),'utf8');
+  const helper=harness.slice(harness.indexOf('function safeReviewPost('),harness.indexOf('// End diagnostic allowlist.'));
+  const parse=vm.runInNewContext(`(${helper.trim()})`,{URLSearchParams});
+  const part=(name,value)=>`--safe\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`;
+  const data=part('action','save_draft')+part('draft_epoch','3')+part('csrfmiddlewaretoken','SECRET')+part('answer','PRIVATE')+'--safe--\r\n';
+  const result=JSON.parse(JSON.stringify(parse(data)));
+  assert.deepEqual(result,{action:'save_draft',expected_revision:null,expected_version:null,draft_epoch:'3'});
+  assert.doesNotMatch(JSON.stringify(result),/SECRET|PRIVATE/);
+});

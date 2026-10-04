@@ -31,6 +31,16 @@ def test_current_onebox_browser_journey(tmp_path,settings,monkeypatch,request):
         'pendingAnswer':PENDING_ANSWER,'completeReviewPath':reverse('tutor-import-interpretation',args=[resolved.pk])}
     result=subprocess.run(['node',str(Path(__file__).with_name('teacher_review_browser.mjs'))],input=json.dumps(config),text=True,capture_output=True,timeout=180)
     print(result.stdout)
+    # Synthetic fixture metadata only, never PDF text, answers, credentials or tokens.
+    from curriculum.models import CurriculumTeacherReview
+    print(json.dumps({'onebox_server_transition':{
+        'provider_calls':len(provider.contexts),
+        'reviews':[{'job_id':r.job_id,'revision':r.revision,'draft_epoch':r.draft_epoch,
+            'status':r.state.get('status'),'error':r.state.get('error'),
+            'question_count':len(r.state.get('turns',[])),
+            'answered':[t.get('answer') is not None for t in r.state.get('turns',[])],
+            'generation_claimed':bool(r.generation_token)}
+            for r in CurriculumTeacherReview.objects.order_by('job_id')]}},sort_keys=True))
     assert result.returncode==0,result.stdout+result.stderr
     uploaded=CurriculumImportJob.objects.exclude(pk=resolved.pk).get()
     assert uploaded.created_by==teacher
