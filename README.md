@@ -4,7 +4,9 @@ AulaLista es una aplicación educativa local para preparar y ofrecer actividades
 
 ## Dónde empezar
 
-- [Contexto y vocabulario](CONTEXT.md): conceptos del producto y límites de autoridad.
+- [Glosario canónico](GLOSSARY.md): conceptos del producto y términos que no deben confundirse.
+- [Modelo de dominio](docs/domain-model.md): fuente, interpretación, revisión docente y publicación, con contratos y brechas de implementación.
+- [Contexto histórico](CONTEXT.md): antecedentes del vocabulario y límites de autoridad que conservan vigencia junto con los ADR.
 - [Diseño](DESIGN.md) y [decisiones aceptadas](docs/adr/): flujo docente, snapshots y privacidad.
 - [Instalación](docs/installation.md) y [estado de implementación](docs/implementation-current.md).
 - Aplicación Django: `aulalista/`, `curriculum/`, `templates/` y `static/`.
