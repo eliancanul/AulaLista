@@ -12,4 +12,4 @@ Use the five default triage labels: `needs-triage`, `needs-info`, `ready-for-age
 
 ### Domain docs
 
-This is a single-context repo. Read the root `CONTEXT.md` and relevant files under `docs/adr/` when they exist. See `docs/agents/domain.md`.
+This is a single-context repo. Read the root `GLOSSARY.md` and relevant files under `docs/adr/` when they exist. `CONTEXT.md` remains a historical reference during the glossary transition. See `docs/agents/domain.md`.
