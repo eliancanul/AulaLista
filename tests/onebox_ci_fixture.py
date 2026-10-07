@@ -29,7 +29,13 @@ class SyntheticAdaptiveProvider:
         updates=[{'turn_id':t['id'],'target_id':target,'quote':t['answer']}
                  for t in answered for target in t['eligible_targets']]
         asked={target for t in context['turns'] for target in t['targets']}
-        candidates=[t for t in context['missing_fields'] if t['target_id'] not in asked and t.get('field_name') and t['scope']!='annex']
+        permitted=set(context['question_policy']['candidate_target_ids'])
+        possible=[t for t in context['missing_fields'] if t['target_id'] in permitted and t.get('field_name') and t['scope']!='annex']
+        candidates=[t for t in possible if t['target_id'] not in asked]
+        # Deliberately revisit a still-missing target after a skip to stress the
+        # six-turn server gate. This fake is not a model-quality example.
+        if not candidates:
+            candidates=[t for t in possible if t['target_id'] not in {u['target_id'] for u in updates}]
         if not context['turns']:
             candidates.sort(key=lambda t:t['field_name']!='proposito')
         if any(t['answer'] is None for t in context['turns']) or context['questions_remaining']==0 or not candidates:

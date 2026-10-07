@@ -48,7 +48,8 @@ def validate_snapshot(root):
 
 def main():
     validate_snapshot(Path.cwd())
-    if any(os.environ.get(key, "0") != "0" for key in ("AULALISTA_GEMINI_LIVE_ENABLED", "AULALISTA_LUNA_LIVE_ENABLED")):
+    if any(os.environ.get(key, "0") != "0" for key in (
+            "AULALISTA_GEMINI_LIVE_ENABLED", "AULALISTA_LUNA_LIVE_ENABLED", "AULALISTA_PI_LIVE_ENABLED")):
         raise SystemExit("Synthetic CI requires real providers disabled")
     print("Synthetic backend scope. Private-input modules excluded:", *PRIVATE_MODULES,
           "Frozen corpus contracts excluded:", *FROZEN_CORPUS_NODES, sep="\n", flush=True)

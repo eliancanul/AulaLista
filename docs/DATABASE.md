@@ -333,3 +333,35 @@ del dossier: una sola copia de bytes se verifica por SHA y número de páginas y
 produce texto digital por página. Sus vacíos/errores son explícitos, no se hace
 OCR y el límite de envío rechaza el conjunto completo sin truncarlo. Los datos
 del modelo no pueden crear origen humano, aprobar ni publicar por sí mismos.
+
+## Límites de fuente en el dossier (2026-10-06)
+
+La corrección de extracción de metodología, duración global y materiales
+citados opera sobre `interpretation_dossier`; no añade tablas, columnas ni
+migraciones ORM, y no modifica `topics`, `activities` de staging ni sus schemas
+v1. Los dossiers ya guardados no se reescriben automáticamente.
+
+- Metodología y duración conservan los campos existentes y citas separadas
+  por página física. Las continuaciones inciertas y las sugerencias siguen
+  `proposed`/`ambiguous`/`pending`; no crean duración de clase.
+- Los candidatos de material conservan `source_fragments` y pueden añadir
+  `unassigned_fragments` para prefijos editoriales o de pertenencia incierta.
+  Esos fragmentos no amplían `candidate_exercise_pages` y se contrastan con
+  el PDF aunque se eliminen otros metadatos nuevos del candidato.
+- Los títulos pueden tener saltos de línea en sus citas; el título visible
+  normaliza espacios, sin reemplazar ni fabricar la evidencia literal.
+  `confirmed_page` y `confirmed_pages` siguen vacíos hasta la decisión humana
+  admitida por el contrato vigente; este ajuste no implementa una confirmación
+  o exportación multipágina nueva.
+
+El contrato y sus límites están en [source-structure-review.md](source-structure-review.md).
+
+La corrección de roles para tareas sin viñeta y acciones con prefijo adverbial
+no cambia la forma persistida de `source_structure` ni modifica dossiers ya
+guardados. La reextracción explícita propone los roles corregidos y mantiene
+su revisión pendiente; no reescribe automáticamente decisiones ni fuentes.
+
+El modo opt-in `semantic-v2-values-spans` compacta sólo el transporte al
+proveedor. No persiste referencias compactadas en el dossier ni cambia tablas,
+campos, estados de revisión, reglas de autoridad o validación del backend.
+Su contrato reversible está en [teacher-review-structure-transport.md](teacher-review-structure-transport.md).

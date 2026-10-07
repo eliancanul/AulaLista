@@ -809,7 +809,7 @@
             <span class="scope-label">Filtro de sesión:</span>
             <a href="?session_id={{ active_session_id }}&scope=document"
                class="scope-tab {% if not queue.session_filter and queue.scope != 'general' %}active{% endif %}">
-              Todo el documento ({{ dossier.sessions|length }} sesiones)
+              Todo el documento ({{ dossier.sessions|length }} unidades)
             </a>
             <a href="?scope=general"
                class="scope-tab {% if queue.scope == 'general' %}active{% endif %}">
@@ -1247,13 +1247,13 @@
         <input type="hidden" name="session_id" value="{{ active_session_id }}">
         <input type="hidden" name="session_number" value="{{ active_session_number }}">
 
-        <!-- 2. Sesiones de Clase (TODAS las clases en orden) -->
+        <!-- 2. Unidades de planeación con tipo explícito -->
         <section aria-labelledby="all-classes-heading" class="all-classes-section" id="seccion-clases" style="margin-top: 2rem;">
           <h2 id="all-classes-heading" style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">
-            2. Sesiones de Clase ({{ dossier.sessions|length }} sesiones en secuencia)
+            2. Unidades de planeación ({{ dossier.sessions|length }} unidades · {{ dossier.declared_session_count }} sesiones declaradas)
           </h2>
           <p class="muted" style="margin-bottom: 1.25rem;">
-            Secuencia didáctica diaria completa: cada sesión incluye sus momentos pedagógicos y anexos asociados.
+            Cada unidad conserva el alcance de la fuente. Las fases del proyecto no equivalen a clases ni fijan un horario.
           </p>
 
           <div class="sessions-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -1263,9 +1263,9 @@
                 <div class="session-card session-card-active" id="session-card-{{ sess.session_id }}" style="background: var(--color-surface); border: 2px solid var(--color-action, #0284c7); border-radius: var(--radius); padding: 1.25rem;">
                   <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid var(--color-line); padding-bottom: 0.75rem; margin-bottom: 1rem;">
                     <div>
-                      <span class="badge-tag tag-origin" style="margin-bottom: 0.25rem; display: inline-block;">Sesión en edición activa</span>
+                      <span class="badge-tag tag-origin" style="margin-bottom: 0.25rem; display: inline-block;">Unidad en edición activa</span>
                       <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--color-ink);">
-                        Sesión {{ sess.session_number }}: {{ sess.title }}
+                        {{ sess.unit_label }}: {{ sess.title }}
                       </h3>
                       <span class="muted" style="font-size: 0.85rem;">
                         Páginas fuente en PDF: {{ sess.pages|join:', ' }}
@@ -1303,12 +1303,14 @@
 
                   {% if sess.continues_on %}
                     <div class="continuation-banner" style="margin-bottom: 1rem;">
-                      ℹ️ <strong>Continuación de la sesión:</strong> La secuencia didáctica continúa en la{{ sess.continues_on|length|pluralize:"s" }} página{{ sess.continues_on|length|pluralize:"s" }} {{ sess.continues_on|join:", " }}.
+                      ℹ️ <strong>Continuación de la unidad:</strong> La secuencia didáctica continúa en la{{ sess.continues_on|length|pluralize:"s" }} página{{ sess.continues_on|length|pluralize:"s" }} {{ sess.continues_on|join:", " }}.
                     </div>
                   {% endif %}
 
-                  <!-- Momentos y Actividades pedagógicas -->
-                  <h4 style="font-size: 1rem; font-weight: 800; margin: 1rem 0 0.5rem 0;">Momentos de la sesión</h4>
+                  {% include "curriculum/includes/_source_structure.html" %}
+
+                  <!-- Campos de la unidad -->
+                  <h4 style="font-size: 1rem; font-weight: 800; margin: 1rem 0 0.5rem 0;">{% if sess.unit_kind == "declared_session" %}Momentos de la sesión{% else %}Campos registrados de la unidad{% endif %}</h4>
                   {% if sess.fields.contexto_ejecucion %}
                     {% if active_item.field_name == 'contexto_ejecucion' %}
                       {% include "curriculum/includes/_interpreted_field.html" with f=sess.fields.contexto_ejecucion field_id="contexto_ejecucion" label="Lugar y Contexto de Ejecución (Aula vs Casa)" input_type="text" readonly=source_tampered job=job is_proxy=True %}
@@ -1360,7 +1362,7 @@
                   {% if sess.activities %}
                     <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
                       <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
-                        Actividades identificadas en la Sesión {{ sess.session_number }} ({{ sess.activities|length }})
+                        Actividades delimitadas en la fuente ({{ sess.activities|length }})
                       </h4>
                       <div class="table-responsive">
                         <table class="annex-table">
@@ -1421,7 +1423,7 @@
 
                   <div style="margin-top: 1.5rem; border-top: 1px dashed var(--color-line); padding-top: 1rem;">
                     <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">
-                      Anexos y láminas asociadas a la Sesión {{ sess.session_number }}
+                      Materiales y anexos candidatos de la unidad
                     </h4>
                     {% if sess.annex_references %}
                       <div class="table-responsive">
@@ -1442,7 +1444,7 @@
                                   {% if active_item.reference_id != ref.reference_id %}
                                     <span id="control-annex-{{ ref.reference_id }}" tabindex="-1"></span>
                                   {% endif %}
-                                  <strong>Anexo {{ ref.annex_number }}</strong>
+                                  <strong>{% if ref.annex_number %}Anexo {{ ref.annex_number }}{% else %}{{ ref.title|default:"Material citado" }}{% endif %}</strong>
                                 </td>
                                 <td data-label="Evidencia" aria-label="Evidencia"><em>"{{ ref.raw_mention }}"</em></td>
                                 <td data-label="Página candidata" aria-label="Página candidata">
@@ -1562,7 +1564,7 @@
                         </table>
                     </div>
                   {% else %}
-                      <p class="muted" style="font-size: 0.88rem;">No se detectaron menciones de anexos en esta sesión.</p>
+                      <p class="muted" style="font-size: 0.88rem;">No se detectaron menciones de anexos en esta unidad.</p>
                     {% endif %}
                   </div>
                 </div>
@@ -1571,11 +1573,11 @@
                 <details class="session-card session-accordion" id="session-card-{{ sess.session_id }}" style="background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 1rem 1.25rem;">
                   <summary style="font-weight: 800; font-size: 1.1rem; cursor: pointer; color: var(--color-ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                     <div>
-                      <span>Sesión {{ sess.session_number }}: {{ sess.title }}</span>
+                      <span>{{ sess.unit_label }}: {{ sess.title }}</span>
                       <span class="muted" style="font-weight: normal; font-size: 0.82rem; margin-left: 0.5rem;">(Págs. {{ sess.pages|join:', ' }})</span>
                     </div>
                     <a href="?session_id={{ sess.session_id }}&scope={{ sess.session_id }}" class="button button-small" style="font-size: 0.8rem;">
-                      Editar esta sesión ↗
+                      Editar esta unidad ↗
                     </a>
                   </summary>
 
@@ -1604,7 +1606,7 @@
                         {% if sess.activities %} · {{ sess.activities|length }} actividad{{ sess.activities|length|pluralize:"es" }}{% endif %}
                       </span>
                       <a href="?session_id={{ sess.session_id }}&scope={{ sess.session_id }}" class="button button-small button-secondary">
-                        Abrir y editar Sesión {{ sess.session_number }} ↗
+                        Abrir y editar esta unidad ↗
                       </a>
                     </div>
 

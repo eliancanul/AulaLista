@@ -1,5 +1,7 @@
 """Four narrow settings-only availability regressions. Explicit provider doubles only."""
 import uuid
+import runpy
+from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
@@ -9,6 +11,31 @@ from curriculum.models import CurriculumTeacherReview
 from test_teacher_review import ready_job, start, save, advance, ask_first, apply_and_next
 
 pytestmark = pytest.mark.django_db
+
+
+def test_product_default_selects_pi_without_enabling_any_real_provider(monkeypatch, settings):
+    for name in ('AULALISTA_TEACHER_REVIEW_PROVIDER', 'AULALISTA_TEACHER_REVIEW_CONTEXT_MODE',
+                 'AULALISTA_PI_LIVE_ENABLED', 'AULALISTA_LUNA_LIVE_ENABLED',
+                 'AULALISTA_GEMINI_LIVE_ENABLED'):
+        monkeypatch.delenv(name, raising=False)
+    configured = runpy.run_path(str(Path(settings.BASE_DIR) / 'aulalista/settings.py'))
+    assert configured['AULALISTA_TEACHER_REVIEW_PROVIDER'] == 'pi_luna'
+    assert configured['AULALISTA_TEACHER_REVIEW_CONTEXT_MODE'] == 'complete'
+    assert configured['AULALISTA_PI_LIVE_ENABLED'] is False
+    assert configured['AULALISTA_LUNA_LIVE_ENABLED'] is False
+    assert configured['AULALISTA_GEMINI_LIVE_ENABLED'] is False
+    monkeypatch.setenv('AULALISTA_TEACHER_REVIEW_PROVIDER', 'luna')
+    assert runpy.run_path(str(Path(settings.BASE_DIR) / 'aulalista/settings.py'))['AULALISTA_TEACHER_REVIEW_PROVIDER'] == 'luna'
+
+
+def test_pi_settings_notice_never_constructs_runtime(ready_job, settings, monkeypatch):
+    client, _, job = ready_job
+    _no_runtime(monkeypatch)
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'pi_luna'
+    settings.AULALISTA_PI_LIVE_ENABLED = False
+    response = client.get(reverse('tutor-import-interpretation', args=[job.pk]))
+    assert response.context['provider_notice']['code'] == 'pi_live_not_enabled'
+    assert 'deshabilitadas' in response.context['provider_notice']['message']
 
 
 def _form(response):
@@ -160,3 +187,52 @@ def test_luna_selection_cannot_construct_or_fall_back_to_historical_transports(s
     monkeypatch.setattr('curriculum.curriculum_import.chat_json', forbidden)
     with pytest.raises(ReviewProviderError, match='^luna_route_not_configured$'):
         get_review_provider()
+
+
+@pytest.mark.parametrize('code,message', [
+    ('pi_live_not_enabled', 'No se inició una consulta real'),
+    ('pi_route_not_configured', 'No se inició una consulta real'),
+    ('pi_isolation_preflight_failed', 'No se admitió un envío del prompt'),
+    ('pi_runtime_review_required', 'No se admitió un envío del prompt'),
+    ('pi_runtime_preflight_failed', 'No se admitió un envío del prompt'),
+    ('pi_node_version_unsupported', 'No se admitió un envío del prompt'),
+    ('pi_preflight_failed', 'No se admitió un envío del prompt'),
+    ('pi_environment_override_present', 'No se inició la consulta'),
+    ('pi_full_context_too_large', 'no se recortó ni se envió al modelo'),
+])
+def test_pi_pre_admission_failures_have_specific_honest_notices(ready_job, settings, monkeypatch, code, message):
+    client, user, job = ready_job
+    review = save(start(job, user, ask_first), user, 'Retained literal answer')
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'pi_luna'
+    settings.AULALISTA_PI_LIVE_ENABLED = False
+    _no_runtime(monkeypatch)
+    review.state.update(status='pending', error=code)
+    review.save(update_fields=['state'])
+    response = client.get(reverse('tutor-import-interpretation', args=[job.pk]))
+    text = BeautifulSoup(response.content, 'html.parser').get_text()
+    assert message in text
+    assert 'Retained literal answer' in text
+    assert 'puedes reintentar.' not in text
+    assert response.context['provider_notice']['code'] == 'pi_live_not_enabled'
+
+
+@pytest.mark.parametrize('code', ['pi_response_rejected', 'luna_response_rejected'])
+def test_accounted_response_rejection_does_not_claim_unknown_consumption(ready_job, settings, monkeypatch, code):
+    client, user, job = ready_job
+    review = save(start(job, user, ask_first), user, 'Retained literal answer')
+    settings.AULALISTA_TEACHER_REVIEW_PROVIDER = 'pi_luna'
+    _no_runtime(monkeypatch)
+    review.state.update(status='pending', error=code)
+    review.save(update_fields=['state'])
+    url = reverse('tutor-import-interpretation', args=[job.pk])
+    response = client.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    assert 'La respuesta del proveedor se rechazó' in soup.get_text()
+    assert 'resultado y consumo pendientes de conciliación' not in soup.get_text()
+    assert soup.find('button', {'value': 'continue'}) is None
+    blocked = client.post(url, {'action': 'continue', 'expected_revision': review.revision,
+                                'expected_version': review.dossier_version})
+    assert blocked.status_code == 409
+    assert 'No se enviará otra sin revisar el rechazo' in blocked.content.decode()
+    review.refresh_from_db()
+    assert review.state['error'] == code

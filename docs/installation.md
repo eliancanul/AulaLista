@@ -1,4 +1,9 @@
-# Instalación local de AulaLista
+# Entorno local de pruebas de AulaLista
+
+El objetivo de producto es un SaaS conectado con IA para validación curricular
+asistida y revisión humana. Esta guía prepara la etapa local para probar el
+modelo; no define una arquitectura de producción sin red. La conexión API del
+SaaS se hará por separado.
 
 La aplicación Django usa Python 3.13, Django 5.2, Wagtail 7.4, SQLite y recursos
 estáticos locales. Las bases de una instalación contienen trabajo guardado:
@@ -6,7 +11,8 @@ respáldalas junto con los archivos subidos antes de migrar o reemplazar código
 No se incluyen bases ni archivos operativos en el paquete.
 
 La revisión docente activa usa Django y no requiere construir Vue. Luna está
-seleccionado, pero su ruta CLI sigue pendiente de configuración y validación;
+seleccionado mediante Pi (`pi_luna`), pero la ruta local está OFF y requiere
+configuración, aislamiento revisado y validación;
 instalar el nodo no habilita ni prueba un modelo. Véase
 [aceptación y operación](teacher-review-acceptance.md).
 

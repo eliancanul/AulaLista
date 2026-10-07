@@ -26,6 +26,9 @@ from pypdf.errors import PdfReadError, PyPdfError
 from curriculum.verification import normalize_text_for_evidence_check
 from curriculum.vocabulary import CANONICAL_CAMPOS
 from curriculum.overview_fields import extract_overview_spans
+from curriculum.general_details import extract_methodology, extract_project_duration
+from curriculum.source_structure import scan_phase_structure
+from curriculum.source_annexes import scan_annex_candidates, named_material_mentions
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
     clean_page_prefix, is_structural_barrier, phase_project_context, phase_review_scope, first_phase_review_page,
@@ -630,6 +633,7 @@ class AnnexReference:
     current_action: str = ""
     reference_id: str = ""
     legacy_reference_ids: list[str] = field(default_factory=list)
+    title: str = ""
 
     def __post_init__(self) -> None:
         state, act = derive_annex_operational_state(self)
@@ -646,6 +650,7 @@ class AnnexReference:
             "reference_id": self.reference_id,
             "annex_number": self.annex_number,
             "raw_mention": self.raw_mention,
+            "title": self.title,
             "source_pages": list(self.source_pages),
             "candidate_pages": list(self.candidate_pages),
             "status": self.status,
@@ -687,6 +692,7 @@ class AnnexReference:
         return cls(
             annex_number=str(data.get("annex_number", "")),
             raw_mention=str(data.get("raw_mention", "")),
+            title=str(data.get("title", "")),
             source_pages=[int(p) for p in data.get("source_pages", [])],
             candidate_pages=[int(p) for p in data.get("candidate_pages", [])],
             status=str(data.get("status", STATUS_SUPPORTED)),
@@ -861,6 +867,16 @@ class SessionPlan:
     # source verifier can reject them, rather than coercing bool/strings to ints.
     project_context: dict[str, Any] | None = None
     header_anchor: dict[str, Any] | None = None
+    unit_kind: str = "unknown"
+    source_structure: dict[str, Any] | None = None
+
+    @property
+    def unit_label(self) -> str:
+        if self.unit_kind == "project_review":
+            return "Unidad de revisión del proyecto"
+        if self.unit_kind == "declared_session":
+            return f"Sesión {self.session_number}"
+        return "Unidad de planeación"
 
     def to_dict(self) -> dict[str, Any]:
         _ensure_session_annex_ids(self.session_id, self.annex_references)
@@ -871,6 +887,8 @@ class SessionPlan:
             "project_title": self.project_title,
             "project_context": copy.deepcopy(self.project_context),
             "header_anchor": copy.deepcopy(self.header_anchor),
+            "unit_kind": self.unit_kind,
+            "source_structure": copy.deepcopy(self.source_structure),
             "day_of_week": self.day_of_week,
             "pages": list(self.pages),
             "continues_on": list(self.continues_on),
@@ -913,6 +931,8 @@ class SessionPlan:
             project_title=str(data.get("project_title", "")),
             project_context=copy.deepcopy(data.get("project_context")),
             header_anchor=copy.deepcopy(data.get("header_anchor")),
+            unit_kind=data.get("unit_kind", "unknown"),
+            source_structure=copy.deepcopy(data.get("source_structure")),
             day_of_week=str(data.get("day_of_week", "")),
             pages=p_list,
             continues_on=[int(p) for p in data.get("continues_on", [])],
@@ -1016,6 +1036,10 @@ class ImportDossier:
             created_at=str(data.get("created_at", "")),
             updated_at=str(data.get("updated_at", "")),
         )
+
+    @property
+    def declared_session_count(self) -> int:
+        return sum(s.unit_kind == "declared_session" for s in self.sessions)
 
     def get_session(self, identifier: str | int) -> SessionPlan | None:
         """Find session by session_id or session_number."""
@@ -1437,7 +1461,8 @@ def _build_annex_operational_item(
     item_id = _generate_opaque_item_id("annex", session.session_id, ref_id, occurrence)
     stable_key = item_id
     target_id = _generate_canonical_target_id("annex", session.session_id, ref_id)
-    human_label = f"Anexo {ref.annex_number}" + (f": {ref.raw_mention[:40]}" if ref.raw_mention else "")
+    human_label = (f"Anexo {ref.annex_number}" + (f": {ref.raw_mention[:40]}" if ref.raw_mention else "")
+                   if ref.annex_number else ref.title or "Material citado")
     op_state, curr_act = derive_annex_operational_state(ref, source_sha=source_sha, page_count=page_count)
 
     # B5: Annex is ONLY reviewed if derive_annex_operational_state returns resolved
@@ -1477,7 +1502,7 @@ def _build_annex_operational_item(
         stable_key=stable_key,
         scope="annex",
         session_id=session.session_id,
-        session_number=session.session_number,
+        session_number=session.session_number if session.unit_kind == "declared_session" else None,
         project_title=session.project_title,
         field_name=ref_id,
         reference_id=ref.reference_id,
@@ -1610,7 +1635,11 @@ def derive_operational_queue(
     # 2. Sessions (fields and annexes)
     for s_idx, session in enumerate(dossier.sessions):
         s_proj = session.project_title  # Missing local context must not inherit the global title.
-        for f_idx, f_name in enumerate(SESSION_FIELD_DISPLAY_ORDER):
+        field_names = SESSION_FIELD_DISPLAY_ORDER
+        if session.unit_kind == "project_review":
+            field_names = [name for name in field_names if name in session.fields
+                           and name not in {"inicio", "desarrollo", "cierre"}]
+        for f_idx, f_name in enumerate(field_names):
             if f_name in session.fields:
                 s_field = session.fields[f_name]
             else:
@@ -1625,7 +1654,7 @@ def derive_operational_queue(
                 field=s_field,
                 scope="session",
                 session_id=session.session_id,
-                session_number=session.session_number,
+                session_number=session.session_number if session.unit_kind == "declared_session" else None,
                 project_title=s_proj,
                 occurrence=(s_idx * 100) + f_idx,
             )
@@ -1705,7 +1734,7 @@ def derive_operational_queue(
 
             filtered_items = [it for it in all_items if it.session_id == target_s.session_id]
             scope_str = target_s.session_id
-            scope_label_str = f"Sesión {target_s.session_number} ({target_s.title})"
+            scope_label_str = f"{target_s.unit_label} ({target_s.title})"
             effective_session_filter = target_s.session_id
 
     sorted_items = sorted(filtered_items, key=_item_sort_key)
@@ -2099,27 +2128,8 @@ class CurriculumSourceInterpreter:
 
     @classmethod
     def _scan_annex_sheet_candidates(cls, pages_text: list[str]) -> list[dict[str, Any]]:
-        """Identify pages that represent individual annex sheets."""
-        candidates = []
-        for idx, text in enumerate(pages_text, start=1):
-            lines = [l.strip() for l in text.splitlines() if l.strip()]
-            for line in lines[:6]:
-                m = re.match(
-                    r"^ANEXO\s*(?:#|No\.?|N°)?\s*0*(\d+)(?:\s*[-–—:]\s*(.*))?$",
-                    line,
-                    re.IGNORECASE,
-                )
-                if m:
-                    num = str(int(m.group(1)))
-                    extra_title = m.group(2) or ""
-                    candidates.append({
-                        "number": num,
-                        "page": idx,
-                        "label": line,
-                        "title": extra_title.strip(),
-                    })
-                    break
-        return candidates
+        """Identify numbered and source-mentioned named worksheet candidates."""
+        return scan_annex_candidates(pages_text)
 
     @classmethod
     def _extract_general_fields(
@@ -2528,53 +2538,25 @@ class CurriculumSourceInterpreter:
                     action_required="Redactar la finalidad o intención didáctica docente.",
                 )
 
-        # 5. Metodología
-        # Table headers can place "Tiempo de aplicación" immediately after the
-        # methodology on the same line, with its value continuing on page 2.
-        # Capture only the physical line that supplies the method; a citation
-        # assembled across pages cannot pass the source verifier.
-        table_method = re.search(
-            r"Metodolog[ií]a\s*:?[ \t]*([^\n\r]*?)(?=[ \t]+Tiempo\s+de\b)",
-            overview_pages[0] if overview_pages else "",
-            re.IGNORECASE,
-        )
-        met_match = re.search(
-            r"Metodolog[ií]a:?\s*(.+?)(?=(?:\s{2,}|\n\s*)(?:Campos|Contenidos|Escenario|Ejes|Prop[oó]sito|Finalidad|Temporalidad|[-•–])|\Z)",
-            overview_text,
-            re.DOTALL | re.IGNORECASE,
-        )
-        if table_method or met_match:
-            source_match = table_method or met_match
-            val = re.sub(r"\s+", " ", source_match.group(1)).strip().rstrip(".")
-            matched_page = 1 if table_method else _find_page(source_match.group(0))
-            is_warned = matched_page in page_warnings
-            # If methodology ends with preposition, partial words, or is too long/runaway
-            is_partial = val.endswith(("de", "en", "para", "con", "por", "a")) or len(val) > 150
-            status = STATUS_AMBIGUOUS if (is_warned or is_partial) else STATUS_SUPPORTED
+        # 5. Methodology keeps page-local source slices without silent truncation.
+        method = extract_methodology(overview_pages)
+        if method and method.value:
+            warned = any(page in page_warnings for page, _ in method.fragments)
             fields_dict["metodologia"] = InterpretedField(
-                name="metodologia",
-                value=val[:150],
-                origin=ORIGIN_EXTRACTED if not is_partial else ORIGIN_PROPOSED,
-                status=status,
-                reason="Metodología de proyecto identificada en el documento."
-                if not is_partial
-                else "Texto de metodología detectado de forma parcial o heurística.",
+                name="metodologia", value=method.value,
+                origin=ORIGIN_PROPOSED if method.ambiguous else ORIGIN_EXTRACTED,
+                status=STATUS_AMBIGUOUS if method.ambiguous or warned else STATUS_SUPPORTED,
+                review=REVIEW_PENDING,
+                reason=("Texto de metodología conservado como candidato para revisión."
+                        if method.ambiguous else "Metodología delimitada con evidencia literal por página."),
                 action_required="Confirmar metodología pedagógica.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=matched_page,
-                        excerpt=val[:150],
-                    )
-                ],
+                evidence=[SourceReference(document_sha256=sha256, page_number=page, excerpt=raw)
+                          for page, raw in method.fragments],
             )
         else:
             fields_dict["metodologia"] = InterpretedField(
-                name="metodologia",
-                value="",
-                origin=ORIGIN_PROPOSED,
-                status=STATUS_MISSING,
-                reason="No se encontró mención de metodología en la fuente.",
+                name="metodologia", value="", origin=ORIGIN_PROPOSED, status=STATUS_MISSING,
+                reason="No se encontró un valor de metodología delimitado en la fuente.",
                 action_required="Definir la metodología a emplear.",
             )
 
@@ -2662,90 +2644,20 @@ class CurriculumSourceInterpreter:
                 reason="No se detectó mención explícita de grado escolar en las páginas de portada/encabezado.",
                 action_required="Especificar el grado escolar de la planeación.",
             )
-        # 8. Duración global del proyecto (Tiempo de aplicación / Temporalidad)
-        dur_val = ""
-        dur_evidence: list[SourceReference] = []
-        dur_status = STATUS_SUPPORTED
-        dur_origin = ORIGIN_EXTRACTED
-        dur_reason = ""
-
-        # A. Check for cross-page split between page 1 and page 2
-        if len(overview_pages) >= 2:
-            m_t1 = re.search(r"Tiempo\s+de\s+(?:aplicaci[oó]n\s*:?\s*)?([^\n\r]+)", overview_pages[0], re.IGNORECASE)
-            # A split label must resume with a plausible duration value in the
-            # page header region, not an unrelated later mention of "aplicación".
-            duration_quantity = r"(?:\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte)"
-            duration_unit = r"(?:d[ií]as?|semanas?|mes(?:es)?|bimestres?|trimestres?|cuatrimestres?|semestres?|a[nñ]os?|ciclos?)"
-            m_t2 = re.search(
-                rf"aplicaci[oó]n\s+((?:(?:se\s+sugiere|aproximadamente|de)\s+)?(?:{duration_quantity}\s+)?{duration_unit}\b[^\n\r]*?)(?=\s*\n\s*(?:DESARROLLO|Fase|Metodolog[ií]a|Campo)|\Z)",
-                overview_pages[1],
-                re.IGNORECASE,
-            )
-            if m_t2:
-                prefix = overview_pages[1][:m_t2.start()]
-                if prefix.count("\n") > 2 or len(prefix) > 256:
-                    m_t2 = None
-            if m_t1 and m_t2:
-                p1_time = m_t1.group(1).strip()
-                p2_time = m_t2.group(1).strip()
-                combined = re.sub(r"\s+", " ", f"{p1_time} {p2_time}").strip()
-                ex1 = m_t1.group(0).strip()
-                ex2 = m_t2.group(0).strip()
-                norm_ex1 = normalize_text_for_evidence_check(ex1)
-                norm_p1 = normalize_text_for_evidence_check(overview_pages[0])
-                norm_ex2 = normalize_text_for_evidence_check(ex2)
-                norm_p2 = normalize_text_for_evidence_check(overview_pages[1])
-                if norm_ex1 and norm_ex1 in norm_p1 and norm_ex2 and norm_ex2 in norm_p2:
-                    dur_val = combined
-                    dur_origin = ORIGIN_PROPOSED
-                    dur_status = STATUS_AMBIGUOUS
-                    dur_reason = (
-                        "Sugerencia de temporalidad global del proyecto identificada a través del salto de páginas 1 y 2; "
-                        "no define sesiones ni horario."
-                    )
-                    dur_evidence = [
-                        SourceReference(document_sha256=sha256, page_number=1, excerpt=ex1),
-                        SourceReference(document_sha256=sha256, page_number=2, excerpt=ex2),
-                    ]
-
-        # B. Check for single-page match if not resolved cross-page
-        if not dur_val:
-            single_m = re.search(
-                r"(?:Tiempo\s+de(?:\s+aplicaci[oó]n)?|Duraci[oó]n\s+del\s+proyecto)\s*:?\s*([^\n\r]+?)(?=(?:\s{2,}|\n|\s+Metodolog[ií]a|\s+Fase|\Z))",
-                overview_text,
-                re.IGNORECASE,
-            )
-            if single_m:
-                raw_dur = single_m.group(1).strip()
-                clean_dur = re.sub(r"\s+", " ", raw_dur).strip()
-                if clean_dur and len(clean_dur) > 2 and not clean_dur.lower().startswith("de aplicación"):
-                    m_page = _find_page(single_m.group(0))
-                    ex = single_m.group(0).strip()[:200]
-                    norm_ex = normalize_text_for_evidence_check(ex)
-                    norm_p = normalize_text_for_evidence_check(overview_pages[m_page - 1]) if 0 <= m_page - 1 < len(overview_pages) else ""
-                    if norm_ex and norm_ex in norm_p:
-                        dur_val = clean_dur
-                        dur_origin = ORIGIN_EXTRACTED if not ("sugiere" in clean_dur.lower()) else ORIGIN_PROPOSED
-                        dur_status = STATUS_AMBIGUOUS if (m_page in page_warnings or "sugiere" in clean_dur.lower()) else STATUS_SUPPORTED
-                        dur_reason = f"Duración global del proyecto identificada en página {m_page}."
-                        dur_evidence = [SourceReference(document_sha256=sha256, page_number=m_page, excerpt=ex)]
-                    else:
-                        dur_val = clean_dur
-                        dur_origin = ORIGIN_PROPOSED
-                        dur_status = STATUS_AMBIGUOUS
-                        dur_reason = "Duración sugerida detectada pero no se pudo cotejar cita contigua unívoca en una sola página."
-                        dur_evidence = []
-
-        if dur_val:
+        # 8. Project time is a global source declaration, never a class duration.
+        duration = extract_project_duration(overview_pages)
+        if duration and duration.value:
+            warned = any(page in page_warnings for page, _ in duration.fragments)
             fields_dict["duracion_proyecto"] = InterpretedField(
-                name="duracion_proyecto",
-                value=dur_val,
-                origin=dur_origin,
-                status=dur_status,
+                name="duracion_proyecto", value=duration.value,
+                origin=ORIGIN_PROPOSED if duration.ambiguous else ORIGIN_EXTRACTED,
+                status=STATUS_AMBIGUOUS if duration.ambiguous or warned else STATUS_SUPPORTED,
                 review=REVIEW_PENDING,
-                reason=dur_reason,
+                reason=("Temporalidad global sugerida o de límites inciertos; no define sesiones ni horario."
+                        if duration.ambiguous else "Temporalidad global delimitada con evidencia literal por página."),
                 action_required="Revisar y definir la temporalidad o duración real del proyecto.",
-                evidence=dur_evidence,
+                evidence=[SourceReference(document_sha256=sha256, page_number=page, excerpt=raw)
+                          for page, raw in duration.fragments],
             )
 
         return fields_dict
@@ -2770,164 +2682,36 @@ class CurriculumSourceInterpreter:
                 phase_segments, unassigned_segments = phase_review_scope(pages_text, sha256, project_start)
                 project_pages = [number for number, _ in phase_segments]
 
-                activities: list[SessionActivity] = []
-                act_pattern = re.compile(
-                    r"(?:^|\n)\s*(?:(Actividad\b(?:\s+\d+\s*[:.-]|\s+[A-Za-z]\s*[:.-])?\s*[^\n\r]+)|"
-                    r"[•\-\*]\s*([^\n\r]+(?:\n(?!\s*(?:[•\-\*]|\d+[.)]|Fase\b|DESARROLLO\b|Productos\b|ANEXO\b|Recursos\b|implicaciones\b))[^\n\r]+)*)|"
-                    r"\d+[.)]\s*([^\n\r]+(?:\n(?!\s*(?:[•\-\*]|\d+[.)]|Fase\b|DESARROLLO\b|Productos\b|ANEXO\b|Recursos\b|implicaciones\b))[^\n\r]+)*))",
-                    re.IGNORECASE,
+                structure = scan_phase_structure(pages_text, phase_segments, sha256)
+                activities = [SessionActivity(
+                    activity_id=block["block_id"], title=block["text"],
+                    description=block["text"], order=index,
+                    evidence=[SourceReference.from_dict(fragment) for fragment in block["evidence"]],
+                ) for index, block in enumerate(
+                    (b for b in structure["blocks"] if b["role"] == "activity"), 1,
+                )]
+                annex_refs = cls._detect_annex_references_in_session(
+                    session_text="\n".join(text for _, text in phase_segments),
+                    session_pages=project_pages, sha256=sha256,
+                    annex_candidates=annex_candidates, page_segments=phase_segments,
+                    pages_text=pages_text,
                 )
-                order = 0
-                for p_num, p_text in phase_segments:
-                    boundary = re.search(
-                        r"(?im)^\s*(?:Recursos|Materiales|Evaluaci[oó]n|Productos(?:\s+y\s+evidencias)?|Implicaciones|Anexos?)\b",
-                        p_text,
-                    )
-                    # Some exported plans place a resources/implications label
-                    # before their activity list. Treat it as a cutoff only
-                    # after at least one activity has started on this page.
-                    activity_text = p_text
-                    if boundary and act_pattern.search(p_text[:boundary.start()]):
-                        activity_text = p_text[:boundary.start()]
-                    for m in act_pattern.finditer(activity_text):
-                        raw_desc = (m.group(1) or m.group(2) or m.group(3) or "").strip()
-                        raw_desc = re.sub(r"^[•\-\*]\s*", "", raw_desc).strip()
-                        clean_desc = re.sub(r"\s+", " ", raw_desc)
-                        if not clean_desc or len(clean_desc) < 5:
-                            continue
-                        if re.match(r"^(?:Recursos\b|implicaciones\b|Evaluaci[oó]n\b|Fase\b|DESARROLLO\b|Aspectos\s+a\s+evaluar)", clean_desc, re.IGNORECASE):
-                            continue
-                        order += 1
-                        act_title = f"Actividad {order}: {clean_desc[:40].rstrip('.')}"
-                        excerpt = clean_desc[:120].strip()
-                        norm_ex = normalize_text_for_evidence_check(excerpt)
-                        norm_p = normalize_text_for_evidence_check(p_text)
-                        if not (norm_ex and norm_ex in norm_p):
-                            first_line = clean_desc.split(".")[0].strip()[:60]
-                            if normalize_text_for_evidence_check(first_line) in norm_p:
-                                excerpt = first_line
-                            else:
-                                excerpt = m.group(0).strip()[:60].strip()
-
-                        activities.append(
-                            SessionActivity(
-                                activity_id=f"p{project_start}_act_{order}",
-                                title=act_title,
-                                description=clean_desc,
-                                order=order,
-                                evidence=[
-                                    SourceReference(
-                                        document_sha256=sha256,
-                                        page_number=p_num,
-                                        excerpt=excerpt,
-                                    )
-                                ],
-                            )
-                        )
-
+                _ensure_session_annex_ids(f"p{project_start}_project_review", annex_refs)
+                for activity in activities:
+                    activity_text_by_page = {
+                        page: normalize_text_for_evidence_check("\n".join(
+                            source.excerpt for source in activity.evidence if source.page_number == page
+                        )) for page in {source.page_number for source in activity.evidence}
+                    }
+                    for ref in annex_refs:
+                        matches = [ev for ev in ref.evidence if ev.excerpt and re.search(
+                            rf"(?<!\w){re.escape(normalize_text_for_evidence_check(ev.excerpt))}(?!\w)",
+                            activity_text_by_page.get(ev.page_number, ""),
+                        )]
+                        if matches:
+                            activity.annex_ids.append(ref.reference_id)
+                            activity.annex_evidence[ref.reference_id] = matches
                 fields: dict[str, InterpretedField] = {}
-                if activities:
-                    act_1 = activities[0]
-                    fields["inicio"] = InterpretedField(
-                        name="inicio",
-                        value=act_1.description,
-                        origin=ORIGIN_PROPOSED,
-                        status=STATUS_AMBIGUOUS,
-                        review=REVIEW_PENDING,
-                        reason=(
-                            "Propuesta pedagógica inicial: se sugiere la primera actividad del proyecto "
-                            "como momento de inicio; requiere validación docente."
-                        ),
-                        action_required="Revisar la asignación y adecuación de la actividad de inicio.",
-                        evidence=list(act_1.evidence),
-                    )
-                    if len(activities) == 2:
-                        act_2 = activities[1]
-                        fields["desarrollo"] = InterpretedField(
-                            name="desarrollo",
-                            value=act_2.description,
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_AMBIGUOUS,
-                            review=REVIEW_PENDING,
-                            reason="Propuesta pedagógica de actividades para el momento de desarrollo del proyecto.",
-                            action_required="Verificar secuencia y materiales requeridos.",
-                            evidence=list(act_2.evidence),
-                        )
-                        fields["cierre"] = InterpretedField(
-                            name="cierre",
-                            value="",
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_MISSING,
-                            reason="No se asignó actividad de cierre en la propuesta inicial de fases.",
-                            action_required="Definir dinámica de cierre o síntesis del proyecto.",
-                        )
-                    elif len(activities) >= 3:
-                        mid_acts = activities[1:-1]
-                        last_act = activities[-1]
-                        mid_text = "\n\n".join(a.description for a in mid_acts)
-                        mid_ev = [ev for a in mid_acts for ev in a.evidence]
-                        fields["desarrollo"] = InterpretedField(
-                            name="desarrollo",
-                            value=mid_text,
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_AMBIGUOUS,
-                            review=REVIEW_PENDING,
-                            reason="Propuesta pedagógica de actividades para el momento de desarrollo del proyecto.",
-                            action_required="Verificar secuencia y materiales requeridos.",
-                            evidence=mid_ev[:5],
-                        )
-                        fields["cierre"] = InterpretedField(
-                            name="cierre",
-                            value=last_act.description,
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_AMBIGUOUS,
-                            review=REVIEW_PENDING,
-                            reason="Propuesta pedagógica de actividad para el momento de cierre del proyecto.",
-                            action_required="Revisar dinámica de cierre y evaluación formativa.",
-                            evidence=list(last_act.evidence),
-                        )
-                    else:
-                        fields["desarrollo"] = InterpretedField(
-                            name="desarrollo",
-                            value="",
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_MISSING,
-                            reason="No se identificaron actividades suficientes para desarrollo en la propuesta inicial.",
-                            action_required="Redactar actividades de desarrollo.",
-                        )
-                        fields["cierre"] = InterpretedField(
-                            name="cierre",
-                            value="",
-                            origin=ORIGIN_PROPOSED,
-                            status=STATUS_MISSING,
-                            reason="No se identificaron actividades de cierre en la propuesta inicial.",
-                            action_required="Redactar actividad de cierre.",
-                        )
-                else:
-                    fields["inicio"] = InterpretedField(
-                        name="inicio",
-                        value="",
-                        origin=ORIGIN_PROPOSED,
-                        status=STATUS_MISSING,
-                        reason="La fuente no delimita sesiones ni un inicio de sesión.",
-                        action_required="Revisar la organización del proyecto antes de planear sesiones.",
-                    )
-                    fields["desarrollo"] = InterpretedField(
-                        name="desarrollo",
-                        value="",
-                        origin=ORIGIN_PROPOSED,
-                        status=STATUS_MISSING,
-                        reason="No se identificaron actividades para desarrollo.",
-                        action_required="Redactar actividades de desarrollo.",
-                    )
-                    fields["cierre"] = InterpretedField(
-                        name="cierre",
-                        value="",
-                        origin=ORIGIN_PROPOSED,
-                        status=STATUS_MISSING,
-                        reason="No se identificaron actividades de cierre.",
-                        action_required="Redactar actividad de cierre.",
-                    )
 
                 fields["duracion"] = InterpretedField(
                     name="duracion",
@@ -2941,8 +2725,8 @@ class CurriculumSourceInterpreter:
                 phase_context = phase_project_context(pages_text, sha256, project_start)
                 phase_notes = (
                     "La fuente organiza el trabajo por fases del proyecto y no declara sesiones. "
-                    "Esta unidad agrupa páginas para revisión docente; propone una organización inicial "
-                    "por momentos (inicio/desarrollo/cierre) sin fijar duración ni cantidad de sesiones."
+                    "Esta unidad conserva fases, instrucciones y recursos para revisión docente; "
+                    "no asigna momentos, duración ni cantidad de sesiones."
                 )
                 if unassigned_segments:
                     phase_notes += "\n\nCorte de seguridad ante un límite de secuencia no resuelto; requiere revisión."
@@ -2950,6 +2734,9 @@ class CurriculumSourceInterpreter:
                         phase_notes += f"\n\nTramo sin asignar, página física {number}:\n{raw}"
                 return [SessionPlan(
                     session_id=f"p{project_start}_project_review",
+                    unit_kind="project_review",
+                    source_structure=structure,
+                    annex_references=annex_refs,
                     session_number=1,
                     title="Proyecto sin sesiones explícitas",
                     project_title=phase_context["title"],
@@ -3012,6 +2799,7 @@ class CurriculumSourceInterpreter:
                         field_obj.reason = reason
                         field_obj.original_reason = reason
                         field_obj.current_action = field_obj.action_required = derive_field_operational_state(field_obj)[1]
+            plan.unit_kind = "declared_session"
             plan.project_context = copy.deepcopy(segment.project_context)
             plan.header_anchor = copy.deepcopy(segment.header_anchor)
             sessions.append(plan)
@@ -3447,7 +3235,7 @@ class CurriculumSourceInterpreter:
         annex_references: list[AnnexReference] = []
         for num in sorted(detected_numbers, key=lambda x: int(x)):
             matching_sheets = [
-                c for c in annex_candidates if str(int(c["number"])) == num
+                c for c in annex_candidates if str(c.get("number", "")).isdigit() and str(int(c["number"])) == num
             ]
             candidate_pages = [c["page"] for c in matching_sheets]
 
@@ -3516,6 +3304,35 @@ class CurriculumSourceInterpreter:
                     confirmed_page=None,
                 )
             )
+
+        # Titles have stable identities independent of invented annex numbers.
+        named_mentions = named_material_mentions(page_segments or [
+            (session_pages[0] if session_pages else 1, session_text),
+        ])
+        identities = dict.fromkeys(mention["identity"] for mention in named_mentions)
+        for identity in identities:
+            local_mentions = [m for m in named_mentions if m["identity"] == identity]
+            matching = [c for c in annex_candidates if c.get("identity") == identity]
+            candidate_pages = sorted({p for c in matching for p in c["candidate_exercise_pages"]})
+            evidence = [SourceReference(
+                document_sha256=sha256, page_number=m["page"], excerpt=m["excerpt"],
+                role="material_mention",
+            ) for m in local_mentions]
+            for candidate in matching:
+                evidence.extend(SourceReference(
+                    document_sha256=sha256, page_number=fragment["page_number"],
+                    excerpt=fragment["excerpt"], role=fragment["role"],
+                ) for fragment in candidate["source_fragments"])
+            title = local_mentions[0]["title"]
+            annex_references.append(AnnexReference(
+                reference_id=f"ref_{identity}", annex_number="", title=title,
+                raw_mention=local_mentions[0]["excerpt"],
+                source_pages=sorted({m["page"] for m in local_mentions}),
+                candidate_pages=candidate_pages, status=STATUS_AMBIGUOUS if matching else STATUS_MISSING,
+                review=REVIEW_PENDING, confirmed_page=None, origin=ORIGIN_PROPOSED,
+                reason="Título de material citado; la asociación y sus páginas requieren revisión docente.",
+                evidence=evidence,
+            ))
 
         return annex_references
 

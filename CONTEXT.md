@@ -1,6 +1,6 @@
 # AulaLista
 
-AulaLista es un nodo educativo local para ofrecer actividades de aprendizaje cuando no hay acceso a Internet. Su contenido público está gobernado por personas y su funcionamiento inicial debe poder demostrarse sin alumnado real ni afirmar validación pedagógica no realizada.
+AulaLista se construye como un SaaS conectado con IA para apoyar la validación y preparación curricular. La red es un requisito funcional del producto; el contenido público sigue gobernado por personas. La etapa actual usa una instalación local para probar el modelo y los flujos sin alumnado real ni afirmar validación pedagógica no realizada. Los perfiles OFF de prueba y el adaptador local Pi no definen la arquitectura API futura.
 
 **Instalación local**:
 Cada instalación local de AulaLista representa una sola `School`. Tiene una

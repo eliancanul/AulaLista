@@ -1,0 +1,57 @@
+{
+  "scope": "Observed bad model quotes on invented data; expected values from frozen authorised answer bank, not new model output or pedagogical gold.",
+  "source_zip_sha256": "5767378b215fd890446c8674bcacfe3d3c3f80f60351596190600edc8152adb3",
+  "causal_attribution": "Both representation and SYSTEM changed before observed failure; this fixture alone cannot attribute causality.",
+  "cases": [
+    {
+      "call": 2,
+      "scope": "general",
+      "field_name": "campos_formativos",
+      "session_number": null,
+      "label": "Campos Formativos",
+      "answer": "  Campos Formativos: Lenguajes\n",
+      "bad_quote": "Campos Formativos: Lenguajes",
+      "expected_value": "Lenguajes"
+    },
+    {
+      "call": 3,
+      "scope": "general",
+      "field_name": "proposito",
+      "session_number": null,
+      "label": "Propósito para el Alumno",
+      "answer": "  Propósito para el Alumno: Comparar relatos de la comunidad.\nFinalidad e Intención Docente: Compartir una lectura con el grupo.\n",
+      "bad_quote": "Propósito para el Alumno: Comparar relatos de la comunidad.",
+      "expected_value": "Comparar relatos de la comunidad."
+    },
+    {
+      "call": 3,
+      "scope": "general",
+      "field_name": "finalidad",
+      "session_number": null,
+      "label": "Finalidad e Intención Docente",
+      "answer": "  Propósito para el Alumno: Comparar relatos de la comunidad.\nFinalidad e Intención Docente: Compartir una lectura con el grupo.\n",
+      "bad_quote": "Finalidad e Intención Docente: Compartir una lectura con el grupo.",
+      "expected_value": "Compartir una lectura con el grupo."
+    },
+    {
+      "call": 4,
+      "scope": "session",
+      "field_name": "desarrollo",
+      "session_number": 1,
+      "label": "Momento 2: Desarrollo",
+      "answer": "  Momento 2: Desarrollo: Leer dos relatos y comparar sus personajes.\n",
+      "bad_quote": "Momento 2: Desarrollo: Leer dos relatos y comparar sus personajes.",
+      "expected_value": "Leer dos relatos y comparar sus personajes."
+    },
+    {
+      "call": 5,
+      "scope": "session",
+      "field_name": "cierre",
+      "session_number": 2,
+      "label": "Momento 3: Cierre",
+      "answer": "  Momento 3: Cierre: Escribir una conclusion y compartirla.\n",
+      "bad_quote": "Momento 3: Cierre: Escribir una conclusion y compartirla.",
+      "expected_value": "Escribir una conclusion y compartirla."
+    }
+  ]
+}

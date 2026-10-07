@@ -4,7 +4,7 @@
 
 La entrada activa usa Django: **Currícula y autoría → Importar planeación → Revisar planeación**. `/sprint/` redirige a Currícula y autoría. La presentación visual definitiva se revisará por separado.
 
-Luna es el modelo seleccionado; su adaptador CLI local está implementado, pero su ejecución real todavía no está validada. La aplicación informa que falta configurar esa ruta y conserva respuestas y borradores. No hay llamadas Luna admitidas ni fallback automático a otro proveedor.
+GPT-6 Luna mediante Pi (`pi_luna`) es la selección de esta etapa de pruebas locales. El adaptador local está integrado, con LIVE=0 y contexto `complete`; este candidato requiere aceptación real separada. El objetivo es un SaaS conectado con IA, cuya conexión API se hará después. La aplicación informa el estado de configuración y conserva respuestas y borradores. Las pruebas OFF no llaman al modelo ni habilitan fallback automático.
 
 La ruta histórica Gemini high tampoco está validada. Su primer intento sintético autorizado terminó sin respuesta aceptada ni recibo terminal de consumo. **STOP_UNKNOWN: transmisión y consumo desconocidos, no cero.** No se debe reintentar, borrar el bloqueo, cambiar el directorio de recibos para eludirlo ni sustituir silenciosamente el modelo para eludir el bloqueo. La nueva selección Luna no borra ni reetiqueta ese intento. Una nueva autorización puede admitir otro ensayo acotado con una ruta efectivamente sin herramientas y datos concretos permitidos; nunca reescribe ni concilia automáticamente el intento anterior. El ensayo empieza con un smoke sintético y sólo después puede usar una planeación de desarrollo revisada para excluir datos sensibles. FINAL queda fuera.
 
@@ -36,7 +36,10 @@ Trabajar con la revisión exacta acordada y Python 3.13. Antes de aplicar migrac
 python3.13 -m venv .venv
 . .venv/bin/activate
 python -m pip install --require-hashes -r requirements.lock -r requirements-service.lock
-export AULALISTA_TEACHER_REVIEW_PROVIDER=luna
+export AULALISTA_TEACHER_REVIEW_PROVIDER=pi_luna
+export AULALISTA_PI_LIVE_ENABLED=0
+export AULALISTA_LUNA_LIVE_ENABLED=0
+export AULALISTA_TEACHER_REVIEW_CONTEXT_MODE=complete
 export AULALISTA_GEMINI_LIVE_ENABLED=0
 python manage.py check
 python manage.py makemigrations --check --dry-run
@@ -46,7 +49,7 @@ python manage.py runserver
 
 La revisión Django no requiere construir Vue. La comprobación local de navegador se realiza únicamente donde el acceso esté permitido; no se elude el bloqueo de la nube.
 
-La selección `luna` requiere la preparación de [Luna CLI](luna-cli.md); la habilitación no sustituye el preflight ni una consulta real. La configuración histórica siguiente pertenece a Gemini y no configura Luna:
+La selección `pi_luna` requiere la preparación de [Pi local](pi-luna.md); la habilitación no sustituye el preflight ni una consulta real. La ruta anterior `luna` sigue requiriendo [Luna CLI](luna-cli.md) cuando se selecciona expresamente. La configuración histórica siguiente pertenece a Gemini y no configura Pi:
 
 - `AULALISTA_GEMINI_AGY_LAUNCHER`: launcher oficial validado de la instalación existente.
 - `AULALISTA_GEMINI_AGY_AGENT_FILE`: perfil cuya ausencia efectiva de herramientas esté demostrada; que el archivo diga `tools: []` no basta.

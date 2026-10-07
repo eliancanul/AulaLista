@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import logging
 import re
 import unicodedata
@@ -36,11 +37,23 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError, PyPdfError
 
 from curriculum.vocabulary import CANONICAL_CAMPOS
+from curriculum.source_structure import scan_phase_structure
+from curriculum.source_annexes import scan_annex_candidates, worksheet_identity, named_material_mentions
 from curriculum.source_segments import (
     scan_session_segments, match_session_segment, anchor_matches,
     project_context_matches, phase_project_context, phase_review_scope, has_possible_session_structure,
     planning_boundary_positions, first_phase_review_page,
 )
+
+def _same_source_metadata(supplied, expected):
+    """Exact JSON types matter: a boolean is not a physical page or offset."""
+    try:
+        return json.dumps(supplied, sort_keys=True, allow_nan=False) == json.dumps(
+            expected, sort_keys=True, allow_nan=False,
+        )
+    except (TypeError, ValueError):
+        return False
+
 
 logger = logging.getLogger(__name__)
 
@@ -609,11 +622,13 @@ def verify_curriculum_dossier(
     # Source-derived boundaries are independent of dossier order/subsets, titles
     # and declared offsets. A legacy repeated number is never matched to the
     # first textual occurrence merely because it appears on the same page.
+    physical_candidates = scan_annex_candidates(pages_text)
     source_segments = scan_session_segments(pages_text, actual_sha256)
     has_session_structure = bool(source_segments) or has_possible_session_structure(pages_text)
     has_planning_structure = any(planning_boundary_positions(pages_text).values())
     source_phase_start = None if has_session_structure else first_phase_review_page(pages_text)
     page_session_segments: dict[int, dict[str, str]] = {}
+    source_literal_segments: dict[str, list[tuple[int, str]]] = {}
     uncertain_session_ids: set[str] = set()
     for s_index, session in enumerate(raw_sessions if isinstance(raw_sessions, list) else []):
         if not isinstance(session, dict):
@@ -623,6 +638,10 @@ def verify_curriculum_dossier(
             continue
         matched = match_session_segment(session, source_segments)
         declared_pages = session_declared_pages.get(sid, set())
+        source_literal_segments[sid] = [
+            (page, pages_text[page - 1]) for page in sorted(declared_pages)
+            if not has_session_structure and not has_planning_structure and 1 <= page <= len(pages_text)
+        ]
         for page_number in declared_pages:
             # No broad page fallback when the source has session structure,
             # even if an anchor was removed or other sessions were omitted.
@@ -642,15 +661,44 @@ def verify_curriculum_dossier(
                     and type(physical_pages[0]) is int and physical_pages[0] == source_phase_start and canonical_id_matches):
                 matched_phase_start = source_phase_start
                 phase_segments, unassigned = phase_review_scope(pages_text, actual_sha256, source_phase_start)
+                source_literal_segments[sid] = phase_segments
                 if unassigned:
                     uncertain_session_ids.add(sid)
                 for page_number, text in phase_segments:
                     page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
         if matched:
+            source_literal_segments[sid] = matched.page_segments
             if matched.unassigned_segments:
                 uncertain_session_ids.add(sid)
             for page_number, text in matched.page_segments:
                 page_session_segments.setdefault(page_number, {})[sid] = normalize_text_for_evidence_check(text)
+
+        expected_kind = "declared_session" if matched else (
+            "project_review" if matched_phase_start is not None else "unknown"
+        )
+        kind = session.get("unit_kind", "unknown")
+        if kind != "unknown" and kind != expected_kind:
+            items.append(VerificationItem(
+                item_id=f"sess_{s_index}_{sid}_unit_kind",
+                path=f"sessions/{sid}/unit_kind", scope=SCOPE_SESSION,
+                target=f"session.{sid}.unit_kind", status=STATUS_BLOCKED,
+                message="El tipo de unidad no coincide con la delimitación física de la fuente.",
+                details={"session_id": sid, "reason": "unit_kind_mismatch"},
+            ))
+        structure = session.get("source_structure")
+        if structure is not None:
+            expected_structure = (scan_phase_structure(pages_text, phase_segments, actual_sha256)
+                                  if matched_phase_start is not None else None)
+            # Equality includes each role, association and page-local offset.
+            # Pending source roles are never evidence of teacher confirmation.
+            if expected_structure is None or not _same_source_metadata(structure, expected_structure):
+                items.append(VerificationItem(
+                    item_id=f"sess_{s_index}_{sid}_source_structure",
+                    path=f"sessions/{sid}/source_structure", scope=SCOPE_SESSION,
+                    target=f"session.{sid}.source_structure", status=STATUS_BLOCKED,
+                    message="Los bloques o fases no coinciden con los fragmentos recomputados desde el PDF.",
+                    details={"session_id": sid, "reason": "source_structure_mismatch"},
+                ))
 
         for name in ("header_anchor", "project_context"):
             supplied = session.get(name)
@@ -1480,7 +1528,10 @@ def verify_curriculum_dossier(
                             details={"session_id": s_id, "field_count": 0},
                         )
                     )
-                for sf_canon in CANONICAL_SESSION_FIELDS:
+                canonical_fields = CANONICAL_SESSION_FIELDS
+                if isinstance(s_item, dict) and s_item.get("unit_kind") == "project_review":
+                    canonical_fields = []
+                for sf_canon in canonical_fields:
                     if sf_canon not in s_fields:
                         items.append(
                             VerificationItem(
@@ -1532,6 +1583,62 @@ def verify_curriculum_dossier(
                     cand_pages = getattr(annex, "candidate_pages", []) if not isinstance(annex, dict) else annex.get("candidate_pages", [])
                     annex_rev = getattr(annex, "review", "") if not isinstance(annex, dict) else annex.get("review", "")
                     annex_ev = getattr(annex, "evidence", []) if not isinstance(annex, dict) else annex.get("evidence", [])
+
+                    annex_title = getattr(annex, "title", "") if not isinstance(annex, dict) else annex.get("title", "")
+                    material_evidence = any(
+                        (ev.get("role") if isinstance(ev, dict) else getattr(ev, "role", ""))
+                        in {"material_mention", "worksheet_heading", "worksheet_content"}
+                        for ev in annex_ev
+                    ) if isinstance(annex_ev, list) else False
+                    is_named_material = (not num_str and bool(annex_title) or material_evidence or
+                                         isinstance(ref_id, str) and ref_id.startswith("ref_worksheet_"))
+                    if is_named_material:
+                        identity = worksheet_identity(annex_title) if isinstance(annex_title, str) and annex_title else None
+                        expected_pages = sorted({p for candidate in physical_candidates
+                                                 if candidate.get("identity") == identity
+                                                 for p in candidate["candidate_exercise_pages"]})
+                        if (identity is None or num_str or ref_id != f"ref_{identity}"
+                                or not _same_source_metadata(cand_pages, expected_pages)):
+                            items.append(VerificationItem(
+                                item_id=f"annex_{s_id}_{ref_token}_candidate_source",
+                                path=f"sessions/{s_id}/annex_references/{ref_token}/candidate_pages",
+                                scope=SCOPE_ANNEX, target=f"session.{s_id}.annex.{ref_token}.candidate_pages",
+                                status=STATUS_BLOCKED,
+                                message="La identidad o las páginas candidatas del material citado no coinciden con su fuente física.",
+                                details={"session_id": s_id, "reason": "worksheet_candidate_mismatch"},
+                            ))
+                        mentions = [mention for mention in named_material_mentions(source_literal_segments.get(s_id, []))
+                                    if mention["identity"] == identity]
+                        expected_evidence = [{
+                            "document_sha256": actual_sha256, "page_number": mention["page"],
+                            "excerpt": mention["excerpt"], "role": "material_mention",
+                        } for mention in mentions]
+                        expected_evidence.extend({
+                            "document_sha256": actual_sha256, "page_number": fragment["page_number"],
+                            "excerpt": fragment["excerpt"], "role": fragment["role"],
+                        } for candidate in physical_candidates if candidate.get("identity") == identity
+                          for fragment in candidate["source_fragments"])
+                        actual_evidence = []
+                        for ev in annex_ev if isinstance(annex_ev, list) else []:
+                            claim = {key: ev.get(key) if isinstance(ev, dict) else getattr(ev, key, None)
+                                     for key in ("document_sha256", "page_number", "excerpt", "role")}
+                            if claim["role"] != "teacher_selected_source_page":
+                                actual_evidence.append(claim)
+                        mention_pages = (annex.get("source_pages") if isinstance(annex, dict)
+                                         else getattr(annex, "source_pages", None))
+                        raw_mention = (annex.get("raw_mention") if isinstance(annex, dict)
+                                       else getattr(annex, "raw_mention", None))
+                        if (not mentions or annex_title != mentions[0]["title"] or raw_mention != mentions[0]["excerpt"]
+                                or not _same_source_metadata(mention_pages, sorted({m["page"] for m in mentions}))
+                                or not _same_source_metadata(actual_evidence, expected_evidence)):
+                            items.append(VerificationItem(
+                                item_id=f"annex_{s_id}_{ref_token}_mention_source",
+                                path=f"sessions/{s_id}/annex_references/{ref_token}/evidence",
+                                scope=SCOPE_ANNEX, target=f"session.{s_id}.annex.{ref_token}.evidence",
+                                status=STATUS_BLOCKED,
+                                message="La mención y los fragmentos del material deben coincidir con su ámbito físico en la fuente.",
+                                details={"session_id": s_id, "reason": "worksheet_mention_mismatch"},
+                            ))
 
                     # Candidate pages bounds check
                     for cp_idx, cp in enumerate(cand_pages or []):
@@ -2037,6 +2144,19 @@ def verify_curriculum_dossier(
                     )
                 )
                 continue
+            if isinstance(cand, dict) and any(key in cand for key in (
+                    "identity", "heading_page", "heading_start", "heading_end",
+                    "candidate_exercise_pages", "confirmed_pages", "source_fragments", "unassigned_fragments",
+            )) and not any(
+                    _same_source_metadata(cand, expected) for expected in physical_candidates):
+                items.append(VerificationItem(
+                    item_id=f"annex_cand_{c_idx}_source",
+                    path=f"annex_candidates/{c_idx}/source_fragments",
+                    scope=SCOPE_ANNEX, target=f"annex_candidate.{c_idx}.source_fragments",
+                    status=STATUS_BLOCKED,
+                    message="El título, los fragmentos o las páginas candidatas del material contradicen la fuente física.",
+                    details={"index": c_idx, "reason": "worksheet_source_mismatch"},
+                ))
             p_cand = cand.get("page") if isinstance(cand, dict) else getattr(cand, "page", None)
             lbl = cand.get("label", "") if isinstance(cand, dict) else getattr(cand, "label", "")
             if p_cand is None or not isinstance(p_cand, int) or isinstance(p_cand, bool):

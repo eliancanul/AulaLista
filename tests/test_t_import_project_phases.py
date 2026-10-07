@@ -32,13 +32,10 @@ def test_phase_based_plan_has_a_reviewable_project_without_invented_sessions():
     assert "sin sesiones explícitas" in sessions[0].title.lower()
     assert sessions[0].project_title == "Tu historia de transformación"
     assert sessions[0].pages == [2, 3]
-    # Moments proposed from activities without inventing session cardinality or minutes
+    # Explicit activities remain; phase position does not invent session moments.
     assert len(sessions[0].activities) == 2
-    assert sessions[0].fields["inicio"].value == "Actividad colectiva de observación y diálogo."
-    assert sessions[0].fields["inicio"].origin == "proposed"
-    assert sessions[0].fields["inicio"].status == "ambiguous"
-    assert sessions[0].fields["desarrollo"].value == "Actividad de escritura colectiva."
-    assert sessions[0].fields["desarrollo"].origin == "proposed"
+    assert sessions[0].unit_kind == "project_review"
+    assert not {"inicio", "desarrollo", "cierre"}.intersection(sessions[0].fields)
     assert sessions[0].fields["duracion"].status == "missing"
 
 
@@ -54,8 +51,10 @@ def test_phase_based_pdf_passes_physical_verification_without_a_session_header()
     assert dossier.general_fields["grado"].value == "3"
     assert dossier.general_fields["duracion_proyecto"].value == "dos semanas"
     assert dossier.sessions[0].status == "ambiguous"
-    assert dossier.sessions[0].fields["inicio"].value == "Actividad de dialogo."
-    assert dossier.sessions[0].fields["desarrollo"].value == "Actividad de escritura."
+    assert dossier.declared_session_count == 0
+    assert [a.description for a in dossier.sessions[0].activities] == [
+        "Actividad de dialogo.", "Actividad de escritura.",
+    ]
     assert dossier.verification_report["is_valid"] is True
     assert dossier.verification_report["blocked_count"] == 0
 
@@ -74,12 +73,12 @@ def test_lainitas_pdf_prepares_a_physically_valid_review_dossier():
     # Global duration across pages 1 and 2
     assert dossier.general_fields["duracion_proyecto"].value == "Se sugiere dos semanas"
     assert len(dossier.general_fields["duracion_proyecto"].evidence) == 2
-    # Proposed first activity as inicio with verified provenance
+    # A phase project keeps its source without inventing session moments.
     assert dossier.sessions
     assert dossier.sessions[0].status == "ambiguous"
-    assert dossier.sessions[0].fields["inicio"].value.strip()
-    assert dossier.sessions[0].fields["inicio"].evidence[0].page_number == 2
-    assert dossier.sessions[0].fields["inicio"].origin == "proposed"
+    assert dossier.sessions[0].unit_kind == "project_review"
+    assert dossier.sessions[0].source_structure["blocks"]
+    assert "inicio" not in dossier.sessions[0].fields
     assert dossier.verification_report["is_valid"] is True
     assert dossier.verification_report["blocked_count"] == 0
 
