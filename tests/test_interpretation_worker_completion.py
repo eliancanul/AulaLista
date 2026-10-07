@@ -149,6 +149,17 @@ def test_valid_completion_persists_real_canonical_report(worker):
     assert job.has_valid_ready_dossier()
 
 
+def test_valid_completion_cannot_overwrite_a_successor_claim(worker):
+    job, token, dossier, now = worker
+    CurriculumImportJob.objects.filter(pk=job.pk).update(
+        interpretation_claim_token=uuid.uuid4(),
+    )
+    before = CurriculumImportJob.objects.values().get(pk=job.pk)
+
+    assert interpretation_commands.finish_worker_success(job, token, dossier, now=now) == 0
+    assert CurriculumImportJob.objects.values().get(pk=job.pk) == before
+
+
 @pytest.mark.parametrize("token", [None, "", "not-a-uuid"])
 def test_invalid_token_does_not_read_source_or_change_job(worker, monkeypatch, token):
     job, _, dossier, now = worker
