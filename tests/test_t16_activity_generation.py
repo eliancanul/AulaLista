@@ -120,6 +120,7 @@ def test_propose_activities_maps_llm_output_to_package_payload_shape():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_generate_activities_validates_each_proposal_structurally():
     client, job = completed_job()
     invalid = valid_proposal()
@@ -145,6 +146,7 @@ def test_generate_activities_validates_each_proposal_structurally():
     assert CurriculumPackage.objects.count() == 0
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_convert_selected_creates_only_ai_tagged_drafts_and_never_publications():
     client, job = completed_job()
     entries = [
@@ -176,6 +178,7 @@ def test_convert_selected_creates_only_ai_tagged_drafts_and_never_publications()
     assert job.status == CurriculumImportJob.STATUS_CONVERTED
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_convert_without_selection_is_rejected():
     client, job = completed_job()
     job.activities = [{"is_valid": True, "proposal": valid_proposal()}]

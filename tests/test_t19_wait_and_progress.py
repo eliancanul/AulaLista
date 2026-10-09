@@ -84,6 +84,7 @@ def wait_until(predicate, timeout=10):
     return False
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_extract_runs_in_background_and_wait_page_reports_it():
     client = tutor_client()
     client.post(reverse("tutor-import-upload"), {"pdf": pdf_upload()})
@@ -131,6 +132,7 @@ def test_extract_runs_in_background_and_wait_page_reports_it():
     assert response["Location"].endswith(f"/tutor/imports/{job.pk}/")
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_generate_activities_interrupted_keeps_partial_results():
     client, job = completed_job()
 
@@ -177,6 +179,7 @@ def test_wait_page_shows_live_counter_and_duration_warning():
     assert "varios minutos" in body
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_detail_page_warns_about_expected_duration_before_generating():
     client, job = completed_job()
     response = client.get(reverse("tutor-import-detail", args=[job.pk]))

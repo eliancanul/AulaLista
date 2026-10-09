@@ -31,18 +31,23 @@ def probe_wsgi():
 
     server = make_server("127.0.0.1", 0, application)
     worker = threading.Thread(target=server.handle_request, daemon=True)
-    worker.start()
-    with urlopen(
-        f"http://127.0.0.1:{server.server_port}/student/", timeout=5
-    ) as response:
-        status = f"{response.status} {response.reason}"
-        body = response.read()
-    worker.join(timeout=5)
-    server.server_close()
+    server.timeout = 5
+    try:
+        worker.start()
+        with urlopen(
+            f"http://127.0.0.1:{server.server_port}/student/", timeout=5
+        ) as response:
+            status = f"{response.status} {response.reason}"
+            body = response.read()
+    finally:
+        try:
+            worker.join(timeout=5)
+        finally:
+            server.server_close()
     return {
         "status": status,
         "critical_route": "/student/",
-        "body_contains_entrypoint": b"No hay paquetes publicados." in body,
+        "body_contains_entrypoint": b'id="student-entry"' in body,
         "transport": "loopback-socket",
     }
 

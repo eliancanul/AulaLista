@@ -188,6 +188,7 @@ def chunk_pages(pages, max_chars=CHUNK_MAX_CHARS):
 
     chunks = []
     current_lines = []
+    current_pages = []
     current_size = 0
     current_first = current_last = None
     for page_number, text in enumerate(pages, start=1):
@@ -199,14 +200,17 @@ def chunk_pages(pages, max_chars=CHUNK_MAX_CHARS):
                     "first_page": current_first,
                     "last_page": current_last,
                     "text": "\n".join(current_lines),
+                    "page_texts": current_pages,
                 }
             )
             current_lines, current_size = [], 0
+            current_pages = []
             current_first = None
         if current_first is None:
             current_first = page_number
         current_last = page_number
         current_lines.append(page_text)
+        current_pages.append(text)
         current_size += page_size
     if current_lines:
         chunks.append(
@@ -214,6 +218,7 @@ def chunk_pages(pages, max_chars=CHUNK_MAX_CHARS):
                 "first_page": current_first,
                 "last_page": current_last,
                 "text": "\n".join(current_lines),
+                "page_texts": current_pages,
             }
         )
     return chunks
@@ -343,6 +348,50 @@ def _is_planning_container(title):
     ))
 
 
+def _topic_source_pages(chunk):
+    """Recover physical pages, never a model-supplied range or PDF marker hint.
+
+    New chunks retain their extraction boundaries separately from PDF text.
+    The legacy text-only shape is accepted only with an unambiguous, complete
+    sequence of line-start page markers matching the declared chunk bounds.
+    """
+    if not isinstance(chunk, dict):
+        return None
+    first, last, text = (chunk.get(key) for key in ("first_page", "last_page", "text"))
+    if (type(first) is not int or type(last) is not int or first < 1
+            or last < first or not isinstance(text, str)):
+        return None
+    if "page_texts" in chunk:
+        pages = chunk["page_texts"]
+        if (not isinstance(pages, list) or len(pages) != last - first + 1
+                or any(not isinstance(page, str) for page in pages)):
+            return None
+        rendered = "\n".join(f"[página {first + offset}]\n{page}"
+                             for offset, page in enumerate(pages))
+        return pages if rendered == text else None
+    markers = list(re.finditer(r"^\[página ([0-9]+)\]", text, re.MULTILINE))
+    if (len(markers) != last - first + 1 or not markers
+            or text[:markers[0].start()].strip()):
+        return None
+    pages = []
+    for offset, marker in enumerate(markers):
+        # String comparison avoids unbounded integer conversion of source text.
+        if marker.group(1) != str(first + offset):
+            return None
+        end = markers[offset + 1].start() if offset + 1 < len(markers) else len(text)
+        pages.append(text[marker.end():end])
+    return pages
+
+
+def _topic_title_in_page(title, page):
+    def normalize(value):
+        return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+    # Keep punctuation and accents; do not use the fuzzy deduplication key as
+    # evidence, or accept a short title embedded inside an unrelated word.
+    return re.search(r"(?<!\w)" + re.escape(normalize(title)) + r"(?!\w)",
+                     normalize(page)) is not None
+
+
 def identify_topics(chunk, *, transport=None):
     """Stage B: propose topics for one chunk, with page citations.
 
@@ -350,24 +399,37 @@ def identify_topics(chunk, *, transport=None):
     mere activity titles or secondary headings are dropped (#33).
     """
 
+    pages = _topic_source_pages(chunk)
+    if pages is None:
+        return []
     prompt = render_prompt("identify_topics", chunk_text=chunk["text"])
     result = chat_json(
         prompt, TOPIC_SCHEMA, stage="identify_topics", transport=transport
     )
     topics = []
     for topic in result["temas"][:20]:
-        title = str(topic.get("titulo", "")).strip()[:200]
-        if not title:
+        if not isinstance(topic, dict) or not isinstance(topic.get("titulo"), str):
+            continue
+        title = topic["titulo"].strip()
+        if not title or len(title) > 200:
             continue
         # Missing tipo keeps the candidate: only explicit non-topics drop.
         tipo = str(topic.get("tipo") or "tema").strip().lower()
         if tipo != "tema" or _is_planning_container(title):
             continue
+        first = topic.get("pagina_inicio", chunk["first_page"])
+        last = topic.get("pagina_fin", chunk["last_page"])
+        if (type(first) is not int or type(last) is not int
+                or not chunk["first_page"] <= first <= last <= chunk["last_page"]):
+            continue
+        cited_pages = pages[first - chunk["first_page"]:last - chunk["first_page"] + 1]
+        if not any(_topic_title_in_page(title, page) for page in cited_pages):
+            continue
         topics.append(
             {
                 "titulo": title,
-                "pagina_inicio": int(topic.get("pagina_inicio") or chunk["first_page"]),
-                "pagina_fin": int(topic.get("pagina_fin") or chunk["last_page"]),
+                "pagina_inicio": first,
+                "pagina_fin": last,
             }
         )
     return topics

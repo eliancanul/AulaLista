@@ -136,6 +136,28 @@ def _is_value_present(val: Any, target_text: str) -> bool:
     return bool(norm_v and norm_v in target_text)
 
 
+def _value_matches_citation(
+    val: Any, excerpt: str, normalized_page: str, *, allow_session_preview: bool = False,
+) -> bool:
+    """Bind the value to its citation; allow only the parser's exact preview.
+
+    _section_evidence emits one 200-character preview for a longer session
+    moment/resource/evaluation value. No general field or shorter/arbitrary
+    prefix receives this exception. The complete value must still occur on
+    the physical page; the caller additionally enforces the session segment.
+    """
+    normalized_excerpt = normalize_text_for_evidence_check(excerpt)
+    if not normalized_excerpt or not _is_value_present(val, normalized_page):
+        return False
+    if _is_value_present(val, normalized_excerpt):
+        return True
+    return bool(
+        allow_session_preview and isinstance(val, str) and isinstance(excerpt, str)
+        and len(val) > 200 and len(excerpt) == 200
+        and normalized_excerpt == normalize_text_for_evidence_check(val[:200])
+    )
+
+
 def _contains_whole_literal(value: str, text: str) -> bool:
     return bool(value and re.search(rf"(?<!\w){re.escape(value)}(?!\w)", text))
 
@@ -743,8 +765,38 @@ def verify_curriculum_dossier(
             )
             return
 
-        # 3. Proposed / Inferred: produce EXACTLY ONE item teacher_review per field/target
-        if origin in ("proposed", "inferred"):
+        # A label alone cannot exempt a value from source verification. Human
+        # data must have the matching server-authored resolve audit delta. The
+        # HTTP/provider boundary never accepts origin/history flags from a model.
+        if origin == "teacher_entered":
+            human_audit = False
+            raw_history = dossier_dict.get("history", [])
+            for entry in raw_history if isinstance(raw_history, list) else []:
+                if (not isinstance(entry, dict) or entry.get("action") != "resolve"
+                        or not isinstance(entry.get("actor"), str) or not entry["actor"].strip()
+                        or type(entry.get("version")) is not int or not 1 <= entry["version"] <= dossier_version):
+                    continue
+                raw_deltas = entry.get("deltas", [])
+                for delta in raw_deltas if isinstance(raw_deltas, list) else []:
+                    after = delta.get("after") if isinstance(delta, dict) else None
+                    if (isinstance(after, dict) and delta.get("scope") == scope
+                            and delta.get("field") == field_name
+                            and (scope != SCOPE_SESSION or delta.get("session_id") == parent_id)
+                            and after.get("origin") == "teacher_entered" and after.get("value") == val):
+                        human_audit = True
+            if not human_audit:
+                items.append(VerificationItem(
+                    item_id=f"{id_prefix}_human_audit_missing", path=f"{path_prefix}/value",
+                    scope=scope, target=target_prefix, status=STATUS_BLOCKED,
+                    message=f"Campo '{field_name}' se etiqueta como dato docente sin una corrección humana registrada.",
+                    details={"field_name": field_name, "reason": "missing_human_correction_audit"},
+                ))
+                return
+
+        # 3. Human input is not PDF evidence. Retained citations still receive the
+        # identical physical checks below; a human value need not occur in them.
+        # Proposals/inferences likewise remain subject to final human review.
+        if origin in ("proposed", "inferred", "teacher_entered"):
             if not isinstance(ev_list, list):
                 items.append(
                     VerificationItem(
@@ -882,7 +934,9 @@ def verify_curriculum_dossier(
 
             if not has_contradiction:
                 msg = (
-                    f"Campo '{field_name}' contiene un dato propuesto y ambiguo; requiere verificación docente."
+                    f"Campo '{field_name}' contiene un dato aportado por docente, no extraído del PDF; requiere revisión final."
+                    if origin == "teacher_entered"
+                    else f"Campo '{field_name}' contiene un dato propuesto y ambiguo; requiere verificación docente."
                     if stat == "ambiguous"
                     else f"Campo '{field_name}' contiene un dato propuesto o inferido; requiere confirmación docente."
                 )
@@ -1109,8 +1163,14 @@ def verify_curriculum_dossier(
 
             # E. Physical contiguous match check
             if norm_ex in norm_page:
-                # Check if the actual field VALUE is also present
-                value_present = _is_value_present(val, norm_page)
+                # The value must be tied to this citation as well as its page.
+                value_present = _value_matches_citation(
+                    val, ev_excerpt, norm_page,
+                    allow_session_preview=(
+                        scope == SCOPE_SESSION and origin == "extracted" and len(ev_list) == 1
+                        and field_name in {"inicio", "desarrollo", "cierre", "materiales", "evaluacion"}
+                    ),
+                )
                 if campos_coverage is not None:
                     value_present = campos_coverage and any(
                         _contains_whole_literal(normalize_text_for_evidence_check(v), norm_ex)
@@ -1200,7 +1260,7 @@ def verify_curriculum_dossier(
                                     "pero falta cobertura textual de todos los valores en citas válidas, "
                                     "o esta cita no respalda ningún valor."
                                     if campos_coverage is not None
-                                    else "pero el valor del campo no se encontró textualmente en la página."
+                                    else "pero la cita no respalda el valor del campo o su texto completo no aparece en la página."
                                 )
                             ),
                             excerpt=str(ev_excerpt or ""),

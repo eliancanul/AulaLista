@@ -89,7 +89,7 @@ def test_qwen14b_is_default_in_settings_and_curriculum_import():
 
 
 def test_topic_identification_drops_administrative_and_project_containers():
-    chunk = {"first_page": 1, "last_page": 1, "text": "[página 1] Planeación Didáctica Semana 01"}
+    chunk = {"first_page": 1, "last_page": 1, "text": "[página 1] Planeación Didáctica Semana 01\nRepresentación numérica"}
 
     def transport(_request):
         return {
@@ -172,6 +172,7 @@ def test_chat_json_retries_until_schema_valid_response():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_extract_action_identifies_topics_with_citations_and_no_packages():
     client = tutor_client()
     job = upload_job(client)
@@ -215,6 +216,7 @@ def test_extract_action_identifies_topics_with_citations_and_no_packages():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_failed_stage_records_error_and_allows_retry():
     client = tutor_client()
     job = upload_job(client)
@@ -253,6 +255,7 @@ def test_failed_stage_records_error_and_allows_retry():
 
 
 @sync_stage
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
     client = tutor_client()
     job = upload_job(client)
@@ -301,6 +304,7 @@ def test_confirm_topics_checkpoint_edits_then_proposes_subtopics():
     assert CurriculumPackage.objects.count() == 0
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_confirm_subtopics_completes_hierarchy_without_creating_packages():
     client = tutor_client()
     job = upload_job(client)
@@ -408,7 +412,7 @@ def typed_topics_transport(payload):
 
 
 def test_identify_topics_filters_activity_and_other_titles():
-    chunk = {"text": "[página 1] contenido", "first_page": 1, "last_page": 1}
+    chunk = {"text": "[página 1] Fracciones\nNúmeros enteros\nActividad: colorea las mitades\nNota editorial", "first_page": 1, "last_page": 1}
     transport = typed_topics_transport(
         {
             "temas": [
@@ -596,6 +600,7 @@ def test_convert_rejects_stale_positional_index_for_explicit_ids():
     assert CurriculumPackage.objects.get().title == "Actividad segunda"
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_review_form_submits_stable_activity_identity():
     first = _convert_entry("aaa11111", "Actividad primera")
     second = _convert_entry("bbb22222", "Actividad segunda")

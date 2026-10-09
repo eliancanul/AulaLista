@@ -8,3 +8,17 @@ via atexit with an exact local guard closure.
 No late storage resets, PID checks, symlink traversals, or stale directory cleanups
 are performed here.
 """
+
+import pytest
+
+
+@pytest.fixture
+def legacy_import_routes(settings):
+    """Preserve retired staging/queue invariants without exposing their UI."""
+    settings.ROOT_URLCONF = "legacy_import_urls"
+
+
+@pytest.fixture
+def legacy_vue_routes(settings):
+    """Retain experimental Vue/API coverage without exposing its retired entry."""
+    settings.ROOT_URLCONF = "legacy_vue_urls"

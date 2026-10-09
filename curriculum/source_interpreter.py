@@ -3074,6 +3074,7 @@ class CurriculumSourceInterpreter:
 
         matches = list(moment_pattern.finditer(block_text))
         sections: dict[str, str] = {}
+        section_spans: dict[str, tuple[int, int]] = {}
         for m_idx, m in enumerate(matches):
             raw_key = m.group(1).lower()
             key = (
@@ -3088,6 +3089,40 @@ class CurriculumSourceInterpreter:
             content = block_text[start:end].strip()
             if key not in sections:
                 sections[key] = content
+                literal_start = start + len(block_text[start:end]) - len(block_text[start:end].lstrip())
+                section_spans[key] = (literal_start, literal_start + len(content))
+
+        # The session block is joined from exact physical-page segments. Keep
+        # those offsets: a moment spanning pages cannot be cited as one excerpt
+        # on whichever page happens to contain its first (possibly repeated) line.
+        physical_spans: list[tuple[int, int, int]] = []
+        if page_segments and block_text == "\n".join(text for _, text in page_segments):
+            cursor = 0
+            for page, text in page_segments:
+                physical_spans.append((page, cursor, cursor + len(text)))
+                cursor += len(text) + 1
+
+        def _section_evidence(key: str | None, value: str, default_page: int) -> list[SourceReference]:
+            span = section_spans.get(key)
+            if span and physical_spans and sections[key].startswith(value):
+                start, end = span[0], span[0] + len(value)
+                evidence = []
+                for page, page_start, page_end in physical_spans:
+                    left, right = max(start, page_start), min(end, page_end)
+                    excerpt = block_text[left:right].strip() if left < right else ""
+                    if excerpt:
+                        evidence.append(SourceReference(document_sha256=sha256,
+                            page_number=page, excerpt=excerpt))
+                if evidence:
+                    # Preserve the established single-page preview. Cross-page
+                    # fields retain every complete page-local fragment.
+                    if len(evidence) == 1:
+                        evidence[0].excerpt = evidence[0].excerpt[:200]
+                    return evidence
+            # Compatibility for callers without physical segments and resource
+            # values assembled from a separate closing-section suffix.
+            return [SourceReference(document_sha256=sha256,
+                page_number=_find_chunk_page(value, default_page), excerpt=value[:200])]
 
         inicio_text = sections.get("inicio", "")
         desarrollo_text = sections.get("desarrollo", "")
@@ -3127,7 +3162,8 @@ class CurriculumSourceInterpreter:
 
         # 1. Inicio field
         if inicio_text:
-            inicio_page = _find_chunk_page(inicio_text, primary_page)
+            inicio_evidence = _section_evidence("inicio", inicio_text, primary_page)
+            inicio_page = inicio_evidence[0].page_number
             fields["inicio"] = InterpretedField(
                 name="inicio",
                 value=inicio_text,
@@ -3135,13 +3171,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if (inicio_page in page_warnings or is_warned) else STATUS_SUPPORTED,
                 reason="Momento de inicio extraído de la sesión.",
                 action_required="Revisar consignas y dinámicas de apertura.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=inicio_page,
-                        excerpt=inicio_text[:200],
-                    )
-                ],
+                evidence=inicio_evidence,
             )
         else:
             fields["inicio"] = InterpretedField(
@@ -3155,7 +3185,8 @@ class CurriculumSourceInterpreter:
 
         # 2. Desarrollo field
         if desarrollo_text:
-            desarrollo_page = _find_chunk_page(desarrollo_text, primary_page)
+            desarrollo_evidence = _section_evidence("desarrollo", desarrollo_text, primary_page)
+            desarrollo_page = desarrollo_evidence[0].page_number
             fields["desarrollo"] = InterpretedField(
                 name="desarrollo",
                 value=desarrollo_text,
@@ -3163,13 +3194,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if (desarrollo_page in page_warnings or is_warned) else STATUS_SUPPORTED,
                 reason="Momento central de desarrollo extraído de la sesión.",
                 action_required="Verificar secuencia y materiales requeridos.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=desarrollo_page,
-                        excerpt=desarrollo_text[:200],
-                    )
-                ],
+                evidence=desarrollo_evidence,
             )
         else:
             fields["desarrollo"] = InterpretedField(
@@ -3183,7 +3208,8 @@ class CurriculumSourceInterpreter:
 
         # 3. Cierre field
         if cierre_action:
-            cierre_page = _find_chunk_page(cierre_action, pages[-1] if pages else primary_page)
+            cierre_evidence = _section_evidence("cierre", cierre_action, pages[-1] if pages else primary_page)
+            cierre_page = cierre_evidence[0].page_number
             cierre_warned = cierre_page in page_warnings or is_warned
             fields["cierre"] = InterpretedField(
                 name="cierre",
@@ -3192,13 +3218,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if cierre_warned else STATUS_SUPPORTED,
                 reason="Momento de cierre extraído de la sesión.",
                 action_required="Confirmar consigna de conclusión y entrega.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=cierre_page,
-                        excerpt=cierre_action[:200],
-                    )
-                ],
+                evidence=cierre_evidence,
             )
         else:
             fields["cierre"] = InterpretedField(
@@ -3212,7 +3232,9 @@ class CurriculumSourceInterpreter:
 
         # 4. Materiales / Recursos field
         if final_recursos:
-            recursos_page = _find_chunk_page(final_recursos, primary_page)
+            recursos_evidence = _section_evidence(None if recursos_from_cierre else "recursos",
+                                                 final_recursos, primary_page)
+            recursos_page = recursos_evidence[0].page_number
             fields["materiales"] = InterpretedField(
                 name="materiales",
                 value=final_recursos,
@@ -3220,13 +3242,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if (recursos_page in page_warnings or is_warned) else STATUS_SUPPORTED,
                 reason="Recursos y materiales requeridos extraídos de la sesión.",
                 action_required="Comprobar disponibilidad física en el aula.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=recursos_page,
-                        excerpt=final_recursos[:200],
-                    )
-                ],
+                evidence=recursos_evidence,
             )
         else:
             fields["materiales"] = InterpretedField(
@@ -3240,7 +3256,8 @@ class CurriculumSourceInterpreter:
 
         # 5. Evaluación field
         if evaluacion_text:
-            eval_page = _find_chunk_page(evaluacion_text, primary_page)
+            eval_evidence = _section_evidence("evaluacion", evaluacion_text, primary_page)
+            eval_page = eval_evidence[0].page_number
             fields["evaluacion"] = InterpretedField(
                 name="evaluacion",
                 value=evaluacion_text,
@@ -3248,13 +3265,7 @@ class CurriculumSourceInterpreter:
                 status=STATUS_AMBIGUOUS if (eval_page in page_warnings or is_warned) else STATUS_SUPPORTED,
                 reason="Criterios e instrumentos de evaluación formativa extraídos de la sesión.",
                 action_required="Validar criterios formativos.",
-                evidence=[
-                    SourceReference(
-                        document_sha256=sha256,
-                        page_number=eval_page,
-                        excerpt=evaluacion_text[:200],
-                    )
-                ],
+                evidence=eval_evidence,
             )
         else:
             fields["evaluacion"] = InterpretedField(
@@ -3523,7 +3534,7 @@ class CurriculumSourceInterpreter:
         segments = page_segments or [(session_pages[0] if session_pages else 1, session_text)]
 
         act_pattern = re.compile(
-            r"(?:^|\n)\s*Actividad\s*(\d+|[A-Za-z])?\s*[:.-]?\s*([^\n\r]+)",
+            r"(?:^|\n)\s*Actividad(?=\b|\d)\s*(\d+|[A-Za-z])?\s*[:.-]?\s*([^\n\r]+)",
             re.IGNORECASE,
         )
 

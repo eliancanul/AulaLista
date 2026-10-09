@@ -8,6 +8,7 @@ Project proximity is a reviewable interpretation, never a membership claim.
 from __future__ import annotations
 
 import copy
+import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -20,6 +21,41 @@ from curriculum.vocabulary import CANONICAL_CAMPOS
 
 ANCHOR_SCHEMA_VERSION = 1
 PROJECT_CONTEXT_SCHEMA_VERSION = 1
+
+
+def extracted_page_segments(text: str, document_id: str, page: int) -> list[dict[str, Any]]:
+    """Literal line anchors for the new reader, separate from legacy PDF offsets.
+
+    Structural kinds are review hints, never confirmed table cells or headings.
+    The text digest prevents reuse of IDs when parser output changes.
+    """
+    text_digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    segments = []
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        value = line.strip()
+        if value:
+            start = offset + len(line) - len(line.lstrip())
+            end = start + len(value)
+            if re.search(r"\S(?:[^\S\r\n]{2,}|\t)\S", value):
+                kind = "table_row_candidate"
+            elif re.fullmatch(
+                r"(?:DATOS GENERALES|SESI[ÓO]N\s+\d+(?:\s*[:.]\s*.+)?|"
+                r"Proyecto\s*:.+|Inicio\s*:?|Desarrollo\s*:?|Cierre\s*:?)",
+                value, re.IGNORECASE,
+            ):
+                kind = "heading_candidate"
+            else:
+                kind = "text"
+            segments.append({
+                "id": f"{document_id}:text-v1:{text_digest}:p{page}:{start}-{end}",
+                "text": value, "page": page, "kind": kind,
+                "text_start": start, "text_end": end,
+            })
+        offset += len(line)
+    return segments
+
+
 _DAYS = r"Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes"
 # Preserve the legacy spacing class for existing entities and safety cuts.
 # Only the newly admitted wrapped form uses the stricter physical-line class.
@@ -329,9 +365,27 @@ def clean_page_prefix(text: str) -> str:
 def is_structural_barrier(text: str) -> bool:
     if not text.strip():
         return True
-    norm = re.sub(r"\s+", " ", text).strip().lower()
+    rubric_pattern = r"\b(?:r[uú]brica(?: de evaluaci[oó]n)?|escala estimativa|lista de cotejo|matriz de valoraci[oó]n|criterios de evaluaci[oó]n)\b"
+    classification_lines = []
+    seen_moment = False
+    for line in text.splitlines():
+        # A rubric mentioned as a trailing Evaluación: field is not a new
+        # document. The exception is confined to an earlier explicit moment
+        # on this candidate page, and ends at a new planning heading.
+        if re.match(r"^\s*(?:Proyecto(?: de diagn[oó]stico)?|Prop[oó]sito|Metodolog[ií]a|Campos? formativos?)\s*:", line, re.IGNORECASE):
+            seen_moment = False
+        if seen_moment and re.match(r"^\s*Evaluaci[oó]n\s*:", line, re.IGNORECASE):
+            classified_line = re.sub(rubric_pattern, "[instrumento evaluativo citado]", line, flags=re.IGNORECASE)
+        else:
+            classified_line = line
+        classification_lines.append(classified_line)
+        if re.match(r"^\s*(?:Inicio|Desarrollo|Cierre)\s*(?::|$)", line, re.IGNORECASE):
+            seen_moment = True
+    # Only the classifier's view changes; the original source and citations
+    # are retained verbatim in the session segment.
+    norm = re.sub(r"\s+", " ", "\n".join(classification_lines)).strip().lower()
     return bool(
-        re.search(r"\b(?:r[uú]brica(?: de evaluaci[oó]n)?|escala estimativa|lista de cotejo|matriz de valoraci[oó]n|criterios de evaluaci[oó]n)\b", norm)
+        re.search(rubric_pattern, norm)
         or re.search(r"\b(?:desarrollo de actividades|proyecto(?: de diagn[oó]stico)?:|prop[oó]sito:|metodolog[ií]a:|campos formativos:)\b", norm)
         or re.search(r"(?:^|\n)\s*anexos?(?:\s*\d+|:|\s*$)", norm)
         or re.search(r"\b(?:vo\.\s*bo\.|directora? escolar|docente frente a grupo|firma del docente)\b", norm)

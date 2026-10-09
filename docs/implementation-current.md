@@ -1,4 +1,23 @@
-# AulaLista — implementación actual
+# AulaLista — estado de implementación
+
+**Actualización:** 4 de octubre de 2026
+**Alcance:** recorrido docente Django de PR159, todavía en borrador.
+
+El checkpoint publicado anterior `b7b8b9dd` tiene [CI del árbol exacto aprobada](https://github.com/eliancanul/AulaLista/actions/runs/37171567267): pruebas sintéticas declaradas, el recorrido actual en Chrome y regresiones conservadas de la interfaz anterior. No es una corrida del corpus privado ni una prueba del proveedor real.
+
+- La entrada activa es Currícula y autoría → Importar planeación → Revisar planeación. `/sprint/` redirige a Django; Vue se conserva como implementación experimental fuera de ese recorrido.
+- La revisión presenta una caja, conserva respuestas y borradores por turno, permite correcciones y limita a seis las preguntas generadas por un proveedor. La aprobación/publicación sigue siendo humana.
+- El contexto conserva el dossier y el texto digital de cada página del PDF, con SHA y páginas físicas. No realiza OCR ni acredita comprensión semántica completa.
+- Luna es la selección actual. Su adaptador CLI local está implementado con pruebas simuladas; la ejecución real aún no está validada. El aviso distingue configuración, habilitación y comprobación, y no hay fallback automático. No se ha establecido el recorrido PDF real → Luna → preguntas útiles → guardado.
+- El intento histórico de Gemini sigue con resultado y consumo desconocidos. Elegir Luna no lo borra, reetiqueta ni concilia.
+
+Los detalles vigentes están en [revisión docente](teacher-review.md), [aceptación y operación](teacher-review-acceptance.md) e [instalación](installation.md). Una CI verde con proveedor simulado no hace que el algoritmo con Luna esté listo ni autoriza merge o despliegue.
+
+## Registro histórico del 22 de agosto de 2026
+
+Lo siguiente conserva el estado y las mediciones documentados entonces. Sus
+conteos, afirmaciones de preparación y descripción sin LLM no describen el
+checkpoint actual ni reemplazan las comprobaciones del recorrido docente.
 
 **Estado:** MVP técnico local listo para revisión con una docente
 **Fecha:** 22 de agosto de 2026

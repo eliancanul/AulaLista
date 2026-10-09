@@ -1,7 +1,14 @@
 # Instalación local de AulaLista
 
-T01 usa Python 3.13, Django 5.2, Wagtail 7.4, SQLite y recursos estáticos
-locales. La base `db.sqlite3` es desechable para desarrollo y no se versiona.
+La aplicación Django usa Python 3.13, Django 5.2, Wagtail 7.4, SQLite y recursos
+estáticos locales. Las bases de una instalación contienen trabajo guardado:
+respáldalas junto con los archivos subidos antes de migrar o reemplazar código.
+No se incluyen bases ni archivos operativos en el paquete.
+
+La revisión docente activa usa Django y no requiere construir Vue. Luna está
+seleccionado, pero su ruta CLI sigue pendiente de configuración y validación;
+instalar el nodo no habilita ni prueba un modelo. Véase
+[aceptación y operación](teacher-review-acceptance.md).
 
 ## Instalación limpia reproducible
 
@@ -68,15 +75,22 @@ Ejecuta la medición reproducible con:
 ## Comprobación del nodo
 
 ```sh
-python3.13 -m pytest -q
 python3.13 manage.py check
 python3.13 manage.py migrate --noinput
 python3.13 scripts/verify_local_package.py
 ```
 
 `verify_local_package.py` ejecuta `collectstatic --noinput` y sirve `/student/`
-mediante un socket WSGI de loopback. Su resultado JSON indica el estado de
-ambos pasos y termina con código distinto de cero si alguno falla.
+mediante un socket WSGI de loopback. Comprueba el marcador de la entrada actual,
+con o sin sesiones activas; su resultado no depende de una frase de estado vacío.
+Su JSON informa ambos pasos y falla si alguno falla. Este probe comprueba el
+nodo, no la autenticación docente ni la calidad de preguntas del proveedor.
+Ejecútalo sólo donde el socket local esté permitido.
+
+Las pruebas sintéticas y sus exclusiones están documentadas en
+[el alcance de CI](teacher-review.md#alcance-sintético-de-ci). No ejecutes una
+suite indiscriminada sobre un checkout con PDFs privados para presentar sus
+resultados como evidencia sintética.
 
 ## Empaquetado reproducible para MacBook Air
 
@@ -87,11 +101,25 @@ sidecars WAL/SHM, el entorno virtual, Git ni los estáticos generados:
 sh scripts/package_macos.sh
 ```
 
-El archivo queda en `dist/aulalista-local.tar.gz`. En una MacBook Air limpia:
+El archivo queda en `dist/aulalista-local.tar.gz`. Su carpeta raíz conserva el
+nombre del checkout; sustituye `NOMBRE_DEL_CHECKOUT` por ese nombre al extraerlo.
+Puedes pasar otra carpeta de salida como primer argumento. El paquete final y
+los temporales de empaquetado no se incluyen a sí mismos, incluso con un destino
+anidado dentro del checkout. Si falla la creación, se conserva el paquete anterior
+y se elimina únicamente el temporal de esa ejecución. Las exclusiones privadas
+no dependen de interpretar el nombre del checkout como un patrón.
+En una MacBook Air limpia:
+
+El paquete excluye los directorios privados conocidos (`media`, `.runtime`,
+`artifacts`, `output`, `outputs`, `evidence`, `docs/PLANEACIONES` y
+`docs/research`, `tests/fixtures/sprint_corpus` y `prototypes/docente-skeleton`),
+los PDFs en cualquier subdirectorio, `frontend/node_modules` y `.env*`. Mantén cualquier ruta privada personalizada fuera
+del checkout y revisa el inventario del archivo antes de compartirlo: estas
+exclusiones no detectan datos privados guardados en otros directorios.
 
 ```sh
 tar -xzf aulalista-local.tar.gz
-cd AulaLista
+cd NOMBRE_DEL_CHECKOUT
 python3.13 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip

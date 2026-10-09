@@ -17,6 +17,17 @@ jobs:
   tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      # Every provider in acceptance is an explicit test double. Never enable
+      # production inference, developer credentials or private trial inputs here.
+      AULALISTA_TEACHER_REVIEW_PROVIDER: luna
+      AULALISTA_LUNA_LIVE_ENABLED: '0'
+      AULALISTA_LUNA_CLI_EXECUTABLE: ''
+      AULALISTA_LUNA_RUNTIME_REVIEW: ''
+      AULALISTA_GEMINI_LIVE_ENABLED: '0'
+      AULALISTA_GEMINI_AGY_LAUNCHER: ''
+      AULALISTA_GEMINI_AGY_AGENT_FILE: ''
+      AULALISTA_RUN_REAL_NLI_SMOKE: '0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -26,14 +37,64 @@ jobs:
         with:
           python-version: '3.13.5'
           cache: pip
-          cache-dependency-path: requirements.lock
+          cache-dependency-path: |
+            requirements.lock
+            requirements-service.lock
       - name: Install hash-locked dependencies
-        run: python -m pip install --require-hashes -r requirements.lock
-      - name: Syntax, whitespace and Django checks
+        run: python -m pip install --require-hashes -r requirements.lock -r requirements-service.lock
+      - name: Prepare exact synthetic code snapshot without private inputs
         run: |
-          python -m compileall -q aulalista curriculum health scripts tests
-          git diff --check HEAD^ HEAD
+          echo "AULALISTA_DB_PATH=$RUNNER_TEMP/aulalista-ci.sqlite3" >> "$GITHUB_ENV"
+          echo "AULALISTA_MEDIA_ROOT=$RUNNER_TEMP/aulalista-ci-media" >> "$GITHUB_ENV"
+          python scripts/prepare_synthetic_ci.py "$RUNNER_TEMP/aulalista-synthetic"
+          echo "CI_SNAPSHOT=$RUNNER_TEMP/aulalista-synthetic" >> "$GITHUB_ENV"
+      - name: Check source whitespace
+        run: git diff --check HEAD^ HEAD
+      - name: Syntax and Django checks in the synthetic snapshot
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: |
+          python -m compileall -q aulalista api curriculum health scripts tests
           python manage.py check
           python manage.py makemigrations --check --dry-run
-      - name: Run full test suite
-        run: python -m pytest -q
+      - name: Required service dependencies
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: python -c "import django; django.setup(); import fastapi, pydantic, httpx, multipart, api.auth, api.persistence"
+        env:
+          DJANGO_SETTINGS_MODULE: aulalista.test_settings
+      - name: Run declared synthetic backend scope and timeout checks
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: |
+          python -m scripts.run_synthetic_backend
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Require installed Chrome for browser acceptance
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -x "$CHROME_BIN"
+          "$CHROME_BIN" --version
+          echo "NIGHT_CHROME=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "S13_CHROME=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "S15_CHROME=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "S20_CHROME=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "NIGHT_BROWSER_REQUIRED=1" >> "$GITHUB_ENV"
+          echo "TEACHER_REVIEW_CHROME=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "TEACHER_REVIEW_BROWSER_REQUIRED=1" >> "$GITHUB_ENV"
+      - name: Required active Django one-box browser acceptance (simulated provider)
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: |
+          node --test tests/test_teacher_review_dom.mjs
+          python -m pytest tests/test_teacher_review_browser.py -q
+      - name: Retained experimental Vue build and unit regressions
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: |
+          npm --prefix frontend ci --ignore-scripts
+          npm --prefix frontend run build
+          npm --prefix frontend test
+          node --test frontend/tests/*.test.mjs
+      - name: Retained inactive Vue and bulk-review browser regressions
+        working-directory: ${{ env.CI_SNAPSHOT }}
+        run: |
+          python -m pytest -q tests/test_night_browser.py tests/test_s13_editor_browser.py tests/test_s15_offline_review.py tests/test_s20_integrated_review.py

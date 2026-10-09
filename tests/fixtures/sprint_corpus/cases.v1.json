@@ -1,0 +1,569 @@
+{
+  "schema_version": "1.0.0",
+  "corpus_version": "sprint-corpus-1.0.1-synthetic",
+  "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+  "classification": "synthetic_development_only",
+  "teacher_validated": false,
+  "cases": [
+    {
+      "id": "SC01",
+      "document_id": "SC01",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "explicit_fields",
+        "missing_school_level"
+      ],
+      "input_provenance": {
+        "path": "scripts/benchmark_curriculum/fixtures.py",
+        "sha256": "822daf43bed08edb11826f4a82775bfb1bc34931e1d0770683f9bb808042dacd",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          31,
+          56
+        ],
+        "source_code": "def build(runtime, include_c01=False):\n    destination=runtime.private_path(\"fixtures\")\n    if destination.exists():\n        raise ValueError(\"Refusing to overwrite fixtures; use a fresh private workdir\")\n    destination.mkdir(parents=True)\n    pages=[['Proyecto: Agua del barrio','Propósito: Observar el uso del agua.','Campos formativos: Lenguajes',\n            'SESIÓN 1: Observamos','Inicio: Leemos la pregunta.','Desarrollo: Anotamos ejemplos.','Cierre: Compartimos.'],\n           ['Proyecto: Cuidado del parque','Finalidad: Describir el parque.','SESIÓN 1: Caminamos',\n            'Inicio: Dibujamos el camino.','Desarrollo: Contamos los árboles.','Cierre: Presentamos.']]\n    fixtures={'S01_repeated_projects':pages,'S02_blank_pages':[[],[],[]],\n              'S03_thirty_pages':[pages[i%2]+[f'Observación sintética {i+1}: '+('palabra '*18) for _ in range(30)] for i in range(30)]}\n    rows=[]\n    for name,content in fixtures.items():\n        path=destination/f'{name}.pdf'\n        path.write_bytes(pdf_bytes(content))\n        rows.append({'document_id':name,'family_id':name,'split':'X','path':str(path),'file_sha256':sha_file(path),\n                     'bytes':path.stat().st_size,'page_count':len(content),'synthetic':True})\n    if include_c01:\n        c01=runtime.snapshots/'B3'/C01_RELATIVE\n        if sha_file(c01)!=C01_SHA: raise ValueError('C01 does not match protocol')\n        # Page count independently determined during fixtures, never from product output.\n        from pypdf import PdfReader\n        rows.insert(0,{'document_id':'C01','family_id':'C01_exposed','split':'R','path':str(c01),\n                       'file_sha256':C01_SHA,'bytes':c01.stat().st_size,'page_count':len(PdfReader(c01).pages),'synthetic':False})\n    write_json(destination/'manifest.json',rows)\n    return rows",
+        "transformation": "Join pages[0] literal strings with LF; retain original spelling; logical text page 1, not a PDF extraction."
+      },
+      "source_segments": [
+        {
+          "id": "SC01-s1",
+          "text": "Proyecto: Agua del barrio\nPropósito: Observar el uso del agua.\nCampos formativos: Lenguajes\nSESIÓN 1: Observamos\nInicio: Leemos la pregunta.\nDesarrollo: Anotamos ejemplos.\nCierre: Compartimos.",
+          "page": 1
+        }
+      ],
+      "input_sha256": "8cf54cdd9d3f3997a77842392cc34f0a6ec08c861b592332ff74b62a39b3b4ee",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "Agua del barrio",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC01-s1"
+          ]
+        },
+        {
+          "key": "proposito",
+          "value": "Observar el uso del agua.",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC01-s1"
+          ]
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿A qué nivel y grado corresponde este material?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC02",
+      "document_id": "SC02",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "explicit_fields",
+        "missing_school_level"
+      ],
+      "input_provenance": {
+        "path": "scripts/benchmark_curriculum/fixtures.py",
+        "sha256": "822daf43bed08edb11826f4a82775bfb1bc34931e1d0770683f9bb808042dacd",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          31,
+          56
+        ],
+        "source_code": "def build(runtime, include_c01=False):\n    destination=runtime.private_path(\"fixtures\")\n    if destination.exists():\n        raise ValueError(\"Refusing to overwrite fixtures; use a fresh private workdir\")\n    destination.mkdir(parents=True)\n    pages=[['Proyecto: Agua del barrio','Propósito: Observar el uso del agua.','Campos formativos: Lenguajes',\n            'SESIÓN 1: Observamos','Inicio: Leemos la pregunta.','Desarrollo: Anotamos ejemplos.','Cierre: Compartimos.'],\n           ['Proyecto: Cuidado del parque','Finalidad: Describir el parque.','SESIÓN 1: Caminamos',\n            'Inicio: Dibujamos el camino.','Desarrollo: Contamos los árboles.','Cierre: Presentamos.']]\n    fixtures={'S01_repeated_projects':pages,'S02_blank_pages':[[],[],[]],\n              'S03_thirty_pages':[pages[i%2]+[f'Observación sintética {i+1}: '+('palabra '*18) for _ in range(30)] for i in range(30)]}\n    rows=[]\n    for name,content in fixtures.items():\n        path=destination/f'{name}.pdf'\n        path.write_bytes(pdf_bytes(content))\n        rows.append({'document_id':name,'family_id':name,'split':'X','path':str(path),'file_sha256':sha_file(path),\n                     'bytes':path.stat().st_size,'page_count':len(content),'synthetic':True})\n    if include_c01:\n        c01=runtime.snapshots/'B3'/C01_RELATIVE\n        if sha_file(c01)!=C01_SHA: raise ValueError('C01 does not match protocol')\n        # Page count independently determined during fixtures, never from product output.\n        from pypdf import PdfReader\n        rows.insert(0,{'document_id':'C01','family_id':'C01_exposed','split':'R','path':str(c01),\n                       'file_sha256':C01_SHA,'bytes':c01.stat().st_size,'page_count':len(PdfReader(c01).pages),'synthetic':False})\n    write_json(destination/'manifest.json',rows)\n    return rows",
+        "transformation": "Join pages[1] literal strings with LF; retain original spelling; logical text page 1, not a PDF extraction."
+      },
+      "source_segments": [
+        {
+          "id": "SC02-s1",
+          "text": "Proyecto: Cuidado del parque\nFinalidad: Describir el parque.\nSESIÓN 1: Caminamos\nInicio: Dibujamos el camino.\nDesarrollo: Contamos los árboles.\nCierre: Presentamos.",
+          "page": 1
+        }
+      ],
+      "input_sha256": "290d7454b8ba07449dec7be9c816567e874b905bbe0f5e2ba878bb503c4d3470",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "Cuidado del parque",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC02-s1"
+          ]
+        },
+        {
+          "key": "finalidad",
+          "value": "Describir el parque.",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC02-s1"
+          ]
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿A qué nivel y grado corresponde este material?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC03",
+      "document_id": "SC03",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "ambiguous_title"
+      ],
+      "input_provenance": {
+        "path": "tests/test_overview_field_boundaries.py",
+        "sha256": "69e6399d01c1b752d2383497f58d84b71c69844a2ddd6e5969acec3dc71bcf24",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          17,
+          24
+        ],
+        "source_code": "def test_multiline_title_is_preserved_as_a_reviewable_candidate():\n    raw = \"Guardianes de\\nla comunidad\"\n    page = f\"Proyecto: {raw}\\nEscenario: Aula\"\n    field = fields([page])[\"proyecto\"]\n    assert field.value == \"Guardianes de la comunidad\"\n    assert field.status == \"ambiguous\"\n    assert field.review == \"pending\"\n    assert field.evidence[0].excerpt == raw",
+        "transformation": "Render page f-string with the literal raw assigned in this test."
+      },
+      "source_segments": [
+        {
+          "id": "SC03-s1",
+          "text": "Proyecto: Guardianes de\nla comunidad\nEscenario: Aula",
+          "page": 1
+        }
+      ],
+      "input_sha256": "a55451a7e062feed7eaa657580a87a14e8826541514a229bc128b735735d9417",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "Guardianes de la comunidad",
+          "status": "suggested",
+          "evidence_ids": [
+            "SC03-s1"
+          ]
+        },
+        {
+          "key": "proposito",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿El título completo es «Guardianes de la comunidad»?",
+        "¿Cuál es el objetivo y a qué nivel y grado corresponde?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC04",
+      "document_id": "SC04",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "quoted_multiline"
+      ],
+      "input_provenance": {
+        "path": "tests/test_overview_field_boundaries.py",
+        "sha256": "69e6399d01c1b752d2383497f58d84b71c69844a2ddd6e5969acec3dc71bcf24",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          27,
+          32
+        ],
+        "source_code": "def test_quoted_multiline_title_has_an_explicit_closing_boundary():\n    raw = '\"Guardianes de\\nla comunidad\"'\n    field = fields([f\"Proyecto: {raw}\\nEscenario: Aula\"])[\"proyecto\"]\n    assert field.value == '\"Guardianes de la comunidad\"'\n    assert field.status == \"supported\"\n    assert field.evidence[0].excerpt == raw",
+        "transformation": "Render page f-string with the literal raw assigned in this test."
+      },
+      "source_segments": [
+        {
+          "id": "SC04-s1",
+          "text": "Proyecto: \"Guardianes de\nla comunidad\"\nEscenario: Aula",
+          "page": 1
+        }
+      ],
+      "input_sha256": "9c356ad31421d85eca49de5a00da2efe09b0ce282f84e1e2d5654ba509edad17",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "\"Guardianes de la comunidad\"",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC04-s1"
+          ]
+        },
+        {
+          "key": "proposito",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿Cuál es el objetivo y a qué nivel y grado corresponde?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC05",
+      "document_id": "SC05",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "missing_objective",
+        "header_boundary"
+      ],
+      "input_provenance": {
+        "path": "tests/test_overview_field_boundaries.py",
+        "sha256": "69e6399d01c1b752d2383497f58d84b71c69844a2ddd6e5969acec3dc71bcf24",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          93,
+          96
+        ],
+        "source_code": "def test_empty_label_does_not_consume_the_next_header(label, key, next_header):\n    field = fields([f\"{label}:\\n{next_header}\"])[key]\n    assert field.value == \"\"\n    assert field.status == \"missing\"",
+        "transformation": "Instantiate label=Propósito, key=proposito, next_header=Producto: Herbario from the parameterization."
+      },
+      "source_segments": [
+        {
+          "id": "SC05-s1",
+          "text": "Propósito:\nProducto: Herbario",
+          "page": 1
+        }
+      ],
+      "input_sha256": "d9317b93c4fd67650183a6fb6bf92f1be3ed1b92e01ae79383be6c6ab23e5686",
+      "expected_fields": [
+        {
+          "key": "proposito",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿Cuál es el propósito?",
+        "¿A qué nivel y grado corresponde?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC06",
+      "document_id": "SC06",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "unclosed_quote",
+        "abstention"
+      ],
+      "input_provenance": {
+        "path": "tests/test_overview_field_boundaries.py",
+        "sha256": "69e6399d01c1b752d2383497f58d84b71c69844a2ddd6e5969acec3dc71bcf24",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          42,
+          45
+        ],
+        "source_code": "def test_unclosed_quote_requires_review_instead_of_hiding_a_barrier():\n    field = fields(['Propósito: Explicar \"una etiqueta\\nProducto: Herbario'])[\"proposito\"]\n    assert field.status == \"ambiguous\"\n    assert field.review == \"pending\"",
+        "transformation": "Copy the input string literal exactly."
+      },
+      "source_segments": [
+        {
+          "id": "SC06-s1",
+          "text": "Propósito: Explicar \"una etiqueta\nProducto: Herbario",
+          "page": 1
+        }
+      ],
+      "input_sha256": "9e037e2129727717fb573ce5ac72266e96bc13bdb26c453db7ef03712eb418bd",
+      "expected_fields": [
+        {
+          "key": "proposito",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "La cita está incompleta. ¿Dónde termina el propósito?",
+        "¿A qué nivel y grado corresponde?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC07",
+      "document_id": "SC07",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "table_boundary",
+        "avoid_objective_contamination"
+      ],
+      "input_provenance": {
+        "path": "tests/test_tabular_overview_development.py",
+        "sha256": "1cf35a7d77d6c6671853662ed55e8e0334b1628725a9d4350a841036a8b6b2a5",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          33,
+          51
+        ],
+        "source_code": "def test_complete_metadata_pair_bounds_objective_before_table_body(label, key, newline, columns, method):\n    raw = f\"Observar el patio.{newline}Comparar preguntas y explicar hallazgos.\"\n    page = f\"{label}:{newline}{raw}{newline}{method}{newline}{columns}{newline}{TABLE_BODY}\"\n    field = _field([page], key)\n    span = extract_overview_spans([page])[key]\n    expected_value = raw if key == \"finalidad\" else \" \".join(raw.split())\n\n    assert field.value == expected_value\n    assert field.status == \"supported\"\n    assert field.review == \"pending\"\n    assert field.operational_state == \"needs_review\"\n    assert field.evidence[0].excerpt == raw\n    assert span.excerpt == raw\n    assert span.text_start == 0\n    assert span.value_start == page.index(raw)\n    assert span.text_end == page.index(raw) + len(raw)\n    assert page[span.value_start:span.text_end] == raw\n    assert span.termination == \"header\"\n    assert TABLE_BODY in page[span.text_end:]",
+        "transformation": "Instantiate label=Propósito, key=proposito, newline=LF, method=METHOD, columns=COLUMNS, TABLE_BODY from module constants."
+      },
+      "source_segments": [
+        {
+          "id": "SC07-s1",
+          "text": "Propósito:\nObservar el patio.\nComparar preguntas y explicar hallazgos.\nMetodología Aprendizaje basado en problemas (ABP)\nCampos Contenidos Proceso de desarrollo de aprendizajes\nLenguajes\nRegistro de preguntas.\nFormula preguntas sobre su entorno.",
+          "page": 1
+        }
+      ],
+      "input_sha256": "0399a192373f11ca6c07a725f23902b601b5050a3b6220c3dfc79628e952ac85",
+      "expected_fields": [
+        {
+          "key": "proposito",
+          "value": "Observar el patio. Comparar preguntas y explicar hallazgos.",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC07-s1"
+          ]
+        },
+        {
+          "key": "grado",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿A qué nivel y grado corresponde?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC08",
+      "document_id": "SC08",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "ambiguous_grade",
+        "missing_school_level"
+      ],
+      "input_provenance": {
+        "path": "scripts/benchmark_curriculum/fixtures.py",
+        "sha256": "822daf43bed08edb11826f4a82775bfb1bc34931e1d0770683f9bb808042dacd",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          31,
+          56
+        ],
+        "source_code": "def build(runtime, include_c01=False):\n    destination=runtime.private_path(\"fixtures\")\n    if destination.exists():\n        raise ValueError(\"Refusing to overwrite fixtures; use a fresh private workdir\")\n    destination.mkdir(parents=True)\n    pages=[['Proyecto: Agua del barrio','Propósito: Observar el uso del agua.','Campos formativos: Lenguajes',\n            'SESIÓN 1: Observamos','Inicio: Leemos la pregunta.','Desarrollo: Anotamos ejemplos.','Cierre: Compartimos.'],\n           ['Proyecto: Cuidado del parque','Finalidad: Describir el parque.','SESIÓN 1: Caminamos',\n            'Inicio: Dibujamos el camino.','Desarrollo: Contamos los árboles.','Cierre: Presentamos.']]\n    fixtures={'S01_repeated_projects':pages,'S02_blank_pages':[[],[],[]],\n              'S03_thirty_pages':[pages[i%2]+[f'Observación sintética {i+1}: '+('palabra '*18) for _ in range(30)] for i in range(30)]}\n    rows=[]\n    for name,content in fixtures.items():\n        path=destination/f'{name}.pdf'\n        path.write_bytes(pdf_bytes(content))\n        rows.append({'document_id':name,'family_id':name,'split':'X','path':str(path),'file_sha256':sha_file(path),\n                     'bytes':path.stat().st_size,'page_count':len(content),'synthetic':True})\n    if include_c01:\n        c01=runtime.snapshots/'B3'/C01_RELATIVE\n        if sha_file(c01)!=C01_SHA: raise ValueError('C01 does not match protocol')\n        # Page count independently determined during fixtures, never from product output.\n        from pypdf import PdfReader\n        rows.insert(0,{'document_id':'C01','family_id':'C01_exposed','split':'R','path':str(c01),\n                       'file_sha256':C01_SHA,'bytes':c01.stat().st_size,'page_count':len(PdfReader(c01).pages),'synthetic':False})\n    write_json(destination/'manifest.json',rows)\n    return rows",
+        "transformation": "Sprint-authored mutation: prepend Grado: 1ro plus LF to pages[0]. Grade token is synthetic; no school level is supplied.",
+        "kind": "sprint_authored_mutation"
+      },
+      "source_segments": [
+        {
+          "id": "SC08-s1",
+          "text": "Grado: 1ro\nProyecto: Agua del barrio\nPropósito: Observar el uso del agua.\nCampos formativos: Lenguajes\nSESIÓN 1: Observamos\nInicio: Leemos la pregunta.\nDesarrollo: Anotamos ejemplos.\nCierre: Compartimos.",
+          "page": 1
+        }
+      ],
+      "input_sha256": "3633a702b7215d3ae27cb0c2ec691aa88271af61dbdcd8b3ef3dd77216f94e7c",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "Agua del barrio",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC08-s1"
+          ]
+        },
+        {
+          "key": "proposito",
+          "value": "Observar el uso del agua.",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC08-s1"
+          ]
+        },
+        {
+          "key": "grado",
+          "value": "1ro",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC08-s1"
+          ]
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿A qué nivel escolar corresponde 1ro?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    },
+    {
+      "id": "SC09",
+      "document_id": "SC09",
+      "synthetic": true,
+      "teacher_validated": false,
+      "split": "development",
+      "tags": [
+        "ambiguous_grade",
+        "missing_school_level"
+      ],
+      "input_provenance": {
+        "path": "scripts/benchmark_curriculum/fixtures.py",
+        "sha256": "822daf43bed08edb11826f4a82775bfb1bc34931e1d0770683f9bb808042dacd",
+        "source_commit": "c787068014c9ebbe1c7eb1ead341e1182b667c0a",
+        "lines": [
+          31,
+          56
+        ],
+        "source_code": "def build(runtime, include_c01=False):\n    destination=runtime.private_path(\"fixtures\")\n    if destination.exists():\n        raise ValueError(\"Refusing to overwrite fixtures; use a fresh private workdir\")\n    destination.mkdir(parents=True)\n    pages=[['Proyecto: Agua del barrio','Propósito: Observar el uso del agua.','Campos formativos: Lenguajes',\n            'SESIÓN 1: Observamos','Inicio: Leemos la pregunta.','Desarrollo: Anotamos ejemplos.','Cierre: Compartimos.'],\n           ['Proyecto: Cuidado del parque','Finalidad: Describir el parque.','SESIÓN 1: Caminamos',\n            'Inicio: Dibujamos el camino.','Desarrollo: Contamos los árboles.','Cierre: Presentamos.']]\n    fixtures={'S01_repeated_projects':pages,'S02_blank_pages':[[],[],[]],\n              'S03_thirty_pages':[pages[i%2]+[f'Observación sintética {i+1}: '+('palabra '*18) for _ in range(30)] for i in range(30)]}\n    rows=[]\n    for name,content in fixtures.items():\n        path=destination/f'{name}.pdf'\n        path.write_bytes(pdf_bytes(content))\n        rows.append({'document_id':name,'family_id':name,'split':'X','path':str(path),'file_sha256':sha_file(path),\n                     'bytes':path.stat().st_size,'page_count':len(content),'synthetic':True})\n    if include_c01:\n        c01=runtime.snapshots/'B3'/C01_RELATIVE\n        if sha_file(c01)!=C01_SHA: raise ValueError('C01 does not match protocol')\n        # Page count independently determined during fixtures, never from product output.\n        from pypdf import PdfReader\n        rows.insert(0,{'document_id':'C01','family_id':'C01_exposed','split':'R','path':str(c01),\n                       'file_sha256':C01_SHA,'bytes':c01.stat().st_size,'page_count':len(PdfReader(c01).pages),'synthetic':False})\n    write_json(destination/'manifest.json',rows)\n    return rows",
+        "transformation": "Sprint-authored mutation: prepend Grado: 3ro plus LF to pages[0]. Grade token is synthetic; no school level is supplied.",
+        "kind": "sprint_authored_mutation"
+      },
+      "source_segments": [
+        {
+          "id": "SC09-s1",
+          "text": "Grado: 3ro\nProyecto: Agua del barrio\nPropósito: Observar el uso del agua.\nCampos formativos: Lenguajes\nSESIÓN 1: Observamos\nInicio: Leemos la pregunta.\nDesarrollo: Anotamos ejemplos.\nCierre: Compartimos.",
+          "page": 1
+        }
+      ],
+      "input_sha256": "75b2b64601dbd27b1ef286d966aab6a1a8c604109ca344a04104e503df69ae98",
+      "expected_fields": [
+        {
+          "key": "proyecto",
+          "value": "Agua del barrio",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC09-s1"
+          ]
+        },
+        {
+          "key": "proposito",
+          "value": "Observar el uso del agua.",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC09-s1"
+          ]
+        },
+        {
+          "key": "grado",
+          "value": "3ro",
+          "status": "extracted",
+          "evidence_ids": [
+            "SC09-s1"
+          ]
+        },
+        {
+          "key": "nivel_educativo",
+          "value": null,
+          "status": "unknown",
+          "evidence_ids": []
+        }
+      ],
+      "review_questions": [
+        "¿A qué nivel escolar corresponde 3ro?"
+      ],
+      "expected_approval_status": "pending",
+      "answer_key": null
+    }
+  ]
+}

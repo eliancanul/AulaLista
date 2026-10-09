@@ -118,6 +118,7 @@ def _setup_job():
     return teacher, job, dossier
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_postpone_queue_item_causal_flow():
     """Causal HTTP test:
     1. Check initial state is pending_review (not postponed, not resolved).
@@ -182,6 +183,7 @@ def test_postpone_queue_item_causal_flow():
     assert any(d.get("change_type") == "postponed" for d in recent_history.get("deltas", []))
 
 
+@pytest.mark.usefixtures("legacy_import_routes")
 def test_postpone_queue_item_json_api():
     """Fetch/JSON API test: verify JsonResponse is returned when X-Requested-With header is present."""
     teacher, job, dossier = _setup_job()
