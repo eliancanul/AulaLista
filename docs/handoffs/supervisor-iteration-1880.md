@@ -1,0 +1,69 @@
+# Supervisor handoff — iteration 1880 (Phase 10: checkpoint synthesis, gap analysis, HOLD re-affirmation)
+
+Iteration: 1880. Phase focus: synthesis, gap analysis, and next-loop handoff.
+Branch at pass time: `supervisor/aulalista-docs` (no switch performed — already on it; prompt names `updated-tech` as start — unsafe to switch with dirty tree, so no switch per loop rule).
+`git status --short --branch` at pass time (live): `## supervisor/aulalista-docs...origin/supervisor/aulalista-docs`, HEAD `5e64b71` (= 1870 PR-record fill-in over 1870 checkpoint `4f43d14`, PR #115). Staged empty (`git diff --cached --name-only | wc -l` → 0, verified pre-write). Worktree carries the pre-existing `M` + `??` backlog (settings/models/views/DATABASE + prior-handoff backlog + `scripts/check_migrations.py` + `tests/test_t54_staging_contracts.py`) — preserved, none reverted. Nothing implemented, no issue/PR created/edited/labeled/merged, no code/root-doc/config touched.
+
+Prior memory: `supervisor-iteration-1879.md` (Phase 9 ranking slice, 1823rd no-drift, 1871–1879 carry grant active) is the latest file on disk. Cumulative spine through 1870 checkpoint + catalog through 1870 + gate head (`STATUS: HOLD`) + `supervisor-final-18.md` standing. LIVE `gh` this pass (checkpoint under the expired 1871–1879 carry grant — 1880 MUST go live; grant executed, renews 1881–1889 carry / 1890 must go live).
+
+Phase-label check: prompt phase focus (synthesis, gap analysis, next-loop handoff) matches this Phase 10 checkpoint slice. No label correction needed.
+
+## Scope
+
+Phase 10 checkpoint: full-decade closure (1871–1880), LIVE `gh` re-query (ready/paused/open + PR #115 + #126 + #134), fresh tree fingerprint, cumulative deltas + catalog Phase 10 row + gate-touch, docs-only packaging onto `supervisor/aulalista-docs` (PR #115 already OPEN, unmerged). No implementation. final-19 due at 1900, NOT written at 1880.
+
+## Files inspected (fresh live evidence this pass)
+
+- Fingerprint (fresh `wc -l`): settings 135 / views 2950 / models 2038 / staging 238 / results-service 552 / cursor-service 27 / ADR-0010 58 / test_t54 127 — byte-identical to the 0081–1879 pins.
+- AST (fresh `python3 -c`): views 91 top-level defs / models 5 funcs + 21 classes (= 26) — byte-identical to the 0048–1879 pins.
+- Seams (fresh `grep`): `roadmap_cursor` 8 hits in views (= import `:74-75` + 7 service sites `:2505/:2579/:2599/:2634/:2770/:2807/:2866`); Q8 divergent read `views.py:1068` (`group_progress.current_activity_id`, skips first-ACTUAL fallback) — census carries, no new seam site.
+- R2 pins (fresh `grep -n ^def`): `_activity_id :2301` / `_grouped_activities :2420` / `_import_action_convert :2446` — byte-identical.
+- Zero wiring (fresh `grep -c` ×4): `activity_content_hash|find_duplicate_groups` 0 in views / models / `results.py` / `roadmap_cursor.py` — hash/dedup still report-only.
+- Migration head (fresh checker run): `check_migrations.py` → `OK — numeración lineal sin duplicados` — #57 gate green. Head `0029_curriculumimportjob_progress_finished_at.py`.
+- ADRs (fresh `ls docs/adr/`): 10 files `0001`–`0010`. Schemas flat (README + 3 schemas, no `v2/`). Tests `tests/*.py` 43. Prototypes visual-a/b/c only — Q17 RE-VERIFIED OPEN on the live tree (off-branch tip `72fb6f0` carried, not re-queried).
+- Numstat head (fresh `git diff --numstat`): 12-2/44-4/127-681/7-0 — byte-identical to the 0081 pin.
+- Root docs (fresh reads): CONTEXT head (local-node + human-governed), DESIGN head (contract C + synthetic-DemoPackage), AGENTS head (issue-tracker + triage labels), `DATABASE.md:101-112` (JSON-hierarchy debt + 0020-collision rule), `implementation-current.md:1-6` (MVP header), `teacher-flow.md:116-120` (ACTUAL/TRABAJADO mapping) — no spine contradiction; C2/C4 staleness already R1 items.
+- Decade presence (fresh `[ -f ]` loop): 1871–1879 all PRESENT with phase-correct `head -1` titles + 1880 upon write — decade closes **10/10 GAP-FREE** (first gap-free decade of the new run after the 1861–1870 9/10 break; observed rotation: 1871 baseline / 1872 join / 1873 idempotency / 1874 contradictions / 1875 matrix / 1876 envelope / 1877 migration / 1878 seams / 1879 ranking / 1880 checkpoint; no backfill).
+- Gate head (fresh `head -3`): `STATUS: HOLD` — untouched. Gate log (`git log --all --oneline -8 -- IMPLEMENTATION-GATE.md`): docs-lineage only, no off-cycle flip.
+- Tracker (LIVE `gh` this pass, grant expired — executed): ready-OPEN 6 `[116,118,119,122,125,127]` (`--limit 100`); all six `updatedAt` byte-identical to the 1700–1870 pins (`116 2026-09-22T13:53:29Z` / `118 :31Z` / `119 :32Z` / `122 2026-09-24T14:06:05Z` / `125 2026-09-24T14:05:59Z` / `127 2026-09-22T13:52:46Z`) — zero state/label transition, zero timestamp moves; paused 26 LIVE count, open 32 = 26+6 computed; #126 CLOSED re-verified live (`closedAt 2026-09-25T20:03:07Z` — HUMAN closure-rationale still due); PR #134 MERGED re-verified live (`mergedAt 2026-09-25T16:47:51Z` — HUMAN merge-verification still due); PR #115 OPEN live (`updatedAt 2026-09-27T00:24:39Z` — moved since 1870's `23:13:46Z` with NO local push, metadata movement only).
+- Staged (fresh `git diff --cached --name-only | wc -l` → 0 pre-write): docs-only packaging discipline intact.
+
+## Findings (observed facts vs hypotheses)
+
+1. **No tree drift on any pin (observed).** Fingerprint, AST 91/5+21, 8-hit census, Q8 `:1068`, R2 `:2301/:2420/:2446`, zero wiring, checker OK, ADRs 10, schemas flat, tests 43, numstat head, staged 0, HOLD head — all unchanged vs 0081–1879. Ordinal: 1823rd at 1879 + this observed pass = **1824th consecutive tree no-drift pass** (ordinal carries across the 1860 gap — observed passes only, no rollback evidence).
+2. **NO sixth tracker-scope drift, seventeenth consecutive (observed, LIVE).** Ready SAME 6 OPEN, all six `updatedAt` byte-identical to the 1700–1870 pins; paused 26, open 32 = 26+6; #126 CLOSED + PR #134 MERGED re-verified live (Q18 carries); PR #115 OPEN metadata movement only. R′-order #116 ~4/7 best, none 7/7, Fase II ~2/7 CONFIRMED at 1540 carries — no re-grade per carry-rule. Hypothesis ruled out: no scope change, no ranking promotion warranted.
+3. **Decade 1871–1880 closes 10/10 GAP-FREE (observed).** 1871–1879 present with phase-correct titles + 1880 upon write. Accepted-gaps list unchanged: 51–55/0099/0101-0102/0284-0287/0318/0422-0424/0428/0459-0460/0621-0623/1822 + 1860. No backfill, no inference.
+
+## Decisions (spec only)
+
+- The single #1 architectural change stays **ADR-0010 relational staging with idempotency** as reference (UNDER RE-SCOPING REVIEW pending human Q16+Q18 per 1609); live executable queue SUSPENDED.
+- No ADR change this pass. All bars/clauses/guards carry (7-slot bar, blank-with-owner rule, draft-precision triple, C1 three-way, R2-before-seams, S1-LAST-fused-with-M3, Q15 clause, M0→M4, #57 gate, rule #58, P1/P2-absent, Q11 OUT-of-lane, 1540 ranking rule, 0299 close conditions, named-test-filename rule, `--limit 100` pagination discipline, field-named #134 cites, `rev-parse`-not-prose lineage, import-level egress pattern, off-branch tip `72fb6f0` reading, top-level AST func methodology, `aulalista/urls.py` DEBUG-cite path fix from 1876).
+- `STATUS: HOLD` re-affirmed (forty-three-fold over-determined) — parallel coding lane does nothing.
+- final-18 stands; final-19 due at 1900, NOT before.
+
+## Open questions
+
+Carry-over 1–14 + Q16 (re-scope triage HUMAN-due) + Q18 (HUMAN-due: #126 closure rationale + #134 merge verification, both re-verified live this pass, neither human-confirmed) + Q17 carried OPEN (live-tree absence re-verified fresh this pass; off-branch tip `72fb6f0` 2026-09-22 — owner + delivery mechanism still unnamed, no human confirmation) + PR #115 OPEN observe-only + accepted gaps (no backfill, incl. 1860 alongside 51–55/0099/0101-0102/0284-0287/0318/0422-0424/0428/0459-0460/0621-0623/1822) + Q11-narrowed + Q6/Q13 pre-R2 + Q8 conditional routing post-R2 + Q14 + Q15-CONFIRMED + sharpening (six-`updatedAt` + R′-order + 7-slot bar + P1/P2-absent + checker-OK + AST 91/5+21, all LIVE at 1880; A-matrix 468/189/201/278/130/152 re-read LIVE at 1825 + envelope legs re-read LIVE at 1826 and fresh windows at 1846/1866/1876 incl. `aulalista/urls.py:228-229` path fix + 0029 additive-nullable + `$id` ×3 + flat-schemas + README version rule + C1 three-way + nesting precision + `:56-62` quote + C3-in-commit + `test_t54:119-127` + hash-stability `:108-116` + Q8 `:1068` vs 7-site census + R2 `:2301/:2420/:2446` + `roadmap.py` 242 + zero pipeline call sites + Phase 3 two-bucket + `added_by_topup`-exclusion + Q19-closed + field-precision `mergedAt`-vs-`updatedAt` + `:190-196` docstring quote + C3 URI-namespace-vs-flat-directory reading + Phase 4 C2–C5 fresh-window re-reads at 1874 + Phase 5 A-matrix fresh `wc -l` at 1875 + Phase 6 envelope fresh windows at 1876 + Phase 7 schemas fresh windows at 1877 + Phase 8 seams fresh windows at 1878 + Phase 9 ranking fresh pins at 1879 + Phase 10 root-doc heads at 1880 — all carried by reference) — none re-opened this pass.
+
+## Ranked recommendations
+
+1. Keep `STATUS: HOLD`; respect `paused` labels (26 incl. #128, binding LIVE count this pass); observe PR #115 without acting.
+2. Human Q16+Q18 first: supersede-as-queue vs preserve-as-reference + closure/merge verification (#126 + #134, both re-verified live). It alone gates the #1 change and any ranking promotion.
+3. Human Q17: authoritative design-source commit for R′-2 (#116) onto lane base (live-tree absence re-verified fresh; off-branch tip `72fb6f0` — still off-branch, still unconfirmed).
+4. Human review/commit: uncommitted Phase A–E tree + `M`/`??` backlog (no clean base ref — load-bearing blocker; fails 7-slot item 7 for every draft).
+5. When lane opens: R1 doc-precision FIRST (C1 three-way + `:56-62` quote + `:190-196` docstring quote + nesting precision; C3 flat-path fix in-commit; C2 ADR-0010 pointer; C4 header refresh; C5 side wording), then R2 convert-to-`activity_id` switch with Q13 runner named — R2 ticket must quote the Phase 3 two-bucket policy (`exact` safe-to-dedup vs `same_title_diff_content` never-silent-merge, `staging:211-238`) and the `added_by_topup`-exclusion (`staging:190-196` docstring) as its idempotency acceptance core (tested, A-matrix + P1/P2 green), then P1/P2 in `test_t54` beside `:119-127`, then seams S5→S4→S2 with S1 LAST fused with M3 (+ Q8 `:1068` one-line accessor routing inside the seam ticket + Q15 clause). M4 never bundled; Q11 OUT; Q8 post-R2 only. Fold in: `check --deploy` fail-closed proof + settings-authority one-liner inside the R1 ticket (docs/run only, no secret rotation in-lane) + the 1876 DEBUG-cite path fix (`aulalista/urls.py:228-229`).
+6. Next pass (1881) resumes Phase 1 baseline slice under the renewed 1881–1889 carry grant (no live `gh` needed until the 1890 checkpoint); 1890 must go live. No implementation.
+
+## Ready-for-agent acceptance criteria (next ticket draft, not created)
+
+- Cite live lines (this pass fresh: settings 135 / views 2950 / models 2038 / staging 238 / services 552/27 / ADR-0010 58 / test_t54 127 (all fresh `wc -l`) + AST 91/5+21 (fresh `python3 -c`) + `roadmap_cursor` 8 hits + import `:74-75` + 7-site census `:2505/:2579/:2599/:2634/:2770/:2807/:2866` + Q8 divergent `views:1068` (fresh `grep`) + R2 `:2301/:2420/:2446` (fresh `grep -n ^def`) + zero pipeline hash call sites (fresh `grep -c` ×4) + checker OK (fresh run) + ADRs 10 (fresh `ls`) + schemas flat 4 files + tests 43 + numstat 12-2/44-4/127-681/7-0 (fresh) + gate HOLD (fresh `head -3`) + root-doc heads (fresh reads: CONTEXT/DESIGN/AGENTS/DATABASE:101-112/implementation-current:1-6/teacher-flow:116-120) / docs-branch HEAD `5e64b71` + lane lineage 1870-checkpoint / branch `supervisor/aulalista-docs` / staged 0 pre-write / 1824th no-drift / 1860-gap noted / tracker LIVE at 1880 (`--limit 100`): ready-OPEN 6 `[116,118,119,122,125,127]` with six `updatedAt` byte-identical to 1700–1870 pins, paused 26, open 32, #126 CLOSED `2026-09-25T20:03:07Z`, PR #134 MERGED `2026-09-25T16:47:51Z`, PR #115 OPEN `2026-09-27T00:24:39Z` / R′-order #116 ~4/7 best, none 7/7, Fase II ~2/7; carried-by-reference: C1 three-way + nesting precision + C2/C4/C5 + Q15-CONFIRMED + envelope legs (1826/1846/1866/1876) + Q8 blast-radius + Phase 3 two-bucket + `added_by_topup`-exclusion + field-precision `mergedAt` reading + Q19-closed + off-branch tip `72fb6f0`).
+- Draft-quality bar: all 7 slots filled or blank-with-owner (unmarked blank = 0/7 ceiling); exact allowed paths + named test files + clean base ref are the three load-bearing slots that fail every live draft today.
+- Preserve inviolable contracts + all bars/clauses/guards; Q11 OUT; M4 never bundled; fused #53+#98+#54 as ONE reference decision, #57 prerequisite, #58 stale, #55/#56/#65 peripheral; no merge/commit/issue creation — draft text in Markdown only.
+
+## Next move
+
+Next supervisor pass (1881): Phase 1 baseline slice under the renewed 1881–1889 carry grant — fingerprint/AST spot-check, no live `gh`, no cumulative/catalog/gate edits. 1890 is the next CHECKPOINT (must go live). No implementation.
+
+## Docs-only packaging (this pass: CHECKPOINT — 4 Markdown files, docs-only commit + push, no PR action beyond push lineage)
+
+This pass writes exactly 4 Markdown files (`docs/handoffs/supervisor-iteration-1880.md` + `docs/handoffs/supervisor-cumulative.md` + `docs/handoffs/supervisor-prompt-catalog.md` + `docs/handoffs/IMPLEMENTATION-GATE.md`) via the file tool — never `git add -A`, never code. Staged via explicit `git add` of those 4 paths only; `git diff --cached --name-only` verified pre-commit. Pushed to `supervisor/aulalista-docs`; PR #115 already OPEN for this branch, so the push updates it (docs-only, unmerged — never merge/approve/close per loop rules). Pre-existing working-tree changes preserved, none reverted. No PR created/updated/merged beyond the push lineage.

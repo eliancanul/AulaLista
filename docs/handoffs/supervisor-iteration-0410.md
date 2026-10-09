@@ -1,0 +1,85 @@
+# Supervisor iteration 0410 — Phase 10 checkpoint: synthesis, gap analysis, HOLD re-affirmed
+
+Iteration: 410 | Phase focus: Phase 10 — checkpoint (synthesis, gap analysis, next-loop handoff)
+Branch at pass time: `supervisor/aulalista-docs` (NOT `updated-tech`; anomaly carries over from iterations 9–50, 56–410)
+
+`git status --short --branch` at pass time (abbreviated; full output verified live):
+
+```text
+## supervisor/aulalista-docs...origin/supervisor/aulalista-docs
+ M aulalista/settings.py
+ M curriculum/models.py
+ M curriculum/views.py
+ M docs/DATABASE.md
+ M docs/implementation-current.md
+ M docs/teacher-flow.md
+ D health/templates/health/local_access.html
+?? curriculum/schemas/ + curriculum/services/ + curriculum/staging_validation.py
+?? scripts/check_migrations.py + tests/test_t54_staging_contracts.py
+?? templates/health/local_access.html
+?? docs/handoffs/ backlog (0041–0050, 0056–0098, 0103–0109, 0111–0129,
+??  0131–0139, 0141–0149, 0151–0159, 0161–0165, 0167–0179, 0181–0189,
+??  0191–0209, 0211–0229, 0231–0239, 0241–0249, 0251–0259,
+??  0261–0283, 0288–0317, 0319 + 0321–0409 still unpackaged,
+??  0318 ABSENT — no handoff on disk; checkpoint files through 0400 ARE on disk)
+?? .DS_Store + docs/.DS_Store (local Finder noise, not evidence)
+```
+
+(`git diff --numstat` fingerprint fresh this pass — settings 12/2, models 44/4, views 127/681, DATABASE 7/0, implementation-current 12/3, teacher-flow 7/1, local_access 0/25 = +209/−716 — byte-identical to the 0081–409 table. Head `6087989` — `docs: record PR 115 update in iteration 400 checkpoint` — unchanged since the 0400 pass, NOT code movement and NOT an off-cycle flip. `git log --all --oneline -8` fresh: no off-cycle flip, top two commits are the 0400 checkpoint + its PR-115 record. `ls docs/adr/` 10 files 0001–0010, fresh. `supervisor-iteration-0401.md` through `supervisor-iteration-0409.md` all confirmed present on disk, fresh.)
+
+Prior memory: `supervisor-iteration-0409.md` (Phase 9 ranking slice, decade 401–410 9/10 — full re-read) + `supervisor-iteration-0408.md` (Phase 8 seams) + `supervisor-iteration-0407.md` (Phase 7 schema) + `supervisor-iteration-0406.md` (Phase 6 envelope) + `supervisor-iteration-0405.md` (Phase 5 matrix) + `supervisor-iteration-0404.md` (Phase 4 contradiction) + `supervisor-iteration-0403.md` (Phase 3 idempotency) + `supervisor-iteration-0402.md` (Phase 2 staging-join) + `supervisor-iteration-0401.md` (Phase 1 baseline) + `supervisor-cumulative.md` (spine + deltas through 391–400 carried by reference) + `supervisor-prompt-catalog.md` (carries; updated this checkpoint) + `IMPLEMENTATION-GATE.md` (`STATUS: HOLD`, rewritten at 0250, re-affirmed through 0400 — re-affirmed this checkpoint with iteration-410 note).
+**0318 has no handoff file on disk** (observed absent at 0319–410; accepted missing evidence, same disposition as 51–55/0099/0101–0102/0166/0284–0287, no backfill; precedes decade 401–410 so decade 401–410 stands gap-free).
+
+## Scope
+
+Phase 10 checkpoint pass — synthesis, gap analysis, HOLD re-affirmation + cumulative deltas 401–410 + prompt catalog + gate re-check + docs-only PR packaging (decade 401–410 completes 10/10; cycle-5 `supervisor-final-5.md` due at iteration 500, NOT at 0410). Spec only — nothing implemented, no issue created/edited/labeled, no code/root-doc/config touched. Writes this pass: this handoff + cumulative deltas + catalog rows + gate iteration-410 note (`docs/handoffs/` Markdown only; no ADR changes — none warranted).
+
+## Files inspected
+
+- Fresh evidence: `git diff --numstat` (+209/−716, byte-identical, fresh) + head `6087989` (fresh `git log --oneline -1`, docs-only) + `git log --all --oneline -8` (fresh, no off-cycle flip) + `ls docs/adr/` (10 files 0001–0010, fresh) + `gh issue list --label ready-for-agent` (4 rows: #119 `2026-09-14T04:18:37Z` / #118 `04:18:36Z` / #117 `04:18:35Z` / #116 `04:18:34Z` — timestamp-identical to the 0249 baseline and the 0400 checkpoint, fresh) + paused-set `gh issue list --label paused` (25 rows, fresh — count-identical to the 0249 baseline) + `gh pr list --head supervisor/aulalista-docs` (single row: PR #115 OPEN, fresh) + CONTEXT.md head + AGENTS.md head (fresh, no spine contradiction) + `git diff --cached --name-only` (empty before packaging, fresh).
+- Prompt stale cites (`views.py:2875-2876,2959-2960`, `views.py:3504`, `models.py:1998`, `models.py:1125-1127`) NOT used — current lines only (checkpoint slice needs no line cites; tree pins carried from 0401–0408).
+- Read depth: 0409 full re-read at the prior pass; 0401 + 0408 headers re-read fresh this pass; 0402–0407 headers carried from their own passes (all on disk, decade gap-free); CONTEXT/AGENTS heads fresh; cumulative tail (391–400 deltas + PR record) + catalog Phase 10 tail (0370–0400 rows) full re-reads.
+
+## Findings (observed facts vs hypotheses)
+
+1. **No new tree evidence on this branch (observed).** numstat + head + `ls docs/adr/` 10 files byte-identical to the 0199–0409 fingerprint. Head `6087989` unchanged since the 0400 checkpoint pass (docs-only, NOT code movement). `git log --all -8` shows no off-cycle flip (top two commits are the 0400 checkpoint + its PR-115 record).
+   **389th consecutive no-drift pass** (388 at 0409 + 1 observed 0410; 0318 absent so not counted; the 0150/0151 duplicate-132 seam wrinkle + 51–55/0099/0101–0102/0166 gaps + 0284–0287 gap + 0318 gap stand as counting-only, no evidence impact). The standing uncommitted Phase A–E tree is never discarded or reverted.
+2. **Ready-set + paused-set + PR #115 LIVE re-queried, timestamp-identical — carry-rule, no re-grade (observed).** `gh issue list --label ready-for-agent` fresh returns exactly 4 rows with `updatedAt` byte-identical to the 0249 baseline (bodies READ in full at 0249; re-pinned at the 0400 checkpoint): #116 `04:18:34Z` / #117 `04:18:35Z` / #118 `04:18:36Z` / #119 `04:18:37Z` (all 2026-09-14). Paused-set fresh returns 25 rows (count-identical). Live grades carry from 0249: **#116 ~4/7 > #118 ~3.5–4/7 > #119 ~3.5/7 (research spike, isolated) > #117 ~3.5/7 (epic, not executable)** — none 7/7, none authorized while HOLD. Paused-set binding stop-work on the entire old lane incl. #53/#54/#57/#58/#98 stands. PR #115 OPEN (single row, observe never act).
+   **No new evidence this pass** — the checkpoint re-pins timestamps + counts + grades only. Draft-quality bar unchanged: all 7 slots filled or blank-with-owner; per-ticket gaps with 0299 close conditions (exact allowed file paths + named test files + Q13 runner for every R′ ticket + Q17 design source for R′-2); never cite the retired iteration-49 six-`updatedAt` table or the "#98 sole on-path" grade as live.
+3. **Decade 401–410 closes GAP-FREE 10/10, nineteenth gap-free decade (observed).** 0401 (Phase 1 baseline) + 0402 (Phase 2 staging-join) + 0403 (Phase 3 idempotency) + 0404 (Phase 4 contradiction) + 0405 (Phase 5 matrix) + 0406 (Phase 6 envelope) + 0407 (Phase 7 schema) + 0408 (Phase 8 seams) + 0409 (Phase 9 ranking) + 0410 (this Phase 10 checkpoint) all on disk; 0318 gap precedes the decade and does not affect it. Gate `STATUS: HOLD` live re-checked this pass (scorecard 2.5/6 + new-scope draft bar; see gate iteration-410 note).
+4. **Gap analysis — nothing new opened (observed).** Accepted missing evidence unchanged: 51–55, 0099, 0101–0102, 0166, 0284–0287, 0318 (no backfill). No number skipped in 401–410. No ADR change warranted (10 files, no new decision — HOLD re-affirmation is not a new ADR). `supervisor-final-5.md` due at 0500, NOT at 0410.
+
+## Decisions (spec only)
+
+- The single #1 architectural change is **UNDER RE-SCOPING REVIEW pending human Q16 confirmation: ADR-0010 relational staging with idempotency** (M0→M4, S1-LAST-fused-with-M3, queue R1–R5, HOLD-default gate) remains the standing code-anchored decision, BUT R1–R5 is retired as the execution vehicle per #117's explicit stop-work/re-scope, and the live executable queue is R′-1 #118 → R′-2 #116 → R′-3 #119(isolated) under epic #117 (delivery 17/09/2026). ADR-0010 survives as reference, not as the lane. Carries from 0249–0409 — this checkpoint confirms the tree + ready-set + paused-set slice, which does not change its status.
+- **Live grades carry from 0249 (timestamp-identity carry, no re-grade on a checkpoint pass): #116 ~4/7 > #118 ~3.5–4/7 > #119 ~3.5/7 (research spike) > #117 ~3.5/7 (epic, not executable).** None is 7/7. Do NOT cite any of them as authorized work — gate is HOLD.
+- **Gate: HOLD re-affirmed at live 2.5/6 + new-scope rationale (iteration-410 note appended).** Scorecard 2.5/6 + new-scope draft bar from the 0250 rewrite; 389th consecutive no-drift pass; decade 401–410 closes gap-free 10/10 (nineteenth gap-free decade); Q16 still due, Q17 narrowed-but-open; 0284–0287 + 0318 gaps recorded.
+
+## Open questions
+
+Carry-over 1–14 from iterations 50/60–88 unchanged (Phase A–E review/commit + C3-in-commit fix; loop-rule amendment for off-cycle flips; gate traceability; C1 `_norm` pick with iteration-64 nesting precision; report surface; M4 artifact Q6; C3 wording; Q8 CLOSED with dual-cited module identity; S-number pins; missing 0001/0004 + 0051–0055 accepted gaps; Q11 narrowed = validators + `Secure` + `check --deploy` + owner/runbook; branch anomaly; matrix runner Q13; Q14 answered; Q15 CONFIRMED pending the seam-ticket clause) plus the iteration-60 addition (PR-112-merge contents on `main` — still unverified from this branch) plus PR-115 merge state (OPEN per fresh 0410 re-query; carried under the grant rule — observe, never act) plus the 0099/0101/0102/0166 gaps (accepted missing evidence) plus the Finding-1 duplicate-132 seam wrinkle (counting only, no evidence impact) plus the 0284–0287 gap (accepted missing evidence — no backfill) plus Q16 (opened 0248 — re-scope triage; supersede-as-queue / preserve-as-reference input at 0249 Finding 4; gate rewrite done at 0250, HUMAN confirmation still due) plus Q17 (opened 0249 — NARROWED at 0290: the prototype exists at `codex/ui-institucional@95d1ab8`, absent from this working tree; authoritative commit confirmation + delivery onto the lane's base still needed before R′-2 is draftable) plus the 0318 gap (observed absent at 0319–410 — accepted missing evidence, no backfill; this pass contributes no delta on it). No question opened or closed this pass.
+
+## Ranked recommendations
+
+1. Keep `STATUS: HOLD`; the parallel coding lane does nothing while the gate is `HOLD` or absent — and while the `paused` stop-work labels stand. Treat "En pausa por redefinición de alcance; no ejecutar hasta repriorización explícita" as binding on the entire old lane (25 issues, carried).
+2. Human decision required (Q16): confirm supersede-as-queue / preserve-as-reference for ADR-0010/R1–R5 vs R′-queue under #117 (delivery 17/09/2026); confirm whether the Phase A–E uncommitted tree is still wanted on `supervisor/aulalista-docs` or should be reviewed/committed under the new scope first (#117 orders baseline capture + preservation, no reset/clean).
+3. Human/artifacts required (Q17, narrowed): confirm whether `codex/ui-institucional@95d1ab8`'s `prototypes/revision-planeacion-prototype/` is the authoritative design source for R′-2 (#116) and deliver it onto the lane's base (or declare it out of the agent's inputs and re-scope #116's design-fidelity GREENs). Do NOT merge across lanes from the supervisor loop — name owner + mechanism only.
+4. Next pass (0411): **Phase 1 — baseline architecture and domain contracts under the new scope** (0401-slice carried + LIVE re-verification; decade 411–420 opens; no fix implementation).
+5. Draft-quality bar for any R′-ticket draft: all 7 slots filled or explicitly marked with a named owner (blank-with-owner; unmarked blank = 0/7 ceiling); close the per-ticket gaps with their 0299 close conditions (exact allowed file paths + named test files + Q13 runner name for every R′ ticket + Q17 design source for R′-2); evidence pins quoted as current-line cites with their producing fingerprint (this pass: checkpoint LIVE — ready-set #116 `04:18:34Z` / #117 `04:18:35Z` / #118 `04:18:36Z` / #119 `04:18:37Z` (all 2026-09-14, bodies READ in full at 0249, grades Finding-carry), paused-set 25 rows LIVE, PR #115 OPEN LIVE, numstat +209/−716 byte-identical to 0081–409, head `6087989` unchanged since 0400, `git log --all -8` no flip, `ls docs/adr/` 10 files — + carried slices: baseline fresh from 0401, staging-join fresh from 0402, idempotency fresh from 0403, contradiction fresh from 0404, matrix fresh from 0405, envelope fresh from 0406, schema fresh from 0407, seams fresh from 0408, ranking fresh from 0409, checkpoint fresh from 0400, where overlapping) + respect `paused` stop-work labels absolutely; never cite the retired iteration-49 six-`updatedAt` table or the "#98 sole on-path" grade as live.
+6. Keep periphery (old #55/#56/#65, old #95/#103/#104/#107, #97, multi-worker/TLS/institutional-deploy, prototypes beyond Q17) off the new critical path per the human pause; no physical-LAN or concurrent-write claims until T13/physical runs exist. The Q11 hardening checklist stays a pre-institutional item with a named owner — never bundled into R′-1/R′-2. M4 stays a separate human-confirmed ticket with a named export artifact + restore runbook (Q6) — IF the staging lane is ever reactivated.
+
+## Ready-for-agent acceptance criteria (next ticket draft, not created)
+
+- Cite current lines (this pass: checkpoint LIVE above — ready-set timestamps + grades + paused-set 25 + PR #115 OPEN; never the prompt's stale pre-shrink numbers and never the retired "#98 sole on-path" grade) + carried slices (baseline fresh from 0401 — contract anchors `models.py:36/:137/:306/:1130/:1990`, staging-join fresh from 0402 — write sites `views.py:2221-2222/:2383-2384`, idempotency fresh from 0403 — hash/dedup report-only + `_norm` asymmetry + iteration-64 nesting precision, contradiction fresh from 0394/0404 — C1 three-way join `staging_validation.py:56-77` exact vs hash `:189-208` vs ADR-0010 `:35-37`, C2 `DATABASE.md:101-112`, C3 `models.py:1874-1880` flat-path, C4 `implementation-current.md:1-6`, C5 ADR-0006 `:29` + `teacher-flow.md:116-120`, schemas flat, matrix fresh from 0405 — A-matrix exact filenames t15 468 / t16 189 / t19 201 / t20 278 / t22 130 / t24 152 + test_t54 127, `test_t54:108-127` hash-stability + overlap, P1/P2 pending, zero pipeline call sites, `.venv` absent / Q13; envelope fresh from 0406 — staff gate `views.py:125-142` + sealed 12h + DEBUG-only + WAL + dev-defaults + Ollama 180s + zero egress, Q11-narrowed; schema fresh from 0407, seams fresh from 0408 — AST 91 / 5+21, services `results.py` 552 + `roadmap_cursor.py` 27 imported `:74-75`, `roadmap.py` 242, Q8 `:1060-1075` direct-vs-service, 7 service sites, zero pipeline hash/dedup call sites, R2 pins `:2420/:2446`, R2-before-seams + S1-LAST-fused-with-M3, ranking fresh from 0409, checkpoint fresh from 0400, where overlapping).
+- Preserve inviolable contracts (human EditorialReviewer publishes; teacher activates; AI proposes only; immutable SHA256 snapshots; synthetic DemoPackage, zero pedagogical claims) and the migration discipline (M0 precision docs-only → M1 additive → M2 re-runnable JSON-authoritative backfill → M3 flagged new-read → M4 separate human-confirmed ticket with export + runbook; per-step rollback; rule #58; #57 gate green before each step); extraction ordering R2-before-seams + S1-LAST-fused-with-M3 holds — no seam extraction before the convert-to-`activity_id` switch.
+- Draft-quality bar per ticket: all 7 slots filled or explicitly marked with a named owner (blank-with-owner; unmarked blank = 0/7 ceiling); per-ticket gaps with 0299 close conditions (#118 paths + tests + Q13 runner; #116 route decision + Q17 source + tests; #119 isolation paths + fixtures; #117 epic, not executable); queue discipline R′-1 #118 → R′-2 #116 → R′-3 #119-isolated under epic #117 (old R1→R2→R3→R4 suspended pending Q16 human confirmation); `scripts/check_migrations.py` + `makemigrations --check` clean; `docs/DATABASE.md` in the same PR iff a model/pipeline line moved (rule #58); no merge/commit/issue creation by the agent — draft issue text in Markdown only; respect `paused` stop-work labels absolutely.
+
+## Next move
+
+Next supervisor pass (iteration 411): **Phase 1 — baseline architecture and domain contracts under the new scope** (0410-slice carried + LIVE re-verification of ready-set 4 + paused-set + tree fingerprint + head + `git log --all` flip check; decade 411–420 opens; no fix implementation).
+
+## Docs-only packaging (this pass)
+
+- Checkpoint pass: cumulative deltas 401–410 + catalog Phase 9/10 rows + gate iteration-410 note + this handoff staged via explicit `git add` of `docs/handoffs/` Markdown only (never `git add -A`, never code; `git diff --cached --name-only` verified pre-commit), committed, and pushed to `supervisor/aulalista-docs` (PR #115 already OPEN — push updates it, never merge/approve/close). See cumulative §PR record (iteration-410 checkpoint) for commit hash / push range. Nothing was discarded or reverted.
+
+(End of file.)
