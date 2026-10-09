@@ -167,18 +167,11 @@ def finish_worker_success(job, owner_token: Any, dossier, now=None) -> int:
             pdf_bytes = stream.read()
     except Exception as read_exc:
         logger.warning("No se pudo leer el archivo PDF en finish_worker_success: %s", read_exc)
-        return (
-            CurriculumImportJob.objects.filter(pk=job.pk)
-            .filter(interpretation_claim_token=owner_token)
-            .update(
-                interpretation_claim_token=None,
-                interpretation_claimed_at=None,
-                interpretation_state=CurriculumImportJob.INTERPRETATION_STATE_FAILED,
-                interpretation_error_message="No se pudo leer el archivo PDF original de la planeación.",
-                progress_stage="",
-                progress_finished_at=now,
-                updated_at=now,
-            )
+        return finish_worker_failure(
+            job,
+            owner_token=owner_token,
+            error_message="No se pudo leer el archivo PDF original de la planeación.",
+            now=now,
         )
 
     # Run deterministic mechanical verification against physical PDF
@@ -195,18 +188,11 @@ def finish_worker_success(job, owner_token: Any, dossier, now=None) -> int:
             getattr(report, "blocked_count", -1),
             job.pk,
         )
-        return (
-            CurriculumImportJob.objects.filter(pk=job.pk)
-            .filter(interpretation_claim_token=owner_token)
-            .update(
-                interpretation_claim_token=None,
-                interpretation_claimed_at=None,
-                interpretation_state=CurriculumImportJob.INTERPRETATION_STATE_FAILED,
-                interpretation_error_message="La planeación contiene inconsistencias físicas o citas contradictorias con el PDF.",
-                progress_stage="",
-                progress_finished_at=now,
-                updated_at=now,
-            )
+        return finish_worker_failure(
+            job,
+            owner_token=owner_token,
+            error_message="La planeación contiene inconsistencias físicas o citas contradictorias con el PDF.",
+            now=now,
         )
 
     dossier_dict["verification_report"] = report.to_dict()
@@ -219,18 +205,11 @@ def finish_worker_success(job, owner_token: Any, dossier, now=None) -> int:
             owner_token,
             job.pk,
         )
-        return (
-            CurriculumImportJob.objects.filter(pk=job.pk)
-            .filter(interpretation_claim_token=owner_token)
-            .update(
-                interpretation_claim_token=None,
-                interpretation_claimed_at=None,
-                interpretation_state=CurriculumImportJob.INTERPRETATION_STATE_FAILED,
-                interpretation_error_message="Dossier generado no cumple el contrato de integridad física.",
-                progress_stage="",
-                progress_finished_at=now,
-                updated_at=now,
-            )
+        return finish_worker_failure(
+            job,
+            owner_token=owner_token,
+            error_message="Dossier generado no cumple el contrato de integridad física.",
+            now=now,
         )
 
     with transaction.atomic():
@@ -244,33 +223,19 @@ def finish_worker_success(job, owner_token: Any, dossier, now=None) -> int:
                 current_pdf_sha = hashlib.sha256(pdf_bytes).hexdigest()
                 if final_sha.lower() != current_pdf_sha.lower():
                     logger.warning("Tamper interleaving detected in finish_worker_success for job %s", job.pk)
-                    return (
-                        CurriculumImportJob.objects.filter(pk=job.pk)
-                        .filter(interpretation_claim_token=owner_token)
-                        .update(
-                            interpretation_claim_token=None,
-                            interpretation_claimed_at=None,
-                            interpretation_state=CurriculumImportJob.INTERPRETATION_STATE_FAILED,
-                            interpretation_error_message="El archivo PDF fue modificado concurrentemente durante la operación.",
-                            progress_stage="",
-                            progress_finished_at=now,
-                            updated_at=now,
-                        )
+                    return finish_worker_failure(
+                        job,
+                        owner_token=owner_token,
+                        error_message="El archivo PDF fue modificado concurrentemente durante la operación.",
+                        now=now,
                     )
             except Exception as final_exc:
                 logger.warning("Error re-leyendo PDF antes de CAS en finish_worker_success: %s", final_exc)
-                return (
-                    CurriculumImportJob.objects.filter(pk=job.pk)
-                    .filter(interpretation_claim_token=owner_token)
-                    .update(
-                        interpretation_claim_token=None,
-                        interpretation_claimed_at=None,
-                        interpretation_state=CurriculumImportJob.INTERPRETATION_STATE_FAILED,
-                        interpretation_error_message="No se pudo comprobar el archivo PDF antes de persistir.",
-                        progress_stage="",
-                        progress_finished_at=now,
-                        updated_at=now,
-                    )
+                return finish_worker_failure(
+                    job,
+                    owner_token=owner_token,
+                    error_message="No se pudo comprobar el archivo PDF antes de persistir.",
+                    now=now,
                 )
 
         return (
