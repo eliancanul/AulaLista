@@ -25,11 +25,36 @@ def _purpose_draft_key(job):
     return f"teacher-review-purpose-draft-{job.pk}"
 
 
+def _session_answer_drafts(request, job):
+    """Read per-turn backups, including the original single-backup shape."""
+    value = request.session.get(_draft_key(job), {})
+    if 'drafts' in value:
+        return dict(value['drafts'])
+    if value.get('turn_id'):
+        return {value['turn_id']: value}
+    return {}
+
+
+def _session_answer_draft(request, job, turn_id=None):
+    drafts = _session_answer_drafts(request, job)
+    if turn_id is not None:
+        return drafts.get(turn_id, {})
+    return next(reversed(drafts.values()), {})
+
+
 def _clear_session_draft(request, job, turn_id):
     # Saving one destination must not erase a failed submission for another.
-    key = _purpose_draft_key(job) if turn_id == PURPOSE_DRAFT_ID else _draft_key(job)
-    if request.session.get(key, {}).get('turn_id') == turn_id:
-        request.session.pop(key, None)
+    if turn_id == PURPOSE_DRAFT_ID:
+        key = _purpose_draft_key(job)
+        if request.session.get(key, {}).get('turn_id') == turn_id:
+            request.session.pop(key, None)
+        return
+    drafts = _session_answer_drafts(request, job)
+    drafts.pop(turn_id, None)
+    if drafts:
+        request.session[_draft_key(job)] = {'drafts': drafts}
+    else:
+        request.session.pop(_draft_key(job), None)
 
 
 def _parse_draft_epoch(value):
@@ -59,7 +84,14 @@ def _keep_draft(request, job, turn_id, text, mode):
     else:
         if not any(t['id'] == turn_id for t in review.state['turns']):
             return False
-        request.session[_draft_key(job)] = {'turn_id': turn_id, 'text': text, 'mode': mode}
+        drafts = _session_answer_drafts(request, job)
+        if turn_id not in drafts and len(drafts) >= MAX_QUESTIONS:
+            return False
+        # Existing per-turn last-received behavior is unchanged. This session
+        # map does not make simultaneous whole-session saves atomic.
+        drafts.pop(turn_id, None)
+        drafts[turn_id] = {'turn_id': turn_id, 'text': text, 'mode': mode}
+        request.session[_draft_key(job)] = {'drafts': drafts}
     return True
 
 
@@ -106,10 +138,14 @@ def teacher_review(request, job_id):
         review = open_review(job)
     except ReviewError as exc:
         purpose_backup = request.session.get(_purpose_draft_key(job))
-        answer_backup = request.session.get(_draft_key(job))
+        requested_turn = (request.POST.get('turn_id', '')
+                          if request.POST.get('action') in ('answer', 'edit', 'skip')
+                          else request.GET.get('edit'))
+        answer_backup = _session_answer_draft(request, job, requested_turn)
         requested_purpose = (request.POST.get('action') == 'review_purpose'
                              or request.GET.get('edit_purpose') == '1')
-        backup = (purpose_backup if requested_purpose else answer_backup or purpose_backup)
+        backup = (purpose_backup if requested_purpose else answer_backup
+                  or (purpose_backup if requested_turn is None else None))
         if backup:
             return render(request, 'curriculum/teacher_review_source_conflict.html',
                           {'job': job, 'error': str(exc), 'draft_text': backup['text'],
@@ -190,7 +226,9 @@ def teacher_review(request, job_id):
     selected = editing or active
     stored_draft = (drafts.get(selected["id"], {}) if selected
                     else next(reversed(drafts.values()), {}))
-    session_draft = request.session.get(_draft_key(job), {})
+    session_draft = _session_answer_draft(request, job, edit_id or (selected['id'] if selected else None))
+    if not edit_id and not session_draft:
+        session_draft = _session_answer_draft(request, job)
     draft = (session_draft if session_draft and (not edit_id or session_draft.get("turn_id") == edit_id)
              else stored_draft)
     draft_turn = next((t for t in state["turns"] if t["id"] == draft.get("turn_id")), None)

@@ -30,7 +30,7 @@ def test_source_conflict_keeps_submitted_answer(ready_job, monkeypatch, action):
     assert review.state == before
     assert not job.is_approved
     backup = client.session.get(f'teacher-review-draft-{job.pk}')
-    assert backup and backup['text'] == literal
+    assert backup and backup['drafts'][turn['id']]['text'] == literal
     area = BeautifulSoup(response.content, 'html.parser').find('textarea')
     assert area and area.get_text() == literal and area.has_attr('readonly')
     assert b'<script>nunca_ejecutar()</script>' not in response.content
@@ -93,7 +93,7 @@ def test_answer_conflict_does_not_hide_or_replace_separate_purpose_backup(ready_
     response = client.get(url + '?edit_purpose=1')
     page = BeautifulSoup(response.content, 'html.parser')
     assert page.find('textarea', id='preserved-purpose').get_text() == purpose['text']
-    assert client.session[f'teacher-review-draft-{job.pk}']['text'] == literal
+    assert client.session[f'teacher-review-draft-{job.pk}']['drafts'][turn['id']]['text'] == literal
 
 
 @pytest.mark.parametrize('invalid', ['turn', 'oversize', 'duplicate', 'extra_field'])
