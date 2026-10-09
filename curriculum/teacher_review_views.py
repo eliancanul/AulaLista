@@ -76,6 +76,11 @@ def teacher_review(request, job_id):
             return HttpResponseBadRequest("El formulario contiene campos duplicados o no autorizados.")
         if request.POST.get('action') == 'review_purpose':
             _keep_draft(request, job, PURPOSE_DRAFT_ID, request.POST.get('answer', ''), 'purpose')
+        elif request.POST.get('action') in ('answer', 'edit', 'skip'):
+            # A changed source can reject open_review before submit_answer runs.
+            # Preserve the literal submission first, without applying it.
+            _keep_draft(request, job, request.POST.get('turn_id'),
+                        request.POST.get('answer', ''), request.POST['action'])
         if request.POST.get("action") in ("save_draft", "discard_draft"):
             try:
                 from curriculum.source_interpreter import parse_canonical_positive_int
@@ -100,10 +105,16 @@ def teacher_review(request, job_id):
     try:
         review = open_review(job)
     except ReviewError as exc:
-        backup = request.session.get(_purpose_draft_key(job))
+        purpose_backup = request.session.get(_purpose_draft_key(job))
+        answer_backup = request.session.get(_draft_key(job))
+        requested_purpose = (request.POST.get('action') == 'review_purpose'
+                             or request.GET.get('edit_purpose') == '1')
+        backup = (purpose_backup if requested_purpose else answer_backup or purpose_backup)
         if backup:
             return render(request, 'curriculum/teacher_review_source_conflict.html',
-                          {'job': job, 'error': str(exc), 'draft_text': backup['text']}, status=exc.status)
+                          {'job': job, 'error': str(exc), 'draft_text': backup['text'],
+                           'answer_turn_id': backup['turn_id'] if backup.get('mode') != 'purpose' else None},
+                          status=exc.status)
         if request.method == "GET" and exc.status != 503:
             return redirect("tutor-import-wait", job_id=job.pk)
         return HttpResponse(str(exc), status=exc.status)
@@ -111,8 +122,6 @@ def teacher_review(request, job_id):
     answer_saved = False
     if request.method == "POST":
         action = request.POST.get("action")
-        if action in ("answer", "edit", "skip"):
-            _keep_draft(request, job, request.POST.get("turn_id"), request.POST.get("answer", ""), action)
         try:
             from curriculum.source_interpreter import parse_canonical_positive_int
             revision = parse_canonical_positive_int(request.POST.get("expected_revision"))
