@@ -898,8 +898,12 @@ class TestTask6TeacherReviewUI:
         soup = BeautifulSoup(html, "html.parser")
 
         # 1. Desktop thead has correct semantic columns: Referencia, Evidencia, Página candidata, Decisión, Acción
-        table = soup.find("table", class_="annex-table")
-        assert table is not None, "Tabla de anexos debe existir en la vista"
+        # The activity and annex tables share a visual class; target the
+        # reference table by its semantic heading, not incidental DOM order.
+        tables = [table for table in soup.find_all("table", class_="annex-table")
+                  if table.find("th") and table.find("th").get_text(strip=True) == "Referencia"]
+        assert len(tables) == 1, "Una tabla de referencias debe existir en la vista"
+        table = tables[0]
         thead = table.find("thead")
         assert thead is not None, "thead debe existir en markup semántico"
         th_elements = thead.find_all("th")

@@ -27,6 +27,7 @@ from curriculum.claims import (
     make_claim_id,
 )
 from curriculum.source_interpreter import (
+    AnnexReference,
     ORIGIN_EXTRACTED,
     ORIGIN_PROPOSED,
     ORIGIN_TEACHER_ENTERED,
@@ -99,6 +100,9 @@ class TestAtomicClaimsContract124:
             order=1,
             annex_ids=["anexo_4"],
             evidence=[SourceReference(document_sha256=doc_sha, page_number=2, excerpt="Elaborar cartel")],
+            annex_evidence={"anexo_4": [SourceReference(
+                document_sha256=doc_sha, page_number=2, excerpt="Consultar el anexo 4 para elaborar el cartel.",
+            )]},
         )
 
         # 3. Sesión de clase
@@ -112,6 +116,7 @@ class TestAtomicClaimsContract124:
                 "duracion": _make_field("duracion", "50", page=2, doc_sha=doc_sha),
             },
             activities=[activity],
+            annex_references=[AnnexReference(annex_number="4", raw_mention="anexo 4", reference_id="anexo_4")],
         )
 
         dossier = _make_dossier(doc_sha, general_fields=general_fields, sessions=[session])
