@@ -271,7 +271,7 @@ try {
   assert.ok(await evaluate('document.body.innerText').then(t=>t.includes('datos pendientes')));
   assert.equal(await evaluate("document.querySelector('.review-approval')"),null);
   const approvePath=reviewPath.replace('/interpretacion/','/aprobar/');
-  const blockedApproval=await evaluate(`fetch(${JSON.stringify(approvePath)},{method:'POST',credentials:'same-origin',body:new URLSearchParams({csrfmiddlewaretoken:document.querySelector('[name=csrfmiddlewaretoken]').value,expected_version:document.querySelector('.view-heading .muted').textContent.match(/Versión ([0-9]+)/)[1],confirm_approval:'1',confirm_pending_items:'1'})}).then(r=>r.status)`);
+  const blockedApproval=await evaluate(`fetch(${JSON.stringify(approvePath)},{method:'POST',credentials:'same-origin',body:new URLSearchParams({csrfmiddlewaretoken:document.querySelector('[name=csrfmiddlewaretoken]').value,expected_version:document.querySelector('.view-heading').textContent.match(/Versión ([0-9]+)/)[1],confirm_approval:'1',confirm_pending_items:'1'})}).then(r=>r.status)`);
   assert.ok([400,409].includes(blockedApproval),`Unresolved approval must be rejected, got ${blockedApproval}`);
   evidence.checks.push('Six-question hard stop; honest missing data; no auto-approval and direct premature approval rejected');
 

@@ -21,12 +21,18 @@ from django.utils import timezone
 
 from curriculum.models import CurriculumImportJob, CurriculumTeacherReview
 from curriculum.source_interpreter import (
-    AnnexReference, HistoryEntry, InterpretedField,
+    AnnexReference, HistoryEntry, InterpretedField, SourceReference,
     derive_operational_queue, resolve,
 )
 from curriculum.teacher_review_provider import BLOCKING_PROVIDER_ERRORS, ReviewProviderError, get_review_provider
 from curriculum.teacher_review_source import source_document_context
+from curriculum.teacher_review_questions import question_policy, question_scope_error
+from curriculum.teacher_review_quote_values import quote_matches_labelled_value
+from curriculum.learning_purpose import (
+    assess_learning_purpose, learning_purpose_scope, purpose_proposal_has_valid_shape,
+)
 
+PURPOSE_DRAFT_ID = "purpose-review"
 MAX_QUESTIONS = 6
 MAX_ANSWER = 12000
 CLAIM_TIMEOUT = timedelta(minutes=10)
@@ -248,6 +254,105 @@ def submit_answer(*, job_id, user, expected_revision, expected_version, expected
         return review, True
 
 
+
+def needs_manual_recovery(review, dossier):
+    """Silent model output cannot close unresolved required data. GET is read-only."""
+    return bool(dossier and review.state.get('status') in ('needs_input', 'limited', 'complete')
+                and not any(turn['answer'] is None for turn in review.state.get('turns', []))
+                and any(item.priority_state == 'requires_resolution' for item in targets(dossier).values()))
+
+
+def purpose_review_available(review, dossier):
+    """Allow explicit review, including an empty purpose after rejected output."""
+    if dossier is None or review.source_sha256 != dossier.source_sha256:
+        return False
+    current = dossier.general_fields.get('proposito')
+    assessments = [item for item in review.state.get('purpose_assessments', [])
+                   if item.get('source_sha256') == dossier.source_sha256]
+    human_reviews = any(item.get('source_sha256') == dossier.source_sha256
+                        for item in review.state.get('purpose_reviews', []))
+    if current is None or not current.value:
+        return bool(needs_manual_recovery(review, dossier)
+                    or any(item.get('decision') == 'abstained' for item in assessments))
+    return bool(current.origin in ('proposed', 'teacher_entered') and (human_reviews
+                or any(item.get('decision') == 'proposed' for item in assessments)))
+
+
+@_controlled_db_busy
+def request_another_question(*, job_id, user, expected_revision, expected_version):
+    """Only an explicit request can leave manual recovery for a new model call."""
+    with transaction.atomic():
+        job = CurriculumImportJob.objects.select_for_update().get(pk=job_id, created_by=user)
+        dossier = _ready(job)
+        review = CurriculumTeacherReview.objects.select_for_update().get(job=job)
+        _check(review, dossier, expected_revision, expected_version)
+        state = copy.deepcopy(review.state)
+        if state.get('error') in BLOCKING_PROVIDER_ERRORS:
+            raise ReviewError('La consulta anterior requiere revisión o conciliación antes de solicitar otra. Su registro se conserva.')
+        if len(state['turns']) >= MAX_QUESTIONS:
+            raise ReviewError('Ya se alcanzó el máximo de seis preguntas. Revisa los datos pendientes y los campos disponibles manualmente.')
+        if not needs_manual_recovery(review, dossier):
+            raise ReviewError('No hay una aclaración pendiente disponible para otra pregunta.')
+        state['status'] = 'pending'
+        state['events'].append({'kind': 'explicit_question_request', 'at': timezone.now().isoformat(),
+            'actor': user.username, 'source_sha256': dossier.source_sha256,
+            'dossier_version': dossier.version, 'questions_remaining': MAX_QUESTIONS - len(state['turns'])})
+        _cas(review, state)
+        return review
+
+
+@_controlled_db_busy
+def review_learning_purpose(*, job_id, user, expected_revision, expected_version,
+                            expected_draft_epoch, receipt, answer, confirmed):
+    """Explicit human field review, never a question, model call or approval."""
+    if confirmed is not True:
+        raise ReviewError('Confirma que revisaste el propósito antes de guardarlo.', 400)
+    if not isinstance(answer, str) or not answer.strip() or len(answer) > MAX_ANSWER:
+        raise ReviewError('Escribe el propósito revisado, hasta 12 000 caracteres.', 400)
+    try:
+        receipt = str(uuid.UUID(receipt))
+    except (ValueError, TypeError, AttributeError):
+        raise ReviewError('Identificador de envío inválido.', 400) from None
+    fingerprint = hashlib.sha256(json.dumps(['purpose_review', answer], ensure_ascii=False).encode()).hexdigest()
+    with transaction.atomic():
+        job = CurriculumImportJob.objects.select_for_update().get(pk=job_id, created_by=user)
+        dossier = _ready(job)
+        review = CurriculumTeacherReview.objects.select_for_update().get(job=job)
+        state = copy.deepcopy(review.state)
+        prior = next((item for item in state['receipts'] if item['id'] == receipt), None)
+        if prior:
+            if prior['fingerprint'] != fingerprint:
+                raise ReviewError('Este envío ya fue usado con otro texto.')
+            return review
+        _check(review, dossier, expected_revision, expected_version)
+        if type(expected_draft_epoch) is not int or expected_draft_epoch != review.draft_epoch:
+            raise ReviewError('Hay un borrador más reciente. Se conserva sin cambios; recarga antes de guardar.')
+        if not purpose_review_available(review, dossier):
+            raise ReviewError('No hay una propuesta de propósito revisable para esta fuente.')
+        before_version = dossier.version
+        dossier = resolve(dossier, {'general_fields': {'proposito': answer}},
+                          actor=user.username, pdf_source=job.pdf)
+        if dossier.version == before_version:
+            dossier = resolve(dossier, {'reviews': {'proposito': 'confirmed'}},
+                              actor=user.username, pdf_source=job.pdf)
+        if dossier.version != before_version:
+            _save_dossier(job, dossier)
+        state.setdefault('purpose_reviews', []).append({'answer': answer,
+            'source_sha256': dossier.source_sha256, 'dossier_version': dossier.version,
+            'actor': user.username, 'at': timezone.now().isoformat()})
+        state['receipts'].append({'id': receipt, 'fingerprint': fingerprint})
+        state['receipts'] = state['receipts'][-64:]
+        state['events'].append({'kind': 'human_purpose_review', 'at': timezone.now().isoformat(),
+                                'dossier_version': dossier.version, 'question_count': len(state['turns'])})
+        if state.get('status') in ('needs_input', 'limited', 'complete'):
+            state['status'] = ('asking' if any(turn['answer'] is None for turn in state['turns'])
+                else 'needs_input' if any(item.priority_state == 'requires_resolution'
+                                          for item in targets(dossier).values())
+                else 'limited' if unresolved(dossier) else 'complete')
+        _cas(review, state, dossier_version=dossier.version,
+             clear_draft_turn=PURPOSE_DRAFT_ID, expected_draft_epoch=expected_draft_epoch)
+        return review
+
 def _context(job, dossier, state):
     turns = copy.deepcopy(state["turns"])
     # Provider receives all original sessions/activities/annexes/provenance, not a
@@ -257,9 +362,10 @@ def _context(job, dossier, state):
             "questions_asked": len(turns), "max_questions": MAX_QUESTIONS,
             "questions_remaining": 0 if any(t["answer"] is None for t in turns) else MAX_QUESTIONS - len(turns),
             "all_targets": [asdict(t) for t in targets(dossier).values()]}
+    context["question_policy"] = question_policy(context["all_targets"])
     for turn in turns:
         turn["eligible_targets"] = [target for target in turn["targets"] if _answer_target_eligible(turn, target, context)] if turn["answer"] is not None else []
-    if not context["missing_fields"]:
+    if not context["question_policy"]["candidate_target_ids"]:
         context["questions_remaining"] = 0
     return context
 
@@ -284,8 +390,11 @@ def _answer_processing_pending(turn, state):
 
 
 def _validate_output(output, context):
-    if not isinstance(output, dict) or set(output) != {"question", "targets", "answer_updates"}:
+    if (not isinstance(output, dict) or not {"question", "targets", "answer_updates"}.issubset(output)
+            or set(output) - {"question", "targets", "answer_updates", "purpose_proposal"}):
         raise ReviewProviderError("invalid_output")
+    if output.get("purpose_proposal") is not None and not purpose_proposal_has_valid_shape(output["purpose_proposal"]):
+        raise ReviewProviderError("invalid_purpose_proposal")
     question, asked, updates = output["question"], output["targets"], output["answer_updates"]
     allowed = {t["target_id"] for t in context["all_targets"]}
     if not isinstance(asked, list) or not all(isinstance(t, str) and t in allowed for t in asked) or len(asked) != len(set(asked)):
@@ -298,6 +407,9 @@ def _validate_output(output, context):
         raise ReviewProviderError("invalid_completion")
     if context["questions_remaining"] == 0 and question is not None:
         raise ReviewProviderError("question_limit")
+    scope_error = question_scope_error(question, asked, context.get("question_policy"))
+    if scope_error:
+        raise ReviewProviderError(scope_error)
     if not isinstance(updates, list) or len(updates) > 200:
         raise ReviewProviderError("invalid_updates")
     turns = {t["id"]: t for t in context["turns"]}
@@ -322,6 +434,8 @@ def _validate_output(output, context):
                 or _unknown_answer(quote)
                 or not _answer_target_eligible(turn, update["target_id"], context)):
             raise ReviewProviderError("unsupported_human_value")
+        if not quote_matches_labelled_value(quote, update["target_id"], turn, context["all_targets"]):
+            raise ReviewProviderError("human_quote_includes_metadata_or_wrong_field")
         seen.add(update["target_id"])
     return output
 
@@ -366,6 +480,53 @@ def _apply_updates(job, dossier, state, output, user):
     return dossier
 
 
+
+def _purpose_policy(context):
+    current = context['dossier']['general_fields'].get('proposito', {})
+    eligible = (not current.get('value') and current.get('origin') != 'teacher_entered'
+                and current.get('review') not in ('confirmed', 'corrected'))
+    scope = learning_purpose_scope(context['source_document']) if eligible else None
+    target = next((item['target_id'] for item in context['all_targets']
+                   if item['scope'] == 'general' and item['field_name'] == 'proposito'), None)
+    public_scope = ({key: scope[key] for key in ('scope_id', 'project_heading', 'project_page', 'membership')}
+                    if scope else None)
+    return {'eligible': bool(eligible and scope and target), 'target_id': target,
+            'source_scope': public_scope, 'review_required': True}
+
+
+def _apply_purpose_candidate(dossier, state, output, context):
+    candidate = output.get('purpose_proposal')
+    if candidate is None:
+        return False
+    current = dossier.general_fields.get('proposito')
+    # Recheck AFTER human updates and against the locked current dossier. An
+    # explicit correction, including an empty human field, outranks inference.
+    if (current and (current.value or current.origin == 'teacher_entered'
+                     or current.review in ('confirmed', 'corrected'))):
+        assessment = {'decision': 'abstained', 'issues': ['current_purpose_retained'],
+                      'review': 'pending', 'value': None}
+    else:
+        assessment = assess_learning_purpose(candidate, context['source_document'])
+    assessment = {**assessment, 'source_sha256': dossier.source_sha256,
+                  'dossier_version': dossier.version, 'at': timezone.now().isoformat()}
+    state.setdefault('purpose_assessments', []).append(assessment)
+    if assessment['decision'] != 'proposed':
+        return False
+    before = current.to_dict() if current else None
+    proposed = InterpretedField(name='proposito', value=assessment['value'],
+        origin='proposed', status='ambiguous', review='pending', reason=assessment['reason'],
+        evidence=[SourceReference.from_dict(item) for item in assessment['evidence']])
+    dossier.general_fields['proposito'] = proposed
+    dossier.version += 1
+    dossier.updated_at = timezone.now().isoformat()
+    dossier.history.append(HistoryEntry(version=dossier.version, action='teacher_review_purpose_proposal',
+        actor='Asistente (propuesta)', timestamp=dossier.updated_at,
+        summary='Propósito inferido con evidencia; requiere revisión docente y no constituye aprobación.',
+        deltas=[{'scope': 'general', 'field': 'proposito', 'change_type': 'modified',
+                 'before': before, 'after': proposed.to_dict()}]).to_dict())
+    assessment['dossier_version'] = dossier.version
+    return True
+
 @_controlled_db_busy
 def advance_review(*, job_id, user, expected_revision, expected_version, provider=None):
     """One claimed request, one provider response; failures never roll back answers."""
@@ -376,8 +537,10 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
         _check(review, dossier, expected_revision, expected_version)
         state = copy.deepcopy(review.state)
         if state.get("error") in BLOCKING_PROVIDER_ERRORS:
+            if state["error"] in ("luna_response_rejected", "pi_response_rejected", "human_quote_includes_metadata_or_wrong_field"):
+                raise ReviewError("La respuesta anterior se rechazó y su recibo se conserva. No se enviará otra sin revisar el rechazo y obtener una autorización nueva.")
             raise ReviewError("La consulta anterior tiene estado y consumo pendientes de conciliación. No se enviará otra sin una autorización nueva.")
-        if state["status"] in ("complete", "limited"):
+        if state["status"] in ("complete", "limited", "needs_input"):
             return review
         # An unanswered persisted question is resumed, never regenerated by a reload/retry.
         if state["status"] == "asking":
@@ -385,8 +548,10 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
         context = _context(job, dossier, state)
         pending_answer = any(_answer_processing_pending(t, state) and not t.get("skipped")
                              and t["eligible_targets"] for t in context["turns"])
-        if not context["missing_fields"] and not pending_answer:
-            state.update(status="complete", error="")
+        if not context["question_policy"]["candidate_target_ids"] and not pending_answer:
+            unanswered = any(turn["answer"] is None for turn in state["turns"])
+            state.update(status="asking" if unanswered else
+                         "limited" if context["missing_fields"] else "complete", error="")
             for turn in state["turns"]:
                 turn["pending_processing"] = False
             _cas(review, state)
@@ -401,6 +566,7 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
         # SHA-verified byte snapshot and includes every physical page, rather
         # than assuming the interpreted dossier contains all literal PDF text.
         context["source_document"] = source_document_context(job, dossier)
+        context["purpose_policy"] = _purpose_policy(context)
         provider_output = (provider or get_review_provider())(context)
         # Keep transport accounting independently of every later application,
         # source, transaction or ownership check. Rejection is not zero usage.
@@ -420,7 +586,15 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
             failure_code = "provider_unavailable"
             state = copy.deepcopy(review.state)
             dossier = _apply_updates(job, dossier, state, output, user)
-            if output["answer_updates"]:
+            proposed_purpose = _apply_purpose_candidate(dossier, state, output, context)
+            # A valid human quote may have just resolved the last true gap.
+            # Evaluate question scope again against that resulting dossier;
+            # source confirmations and optional blanks never become new gaps.
+            scope_error = question_scope_error(output["question"], output["targets"],
+                question_policy([asdict(item) for item in targets(dossier).values()]))
+            if scope_error:
+                raise ReviewProviderError(scope_error)
+            if output["answer_updates"] or proposed_purpose:
                 _save_dossier(job, dossier)
             question = output["question"]
             unanswered = next((t for t in state["turns"] if t["answer"] is None), None)
@@ -437,7 +611,9 @@ def advance_review(*, job_id, user, expected_revision, expected_version, provide
                     raise ReviewProviderError("question_limit")
                 state["status"] = "asking"
             else:
-                state["status"] = ("asking" if unanswered and unresolved(dossier)
+                state["status"] = ("asking" if unanswered
+                                   else "needs_input" if any(item.priority_state == "requires_resolution"
+                                                            for item in targets(dossier).values())
                                    else "limited" if unresolved(dossier) else "complete")
             state["error"] = ""
             for turn in state["turns"]:
@@ -533,16 +709,24 @@ def resume_changed_dossier(*, job_id, user, expected_revision, expected_version)
 @_controlled_db_busy
 def save_local_draft(*, job_id, user, expected_revision, expected_epoch, turn_id, text, mode):
     """CAS draft writes cannot resurrect a saved/discarded or newer draft."""
-    if mode not in ("answer", "edit") or not isinstance(text, str) or len(text) > MAX_ANSWER:
+    if mode not in ("answer", "edit", "purpose") or not isinstance(text, str) or len(text) > MAX_ANSWER:
         raise ReviewError("Borrador inválido.", 400)
     review = CurriculumTeacherReview.objects.get(job_id=job_id, job__created_by=user)
     turn = next((t for t in review.state["turns"] if t["id"] == turn_id), None)
-    if (not turn or review.revision != expected_revision or review.draft_epoch != expected_epoch
-            or mode == "answer" and turn["answer"] is not None
-            or mode == "edit" and turn["answer"] is None):
+    if mode == 'purpose':
+        dossier = review.job.get_interpretation_dossier()
+        valid_target = (turn_id == PURPOSE_DRAFT_ID and purpose_review_available(review, dossier)
+                        and review.source_sha256 == dossier.source_sha256
+                        and review.dossier_version == dossier.version)
+    else:
+        valid_target = bool(turn and (mode == 'answer' and turn['answer'] is None
+                                    or mode == 'edit' and turn['answer'] is not None))
+    if not valid_target or review.revision != expected_revision or review.draft_epoch != expected_epoch:
         raise ReviewError("La pregunta o el borrador cambió. Este envío no sobrescribirá el más reciente.")
     drafts = local_drafts(review)
     drafts[turn_id] = {"turn_id": turn_id, "text": text, "mode": mode}
+    if mode == 'purpose':
+        drafts[turn_id].update(source_sha256=dossier.source_sha256, dossier_version=dossier.version)
     count = CurriculumTeacherReview.objects.filter(pk=review.pk, revision=expected_revision,
                                                   draft_epoch=expected_epoch).update(
         draft_state={"drafts": drafts},
@@ -557,7 +741,8 @@ def discard_local_draft(*, job_id, user, expected_revision, expected_epoch, turn
     review = CurriculumTeacherReview.objects.get(job_id=job_id, job__created_by=user)
     if review.revision != expected_revision or review.draft_epoch != expected_epoch:
         raise ReviewError("El borrador cambió en otra ventana; no se ha descartado.")
-    if not any(turn["id"] == turn_id for turn in review.state["turns"]):
+    if (not any(turn["id"] == turn_id for turn in review.state["turns"])
+            and not (turn_id == PURPOSE_DRAFT_ID and purpose_review_available(review, review.job.get_interpretation_dossier()))):
         raise ReviewError("Pregunta inválida.", 400)
     drafts = local_drafts(review)
     drafts.pop(turn_id, None)

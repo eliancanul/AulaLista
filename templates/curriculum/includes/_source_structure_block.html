@@ -1,0 +1,11 @@
+<li id="source-block-{{ block.block_id }}" style="margin: 0.75rem 0;">
+  <strong>{% if block.role == 'instruction' %}Instrucción{% elif block.role == 'activity' %}Actividad delimitada{% elif block.role == 'resource' %}Recurso{% elif block.role == 'question' %}Pregunta{% elif block.role == 'step' %}Paso{% elif block.role == 'heading' or block.role == 'resource_heading' %}Encabezado{% else %}Texto sin asignar{% endif %}</strong>
+  {% if block.parent_id %} · <a href="#source-block-{{ block.parent_id }}">Instrucción de referencia</a>{% endif %}
+  <p style="white-space: pre-wrap;">{{ block.text }}</p>
+  <details>
+    <summary>Ver fragmentos de origen</summary>
+    {% for ev in block.evidence %}
+      <p><a href="{% url 'tutor-import-source-page' job.pk ev.page_number %}" target="_blank" rel="noopener">Página física {{ ev.page_number }}</a>: <span style="white-space: pre-wrap;">{{ ev.excerpt }}</span></p>
+    {% endfor %}
+  </details>
+</li>

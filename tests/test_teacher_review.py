@@ -203,7 +203,7 @@ def test_backend_maximum_six_and_no_seventh_provider_question(ready_job):
         review = save(review, user, "", skip=True)
         review = advance(review, user, question)
     assert len(review.state["turns"]) == 6
-    assert review.state["status"] == "limited"
+    assert review.state["status"] == "needs_input"
     assert len(unresolved(job.get_interpretation_dossier())) > 0
     review = advance(review, user, lambda _: pytest.fail("terminal state must not call provider"))
     assert len(review.state["turns"]) == 6
@@ -460,7 +460,7 @@ def test_apply_several_literal_human_fields_in_one_question(ready_job):
     assert job.get_interpretation_dossier().general_fields["proposito"].value == "explorar"
     assert job.get_interpretation_dossier().general_fields["finalidad"].value == "colaborar"
     assert len(review.state["turns"]) == 1
-    assert review.state["status"] == "limited"
+    assert review.state["status"] == "needs_input"
 
 
 def test_edit_cannot_create_uncounted_replacement_question(ready_job):
@@ -553,22 +553,22 @@ def test_edit_annex_removes_own_old_mapping_even_when_next_provider_fails(ready_
 def test_missing_absent_field_is_added_and_edit_can_restore_absence(ready_job):
     _, user, job = ready_job
     dossier = job.get_interpretation_dossier()
-    dossier.general_fields.pop("grado")
+    dossier.general_fields.pop("proposito")
     dossier.version += 1
     job.save_interpretation_dossier(dossier)
     def ask_absent(context):
-        item = next(t for t in context["missing_fields"] if t["field_name"] == "grado")
-        return {"question": "¿Para qué grado planeas la actividad?", "targets": [item["target_id"]], "answer_updates": []}
-    review = advance(save(start(job, user, ask_absent), user, "Quinto grado"), user, _apply_last_only)
+        item = next(t for t in context["missing_fields"] if t["field_name"] == "proposito")
+        return {"question": "¿Qué propósito tiene la actividad?", "targets": [item["target_id"]], "answer_updates": []}
+    review = advance(save(start(job, user, ask_absent), user, "Comparar relatos"), user, _apply_last_only)
     assert not review.state["error"]
     job.refresh_from_db()
-    assert job.get_interpretation_dossier().general_fields["grado"].value == "Quinto grado"
+    assert job.get_interpretation_dossier().general_fields["proposito"].value == "Comparar relatos"
     turn = review.state["turns"][0]
     review, _ = submit_answer(job_id=job.pk, user=user, expected_revision=review.revision,
         expected_version=review.dossier_version, expected_draft_epoch=review.draft_epoch, receipt=str(uuid.uuid4()),
         turn_id=turn["id"], answer="No sé", edit=True)
     job.refresh_from_db()
-    assert "grado" not in job.get_interpretation_dossier().general_fields
+    assert "proposito" not in job.get_interpretation_dossier().general_fields
     assert review.state["turns"][0]["answer"] == "No sé"
 
 

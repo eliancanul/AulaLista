@@ -61,7 +61,7 @@ def test_generated_fixture_actual_upload_and_adaptive_provider(settings,monkeypa
         assert post_form('skip','').status_code==302
     job.refresh_from_db()
     assert len(job.teacher_review.state['turns'])==6
-    assert job.teacher_review.state['status']=='limited',job.teacher_review.state
+    assert job.teacher_review.state['status']=='needs_input',job.teacher_review.state
     blocked=c.post(reverse('tutor-import-approve',args=[job.pk]),{'csrfmiddlewaretoken':c.cookies['csrftoken'].value,'expected_version':job.get_interpretation_dossier().version,'confirm_approval':'1','confirm_pending_items':'1'})
     assert blocked.status_code in (400,409)
     resolved=complete_job(teacher,pdf)

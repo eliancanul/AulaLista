@@ -1,0 +1,83 @@
+{
+  "schema": "aulalista.synthetic.source-context-counterexamples.v1",
+  "reference_author": "AI synthetic development reference, not human gold",
+  "exposure": "Derived grammatical/context shapes from an already exposed development document; contains fictional replacement content only. Not holdout.",
+  "publication_or_teacher_acceptance": false,
+  "no_expected_total_activity_cardinality": true,
+  "cases": [
+    {
+      "case": "homework_plain_infinitive",
+      "pages": [
+        "Fase 1. Planeación\nDESARROLLO DEL PROYECTO\nRecursos e\nimplicaciones\n-Bitácora.\n- ¿Qué lugares conocidos del patio consideran\nadecuados para observar señales?\nTAREA:\nRealizar un recorrido por el patio de la escuela junto con una\npersona adulta para registrar señales. Guiarse con la\nactividad «¿Qué encuentro en el patio?», donde se\nproponen preguntas para ordenar las notas.\n"
+      ],
+      "target_text_prefix": "Realizar un recorrido por el patio",
+      "target_marker": null,
+      "preceding_label": "TAREA:",
+      "preceding_context": "Wrapped question followed by a separate homework label; earlier resource headings leave resource_context true.",
+      "following_context": "Lowercase continuation, then a line beginning actividad with a fictional title.",
+      "observed_current_role_expected_for_reproduction": "unassigned",
+      "proposed_reference_role": "instruction_candidate",
+      "semantic_limit": "Explicit task action; principal-activity cardinality and line grouping require review. Label itself need not be an activity."
+    },
+    {
+      "case": "adverbial_infinitive_after_resources",
+      "pages": [
+        "Fase 3. Intervención\nRecursos e\nimplicaciones\n-Bitácora.\n-Bitácora.\n Individualmente,  realizar  los  ajustes  necesarios  a  su\nregistro de acuerdo con los comentarios del equipo.\n Copiar  en  fichas  las  conclusiones  e  incluir  los\ndibujos que ayuden a interpretarlas.\n"
+      ],
+      "target_text_prefix": "Individualmente,  realizar",
+      "target_marker": "U+F0B7",
+      "preceding_label": "Recursos e / implicaciones",
+      "preceding_context": "Two tightly prefixed resource bullets -Bitácora. immediately before target.",
+      "following_context": "Lowercase continuation, then another U+F0B7 bullet beginning Copiar, with lowercase continuation.",
+      "observed_current_role_expected_for_reproduction": "resource",
+      "proposed_reference_role": "instruction_candidate",
+      "semantic_limit": "Individually making adjustments is an explicit action; this does not adjudicate lesson boundaries or activity count."
+    }
+  ],
+  "unicode_fragment_case": {
+    "pages": [
+      "A🦉áé\r\n¿Sí?\n"
+    ],
+    "source_text_utf8_sha256": "c297da806ca69015a99366eed83f62fae276986433bf5d1ac1e4b86c59207832",
+    "hash_scope": "Exact synthetic text UTF-8 bytes, not a PDF hash.",
+    "fragments": [
+      {
+        "page_number": 1,
+        "text_start": 1,
+        "text_end": 5,
+        "excerpt": "🦉áé",
+        "offset_unit": "Unicode code points (Python str indices)",
+        "contrasting_utf8_byte_offsets": [
+          1,
+          10
+        ],
+        "contrasting_utf16_code_unit_offsets": [
+          1,
+          6
+        ]
+      },
+      {
+        "page_number": 1,
+        "text_start": 7,
+        "text_end": 11,
+        "excerpt": "¿Sí?",
+        "offset_unit": "Unicode code points (Python str indices)",
+        "contrasting_utf8_byte_offsets": [
+          12,
+          18
+        ],
+        "contrasting_utf16_code_unit_offsets": [
+          8,
+          12
+        ]
+      }
+    ],
+    "preserve": [
+      "astral emoji",
+      "precomposed á",
+      "decomposed e + U+0301",
+      "CRLF and LF as written"
+    ],
+    "expected": "Every Python str character slice reproduces excerpt exactly; no silent NFC or newline normalization. Offset units must be explicit across runtimes."
+  }
+}

@@ -16,7 +16,7 @@ from curriculum.agy_transport.artifact_io import commit_json
 from curriculum.agy_transport.audit import strict_json, utc
 from curriculum.agy_transport.capture import capture_attempt
 from curriculum.teacher_review_provider import ReviewProviderError, RESPONSE_SCHEMA, SYSTEM
-from curriculum.teacher_review_context import encode_provider_context
+from curriculum.teacher_review_task_context import provider_task_payload
 
 VERIFIED_MODEL = "gemini-3.8-flash-high"  # exact ID observed in official catalogue, 2026-10-03
 VERIFIED_VERSION = "1.2.15"
@@ -100,8 +100,8 @@ class GeminiHighAgyProvider:
         preflight = self.preflight()
         # The full dossier is never silently truncated to fit a provider limit.
         try:
-            encoded_context = encode_provider_context(context)
-            prompt = SYSTEM + "\nDATOS:\n" + json.dumps(
+            system, encoded_context = provider_task_payload(context)
+            prompt = system + "\nDATOS:\n" + json.dumps(
                 encoded_context, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
         except (TypeError, ValueError):
             raise ReviewProviderError("invalid_target_reference_context") from None

@@ -10,6 +10,7 @@ from curriculum.teacher_review import (
     CLAIM_TIMEOUT, MAX_ANSWER, MAX_QUESTIONS, ReviewError, advance_review, open_review,
     recover_stale_claim, resume_changed_dossier, submit_answer, unresolved,
     save_local_draft, discard_local_draft, local_drafts,
+    PURPOSE_DRAFT_ID, purpose_review_available, review_learning_purpose, needs_manual_recovery, request_another_question,
 )
 from curriculum.source_interpreter import derive_operational_queue
 from curriculum.teacher_review_provider import BLOCKING_PROVIDER_ERRORS, provider_configuration_notice
@@ -18,6 +19,42 @@ from curriculum.views import teacher_required
 
 def _draft_key(job):
     return f"teacher-review-draft-{job.pk}"
+
+
+def _purpose_draft_key(job):
+    return f"teacher-review-purpose-draft-{job.pk}"
+
+
+def _session_answer_drafts(request, job):
+    """Read per-turn backups, including the original single-backup shape."""
+    value = request.session.get(_draft_key(job), {})
+    if 'drafts' in value:
+        return dict(value['drafts'])
+    if value.get('turn_id'):
+        return {value['turn_id']: value}
+    return {}
+
+
+def _session_answer_draft(request, job, turn_id=None):
+    drafts = _session_answer_drafts(request, job)
+    if turn_id is not None:
+        return drafts.get(turn_id, {})
+    return next(reversed(drafts.values()), {})
+
+
+def _clear_session_draft(request, job, turn_id):
+    # Saving one destination must not erase a failed submission for another.
+    if turn_id == PURPOSE_DRAFT_ID:
+        key = _purpose_draft_key(job)
+        if request.session.get(key, {}).get('turn_id') == turn_id:
+            request.session.pop(key, None)
+        return
+    drafts = _session_answer_drafts(request, job)
+    drafts.pop(turn_id, None)
+    if drafts:
+        request.session[_draft_key(job)] = {'drafts': drafts}
+    else:
+        request.session.pop(_draft_key(job), None)
 
 
 def _parse_draft_epoch(value):
@@ -30,9 +67,31 @@ def _keep_draft(request, job, turn_id, text, mode):
     if not isinstance(text, str) or len(text) > MAX_ANSWER:
         return False
     review = CurriculumTeacherReview.objects.filter(job=job).first()
-    if not review or not any(t["id"] == turn_id for t in review.state["turns"]):
+    if not review:
         return False
-    request.session[_draft_key(job)] = {"turn_id": turn_id, "text": text, "mode": mode}
+    if mode == 'purpose':
+        if turn_id != PURPOSE_DRAFT_ID:
+            return False
+        if not (review.state.get('status') in ('needs_input', 'limited', 'complete')
+                or review.state.get('purpose_reviews')
+                or any(item.get('decision') in ('proposed', 'abstained')
+                       for item in review.state.get('purpose_assessments', []))):
+            return False
+        # A conflict backup is only literal user text, never authority to apply
+        # it to a changed PDF. Keep it even when readiness has just been lost.
+        request.session[_purpose_draft_key(job)] = {'turn_id': turn_id, 'text': text, 'mode': mode,
+            'source_sha256': review.source_sha256, 'dossier_version': request.POST.get('expected_version')}
+    else:
+        if not any(t['id'] == turn_id for t in review.state['turns']):
+            return False
+        drafts = _session_answer_drafts(request, job)
+        if turn_id not in drafts and len(drafts) >= MAX_QUESTIONS:
+            return False
+        # Existing per-turn last-received behavior is unchanged. This session
+        # map does not make simultaneous whole-session saves atomic.
+        drafts.pop(turn_id, None)
+        drafts[turn_id] = {'turn_id': turn_id, 'text': text, 'mode': mode}
+        request.session[_draft_key(job)] = {'drafts': drafts}
     return True
 
 
@@ -44,9 +103,16 @@ def teacher_review(request, job_id):
         from curriculum.views import tutor_import_interpretation
         return tutor_import_interpretation(request, job_id)
     if request.method == "POST":
-        allowed = {"csrfmiddlewaretoken", "action", "expected_version", "expected_revision", "receipt", "turn_id", "answer", "draft_mode", "draft_epoch"}
+        allowed = {"csrfmiddlewaretoken", "action", "expected_version", "expected_revision", "receipt", "turn_id", "answer", "draft_mode", "draft_epoch", "confirm_purpose_review"}
         if any(k not in allowed or len(request.POST.getlist(k)) != 1 for k in request.POST):
             return HttpResponseBadRequest("El formulario contiene campos duplicados o no autorizados.")
+        if request.POST.get('action') == 'review_purpose':
+            _keep_draft(request, job, PURPOSE_DRAFT_ID, request.POST.get('answer', ''), 'purpose')
+        elif request.POST.get('action') in ('answer', 'edit', 'skip'):
+            # A changed source can reject open_review before submit_answer runs.
+            # Preserve the literal submission first, without applying it.
+            _keep_draft(request, job, request.POST.get('turn_id'),
+                        request.POST.get('answer', ''), request.POST['action'])
         if request.POST.get("action") in ("save_draft", "discard_draft"):
             try:
                 from curriculum.source_interpreter import parse_canonical_positive_int
@@ -56,13 +122,13 @@ def teacher_review(request, job_id):
                     discard_local_draft(job_id=job.pk, user=request.user,
                         expected_revision=revision, expected_epoch=epoch,
                         turn_id=request.POST.get("turn_id"))
-                    request.session.pop(_draft_key(job), None)
+                    _clear_session_draft(request, job, request.POST.get('turn_id'))
                     return redirect("tutor-import-interpretation", job_id=job.pk)
                 next_epoch = save_local_draft(job_id=job.pk, user=request.user,
                     expected_revision=revision, expected_epoch=epoch,
                     turn_id=request.POST.get("turn_id"), text=request.POST.get("answer", ""),
                     mode=request.POST.get("draft_mode", "answer"))
-                request.session.pop(_draft_key(job), None)
+                _clear_session_draft(request, job, request.POST.get('turn_id'))
                 return JsonResponse({"saved": True, "kind": "local_draft", "draft_epoch": next_epoch})
             except (ValueError, TypeError):
                 return JsonResponse({"saved": False, "error": "invalid_draft_version"}, status=400)
@@ -71,6 +137,20 @@ def teacher_review(request, job_id):
     try:
         review = open_review(job)
     except ReviewError as exc:
+        purpose_backup = request.session.get(_purpose_draft_key(job))
+        requested_turn = (request.POST.get('turn_id', '')
+                          if request.POST.get('action') in ('answer', 'edit', 'skip')
+                          else request.GET.get('edit'))
+        answer_backup = _session_answer_draft(request, job, requested_turn)
+        requested_purpose = (request.POST.get('action') == 'review_purpose'
+                             or request.GET.get('edit_purpose') == '1')
+        backup = (purpose_backup if requested_purpose else answer_backup
+                  or (purpose_backup if requested_turn is None else None))
+        if backup:
+            return render(request, 'curriculum/teacher_review_source_conflict.html',
+                          {'job': job, 'error': str(exc), 'draft_text': backup['text'],
+                           'answer_turn_id': backup['turn_id'] if backup.get('mode') != 'purpose' else None},
+                          status=exc.status)
         if request.method == "GET" and exc.status != 503:
             return redirect("tutor-import-wait", job_id=job.pk)
         return HttpResponse(str(exc), status=exc.status)
@@ -78,13 +158,18 @@ def teacher_review(request, job_id):
     answer_saved = False
     if request.method == "POST":
         action = request.POST.get("action")
-        if action in ("answer", "edit", "skip"):
-            _keep_draft(request, job, request.POST.get("turn_id"), request.POST.get("answer", ""), action)
         try:
             from curriculum.source_interpreter import parse_canonical_positive_int
             revision = parse_canonical_positive_int(request.POST.get("expected_revision"))
             version = parse_canonical_positive_int(request.POST.get("expected_version"))
-            if action in ("answer", "edit", "skip"):
+            if action == 'review_purpose':
+                review = review_learning_purpose(job_id=job.pk, user=request.user,
+                    expected_revision=revision, expected_version=version,
+                    expected_draft_epoch=_parse_draft_epoch(request.POST.get('draft_epoch', '')),
+                    receipt=request.POST.get('receipt'), answer=request.POST.get('answer', ''),
+                    confirmed=request.POST.get('confirm_purpose_review') == '1')
+                _clear_session_draft(request, job, PURPOSE_DRAFT_ID)
+            elif action in ("answer", "edit", "skip"):
                 review, changed = submit_answer(
                     job_id=job.pk, user=request.user, expected_revision=revision,
                     expected_version=version,
@@ -93,11 +178,16 @@ def teacher_review(request, job_id):
                     turn_id=request.POST.get("turn_id"), answer=request.POST.get("answer", ""),
                     edit=action == "edit", skip=action == "skip")
                 answer_saved = True
-                request.session.pop(_draft_key(job), None)
+                _clear_session_draft(request, job, request.POST.get('turn_id'))
                 saved_message = "Respuesta guardada. Puedes salir y retomar aquí."
                 if changed:
                     review = advance_review(job_id=job.pk, user=request.user,
                         expected_revision=review.revision, expected_version=review.dossier_version)
+            elif action == 'request_question':
+                review = request_another_question(job_id=job.pk, user=request.user,
+                    expected_revision=revision, expected_version=version)
+                review = advance_review(job_id=job.pk, user=request.user,
+                    expected_revision=review.revision, expected_version=review.dossier_version)
             elif action == "resume_changed":
                 review = resume_changed_dossier(job_id=job.pk, user=request.user,
                     expected_revision=revision, expected_version=version)
@@ -136,7 +226,9 @@ def teacher_review(request, job_id):
     selected = editing or active
     stored_draft = (drafts.get(selected["id"], {}) if selected
                     else next(reversed(drafts.values()), {}))
-    session_draft = request.session.get(_draft_key(job), {})
+    session_draft = _session_answer_draft(request, job, edit_id or (selected['id'] if selected else None))
+    if not edit_id and not session_draft:
+        session_draft = _session_answer_draft(request, job)
     draft = (session_draft if session_draft and (not edit_id or session_draft.get("turn_id") == edit_id)
              else stored_draft)
     draft_turn = next((t for t in state["turns"] if t["id"] == draft.get("turn_id")), None)
@@ -153,8 +245,40 @@ def teacher_review(request, job_id):
     stale = review.dossier_version != dossier.version or review.source_sha256 != dossier.source_sha256
     display_turns = [{**t, "prior_source": t.get("answer_source_sha256") != dossier.source_sha256}
                      for t in state["turns"]]
+    manual_recovery = needs_manual_recovery(review, dossier)
+    can_review_purpose = purpose_review_available(review, dossier)
+    purpose_field = dossier.general_fields.get('proposito')
+    purpose_is_missing = purpose_field is None or not purpose_field.value
+    purpose_rejected = purpose_is_missing and any(item.get('decision') == 'abstained'
+        and item.get('source_sha256') == dossier.source_sha256 for item in state.get('purpose_assessments', []))
+    purpose_backup = request.session.get(_purpose_draft_key(job), {})
+    requested_purpose = (request.GET.get('edit_purpose') == '1'
+        or request.method == 'POST' and request.POST.get('action') == 'review_purpose')
+    orphaned_purpose_backup = bool(purpose_backup and (not can_review_purpose
+        or purpose_backup.get('source_sha256') != dossier.source_sha256))
+    if requested_purpose and orphaned_purpose_backup:
+        return render(request, 'curriculum/teacher_review_source_conflict.html',
+            {'job': job, 'error': 'Este texto pertenece a una revisión anterior; no se aplicó a la fuente actual.',
+             'draft_text': purpose_backup['text']}, status=409)
+    editing_purpose = can_review_purpose and requested_purpose
+    purpose_text = (purpose_field.value if purpose_field and purpose_field.value is not None else '') if can_review_purpose else ''
+    purpose_draft = drafts.get(PURPOSE_DRAFT_ID, {})
+    if editing_purpose and purpose_draft.get('source_sha256') == dossier.source_sha256:
+        purpose_text = purpose_draft['text']
+    if editing_purpose and purpose_backup.get('source_sha256') == dossier.source_sha256:
+        purpose_text = purpose_backup['text']
+    if editing_purpose and request.method == 'POST':
+        purpose_text = request.POST.get('answer', purpose_text)
     context = {"job": job, "dossier": dossier, "review": review, "state": state,
         "provider_notice": provider_configuration_notice(),
+        'can_review_purpose': can_review_purpose, 'editing_purpose': editing_purpose,
+        'manual_recovery': manual_recovery, 'purpose_is_missing': purpose_is_missing,
+        'purpose_rejected': purpose_rejected, 'display_review_state': 'needs_input' if manual_recovery else state['status'],
+        'can_request_question': manual_recovery and len(state['turns']) < MAX_QUESTIONS
+            and not stale and not review.generation_token and state.get('error') not in BLOCKING_PROVIDER_ERRORS,
+        'purpose_text': purpose_text, 'purpose_draft_id': PURPOSE_DRAFT_ID,
+        'purpose_draft_stale': bool(purpose_draft and purpose_draft.get('dossier_version') != dossier.version),
+        'purpose_conflict_backup': bool(purpose_backup), 'purpose_recovery_available': orphaned_purpose_backup,
         "provider_blocked": state.get("error") in BLOCKING_PROVIDER_ERRORS,
         "turns": display_turns, "active": active, "editing": editing, "form_turn": form_turn,
         "form_text": form_text, "has_draft": bool(draft_turn),
@@ -163,7 +287,7 @@ def teacher_review(request, job_id):
         "receipt": str(uuid.uuid4()), "stale": stale,
         "has_active_approval": job.is_approved,
         "can_approve": queue.requires_resolution_count == 0 and not review.generation_token
-            and state["status"] in ("complete", "limited") and not stale,
+            and state["status"] in ("complete", "limited") and not stale and not editing_purpose,
         "pending_count": queue.pending_review_count,
         "interrupted": bool(review.generation_started_at and timezone.now() - review.generation_started_at >= CLAIM_TIMEOUT)}
     return render(request, "curriculum/tutor_teacher_review.html", context, status=status)

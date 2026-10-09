@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AulaLista · texto conservado</title></head>
+<body><main>
+  <h1>Tu revisión está conservada</h1>
+  <p role="alert">{{ error }}</p>
+  <p>El texto enviado no se aplicó a la planeación. Se conserva en este navegador mientras compruebas la fuente.</p>
+  {% if answer_turn_id %}
+  <label for="preserved-answer">Respuesta pendiente de guardar</label>
+  <textarea id="preserved-answer" rows="8" readonly>{{ draft_text }}</textarea>
+  <p><a href="{% url 'tutor-import-interpretation' job.pk %}?edit={{ answer_turn_id|urlencode }}">Reintentar abrir la respuesta</a></p>
+  {% else %}
+  <label for="preserved-purpose">Revisión de propósito pendiente de guardar</label>
+  <textarea id="preserved-purpose" rows="8" readonly>{{ draft_text }}</textarea>
+  <p><a href="{% url 'tutor-import-interpretation' job.pk %}?edit_purpose=1">Reintentar abrir la revisión</a></p>
+  {% endif %}
+  <p><a href="{% url 'tutor-import-interpretation' job.pk %}">Volver a la planeación actual</a> · <a href="{% url 'tutor-curriculum' %}">Volver a currícula</a></p>
+</main></body>
+</html>

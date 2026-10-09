@@ -284,7 +284,11 @@ def test_existing_phase_review_is_also_bounded_by_an_untitled_restart():
     assert all("listones" not in a.description for a in s.activities)
     assert NEW_METADATA in s.layout_notes
     s.layout_notes = ""
-    f = s.fields["inicio"]
+    assert "inicio" not in s.fields
+    f = s.fields["inicio"] = InterpretedField(
+        name="inicio", value="Observar una piedra.",
+        evidence=[SourceReference(d.source_sha256, 1, excerpt="Observar una piedra.")],
+    )
     f.status, f.origin = "supported", "extracted"
     assert not checked_for(verify_curriculum_dossier(d, source(pages)), f"session.{s.session_id}.inicio")
 
@@ -394,7 +398,7 @@ def test_phase_verifier_cannot_relocate_the_source_unit_using_declared_pages(sid
     s.session_id, s.pages = sid, [2]
     s.project_context = s.header_anchor = None
     s.layout_notes, s.status = "", "supported"
-    f = s.fields["inicio"]
+    f = s.fields["inicio"] = InterpretedField(name="inicio", value="")
     f.value, f.origin, f.status = "Comparar dos listones.", "extracted", "supported"
     f.evidence = [SourceReference(d.source_sha256, 2, excerpt="Comparar dos listones.")]
     assert not checked_for(verify_curriculum_dossier(d, source(pages)), f"session.{sid}.inicio")
@@ -406,6 +410,10 @@ def test_unique_legacy_phase_unit_still_verifies_with_its_true_source_page():
     s = d.sessions[0]
     s.session_id = "legacy_project_review"
     s.project_context = s.header_anchor = None
-    f = s.fields["inicio"]
+    s.unit_kind, s.source_structure = "unknown", None
+    f = s.fields["inicio"] = InterpretedField(
+        name="inicio", value="Observar una piedra.",
+        evidence=[SourceReference(d.source_sha256, 1, excerpt="Observar una piedra.")],
+    )
     f.origin, f.status = "extracted", "supported"
     assert checked_for(verify_curriculum_dossier(d, source(pages)), "session.legacy_project_review.inicio")

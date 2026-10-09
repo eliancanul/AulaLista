@@ -7,21 +7,24 @@
   <link rel="stylesheet" href="{% static 'curriculum/aulalista.css' %}">
   <link rel="stylesheet" href="{% static 'curriculum/institutional.css' %}">
   <link rel="stylesheet" href="{% static 'curriculum/teacher-review.css' %}">
+  <link rel="stylesheet" href="{% static 'curriculum/editorial.css' %}">
 </head>
-<body>
+<body class="editorial-ui workspace-ui">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 {% include "curriculum/tutor_nav.html" %}
-<main id="contenido" class="shell teacher-page review-shell">
-  <a href="{% url 'tutor-curriculum' %}">← Currícula y autoría</a>
-  <header class="view-heading"><h1>Revisar planeación</h1>
+<main id="contenido" class="shell teacher-page review-shell" tabindex="-1">
+  <a class="flow-back" href="{% url 'tutor-curriculum' %}">← Currícula y autoría</a>
+  <ol class="flow-steps" aria-label="Recorrido de la planeación"><li><span>1</span> Subir PDF</li><li{% if not can_approve and not has_active_approval %} aria-current="step"{% endif %}><span>2</span> Revisar y aclarar</li><li{% if can_approve or has_active_approval %} aria-current="step"{% endif %}><span>3</span> Confirmar versión</li></ol>
+  <header class="view-heading"><p class="eyebrow">LA FUENTE, TUS APORTES Y TU DECISIÓN</p><h1>Revisar planeación</h1>
     <p>Una pregunta a la vez, con un máximo de seis. Cada respuesta se guarda antes de continuar.</p>
-    <p class="muted">{{ dossier.source_name }} · {{ dossier.sessions|length }} sesiones · Versión {{ dossier.version }}</p>
+    <p class="review-file-meta"><span>{{ dossier.source_name }}</span><span>{{ dossier.sessions|length }} unidades · {{ dossier.declared_session_count }} sesiones declaradas</span><span>Versión {{ dossier.version }}</span></p>
   </header>
-  <section class="review-box" aria-labelledby="review-question-heading" data-review-state="{{ state.status }}" data-asked-count="{{ asked_count }}">
-    <p class="muted">{{ asked_count }} de {{ max_questions }} preguntas planteadas · Tus respuestas se conservan al salir</p>
+  <section class="review-box" aria-labelledby="review-question-heading" data-review-state="{{ display_review_state }}" data-asked-count="{{ asked_count }}">
+    <p class="review-progress"><strong>{{ asked_count }} de {{ max_questions }} preguntas planteadas</strong><span>Tus respuestas se conservan al salir</span></p>
     {% if not provider_blocked %}<p id="provider-configuration-status" role="status" data-provider-status="{{ provider_notice.code }}">{{ provider_notice.message }}</p>{% endif %}
     {% if error %}<p role="alert" class="review-error">{{ error }}</p>{% endif %}
     {% if saved_message %}<p role="status">{{ saved_message }}</p>{% endif %}
+    {% if purpose_rejected %}<p role="status" data-purpose-rejected>La propuesta automática de propósito no se aplicó: sus citas o evidencias no pasaron la comprobación. El rechazo y el registro de la consulta se conservan. Puedes completar el propósito manualmente.</p>{% endif %}
     {% if review.generation_token %}
       <p role="status">La última respuesta enviada está guardada. La siguiente consulta sigue en preparación.</p>
       {% if interrupted %}<form method="post">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ dossier.version }}"><input type="hidden" name="expected_revision" value="{{ review.revision }}"><button name="action" value="retry_interrupted">Recuperar la consulta interrumpida</button></form>{% else %}<a href="{% url 'tutor-import-interpretation' job.pk %}">Comprobar estado</a>{% endif %}
@@ -30,7 +33,30 @@
       <p role="status">La planeación cambió. Tus respuestas y el borrador se conservan. Comprueba la nueva fuente antes de retomar.</p>
       {% if not review.generation_token %}<form method="post">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ dossier.version }}"><input type="hidden" name="expected_revision" value="{{ review.revision }}"><button name="action" value="resume_changed">Retomar con esta versión</button></form>{% endif %}
     {% endif %}
-    {% if form_turn %}
+    {% if editing_purpose %}
+      <h2 id="review-question-heading">{% if purpose_is_missing %}Completar propósito de aprendizaje{% else %}Revisar propósito de aprendizaje{% endif %}</h2>
+      {% if purpose_is_missing %}<p>Escribe qué deben aprender las alumnas y los alumnos. Se guardará como aporte tuyo, sin consultar al modelo ni incorporar la propuesta rechazada.</p>{% else %}<p>Edita la propuesta o conserva su texto si corresponde. Esta revisión no añade una pregunta y conserva tus respuestas pendientes.</p>{% endif %}
+      {% if purpose_conflict_backup %}<p role="status">Se conserva el texto de un envío que no se aplicó. Revisa el valor guardado antes de continuar: {{ dossier.general_fields.proposito.value }}</p>{% endif %}
+      {% if purpose_draft_stale %}<p role="status">Este borrador pertenece a una versión anterior. Revisa la fuente actual antes de guardarlo.</p>{% endif %}
+      <form method="post" id="teacher-answer-form" data-purpose-review>
+        {% csrf_token %}
+        <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+        <input type="hidden" name="expected_revision" value="{{ review.revision }}">
+        <input type="hidden" name="draft_epoch" value="{{ review.draft_epoch }}">
+        <input type="hidden" name="receipt" value="{{ receipt }}">
+        <input type="hidden" name="turn_id" value="{{ purpose_draft_id }}">
+        <input type="hidden" name="draft_mode" value="purpose">
+        <label for="teacher-answer">Propósito revisado</label>
+        <textarea id="teacher-answer" name="answer" rows="5" maxlength="12000" aria-describedby="draft-status" autofocus>{{ purpose_text }}</textarea>
+        <p id="draft-status" class="muted" role="status" aria-live="polite">Guardar este campo no aprueba ni publica la planeación.</p>
+        <label><input type="checkbox" name="confirm_purpose_review" value="1" required> He revisado el propósito de la caja y confirmo que quiero guardarlo.</label>
+        <div class="review-actions">
+          <button class="primary-action" type="submit" name="action" value="review_purpose"{% if stale or review.generation_token %} disabled data-domain-disabled="true"{% endif %}>Guardar revisión del propósito</button>
+          <button type="submit" name="action" value="discard_draft" formnovalidate>Volver sin cambiar</button>
+        </div>
+      </form>
+      {% include "curriculum/teacher_review_evidence.html" with evidence=dossier.general_fields.proposito.evidence %}
+    {% elif form_turn %}
       <h2 id="review-question-heading">{% if editing %}Corregir respuesta{% else %}{{ form_turn.question }}{% endif %}</h2>
       {% if editing %}<p>{{ form_turn.question }}</p>{% endif %}
       {% if has_draft %}<p role="status">Este es tu borrador guardado en esta sesión; todavía no se ha aplicado como respuesta.</p>{% endif %}
@@ -43,7 +69,7 @@
         <input type="hidden" name="turn_id" value="{{ form_turn.id }}">
         <input type="hidden" name="draft_mode" value="{% if editing %}edit{% else %}answer{% endif %}">
         <label for="teacher-answer">Tu respuesta</label>
-        <textarea id="teacher-answer" name="answer" rows="5" maxlength="12000" autofocus>{{ form_text }}</textarea>
+        <textarea id="teacher-answer" name="answer" rows="5" maxlength="12000" aria-describedby="draft-status" autofocus>{{ form_text }}</textarea>
         <p id="draft-status" class="muted" role="status" aria-live="polite">Se conserva tu texto literal. Los datos aportados por ti se distinguen de la evidencia del PDF.</p>
         <div class="review-actions">
           <button class="primary-action" type="submit" name="action" value="{% if editing %}edit{% else %}answer{% endif %}"{% if stale or review.generation_token %} disabled data-domain-disabled="true"{% endif %}>Guardar y continuar</button>
@@ -52,6 +78,22 @@
       </form>
     {% elif review.generation_token or stale %}
       <h2 id="review-question-heading">Tu revisión está conservada</h2>
+    {% elif manual_recovery %}
+      <div data-manual-recovery>
+        <h2 id="review-question-heading">Faltan datos obligatorios por resolver</h2>
+        <p>La respuesta automática no resolvió todos los datos necesarios. La revisión sigue pendiente; no se iniciará otra consulta al abrir o guardar esta página.</p>
+        {% if asked_count == max_questions %}<p>Se conserva el máximo de seis preguntas. La edición manual del campo no añade otra pregunta.</p>{% endif %}
+        <p>Los datos pendientes se conservan sin inventarlos.</p>
+        {% if can_review_purpose and purpose_is_missing %}<p>Usa «Completar propósito manualmente» para continuar con ese campo.</p>{% endif %}
+        {% if can_request_question %}
+          <p>Pedir otra pregunta enviará la planeación y tus respuestas al modelo configurado e iniciará una nueva consulta.</p>
+          <form method="post">{% csrf_token %}
+            <input type="hidden" name="expected_version" value="{{ dossier.version }}">
+            <input type="hidden" name="expected_revision" value="{{ review.revision }}">
+            <button name="action" value="request_question">Pedir otra pregunta</button>
+          </form>
+        {% endif %}
+      </div>
     {% elif state.status == 'complete' or state.status == 'limited' %}
       <h2 id="review-question-heading">{% if unresolved %}Aclaración cerrada con datos pendientes{% else %}Información aclarada{% endif %}</h2>
       <p>{% if asked_count == max_questions %}Ya se alcanzó el máximo de seis preguntas. {% endif %}La revisión y aprobación final siguen siendo tuyas.</p>
@@ -59,18 +101,35 @@
     {% else %}
       <h2 id="review-question-heading">{% if state.status == 'new' %}Aclarar lo que falta{% else %}Tus respuestas están guardadas{% endif %}</h2>
       {% if state.error == 'provider_not_configured' %}<p role="status">Falta configurar y validar el proveedor de preguntas. Todavía no hay preguntas generadas por un modelo real.</p>
+      {% elif state.error == 'question_too_many_targets' or state.error == 'question_incoherent_group' or state.error == 'question_too_long' or state.error == 'question_has_no_required_gap' %}<p role="status">La pregunta del asistente era demasiado amplia o pedía datos que no requieren aclaración. Ese resultado no se aplicó; tu respuesta literal sigue guardada.</p>
+      {% elif state.error == 'pi_live_not_enabled' or state.error == 'pi_route_not_configured' %}<p role="status">La ruta de Luna mediante Pi está deshabilitada o incompleta. No se inició una consulta real. Tus respuestas siguen guardadas; reintentar no configura ni habilita la conexión.</p>
       {% elif state.error == 'luna_route_not_configured' or state.error == 'luna_live_not_enabled' %}<p role="status">Luna usa una ruta CLI local que aún no está habilitada y comprobada. Tus respuestas se conservan, pero aún no puede generar la siguiente pregunta.</p>
       {% elif state.error == 'gemini_live_not_enabled' or state.error == 'gemini_route_not_configured' %}<p role="status">Gemini high está seleccionado, pero la conexión real no está habilitada y comprobada en esta instalación. Todavía no hay preguntas reales disponibles.</p>
+      {% elif state.error == 'pi_response_rejected' or state.error == 'luna_response_rejected' or state.error == 'human_quote_includes_metadata_or_wrong_field' %}<p role="status">La respuesta del proveedor se rechazó. El recibo del intento se conserva; el rechazo no significa consumo desconocido ni consumo cero. No se enviará otra consulta sin revisar el rechazo y obtener una autorización nueva.</p>
       {% elif provider_blocked %}<p role="status">La solicitud anterior tiene resultado y consumo pendientes de conciliación. No se reintentará automáticamente ni se enviará otra sin autorización nueva.</p>
+      {% elif state.error == 'pi_isolation_preflight_failed' or state.error == 'pi_runtime_review_required' or state.error == 'pi_runtime_preflight_failed' or state.error == 'pi_node_version_unsupported' or state.error == 'pi_preflight_failed' %}<p role="status">La comprobación local de Pi y su aislamiento no pasó. No se admitió un envío del prompt al modelo. Conserva el registro y revisa la instalación sin desactivar las restricciones.</p>
+      {% elif state.error == 'pi_environment_override_present' %}<p role="status">La configuración del entorno impide usar la ruta revisada de Pi. No se inició la consulta ni se modificaron credenciales. Revisa la instalación antes de continuar.</p>
       {% elif state.error == 'luna_sandbox_preflight_failed' or state.error == 'luna_runtime_review_required' or state.error == 'luna_preflight_failed' %}<p role="status">La comprobación local de seguridad no pasó. No se envió el prompt al modelo. Conserva el registro y revisa la instalación sin desactivar el sandbox.</p>
       {% elif state.error == 'luna_auth_override_present' %}<p role="status">Esta ruta requiere la sesión ChatGPT de la CLI, pero hay una variable de autenticación API o destino alternativo. No se inició la consulta ni se modificaron credenciales.</p>
       {% elif state.error == 'luna_login_required' %}<p role="status">La CLI local necesita una sesión ChatGPT válida. La aplicación no inicia sesión ni copia credenciales. No se envió el prompt al modelo.</p>
-      {% elif state.error == 'gemini_full_context_too_large' or state.error == 'luna_full_context_too_large' %}<p role="status">La planeación completa supera el límite de envío. Se conserva íntegra; no se recortó ni se envió al modelo.</p>
+      {% elif state.error == 'gemini_full_context_too_large' or state.error == 'luna_full_context_too_large' or state.error == 'pi_full_context_too_large' %}<p role="status">La planeación completa supera el límite de envío. Se conserva íntegra; no se recortó ni se envió al modelo.</p>
       {% elif state.error == 'source_context_changed' or state.error == 'source_context_unavailable' %}<p role="status">No se pudo comprobar el texto completo de la fuente actual. No se envió una fuente parcial al modelo. Tus respuestas siguen guardadas; comprueba el PDF antes de continuar.</p>
       {% elif state.error %}<p role="status">No se pudo preparar la siguiente pregunta. Tu respuesta permanece guardada; puedes reintentar.</p>{% else %}<p>El asistente considerará la planeación completa y tus respuestas anteriores.</p>{% endif %}
       {% if not provider_blocked %}<form method="post">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ dossier.version }}"><input type="hidden" name="expected_revision" value="{{ review.revision }}"><button class="primary-action" name="action" value="continue">{% if state.status == 'new' %}Comenzar{% else %}Reintentar continuar{% endif %}</button></form>{% endif %}
     {% endif %}
+    {% if purpose_recovery_available %}<p><a href="?edit_purpose=1" data-recover-purpose>Recuperar texto de una revisión anterior del propósito</a></p>{% endif %}
+    {% if can_review_purpose and not editing_purpose %}
+      <div class="review-purpose-summary">
+        <h3>Propósito de aprendizaje</h3>
+        <p class="literal-answer">{{ dossier.general_fields.proposito.value|default:"Propósito pendiente de completar" }}</p>
+        <p>{{ dossier.general_fields.proposito.origin }} · {{ dossier.general_fields.proposito.review }}</p>
+        {% if not stale and not review.generation_token %}<a href="?edit_purpose=1" data-edit-purpose>{% if purpose_is_missing %}Completar propósito manualmente{% else %}Revisar o corregir propósito{% endif %}</a>{% endif %}
+      </div>
+    {% endif %}
   </section>
+  {% if state.purpose_reviews %}<details class="review-details"><summary>Revisiones guardadas del propósito</summary>
+    {% for revision in state.purpose_reviews %}<p class="literal-answer">{{ revision.answer }}</p>{% endfor %}
+  </details>{% endif %}
   {% if turns %}<details class="review-details"><summary>Respuestas guardadas</summary>
     <ol>{% for turn in turns %}<li><p><strong>{{ turn.question }}</strong></p>
       {% if turn.answer != None %}<p class="literal-answer">{% if turn.skipped %}No tengo ese dato{% else %}{{ turn.answer }}{% endif %}</p><a href="?edit={{ turn.id }}">{% if turn.prior_source %}Revisar y confirmar para la fuente actual{% else %}Corregir esta respuesta{% endif %}</a>
@@ -82,8 +141,8 @@
       <h2 id="source-warnings-heading">Advertencias de lectura de la fuente</h2>
       <ul>{% for page, warning in dossier.page_warnings.items %}<li><a href="{% url 'tutor-import-source-page' job.pk page %}">Página física {{ page }}</a>: {{ warning }}</li>{% endfor %}</ul>
     </section>{% endif %}
-    <h2>Datos generales</h2><dl>{% for name, field in dossier.general_fields.items %}<dt>{{ name }}</dt><dd><p class="literal-answer">{{ field.value|default:'Dato pendiente' }} <small>({{ field.origin }} · {{ field.review }})</small></p>{% if field.original_value != None %}<p class="literal-answer">Dato original: {{ field.original_value }}</p>{% endif %}{% include "curriculum/teacher_review_evidence.html" with evidence=field.evidence %}</dd>{% endfor %}</dl>
-    {% for session in dossier.sessions %}<section><h2>Sesión {{ session.session_number }} · {{ session.title }}</h2>
+    <h2>Datos generales</h2><dl>{% for name, field in dossier.general_fields.items %}<dt>{{ name }}</dt><dd><p class="literal-answer">{{ field.value|default:'Dato pendiente' }} <small>({{ field.origin }} · {{ field.review }})</small></p>{% if field.original_value != None %}<p class="literal-answer">Dato original: {{ field.original_value }}</p>{% endif %}{% if field.origin == "proposed" and field.reason %}<p class="review-inference-explanation">{{ field.reason }}</p>{% endif %}{% include "curriculum/teacher_review_evidence.html" with evidence=field.evidence %}</dd>{% endfor %}</dl>
+    {% for session in dossier.sessions %}<section><h2>{{ session.unit_label }} · {{ session.title }}</h2>
       {% for page in session.pages %}<a href="{% url 'tutor-import-source-page' job.pk page %}">Ver página {{ page }} de la fuente</a> {% endfor %}
       {% if session.header_anchor %}<h3>Procedencia del encabezado de sesión</h3><p><a href="{% url 'tutor-import-source-page' job.pk session.header_anchor.page_number %}">Página física {{ session.header_anchor.page_number }}</a> · Ocurrencia {{ session.header_anchor.occurrence }}</p><p class="literal-answer">{{ session.header_anchor.excerpt }}</p>{% endif %}
       {% if session.project_context %}<h3>Contexto de proyecto</h3>
@@ -93,14 +152,15 @@
         {% if session.project_context.anchor %}<p>Encabezado de proyecto, ocurrencia {{ session.project_context.anchor.occurrence }}: <a href="{% url 'tutor-import-source-page' job.pk session.project_context.anchor.page_number %}">Página física {{ session.project_context.anchor.page_number }}</a></p><p class="literal-answer">{{ session.project_context.anchor.excerpt }}</p>{% endif %}
       {% endif %}
       {% if session.layout_notes %}<p class="literal-answer">{{ session.layout_notes }}</p>{% endif %}
-      {% if session.continues_on %}<p>Continuación de la sesión: {% for page in session.continues_on %}<a href="{% url 'tutor-import-source-page' job.pk page %}">Página física {{ page }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% include "curriculum/includes/_source_structure.html" with sess=session %}
+      {% if session.continues_on %}<p>Continuación de la unidad: {% for page in session.continues_on %}<a href="{% url 'tutor-import-source-page' job.pk page %}">Página física {{ page }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
       <dl>{% for name, field in session.fields.items %}<dt>{{ name }}</dt><dd><p class="literal-answer">{{ field.value|default:'Dato pendiente' }} <small>({{ field.origin }} · {{ field.review }})</small></p>{% if field.original_value != None %}<p class="literal-answer">Dato original: {{ field.original_value }}</p>{% endif %}{% include "curriculum/teacher_review_evidence.html" with evidence=field.evidence %}</dd>{% endfor %}</dl>
-      {% for activity in session.activities %}<article><h3>{{ activity.title|default:'Actividad sin título' }}</h3><p>Orden en la sesión: {{ activity.order }}</p><p class="literal-answer">{{ activity.description }}</p>
+      {% for activity in session.activities %}<article><h3>{{ activity.title|default:'Actividad sin título' }}</h3><p>Orden en la unidad: {{ activity.order }}</p><p class="literal-answer">{{ activity.description }}</p>
         {% if activity.annex_ids %}<p>Anexos relacionados: {% for annex_id in activity.annex_ids %}{{ annex_id }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
         {% include "curriculum/teacher_review_evidence.html" with evidence=activity.evidence %}
         {% for annex_id, citations in activity.annex_evidence.items %}<p>Procedencia de la relación con anexo {{ annex_id }}:</p>{% include "curriculum/teacher_review_evidence.html" with evidence=citations %}{% endfor %}
       </article>{% endfor %}
-      {% for annex in session.annex_references %}<article id="anexo-{{ session.session_id }}-{{ annex.reference_id }}"><h3>Anexo {{ annex.annex_number }}</h3><p>{{ annex.raw_mention }} · {{ annex.review }}</p>
+      {% for annex in session.annex_references %}<article id="anexo-{{ session.session_id }}-{{ annex.reference_id }}"><h3>{% if annex.annex_number %}Anexo {{ annex.annex_number }}{% else %}{{ annex.title|default:"Material citado" }}{% endif %}</h3><p>{{ annex.raw_mention }} · {{ annex.review }}</p>
         <p>{% if annex.confirmed_page %}<a href="{% url 'tutor-import-source-page' job.pk annex.confirmed_page %}">Página seleccionada {{ annex.confirmed_page }}</a>{% else %}Página pendiente de confirmar{% endif %}</p>
         {% if annex.source_pages %}<p>Páginas de mención: {% for page in annex.source_pages %}<a href="{% url 'tutor-import-source-page' job.pk page %}">Página {{ page }}</a> {% endfor %}</p>{% endif %}
         {% if annex.candidate_pages %}<p>Páginas candidatas: {% for page in annex.candidate_pages %}<a href="{% url 'tutor-import-source-page' job.pk page %}">Página {{ page }}</a> {% endfor %}</p>{% endif %}
@@ -116,7 +176,7 @@
     <label><input type="checkbox" name="confirm_approval" value="1" required> He revisado la planeación y apruebo esta versión.</label>
     {% if pending_count %}<label><input type="checkbox" name="confirm_pending_items" value="1" required> He revisado los {{ pending_count }} elementos pendientes de confirmación y acepto continuar.</label>{% endif %}
     <button class="primary-action" type="submit">Aprobar esta versión</button>
-  </form>{% else %}<p class="muted">La aprobación final requiere resolver los datos obligatorios y revisar la planeación. Guardar respuestas no aprueba ni publica contenido.</p>{% endif %}
+  </form>{% else %}<p class="muted review-authority-note">La aprobación final requiere resolver los datos obligatorios y revisar la planeación. Guardar respuestas no aprueba ni publica contenido.</p>{% endif %}
 </main>
 <script src="{% static 'curriculum/teacher-review.js' %}" defer></script>
 </body>

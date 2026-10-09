@@ -47,7 +47,7 @@ def test_current_onebox_browser_journey(tmp_path,settings,monkeypatch,request):
     assert uploaded.get_interpretation_dossier().source_sha256==config['pdfSha']
     review=uploaded.teacher_review
     assert len(review.state['turns'])==6
-    assert review.state['status']=='limited'
+    assert review.state['status']=='needs_input'
     # Native HTML form submission canonicalizes textarea line breaks to CRLF.
     # Assert the exact transport text, including spaces and final line breaks.
     transport_first=FIRST_ANSWER.replace('\n','\r\n')

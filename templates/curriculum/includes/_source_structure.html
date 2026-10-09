@@ -1,0 +1,31 @@
+{% if sess.source_structure %}
+  <section aria-labelledby="source-structure-{{ sess.session_id }}" style="margin-top: 1rem;">
+    <h4 id="source-structure-{{ sess.session_id }}">Instrucciones y recursos de la fuente</h4>
+    <p class="muted">Organización provisional por fases. Las instrucciones, preguntas y materiales conservan su función; no representan un conteo de actividades aprobadas.</p>
+    {% for phase in sess.source_structure.phases %}
+      <details open style="margin-bottom: 1rem;">
+        <summary><strong>Fase {{ phase.number }}: {{ phase.title }}</strong> · pendiente de revisión</summary>
+        {% for ev in phase.evidence %}
+          <a href="{% url 'tutor-import-source-page' job.pk ev.page_number %}" target="_blank" rel="noopener">Encabezado en página física {{ ev.page_number }}</a>
+        {% endfor %}
+        <ol>
+          {% for block in sess.source_structure.blocks %}
+            {% if block.phase_id == phase.phase_id %}
+              {% include "curriculum/includes/_source_structure_block.html" %}
+            {% endif %}
+          {% endfor %}
+        </ol>
+      </details>
+    {% endfor %}
+    <details>
+      <summary>Tramos sin fase asignada</summary>
+      <ol>
+        {% for block in sess.source_structure.blocks %}
+          {% if not block.phase_id %}
+            {% include "curriculum/includes/_source_structure_block.html" %}
+          {% endif %}
+        {% endfor %}
+      </ol>
+    </details>
+  </section>
+{% endif %}

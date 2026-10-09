@@ -14,7 +14,7 @@ import uuid
 
 from curriculum.agy_transport.artifact_io import commit, commit_json
 from curriculum.codex_review_transport import CodexEvents, bounded_process, read_regular, strict_json
-from curriculum.teacher_review_context import encode_provider_context
+from curriculum.teacher_review_task_context import provider_task_payload
 from curriculum.teacher_review_provider import RESPONSE_SCHEMA, SYSTEM, ReviewProviderError, review_response_has_valid_shape
 
 MODEL = 'gpt-6-luna'
@@ -208,8 +208,8 @@ class LunaCodexCliProvider:
         if type(self.timeout) is not int or not 1 <= self.timeout <= 120:
             raise ReviewProviderError('luna_invalid_timeout')
         try:
-            encoded = encode_provider_context(context)
-            request = (SYSTEM + '\nDATOS:\n' + json.dumps(encoded, ensure_ascii=False,
+            system, encoded = provider_task_payload(context)
+            request = (system + '\nDATOS:\n' + json.dumps(encoded, ensure_ascii=False,
                        allow_nan=False, separators=(',', ':'))).encode('utf-8')
         except (ValueError, TypeError, UnicodeError):
             raise ReviewProviderError('invalid_target_reference_context') from None

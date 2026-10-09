@@ -136,7 +136,7 @@ class CodexEvents:
         return self.completions == 1 and not self.usage_invalid and all(self.usage[key] is not None for key in self.usage_keys[:3])
 
 
-def bounded_process(argv, *, cwd, timeout, max_bytes, input_path=None, audit=None):
+def bounded_process(argv, *, cwd, timeout, max_bytes, input_path=None, audit=None, env=None):
     """One process, bounded output/time, no shell, no retry and bounded cleanup."""
     if type(timeout) is not int or not 1 <= timeout <= 120 or type(max_bytes) is not int or not 1 <= max_bytes <= 1048576:
         raise ValueError('invalid_process_limits')
@@ -156,7 +156,7 @@ def bounded_process(argv, *, cwd, timeout, max_bytes, input_path=None, audit=Non
         else:
             source = open(os.devnull, 'rb')
         proc = subprocess.Popen(argv, cwd=cwd, stdin=source, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, start_new_session=True, umask=0o077)
+                                stderr=subprocess.PIPE, start_new_session=True, umask=0o077, env=env)
         for name, stream in [('stdout', proc.stdout), ('stderr', proc.stderr)]:
             os.set_blocking(stream.fileno(), False)
             selector.register(stream, selectors.EVENT_READ, name)

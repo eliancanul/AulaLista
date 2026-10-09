@@ -528,11 +528,15 @@ def phase_review_scope(
         if number > limit[0] or (number == limit[0] and limit[1] == 0):
             reached_limit = True
             break
-        if number > first_page and _PHASE_ANNEX_RE.search(text):
-            break
         start = begin[1] if number == first_page else 0
         end = limit[1] if number == limit[0] else len(text)
-        result.append((number, text[start:end]))
+        annex = _PHASE_ANNEX_RE.search(text, start, end)
+        if annex:
+            end = annex.start()
+        if text[start:end].strip():
+            result.append((number, text[start:end]))
+        if annex:
+            break
         if number == limit[0]:
             reached_limit = True
             break
@@ -547,13 +551,17 @@ def phase_review_scope(
             text = pages[number - 1]
             # Preserve only text removed by this reset, respecting the phase
             # unit's pre-existing annex/product stops on these source pages.
-            if number > first_page and _PHASE_ANNEX_RE.search(text):
-                break
             start = limit[1] if number == limit[0] else 0
             if (number, start) >= unassigned_end:
                 break
             end = unassigned_end[1] if number == unassigned_end[0] else len(text)
-            unassigned.append((number, text[start:end]))
+            annex = _PHASE_ANNEX_RE.search(text, start, end)
+            if annex:
+                end = annex.start()
+            if text[start:end].strip():
+                unassigned.append((number, text[start:end]))
+            if annex:
+                break
             if _PHASE_END_RE.search(text):
                 break
     return result, unassigned

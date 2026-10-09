@@ -24,19 +24,25 @@ La entrada activa conserva la shell Django: **Currícula y autoría → Importar
 - Los datos irresolubles quedan explícitos al cerrar. Guardar respuestas nunca aprueba ni publica: la aprobación final usa el comando humano existente y sigue bloqueada por requisitos faltantes.
 - Las ediciones independientes/reextracción requieren revisar y retomar explícitamente la nueva versión. Las respuestas y el contador se conservan.
 
-## Luna seleccionado, ruta pendiente
+## Prueba local de Luna, conexión API posterior
 
-La selección predeterminada de `AULALISTA_TEACHER_REVIEW_PROVIDER` es `luna`.
-El adaptador local invoca Codex CLI con `gpt-6-luna` y esfuerzo `high`, stdin,
-salida estructurada, límites locales y ledger privado. No espera una API key.
-Su contrato se prueba con una CLI sintética; la ejecución real sigue pendiente.
+El producto objetivo es un SaaS conectado. Esta selección y los controles del
+launcher sirven para probar el modelo localmente; no imponen un funcionamiento
+sin red al backend de producción.
+
+La selección predeterminada de `AULALISTA_TEACHER_REVIEW_PROVIDER` es `pi_luna`.
+El adaptador local pide `openai-codex/gpt-6-luna` con esfuerzo `high` mediante
+Pi 0.84.4, stdin, salida estructurada, límites locales y ledger privado. LIVE
+permanece deshabilitado y el contexto es `complete`. No espera una API key.
+La ejecución real de este candidato sigue pendiente de aceptación separada.
 
 Las rutas explícitas, el registro de revisión de restricciones y la habilitación
-se describen en [la guía de Luna CLI](luna-cli.md). Sin ellos, la interfaz informa
+se describen en [la guía de Luna mediante Pi](pi-luna.md). Sin ellos, la interfaz informa
 configuración pendiente o llamadas deshabilitadas. La preflight real debe pasar
 antes de enviar el prompt; no se evita un fallo del sandbox. No hay fallback a
 Gemini, Ollama o una API. Los límites de tiempo/bytes no son topes de tokens/costo,
-y la detección de eventos no garantiza prevenir toda herramienta.
+y la revisión del aislamiento externo no es una atestación automática del Mac.
+La selección explícita `luna` conserva la [CLI Codex anterior](luna-cli.md).
 
 El contrato compartido de preguntas, máximo seis, procedencia, contexto completo
 y guardado durable permanece vigente. Una prueba de la CLI inventada o un aviso
