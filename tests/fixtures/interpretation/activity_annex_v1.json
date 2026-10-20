@@ -1,0 +1,389 @@
+{
+  "version": "activity-annex-development.v1",
+  "reference_kind": "AI-authored synthetic reference; not teacher gold",
+  "scope": "Existing requiere_anexo, explicit numbered references only. No condition/negation interpretation or physical annex-sheet suitability. All complete synthetic pages scored.",
+  "documents": [
+    {
+      "id": "direct",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\nActividad 1: Resolver el anexo 1.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "direct-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 60,
+            "quote": "Actividad 1: Resolver el anexo 1."
+          },
+          "session_id": "s1",
+          "annex_number": "1",
+          "mention": {
+            "page": 1,
+            "start": 52,
+            "end": 59,
+            "quote": "anexo 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "point_number_decoy",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\nActividad 1: Leer el anexo 1 y responder el punto 2.\nActividad 2: Consultar el anexo 2.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "point_number_decoy-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 79,
+            "quote": "Actividad 1: Leer el anexo 1 y responder el punto 2."
+          },
+          "session_id": "s1",
+          "annex_number": "1",
+          "mention": {
+            "page": 1,
+            "start": 48,
+            "end": 55,
+            "quote": "anexo 1"
+          }
+        },
+        {
+          "id": "point_number_decoy-r2",
+          "activity": {
+            "page": 1,
+            "start": 80,
+            "end": 114,
+            "quote": "Actividad 2: Consultar el anexo 2."
+          },
+          "session_id": "s1",
+          "annex_number": "2",
+          "mention": {
+            "page": 1,
+            "start": 106,
+            "end": 113,
+            "quote": "anexo 2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_number_decoy",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\nActividad 1: Leer el anexo 1 y consultar la página 12.\nActividad 2: Consultar el anexo 12.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "page_number_decoy-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 81,
+            "quote": "Actividad 1: Leer el anexo 1 y consultar la página 12."
+          },
+          "session_id": "s1",
+          "annex_number": "1",
+          "mention": {
+            "page": 1,
+            "start": 48,
+            "end": 55,
+            "quote": "anexo 1"
+          }
+        },
+        {
+          "id": "page_number_decoy-r2",
+          "activity": {
+            "page": 1,
+            "start": 82,
+            "end": 117,
+            "quote": "Actividad 2: Consultar el anexo 12."
+          },
+          "session_id": "s1",
+          "annex_number": "12",
+          "mention": {
+            "page": 1,
+            "start": 108,
+            "end": 116,
+            "quote": "anexo 12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "explicit_list",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Comparar los anexos 01 y 02.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "explicit_list-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 56,
+            "quote": "-Comparar los anexos 01 y 02."
+          },
+          "session_id": "s1",
+          "annex_number": "1",
+          "mention": {
+            "page": 1,
+            "start": 41,
+            "end": 55,
+            "quote": "anexos 01 y 02"
+          }
+        },
+        {
+          "id": "explicit_list-r2",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 56,
+            "quote": "-Comparar los anexos 01 y 02."
+          },
+          "session_id": "s1",
+          "annex_number": "2",
+          "mention": {
+            "page": 1,
+            "start": 41,
+            "end": 55,
+            "quote": "anexos 01 y 02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "different_sessions",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Consultar el anexo 1.\nSESIÓN 2: Comparar\nInicio:\n-Consultar el anexo 2.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        },
+        {
+          "id": "s2",
+          "anchor": {
+            "page": 1,
+            "start": 50,
+            "end": 68,
+            "quote": "SESIÓN 2: Comparar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "different_sessions-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 49,
+            "quote": "-Consultar el anexo 1."
+          },
+          "session_id": "s1",
+          "annex_number": "1",
+          "mention": {
+            "page": 1,
+            "start": 41,
+            "end": 48,
+            "quote": "anexo 1"
+          }
+        },
+        {
+          "id": "different_sessions-r2",
+          "activity": {
+            "page": 1,
+            "start": 77,
+            "end": 99,
+            "quote": "-Consultar el anexo 2."
+          },
+          "session_id": "s2",
+          "annex_number": "2",
+          "mention": {
+            "page": 1,
+            "start": 91,
+            "end": 98,
+            "quote": "anexo 2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mention_after_eighty",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Observar cuidadosamente las plantas del patio, comparar las formas de sus hojas y registrar los resultados en el anexo 3.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "mention_after_eighty-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 149,
+            "quote": "-Observar cuidadosamente las plantas del patio, comparar las formas de sus hojas y registrar los resultados en el anexo 3."
+          },
+          "session_id": "s1",
+          "annex_number": "3",
+          "mention": {
+            "page": 1,
+            "start": 141,
+            "end": 148,
+            "quote": "anexo 3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "wrapped_list",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Consultar los anexos 4 y\n5 para comparar registros.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "wrapped_list-r1",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 79,
+            "quote": "-Consultar los anexos 4 y\n5 para comparar registros."
+          },
+          "session_id": "s1",
+          "annex_number": "4",
+          "mention": {
+            "page": 1,
+            "start": 42,
+            "end": 54,
+            "quote": "anexos 4 y\n5"
+          }
+        },
+        {
+          "id": "wrapped_list-r2",
+          "activity": {
+            "page": 1,
+            "start": 27,
+            "end": 79,
+            "quote": "-Consultar los anexos 4 y\n5 para comparar registros."
+          },
+          "session_id": "s1",
+          "annex_number": "5",
+          "mention": {
+            "page": 1,
+            "start": 42,
+            "end": 54,
+            "quote": "anexos 4 y\n5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "no_annex_in_activity",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Responder el punto 2.\nRecursos:\n-Anexo 2.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "word_fragment_not_reference",
+      "pages": [
+        "SESIÓN 1: Explorar\nInicio:\n-Escribir la palabra preanexo 1.\n"
+      ],
+      "sessions": [
+        {
+          "id": "s1",
+          "anchor": {
+            "page": 1,
+            "start": 0,
+            "end": 18,
+            "quote": "SESIÓN 1: Explorar"
+          }
+        }
+      ],
+      "relations": []
+    }
+  ]
+}

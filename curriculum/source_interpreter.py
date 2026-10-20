@@ -1467,6 +1467,43 @@ def _build_annex_operational_item(
     elif priority_state == PRIORITY_PENDING_REVIEW:
         blocking_codes.append("PENDING_TEACHER_CONFIRMATION")
 
+    # A mentioned resource may be negated, conditional, or unresolved. Keep
+    # its physical status and human review visible without making it a
+    # conversion prerequisite. Legacy refs without context retain their review
+    # path; they still cannot become a positive requires claim.
+    from curriculum.annex_mentions import annex_requirement
+    contexts = [ev.excerpt for ev in ref.evidence
+                if getattr(ev, "role", "") == "annex_mention_context"
+                and (not source_sha or ev.document_sha256 == source_sha)]
+    necessity = annex_requirement("\n".join(contexts), ref.annex_number) if contexts else None
+    # Different activities can explicitly use and decline the same resource.
+    # A positive use in one activity still requires the resource for the session;
+    # conflicting statements within that one activity continue to abstain.
+    for activity in session.activities:
+        if ref.reference_id not in activity.annex_ids:
+            continue
+        activity_context = "\n".join(
+            ev.excerpt for ev in activity.annex_evidence.get(ref.reference_id, [])
+            if not source_sha or ev.document_sha256 == source_sha
+        )
+        if annex_requirement(activity_context, ref.annex_number) is True:
+            necessity = True
+            break
+    is_required = not contexts or necessity is True
+    if not is_required:
+        required_for = []
+        blocking_codes = []
+        blocks_action = ""
+        if priority_state == PRIORITY_REQUIRES_RESOLUTION:
+            priority_state = PRIORITY_PENDING_REVIEW
+        if op_state != "resolved" and ref.review != "postponed":
+            problem_summary = (
+                "La fuente no requiere usar este anexo; la mención se conserva para revisión."
+                if necessity is False else
+                "Necesidad del anexo sin determinar o condicionada; requiere revisión docente."
+            )
+            curr_act = problem_summary
+
     source_refs = [ev.to_dict() for ev in ref.evidence if getattr(ev, "page_number", None) == ref.confirmed_page]
     if not source_refs:
         source_refs = [{"page_number": p, "document_sha256": source_sha} for p in (ref.source_pages or ref.candidate_pages)]
@@ -1485,8 +1522,8 @@ def _build_annex_operational_item(
         priority_state=priority_state,
         problem_summary=problem_summary,
         blocks_action=blocks_action,
-        requiredness="annex_use",
-        is_required=True,
+        requiredness="annex_use" if is_required else "optional",
+        is_required=is_required,
         current_value=ref.confirmed_page,
         original_value=ref.candidate_pages[0] if ref.candidate_pages else None,
         operational_state=op_state,
@@ -3390,51 +3427,30 @@ class CurriculumSourceInterpreter:
         detected_numbers: set[str] = set()
         mentions: list[dict[str, Any]] = []
 
-        pattern = re.compile(
-            r"(?:anexos?|cuadernillo\s+de\s+actividades\s+anexos?)\s*(\d+(?:\s*(?:,|y)\s*\d+)*)",
-            re.IGNORECASE,
-        )
+        from curriculum.annex_mentions import iter_annex_mentions
 
-        if page_segments:
-            for seg_page, seg_text in page_segments:
-                for match in pattern.finditer(seg_text):
-                    raw_mention = match.group(0)
-                    numbers_part = match.group(1)
-                    found_nums = re.findall(r"\d+", numbers_part)
-                    for num in found_nums:
-                        norm_num = str(int(num))
-                        detected_numbers.add(norm_num)
-                        mentions.append({
-                            "number": norm_num,
-                            "raw": raw_mention,
-                            "page": seg_page,
-                        })
-        else:
-            for match in pattern.finditer(session_text):
-                raw_mention = match.group(0)
-                numbers_part = match.group(1)
-                found_nums = re.findall(r"\d+", numbers_part)
-
-                mention_page = session_pages[0] if session_pages else 1
-                if pages_text and len(session_pages) > 1:
-                    raw_lower = raw_mention.lower()
-                    for p in session_pages:
-                        if 1 <= p <= len(pages_text):
-                            if raw_lower in pages_text[p - 1].lower():
-                                mention_page = p
-                                break
-
-                for num in found_nums:
-                    norm_num = str(int(num))
-                    detected_numbers.add(norm_num)
-                    mentions.append({
-                        "number": norm_num,
-                        "raw": raw_mention,
-                        "page": mention_page,
-                    })
+        segments = page_segments or [(session_pages[0] if session_pages else 1, session_text)]
+        for seg_page, seg_text in segments:
+            for mention in iter_annex_mentions(seg_text):
+                mention_page = seg_page
+                if not page_segments and pages_text and len(session_pages) > 1:
+                    for page_number in session_pages:
+                        if 1 <= page_number <= len(pages_text) and mention.text in pages_text[page_number - 1]:
+                            mention_page = page_number
+                            break
+                # The legacy fallback may concatenate multiple physical
+                # pages. Do not cite that aggregate as one page's context.
+                context = seg_text if page_segments or len(session_pages) <= 1 else ""
+                if pages_text and not (1 <= mention_page <= len(pages_text)
+                                       and context in pages_text[mention_page - 1]):
+                    context = ""
+                for number in mention.numbers:
+                    detected_numbers.add(number)
+                    mentions.append({"number": number, "raw": mention.text, "page": mention_page,
+                                     "context": context})
 
         annex_references: list[AnnexReference] = []
-        for num in sorted(detected_numbers, key=lambda x: int(x)):
+        for num in sorted(detected_numbers, key=lambda x: (len(x), x)):
             matching_sheets = [
                 c for c in annex_candidates if str(int(c["number"])) == num
             ]
@@ -3458,6 +3474,14 @@ class CurriculumSourceInterpreter:
                         excerpt=rep_for_page,
                     )
                 )
+
+            # Keep literal context separately from the short mention. It is
+            # evidence for necessity review, never evidence of a physical sheet.
+            for page, context in dict.fromkeys((m["page"], m["context"]) for m in num_mentions if m["context"]):
+                evidence.append(SourceReference(
+                    document_sha256=sha256, page_number=page,
+                    excerpt=context, role="annex_mention_context",
+                ))
 
             # Evidence for candidate sheet(s): cites candidate page(s)
             if candidate_pages:
@@ -3523,19 +3547,45 @@ class CurriculumSourceInterpreter:
         segments = page_segments or [(session_pages[0] if session_pages else 1, session_text)]
 
         act_pattern = re.compile(
-            r"(?:^|\n)\s*Actividad\s*(\d+|[A-Za-z])?\s*[:.-]?\s*([^\n\r]+)",
+            r"(?:^|\n)[ \t]*Actividad\b[ \t]*(\d+|[A-Za-z](?=[ \t]*[:.-]))?[ \t]*[:.-]?[ \t]*([^\n\r]+)",
             re.IGNORECASE,
         )
 
+        from curriculum.activity_spans import listed_activity_spans, leading_activity_continuation
+        from curriculum.annex_mentions import iter_annex_mentions
+
         order = 0
+        continuation_context: dict = {}
+        full_activity_refs: dict[str, list[SourceReference]] = {}
         for seg_page, seg_text in segments:
-            for match in act_pattern.finditer(seg_text):
-                num_group = match.group(1)
-                text_group = (match.group(2) or "").strip()
+            continued_end = 0
+            if activities:
+                previous = activities[-1]
+                continuation = leading_activity_continuation(seg_text, previous.description, continuation_context)
+                if continuation:
+                    begin, continued_end = continuation
+                    fragment = seg_text[begin:continued_end]
+                    previous.description += "\n" + fragment
+                    ref = SourceReference(document_sha256=sha256, page_number=seg_page, excerpt=fragment)
+                    full_activity_refs[previous.activity_id].append(ref)
+                    previous.evidence = list(full_activity_refs[previous.activity_id])
+                    numbers = {n for mention in iter_annex_mentions(previous.description) for n in mention.numbers}
+                    for annex in annex_refs or []:
+                        if annex.reference_id and annex.annex_number in numbers:
+                            if annex.reference_id not in previous.annex_ids:
+                                previous.annex_ids.append(annex.reference_id)
+                            previous.annex_evidence[annex.reference_id] = list(previous.evidence)
+            listed = listed_activity_spans(seg_text, context=continuation_context, continuation_end=continued_end)
+            candidates = [(match.start(), match.end(), match.group(1), (match.group(2) or "").strip())
+                          for match in act_pattern.finditer(seg_text)
+                          if match.start() >= continued_end
+                          and not any(start <= match.start() < match.end() <= end for start, end, _ in listed)]
+            candidates.extend((start, end, None, description) for start, end, description in listed)
+            for start, end, num_group, text_group in sorted(candidates):
                 if not text_group or len(text_group) < 3:
                     continue
                 order += 1
-                matched_text = match.group(0).strip()
+                matched_text = seg_text[start:end].strip()
                 title = f"Actividad {num_group}: {text_group[:40]}" if num_group else f"Actividad {order}: {text_group[:40]}"
                 description = text_group
                 excerpt = matched_text[:80].strip()
@@ -3543,28 +3593,20 @@ class CurriculumSourceInterpreter:
                 linked_annex_ids: list[str] = []
                 annex_ev_map: dict[str, list[SourceReference]] = {}
 
+                mentioned_numbers = {number for mention in iter_annex_mentions(matched_text) for number in mention.numbers}
                 for ar in (annex_refs or []):
                     ref_id = getattr(ar, "reference_id", "")
                     annex_num = str(getattr(ar, "annex_number", ""))
-                    raw_mention = getattr(ar, "raw_mention", "")
-                    is_linked = False
-                    if annex_num and re.search(rf"\banexos?\s*.*?\b{re.escape(annex_num)}\b", matched_text, re.IGNORECASE):
-                        is_linked = True
-                    elif raw_mention and raw_mention.lower() in matched_text.lower():
-                        is_linked = True
-                    elif ref_id and ref_id in matched_text:
-                        is_linked = True
-
-                    if is_linked and ref_id:
+                    if ref_id and annex_num in mentioned_numbers:
                         if ref_id not in linked_annex_ids:
                             linked_annex_ids.append(ref_id)
-                        annex_ev_map[ref_id] = [
-                            SourceReference(
-                                document_sha256=sha256,
-                                page_number=seg_page,
-                                excerpt=excerpt,
-                            )
-                        ]
+                        # Preserve enough literal context to demonstrate both
+                        # this activity and its exact annex mention. A generic
+                        # first-80-character excerpt can omit the number entirely.
+                        annex_ev_map[ref_id] = [SourceReference(
+                            document_sha256=sha256, page_number=seg_page,
+                            excerpt=matched_text, role="activity_annex_mention",
+                        )]
 
                 ev = [
                     SourceReference(
@@ -3574,6 +3616,8 @@ class CurriculumSourceInterpreter:
                     )
                 ]
 
+                full_activity_refs[f"{session_id}_act_{order}"] = [SourceReference(
+                    document_sha256=sha256, page_number=seg_page, excerpt=matched_text)]
                 activities.append(
                     SessionActivity(
                         activity_id=f"{session_id}_act_{order}",

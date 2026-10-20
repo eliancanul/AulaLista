@@ -199,7 +199,17 @@ class TestMechanicalVerification:
         assert isinstance(report, VerificationReport)
         assert report.is_valid is True
         assert report.blocked_count == 0
-        assert (report.checked_count, report.needs_review_count, report.blocked_count, report.total_items) == (21, 31, 0, 52)
+        # The original non-activity audit stays unchanged. Newly recovered
+        # activities add evidence checks; a fixed total would punish recall.
+        base_items = [item for item in report.items if "/activities/" not in item["path"]]
+        assert (sum(item["status"] == "checked" for item in base_items),
+                sum(item["status"] == "needs_teacher_review" for item in base_items),
+                sum(item["status"] == "blocked" for item in base_items), len(base_items)) == (21, 31, 0, 52)
+        for session in dossier.sessions:
+            for activity in session.activities:
+                prefix = f"sessions/{session.session_id}/activities/{activity.activity_id}/evidence/"
+                checks = [item for item in report.items if item["path"].startswith(prefix)]
+                assert checks and all(item["status"] == "checked" for item in checks)
         # C01 omits the canonical project duration, which needs human review.
         assert "duracion_proyecto" not in dossier.general_fields
         duration_items = [

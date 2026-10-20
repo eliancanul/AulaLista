@@ -1,0 +1,138 @@
+{
+  "version": "annex-requirement-semantics.v1",
+  "reference_kind": "AI-authored synthetic semantic challenge; not human gold",
+  "scope": "Distinguish evidenced mention from whether this activity requires the resource. null means withhold necessity pending condition/clarification. Preserve the original context. Do not infer physical availability. Not scored as explicit-number parsing alone.",
+  "cases": [
+    {
+      "id": "direct",
+      "text": "Consultar el anexo 1 para resolver la actividad.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": true,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "negated",
+      "text": "No usar el anexo 1; resolver la actividad sin el anexo 2.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": false,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        },
+        {
+          "annex_number": 2,
+          "mentioned": true,
+          "required": false,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "reminder",
+      "text": "No olvidar usar el anexo 1.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": true,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "conditional",
+      "text": "Si el grupo termina antes, trabajar el anexo 1.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": null,
+          "basis": "abstained",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "permission",
+      "text": "Consultar el anexo 1 sólo si la docente lo autoriza.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": null,
+          "basis": "abstained",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "substitution",
+      "text": "Sustituir el anexo 1 por el anexo 2 para esta actividad.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": false,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        },
+        {
+          "annex_number": 2,
+          "mentioned": true,
+          "required": true,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "past_only",
+      "text": "Recordar el anexo 1 trabajado ayer; no hace falta volver a consultarlo.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": false,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "past_current_use",
+      "text": "Revisar el anexo 1 que resolvieron ayer y corregirlo.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": true,
+          "basis": "explicit",
+          "physical_sheet_resolved": false
+        }
+      ]
+    },
+    {
+      "id": "uncertain",
+      "text": "Anexo 1: confirmar con la docente si se utilizará en esta actividad.",
+      "expected": [
+        {
+          "annex_number": 1,
+          "mentioned": true,
+          "required": null,
+          "basis": "abstained",
+          "physical_sheet_resolved": false
+        }
+      ]
+    }
+  ]
+}
