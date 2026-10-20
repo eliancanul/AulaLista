@@ -35,6 +35,7 @@ from curriculum.atlas.exceptions import (
     AtlasIndexNotReadyError,
     AtlasIntegrityError,
     AtlasPermissionError,
+    AtlasRetrievalContractError,
     AtlasSecurityError,
 )
 from curriculum.atlas.fixtures import (
@@ -42,6 +43,7 @@ from curriculum.atlas.fixtures import (
     load_atlas_fixture_from_json,
     save_atlas_fixture_to_json,
 )
+from curriculum.atlas.hierarchy import HierarchyFilterMode
 from curriculum.atlas.index import AtlasIndex
 from curriculum.atlas.models import (
     AtlasDocumentFragment,
@@ -86,6 +88,7 @@ __all__ = [
     "AtlasIntegrityError",
     "AtlasIndexError",
     "AtlasIndexNotReadyError",
+    "AtlasRetrievalContractError",
     # Texto
     "normalize_atlas_text",
     "tokenize_atlas_text",
@@ -102,6 +105,7 @@ __all__ = [
     "IndexMetrics",
     # Interfaces y Recuperadores
     "BaseRetriever",
+    "HierarchyFilterMode",
     "BM25AtlasRetriever",
     "ExactMatchAtlasRetriever",
     # Interfaces y Rerankers

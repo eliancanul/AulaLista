@@ -28,3 +28,7 @@ class AtlasIndexError(AtlasError):
 
 class AtlasIndexNotReadyError(AtlasIndexError):
     """El índice no está construido o ha sido invalidado."""
+
+
+class AtlasRetrievalContractError(AtlasError):
+    """Un recuperador o reranker incumple el contrato de selección explícita."""
