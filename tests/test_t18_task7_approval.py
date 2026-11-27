@@ -130,11 +130,17 @@ def create_fully_reviewed_job(user, pdf_bytes=None):
         f.status = STATUS_SUPPORTED
     for s in dossier.sessions:
         s.annex_references = []
+        # This fixture intentionally removes resource-review work. Preserve
+        # referential integrity for newly extracted activities as well.
+        for activity in s.activities:
+            activity.annex_ids = []
+            activity.annex_evidence = {}
         for f in s.fields.values():
             f.review = REVIEW_CONFIRMED
             f.status = STATUS_SUPPORTED
 
     report = verify_curriculum_dossier(dossier, pdf_bytes)
+    assert report.blocked_count == 0, "Fully reviewed fixture must not contain dangling links"
     dossier.verification_report = report.to_dict()
 
     job = CurriculumImportJob.objects.create(
